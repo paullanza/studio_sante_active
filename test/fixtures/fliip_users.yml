@@ -1,0 +1,49 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  remote_id: MyString
+  custom_id: MyString
+  user_role: MyString
+  first_name: MyString
+  last_name: MyString
+  gender: MyString
+  member_type: MyString
+  status: MyString
+  email: MyString
+  image: MyString
+  phone1: MyString
+  phone2: MyString
+  dob: 2025-07-11
+  address: MyString
+  city: MyString
+  zipcode: MyString
+  language: MyString
+  profile_step: MyString
+  sync_g_cal: MyString
+  progress: 1.5
+  member_since: 2025-07-11
+  custom_field_value: MyString
+
+two:
+  remote_id: MyString
+  custom_id: MyString
+  user_role: MyString
+  first_name: MyString
+  last_name: MyString
+  gender: MyString
+  member_type: MyString
+  status: MyString
+  email: MyString
+  image: MyString
+  phone1: MyString
+  phone2: MyString
+  dob: 2025-07-11
+  address: MyString
+  city: MyString
+  zipcode: MyString
+  language: MyString
+  profile_step: MyString
+  sync_g_cal: MyString
+  progress: 1.5
+  member_since: 2025-07-11
+  custom_field_value: MyString
