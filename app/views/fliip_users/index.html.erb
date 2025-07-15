@@ -1,0 +1,27 @@
+<div class="container mt-4">
+  <h1>Fliip Users</h1>
+  <%= @fliip_users.count %>
+  <table class="table table-hover">
+    <thead class="table-light">
+      <tr>
+        <th>Remote ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @fliip_users.each do |user| %>
+        <tr>
+          <td><%= user.remote_id %></td>
+          <td>
+            <%= link_to "#{user.first_name} #{user.last_name}", fliip_user_path(user), class: "btn btn-sm btn-primary" %>
+          </td>
+          <td><%= user.email.presence || "–" %></td>
+          <td><%= user.status.presence || "–" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

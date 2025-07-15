@@ -1,24 +1,20 @@
-class ApplicationFliipUserCaller
-  def self.call
-    new.call
-  end
-
+class FliipApiCaller
   def initialize
-    @api = ApiClient.new
-  end
-
-  def call
-    @api.fetch_users.each do |data|
-      if user = FliipUser.find_by(remote_id: data[:user_id])
-        update_user(user, data)
-      end
-    end
+    @api_client = ApiClient.new
+    @last_remote_id = FliipUser.maximum(:remote_id)
   end
 
   private
 
-  def update_user(user, data)
-    user.update!(
+  def create_user(data)
+    user = insert_user(data)
+    insert_user_notes(user, data)
+    insert_appointment_notes(user, data)
+  end
+
+  def insert_user(data)
+    user = FliipUser.create!(
+      remote_id:           data[:user_id],
       custom_id:           data[:custom_id],
       user_role:           data[:user_role],
       first_name:          data[:user_firstname],
@@ -42,39 +38,33 @@ class ApplicationFliipUserCaller
       custom_field_value:  data[:custom_field_value],
       custom_field_option: data[:custom_field_option]
     )
-
-    # Wipe and re-insert notes to mirror the API payload
-    user.fliip_user_notes.delete_all
-    insert_user_notes(user, data)
-
-    user.fliip_user_appointment_notes.delete_all
-    insert_appointment_notes(user, data)
+    user
   end
 
   def insert_user_notes(user, data)
     Array(data[:user_notes]).each do |note|
       user.fliip_user_notes.create!(
-        note_text:                 note[:note_text],
-        created_date:              parse_date(note[:created_date]),
-        creator_of_note_full_name: note[:creator_of_note_full_name]
+        note_text: note[:note_text],
+        created_date: parse_date(note[:created_date]),
+        creator_of_note_full_name: note[:creator_of_note_full_name],
       )
     end
   end
 
   def insert_appointment_notes(user, data)
-    Array(data[:user_appointment_notes]).each do |note|
+    Array(data[:appointment_notes]).each do |note|
       user.fliip_user_appointment_notes.create!(
-        note_text:                 note[:note_text],
-        created_date:              parse_date(note[:created_date]),
+        note_text: note[:note_text],
+        created_date: parse_date(note[:created_date]),
         creator_of_note_full_name: note[:creator_of_note_full_name],
-        service_name:              note[:service_name],
-        appointment_start:         parse_date(note[:appointment_start])
+        service_name: note[:service_name],
+        appointment_start: parse_date(note[:appointment_start]),
       )
     end
   end
 
   def parse_date(value)
     return nil if value.blank?
-    DateTime.parse(value) rescue nil
+    Date.parse(value) rescue nil
   end
 end
