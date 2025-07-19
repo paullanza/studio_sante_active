@@ -1,61 +1,59 @@
 module FliipApi
   module UserSync
+    # FullUpdater handles a full sync of users from the Fliip API into our local database
     class FullUpdater < Base
+      # Entry point: builds a new instance, runs the sync, and returns a summary string
       def self.call
-        new.update_all_users
-        true
+        counts = new.update_all_users
+        "Sync complete: #{counts[0]} new users, #{counts[1]} updated users"
       end
 
+      # Primary method: fetch data, compare with local, update or create records
+      # Returns two integers: [number_of_new_users, number_of_updated_users]
       def update_all_users
-        api_data = @api_client.fetch_users
-        remote_ids = api_data.map { |data| data[:user_id].to_i }
+        new_users = 0
+        updated_users = 0
 
-        exisiting_users = FliipUser.where(remote_id: remote_ids).index_by(&:remote_id)
+        # 1. Pull all user data from the remote API
+        api_data = fetch_all_api_users
+        # 2. Load existing users into a hash for quick lookup (defined in Base)
+        existing_users = load_local_users
 
+        # 3. Iterate over each remote record
         api_data.each do |data|
+          # Convert API user ID to integer for consistent key lookup
           remote_id = data[:user_id].to_i
 
-          if exisiting_users[remote_id].to_hash.to_a - data.to_a == []
-            user = exisiting_users[remote_id]
-            update_user(user, data)
+          if existing_users[remote_id]
+            # If we already have this user locally, update only if changed
+            user = existing_users[remote_id]
+            updated_users += 1 if update_user(user, data)
           else
+            # If user doesn't exist locally, create a new record
             create_user(data)
+            new_users += 1
           end
         end
+
+        [new_users, updated_users]
       end
 
       private
 
+      # Takes a local user and a hash of API data, assigns new values,
+      # saves only if any attribute has changed, and returns true if saved
       def update_user(user, data)
-        user.update!(
-          custom_id:           data[:custom_id],
-          user_role:           data[:user_role],
-          user_firstname:          data[:user_firstname],
-          user_lastname:           data[:user_lastname],
-          user_gender:              data[:user_gender],
-          member_type:         data[:member_type],
-          user_status:              data[:user_status],
-          user_email:               data[:user_email],
-          user_image:               data[:user_image],
-          user_phone1:              data[:user_phone1],
-          user_phone2:              data[:user_phone2],
-          user_dob:                 parse_date(data[:user_dob]),
-          user_address:             data[:user_address],
-          user_city:                data[:user_city],
-          user_zipcode:             data[:user_zipcode],
-          user_language:            data[:user_language],
-          profile_step:        data[:profile_step],
-          sync_g_cal:          data[:sync_g_cal],
-          member_since:        parse_date(data[:member_since]),
-          custom_field_value:  data[:custom_field_value],
-          custom_field_option: data[:custom_field_option]
-        )
-
-        user.fliip_user_notes.delete_all
-        insert_user_notes(user, data)
-
-        user.fliip_user_appointment_notes.delete_all
-        insert_appointment_notes(user, data)
+        # Prepare normalized attributes from the incoming data
+        attrs = user_attributes(data)
+        # Assign attributes without saving yet
+        user.assign_attributes(attrs)
+        # Only hit the database if there are actual changes
+        if user.changed?
+          user.save!
+          true
+        else
+          false
+        end
       end
     end
   end

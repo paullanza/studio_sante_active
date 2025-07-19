@@ -14,18 +14,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_14_142046) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
-  create_table "fliip_user_appointment_notes", force: :cascade do |t|
-    t.text "note_text"
-    t.datetime "created_date"
-    t.string "creator_of_note_full_name"
-    t.string "service_name"
-    t.datetime "appointment_start"
-    t.bigint "fliip_user_id", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["fliip_user_id"], name: "index_fliip_user_appointment_notes_on_fliip_user_id"
-  end
-
   create_table "fliip_user_notes", force: :cascade do |t|
     t.text "note_text"
     t.date "created_date"
@@ -185,7 +173,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_14_142046) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
-  add_foreign_key "fliip_user_appointment_notes", "fliip_users"
   add_foreign_key "fliip_user_notes", "fliip_users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

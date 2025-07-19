@@ -16,10 +16,10 @@
         <tr>
           <td><%= user.remote_id %></td>
           <td>
-            <%= link_to "#{user.first_name} #{user.last_name}", fliip_user_path(user), class: "btn btn-sm btn-primary" %>
+            <%= link_to "#{user.user_firstname} #{user.user_lastname}", fliip_user_path(user), class: "btn btn-sm btn-primary" %>
           </td>
-          <td><%= user.email.presence || "–" %></td>
-          <td><%= user.status.presence || "–" %></td>
+          <td><%= user.user_email.presence || "–" %></td>
+          <td><%= user.user_status.presence || "–" %></td>
         </tr>
       <% end %>
     </tbody>

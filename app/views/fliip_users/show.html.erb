@@ -35,24 +35,5 @@
     <p class="text-muted">No user notes.</p>
   <% end %>
 
-  <h2 class="mt-4">Appointment Notes (<%= @fliip_user.fliip_user_appointment_notes.size %>)</h2>
-  <% if @fliip_user.fliip_user_appointment_notes.any? %>
-    <ul class="list-group mb-4">
-      <% @fliip_user.fliip_user_appointment_notes.each do |an| %>
-        <li class="list-group-item">
-          <small class="text-muted">
-            <%= an.appointment_start.strftime("%d/%m/%Y %H:%M") rescue an.appointment_start %>
-            (<%= an.service_name %>) by <%= an.creator_of_note_full_name %>
-          </small>
-          <div>
-            <%= simple_format(an.note_text.gsub('\\n', "\n")) %>
-          </div>
-        </li>
-      <% end %>
-    </ul>
-  <% else %>
-    <p class="text-muted">No appointment notes.</p>
-  <% end %>
-
   <%= link_to "← Back to list", root_path, class: "btn btn-secondary mt-3" %>
 </div>

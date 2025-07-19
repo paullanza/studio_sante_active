@@ -7,7 +7,7 @@ module FliipApi
       end
 
       def create_all_users
-        @api_client.fetch_users.each do |data|
+        fetch_all_api_users.each do |data|
           create_user(data)
         end
       end
