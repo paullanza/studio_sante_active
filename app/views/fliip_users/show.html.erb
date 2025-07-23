@@ -7,6 +7,7 @@
   <h2 class="mt-4">Attributes</h2>
   <table class="table table-bordered table-sm">
     <tbody>
+      <%= image_tag @fliip_user.user_image %>
       <% @fliip_user.attributes.each do |attr, value| %>
         <tr>
           <th class="text-capitalize"><%= attr.titleize %></th>
@@ -15,25 +16,6 @@
       <% end %>
     </tbody>
   </table>
-
-  <h2 class="mt-4">User Notes (<%= @fliip_user.fliip_user_notes.size %>)</h2>
-  <% if @fliip_user.fliip_user_notes.any? %>
-    <ul class="list-group mb-4">
-      <% @fliip_user.fliip_user_notes.each do |note| %>
-        <li class="list-group-item">
-          <small class="text-muted">
-            <%= note.created_date.strftime("%d/%m/%Y %H:%M") rescue note.created_date %>
-            by <%= note.creator_of_note_full_name %>
-          </small>
-          <div>
-            <%= simple_format(note.note_text.gsub('\\n', "\n")) %>
-          </div>
-        </li>
-      <% end %>
-    </ul>
-  <% else %>
-    <p class="text-muted">No user notes.</p>
-  <% end %>
 
   <%= link_to "← Back to list", root_path, class: "btn btn-secondary mt-3" %>
 </div>

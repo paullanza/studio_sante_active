@@ -1,16 +1,16 @@
 module FliipApi
   module UserSync
-    # FullUpdater handles a full sync of users from the Fliip API into our local database
-    class FullUpdater < Base
+    # UserImporter handles a full sync of users from the Fliip API into our local database
+    class UserImporter < Base
       # Entry point: builds a new instance, runs the sync, and returns a summary string
       def self.call
-        counts = new.update_all_users
-        "Sync complete: #{counts[0]} new users, #{counts[1]} updated users"
+        counts = new.create_or_update_all_users
+        "Sync complete: #{counts[0]} new users, #{counts[1]} updated users."
       end
 
       # Primary method: fetch data, compare with local, update or create records
       # Returns two integers: [number_of_new_users, number_of_updated_users]
-      def update_all_users
+      def create_or_update_all_users
         new_users = 0
         updated_users = 0
 
@@ -34,26 +34,22 @@ module FliipApi
             new_users += 1
           end
         end
-
+        # Return the number of new users and changed users as an array to display when called.
         [new_users, updated_users]
       end
 
       private
 
-      # Takes a local user and a hash of API data, assigns new values,
-      # saves only if any attribute has changed, and returns true if saved
-      def update_user(user, data)
-        # Prepare normalized attributes from the incoming data
-        attrs = user_attributes(data)
-        # Assign attributes without saving yet
-        user.assign_attributes(attrs)
-        # Only hit the database if there are actual changes
-        if user.changed?
-          user.save!
-          true
-        else
-          false
-        end
+      # Loads all FliipUser records from the database, keyed by remote_id
+      # This allows O(1) lookup when syncing large datasets
+      def load_local_users
+        FliipUser.all.index_by(&:remote_id)
+      end
+
+      # Delegates to the API client to fetch all users from Fliip's service
+      # Abstracted here to keep external HTTP logic out of the sync loop
+      def fetch_all_api_users
+        @api_client.fetch_all_users
       end
     end
   end

@@ -19,10 +19,7 @@ class CreateFliipUsers < ActiveRecord::Migration[7.1]
       t.string :user_zipcode
       t.string :user_language
       t.string :profile_step
-      t.string :sync_g_cal
       t.date :member_since
-      t.string :custom_field_value
-      t.string :custom_field_option
 
       t.timestamps
     end

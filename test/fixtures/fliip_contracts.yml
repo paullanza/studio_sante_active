@@ -1,0 +1,47 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  remote_contract_id: 
+  fliip_user: one
+  status: MyString
+  start_date: 2025-07-21
+  end_date: 2025-07-21
+  stop_date: 2025-07-21
+  resume_date: 2025-07-21
+  cancel_date: 2025-07-21
+  rebate: MyString
+  discount_name: MyString
+  main_user_contract: MyString
+  membership_name: MyString
+  plan_base_type: MyString
+  plan_type: MyString
+  plan_description: MyText
+  plan_classes: MyString
+  payment_terms: MyString
+  duration: MyString
+  billed_at_purchase: MyString
+  ledger_account: MyString
+  pack_class_used: MyString
+
+two:
+  remote_contract_id: 
+  fliip_user: two
+  status: MyString
+  start_date: 2025-07-21
+  end_date: 2025-07-21
+  stop_date: 2025-07-21
+  resume_date: 2025-07-21
+  cancel_date: 2025-07-21
+  rebate: MyString
+  discount_name: MyString
+  main_user_contract: MyString
+  membership_name: MyString
+  plan_base_type: MyString
+  plan_type: MyString
+  plan_description: MyText
+  plan_classes: MyString
+  payment_terms: MyString
+  duration: MyString
+  billed_at_purchase: MyString
+  ledger_account: MyString
+  pack_class_used: MyString
