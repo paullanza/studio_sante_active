@@ -7,7 +7,11 @@
   <h2 class="mt-4">Attributes</h2>
   <table class="table table-bordered table-sm">
     <tbody>
-      <%= image_tag @fliip_user.user_image %>
+      <tr>
+        <td colspan="2" class="text-center">
+          <%= image_tag @fliip_user.user_image if @fliip_user.user_image.present? %>
+        </td>
+      </tr>
       <% @fliip_user.attributes.each do |attr, value| %>
         <tr>
           <th class="text-capitalize"><%= attr.titleize %></th>
@@ -16,6 +20,69 @@
       <% end %>
     </tbody>
   </table>
+
+  <h2 class="mt-4">Contracts</h2>
+  <% if @fliip_user.fliip_contracts.any? %>
+    <div class="table-responsive">
+      <table class="table table-bordered table-sm">
+        <thead class="thead-light">
+          <tr>
+            <th>Contract #</th>
+            <th>Status</th>
+            <th>Main?</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Stop Date</th>
+            <th>Resume Date</th>
+            <th>Cancel Date</th>
+            <th>Membership Name</th>
+            <th>Plan Base Type</th>
+            <th>Plan Type</th>
+            <th>Plan Description</th>
+            <th>Plan Classes</th>
+            <th>Payment Terms</th>
+            <th>Duration</th>
+            <th>Billed at Purchase</th>
+            <th>Rebate</th>
+            <th>Discount Name</th>
+            <th>Ledger Account</th>
+            <th>Pack Class #</th>
+            <th>Pack Class Used</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @fliip_user.fliip_contracts.each do |contract| %>
+            <tr>
+              <td><%= contract.remote_contract_id %></td>
+              <td><%= contract.status.presence || "–" %></td>
+              <td><%= contract.main_user_contract ? "Yes" : "No" %></td>
+              <td><%= contract.start_date || "–" %></td>
+              <td><%= contract.end_date   || "–" %></td>
+              <td><%= contract.stop_date  || "–" %></td>
+              <td><%= contract.resume_date || "–" %></td>
+              <td><%= contract.cancel_date || "–" %></td>
+              <td><%= contract.membership_name.presence || "–" %></td>
+              <td><%= contract.plan_base_type.presence || "–" %></td>
+              <td><%= contract.plan_type.presence || "–" %></td>
+              <td><%= contract.plan_description.presence || "–" %></td>
+              <td><%= contract.plan_classes.presence || "–" %></td>
+              <td><%= contract.payment_terms.presence || "–" %></td>
+              <td><%= contract.duration.presence || "–" %></td>
+              <td><%= contract.billed_at_purchase || 0 %></td>
+              <td><%= contract.rebate.presence || "–" %></td>
+              <td><%= contract.discount_name.presence || "–" %></td>
+              <td><%= contract.ledger_account.presence || "–" %></td>
+              <td><%= contract.pack_class_num || 0 %></td>
+              <td><%= contract.pack_class_used || 0 %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="text-muted">No contracts found for this user.</p>
+  <% end %>
+
 
   <%= link_to "← Back to list", root_path, class: "btn btn-secondary mt-3" %>
 </div>

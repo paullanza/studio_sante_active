@@ -5,7 +5,7 @@ module FliipApi
     class Base
       # Initialize the API client and track the last synced remote_id
       def initialize
-        @api_client     = FliipApi::ApiClient.new
+        @api_client = FliipApi::ApiClient.new
         # Track the highest remote_id in the users table for potential incremental fetches
         @last_remote_id = FliipUser.maximum(:remote_id)
       end
@@ -14,8 +14,9 @@ module FliipApi
 
       # Create a new FliipUser record from API data
       def create_user(data)
-        FliipUser.create!(user_attributes(data))
-        # Suggestion: add Rails.logger.info "Created user #{data[:user_id]}" for debugging
+        user = FliipUser.create!(user_attributes(data))
+        sync_contracts_for(user)
+        user
       end
 
       # Build a permitted attributes hash for mass-assignment
@@ -51,11 +52,34 @@ module FliipApi
         # Assign attributes without saving yet
         user.assign_attributes(attrs)
         # Only hit the database if there are actual changes
+        saved = false
         if user.changed?
           user.save!
-          true
-        else
-          false
+          saved = true
+        end
+
+        sync_contracts_for(user)
+
+        saved
+      end
+
+      def sync_contracts_for(user)
+        # build a ContractSync helper tied to this user
+        contract_syncer = FliipApi::ContractSync::Base.new(user)
+
+        # 1) current contracts
+        @api_client.fetch_user_contracts(user.remote_id).each do |c_data|
+          contract_syncer.upsert_contract(c_data)
+        end
+
+        # 2) future contracts
+        @api_client.fetch_future_user_contracts(user.remote_id).each do |c_data|
+          contract_syncer.upsert_contract(c_data)
+        end
+
+        # 3) history contracts
+        @api_client.fetch_history_user_contracts(user.remote_id).each do |c_data|
+          contract_syncer.upsert_contract(c_data)
         end
       end
 

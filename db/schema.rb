@@ -35,6 +35,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_21_160951) do
     t.string "duration"
     t.string "billed_at_purchase"
     t.string "ledger_account"
+    t.string "pack_class_num"
     t.string "pack_class_used"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
