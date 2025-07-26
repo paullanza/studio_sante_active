@@ -73,5 +73,41 @@ module FliipApi
         []
       end
     end
+
+    # Fetches service data for a given user
+    def fetch_user_services(user_id)
+      response = self.class.get("/services/get/#{user_id}", headers: @headers)
+
+      if response.success?
+        response.parsed_response.map(&:deep_symbolize_keys!)
+      else
+        Rails.logger.error "API Error: #{response.code} - #{response.message}"
+        []
+      end
+    end
+
+    # Fetches service data for a given user
+    def fetch_future_user_services(user_id)
+      response = self.class.get("/services/get_future/#{user_id}", headers: @headers)
+
+      if response.success?
+        response.parsed_response.map(&:deep_symbolize_keys!)
+      else
+        Rails.logger.error "API Error: #{response.code} - #{response.message}"
+        []
+      end
+    end
+
+    # Fetches service data for a given user
+    def fetch_history_user_services(user_id)
+      response = self.class.get("/services/get_history/#{user_id}", headers: @headers)
+
+      if response.success?
+        response.parsed_response.map(&:deep_symbolize_keys!)
+      else
+        Rails.logger.error "API Error: #{response.code} - #{response.message}"
+        []
+      end
+    end
   end
 end

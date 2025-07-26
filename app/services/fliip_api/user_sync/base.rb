@@ -1,7 +1,7 @@
 module FliipApi
   module UserSync
-    # Base class for syncing users from the Fliip API
-    # Holds shared methods and setup for different sync strategies
+    # Base class for syncing users (and their contracts) from the Fliip API.
+    # Provides shared setup and core helpers for all sync strategies.
     class Base
       # Initialize the API client and track the last synced remote_id
       def initialize
@@ -10,13 +10,37 @@ module FliipApi
         @last_remote_id = FliipUser.maximum(:remote_id)
       end
 
+      def self.completion_message(counts)
+        plural_one = counts[0] != 1 ? 's' : ''
+        plural_two = counts[1] != 1 ? 's' : ''
+        "Sync complete: #{counts[0]} new user#{plural_one}, #{counts[1]} updated user#{plural_two}."
+      end
+
       private
 
-      # Create a new FliipUser record from API data
-      def create_user(data)
-        user = FliipUser.create!(user_attributes(data))
-        sync_contracts_for(user)
-        user
+      # Insert or update a user record based on its remote ID and associated user.
+      def upsert_user(data)
+        attrs = user_attributes(data)
+        user = FliipUser.find_or_initialize_by(remote_id: attrs[:remote_id])
+        is_new = user.new_record?
+
+        user.assign_attributes(attrs)
+        is_changed = !is_new && user.changed?
+
+        # Persist if it's new or changed
+        if is_new || is_changed
+          user.save!
+        end
+
+        # Delegate all contract and service syncing in two calls
+        FliipApi::UserSync::ContractSync.call(user)
+        FliipApi::UserSync::ServiceSync.call(user)
+
+        return "new" if is_new
+
+        return "updated" if is_changed
+
+        "unchanged"
       end
 
       # Build a permitted attributes hash for mass-assignment
@@ -44,28 +68,9 @@ module FliipApi
         }
       end
 
-      # Takes a local user and a hash of API data, assigns new values,
-      # saves only if any attribute has changed, and returns true if saved
-      def update_user(user, data)
-        # Prepare normalized attributes from the incoming data
-        attrs = user_attributes(data)
-        # Assign attributes without saving yet
-        user.assign_attributes(attrs)
-        # Only hit the database if there are actual changes
-        saved = false
-        if user.changed?
-          user.save!
-          saved = true
-        end
-
-        sync_contracts_for(user)
-
-        saved
-      end
-
       def sync_contracts_for(user)
         # build a ContractSync helper tied to this user
-        contract_syncer = FliipApi::ContractSync::Base.new(user)
+        contract_syncer = FliipApi::UserSync::ContractSync.new(user)
 
         # 1) current contracts
         @api_client.fetch_user_contracts(user.remote_id).each do |c_data|
@@ -88,6 +93,13 @@ module FliipApi
         return nil if value.blank?
 
         Date.parse(value) rescue nil
+      end
+
+      # Parse a datetime string into a DateTime object, nil if invalid or blank
+      def parse_datetime(value)
+        return nil if value.blank?
+
+        DateTime.parse(value) rescue nil
       end
     end
   end

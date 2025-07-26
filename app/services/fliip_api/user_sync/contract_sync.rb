@@ -1,19 +1,31 @@
 module FliipApi
-  module ContractSync
-    # Base class for syncing contracts from the Fliip API into our local database.
-    # Provides shared initialization, parsing helpers, and the core upsert logic.
-    class Base
+  module UserSync
+    class ContractSync < Base
+      # Base class for syncing contracts from the Fliip API into our local database.
+      # Provides shared initialization, parsing helpers, and the core upsert logic.
       def initialize(user)
         @user = user
         @api_client = FliipApi::ApiClient.new
       end
 
+      def self.call(*args, &block)
+        new(*args, &block).call
+      end
+
+      # Fetches current, future, and historical contracts, and upserts each one
+      def call
+        sync_current
+        sync_future
+        sync_history
+      end
+
+      private
+
       # Insert or update a contract record based on its remote ID and associated user.
       def upsert_contract(data)
-        attrs    = contract_attributes(data)
+        attrs = contract_attributes(data)
         contract = FliipContract.find_or_initialize_by(
-          remote_contract_id: attrs[:remote_contract_id],
-          fliip_user_id:      attrs[:fliip_user_id]
+          remote_contract_id: attrs[:remote_contract_id]
         )
 
         # Assign all fields and save only if anything changed (new or updated)
@@ -22,11 +34,25 @@ module FliipApi
         contract
       end
 
-      private
+      # 1) Sync current active contracts
+      def sync_current
+        @api_client.fetch_user_contracts(@user.remote_id).each do |data|
+          upsert_contract(data)
+        end
+      end
 
-      # Helper to parse API dates
-      def parse_date(value)
-        Date.parse(value) rescue nil
+      # 2) Sync future contracts
+      def sync_future
+        @api_client.fetch_future_user_contracts(@user.remote_id).each do |data|
+          upsert_contract(data)
+        end
+      end
+
+      # 3) Sync historical contracts
+      def sync_history
+        @api_client.fetch_history_user_contracts(@user.remote_id).each do |data|
+          upsert_contract(data)
+        end
       end
 
       # Build a normalized hash of attributes for mass-assignment.

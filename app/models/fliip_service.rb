@@ -1,0 +1,2 @@
+class FliipService < ApplicationRecord
+end

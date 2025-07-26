@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_07_21_160951) do
+ActiveRecord::Schema[7.1].define(version: 2025_07_26_194453) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -43,6 +43,35 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_21_160951) do
     t.index ["remote_contract_id"], name: "index_fliip_contracts_on_remote_contract_id"
   end
 
+  create_table "fliip_services", force: :cascade do |t|
+    t.bigint "remote_purchase_id"
+    t.bigint "fliip_user_id", null: false
+    t.string "purchase_status"
+    t.date "start_date"
+    t.date "expire_date"
+    t.datetime "purchase_date"
+    t.date "stop_date"
+    t.date "cancel_date"
+    t.string "rebate"
+    t.boolean "stop_payments"
+    t.string "discount_name"
+    t.integer "service_id"
+    t.string "service_name"
+    t.string "service_type"
+    t.string "service_category_name"
+    t.string "coach"
+    t.string "payment_terms"
+    t.string "duration"
+    t.string "online_enabled"
+    t.string "service_description"
+    t.integer "billed_at_purchase"
+    t.string "ledger_account"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fliip_user_id"], name: "index_fliip_services_on_fliip_user_id"
+    t.index ["remote_purchase_id"], name: "index_fliip_services_on_remote_purchase_id"
+  end
+
   create_table "fliip_users", force: :cascade do |t|
     t.bigint "remote_id"
     t.string "custom_id"
@@ -69,4 +98,5 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_21_160951) do
   end
 
   add_foreign_key "fliip_contracts", "fliip_users"
+  add_foreign_key "fliip_services", "fliip_users"
 end

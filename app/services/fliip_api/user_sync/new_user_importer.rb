@@ -4,22 +4,22 @@ module FliipApi
     class NewUserImporter < Base
       # Entry point: calls create_new_users and returns a message summarizing how many were added
       def self.call
-        new_user_count = new.create_new_users
-        "Added #{new_user_count} new user#{new_user_count == 1 ? '' : 's'}."
+        counts = new.upsert_new_users
+        completion_message(counts)
       end
 
-      # Iterates through newly fetched users and creates records in the DB.
-      def create_new_users
-        new_user_count = 0
-        # Fetch only users whose remote_id exceeds the last synced ID
-        new_users = fetch_new_api_users
+      def upsert_new_users
+        new_users = 0
+        updated_users = 0
 
-        new_users.each do |data|
-          create_user(data)    # Persist each new user
-          new_user_count += 1  # Increment the counter
+        fetch_new_api_users.each do |data|
+          case upsert_user(data)
+          when "new" then new_users += 1
+          when "updated" then updated_users += 1
+          end
         end
 
-        new_user_count
+        [new_users, updated_users]
       end
 
       private
