@@ -2,6 +2,9 @@ source "https://rubygems.org"
 
 ruby "3.3.5"
 
+# Devise gem for user authentication
+gem "devise"
+
 # Solid Queue for background jobs
 gem "solid_queue"
 

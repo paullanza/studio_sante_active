@@ -10,9 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_07_26_194453) do
+ActiveRecord::Schema[7.1].define(version: 2025_07_28_154923) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "access_codes", force: :cascade do |t|
+    t.string "code"
+    t.bigint "user_id", null: false
+    t.datetime "used_at"
+    t.boolean "active"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_access_codes_on_user_id"
+  end
 
   create_table "fliip_contracts", force: :cascade do |t|
     t.bigint "remote_contract_id"
@@ -97,6 +107,25 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_26_194453) do
     t.index ["remote_id"], name: "index_fliip_users_on_remote_id"
   end
 
+  create_table "users", force: :cascade do |t|
+    t.string "email", default: "", null: false
+    t.string "encrypted_password", default: "", null: false
+    t.string "reset_password_token"
+    t.datetime "reset_password_sent_at"
+    t.datetime "remember_created_at"
+    t.string "first_name"
+    t.string "last_name"
+    t.string "phone"
+    t.string "address"
+    t.date "birthday"
+    t.integer "role"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+  end
+
+  add_foreign_key "access_codes", "users"
   add_foreign_key "fliip_contracts", "fliip_users"
   add_foreign_key "fliip_services", "fliip_users"
 end

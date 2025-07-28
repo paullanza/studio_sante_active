@@ -6,6 +6,7 @@
         <th>Local ID</th>
         <th>Remote ID</th>
         <th>Name</th>
+        <th>Member Type</th>
         <th>Email</th>
         <th>Status</th>
         <th>Contracts</th>
@@ -22,8 +23,9 @@
                         fliip_user_path(user),
                         class: "btn btn-sm btn-primary" %>
           </td>
-          <td><%= user.user_email.presence || "–" %></td>
-          <td><%= user.user_status.presence || "–" %></td>
+          <td><%= user.member_type || "–" %></td>
+          <td><%= user.user_email || "–" %></td>
+          <td><%= user.user_status || "–" %></td>
           <td><%= user.fliip_contracts.count %></td>
           <td><%= user.fliip_services.count %></td>
         </tr>
