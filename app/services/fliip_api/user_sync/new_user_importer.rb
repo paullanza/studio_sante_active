@@ -4,11 +4,12 @@ module FliipApi
     class NewUserImporter < Base
       # Entry point: calls create_new_users and returns a message summarizing how many were added
       def self.call
-        counts = new.upsert_new_users
-        completion_message(counts)
+        info = new.upsert_new_users
+        completion_message(info)
       end
 
       def upsert_new_users
+        start_time = Time.now
         new_users = 0
         updated_users = 0
 
@@ -18,8 +19,14 @@ module FliipApi
           when "updated" then updated_users += 1
           end
         end
+        end_time = Time.now
 
-        [new_users, updated_users]
+        {
+          new_users: new_users,
+          updated_users: updated_users,
+          start_time: start_time,
+          end_time: end_time
+        }
       end
 
       private

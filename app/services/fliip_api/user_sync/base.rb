@@ -10,10 +10,13 @@ module FliipApi
         @last_remote_id = FliipUser.maximum(:remote_id)
       end
 
-      def self.completion_message(counts)
-        plural_one = counts[0] != 1 ? 's' : ''
-        plural_two = counts[1] != 1 ? 's' : ''
-        "Sync complete: #{counts[0]} new user#{plural_one}, #{counts[1]} updated user#{plural_two}."
+      def self.completion_message(info)
+        seconds = (info[:end_time] - info[:start_time])
+        elapsed_time = Time.at(seconds).utc.strftime("%-H hours, %-M minutes, %-S seconds")
+        plural_one = info[:new_users] != 1 ? 'users' : 'user'
+        plural_two = info[:updated_users] != 1 ? 'users' : 'user'
+        puts "Sync complete: Elapsed time: #{elapsed_time} "
+        puts "#{info[:new_users]} new #{plural_one}, #{info[:updated_users]} updated #{plural_two}."
       end
 
       private

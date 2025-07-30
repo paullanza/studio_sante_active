@@ -10,19 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_07_28_154923) do
+ActiveRecord::Schema[7.1].define(version: 2025_07_30_142334) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-
-  create_table "access_codes", force: :cascade do |t|
-    t.string "code"
-    t.bigint "user_id", null: false
-    t.datetime "used_at"
-    t.boolean "active"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["user_id"], name: "index_access_codes_on_user_id"
-  end
 
   create_table "fliip_contracts", force: :cascade do |t|
     t.bigint "remote_contract_id"
@@ -107,6 +97,17 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_28_154923) do
     t.index ["remote_id"], name: "index_fliip_users_on_remote_id"
   end
 
+  create_table "signup_codes", force: :cascade do |t|
+    t.string "code", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "expiry_date", null: false
+    t.bigint "used_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_signup_codes_on_code", unique: true
+    t.index ["used_by_id"], name: "index_signup_codes_on_used_by_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -118,14 +119,15 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_28_154923) do
     t.string "phone"
     t.string "address"
     t.date "birthday"
-    t.integer "role"
+    t.integer "role", default: 0, null: false
+    t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
-  add_foreign_key "access_codes", "users"
   add_foreign_key "fliip_contracts", "fliip_users"
   add_foreign_key "fliip_services", "fliip_users"
+  add_foreign_key "signup_codes", "users", column: "used_by_id"
 end
