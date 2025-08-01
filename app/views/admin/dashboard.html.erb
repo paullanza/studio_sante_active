@@ -1,0 +1,99 @@
+<div class="container mt-4">
+  <h1 class="mb-4">Admin Dashboard</h1>
+
+  <div class="mb-4">
+    <%= link_to "Manage Service Session Limits", admin_services_path, class: "btn btn-outline-dark" %>
+  </div>
+
+  <!-- Users Section -->
+  <section class="mb-5">
+    <h2>Users</h2>
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @users.each do |user| %>
+          <tr>
+            <td><%= link_to "#{user.first_name} #{user.last_name}", user_path(user), class: "text-decoration-none" %></td>
+            <td><%= user.role.titleize %></td>
+            <td>
+              <span class="badge <%= user.active? ? 'bg-success' : 'bg-secondary' %>">
+                <%= user.active? ? 'Active' : 'Inactive' %>
+              </span>
+            </td>
+            <td class="text-end">
+              <% unless user.admin? %>
+                <div class="d-flex justify-content-end gap-2">
+                  <%= button_to "Make #{user.employee? ? 'Manager' : 'Employee'}",
+                                toggle_role_user_path(user),
+                                method: :patch,
+                                class: "btn btn-sm btn-outline-primary" %>
+
+                  <%= button_to(user.active? ? 'Deactivate' : 'Reactivate',
+                                user.active? ? deactivate_user_path(user) : activate_user_path(user),
+                                method: :patch,
+                                class: "btn btn-sm #{user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
+                </div>
+              <% else %>
+                <em>Admin</em>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Signup Codes Section -->
+  <section>
+    <h2>Signup Codes</h2>
+    <%= button_to "Generate New Code",
+                  admin_signup_codes_path,
+                  method: :post,
+                  class: "btn btn-primary mb-3" %>
+
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Expires At</th>
+          <th>Used By</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @signup_codes.each do |code| %>
+          <tr>
+            <td><%= code.code %></td>
+            <td><%= code.usable? ? code.expiry_date.strftime("%d/%m/%Y") : "—" %></td>
+            <td>
+              <% if code.used? %>
+                <%= "#{code.used_by&.first_name} #{code.used_by&.last_name}" %>
+              <% elsif code.deactivated? %>
+                Deactivated
+              <% else %>
+                —
+              <% end %>
+            </td>
+            <td class="text-end">
+              <% if code.usable? %>
+                <%= button_to "Deactivate",
+                              deactivate_admin_signup_code_path(code),
+                              method: :patch,
+                              class: "btn btn-sm btn-outline-danger" %>
+              <% else %>
+                <em>—</em>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+</div>

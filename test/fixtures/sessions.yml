@@ -1,0 +1,21 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  fliip_user: one
+  fliip_service: one
+  date: 2025-08-01
+  time: 2025-08-01 11:36:21
+  present: false
+  note: MyText
+  confirmed: false
+
+two:
+  user: two
+  fliip_user: two
+  fliip_service: two
+  date: 2025-08-01
+  time: 2025-08-01 11:36:21
+  present: false
+  note: MyText
+  confirmed: false

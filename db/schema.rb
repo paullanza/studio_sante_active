@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_07_30_142334) do
+ActiveRecord::Schema[7.1].define(version: 2025_08_01_160001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -97,6 +97,31 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_30_142334) do
     t.index ["remote_id"], name: "index_fliip_users_on_remote_id"
   end
 
+  create_table "service_definitions", force: :cascade do |t|
+    t.integer "service_id"
+    t.string "service_name"
+    t.integer "paid_sessions"
+    t.integer "free_sessions"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "sessions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "fliip_user_id", null: false
+    t.bigint "fliip_service_id", null: false
+    t.date "date"
+    t.time "time"
+    t.boolean "present"
+    t.text "note"
+    t.boolean "confirmed"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fliip_service_id"], name: "index_sessions_on_fliip_service_id"
+    t.index ["fliip_user_id"], name: "index_sessions_on_fliip_user_id"
+    t.index ["user_id"], name: "index_sessions_on_user_id"
+  end
+
   create_table "signup_codes", force: :cascade do |t|
     t.string "code", null: false
     t.integer "status", default: 0, null: false
@@ -129,5 +154,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_30_142334) do
 
   add_foreign_key "fliip_contracts", "fliip_users"
   add_foreign_key "fliip_services", "fliip_users"
+  add_foreign_key "sessions", "fliip_services"
+  add_foreign_key "sessions", "fliip_users"
+  add_foreign_key "sessions", "users"
   add_foreign_key "signup_codes", "users", column: "used_by_id"
 end

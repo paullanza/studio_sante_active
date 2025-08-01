@@ -48,6 +48,10 @@ class User < ApplicationRecord
     update!(active: false)
   end
 
+  def full_name
+    "#{first_name} #{last_name}"
+  end
+
   private
 
   def validate_signup_code
@@ -66,6 +70,6 @@ class User < ApplicationRecord
     code = SignupCode.find_by(code: signup_code_token)
     return unless code&.usable?
 
-    code.used!
+    code.update!(status: :used, used_by: self)
   end
 end

@@ -1,0 +1,38 @@
+<div class="container mt-4">
+  <h1><%= @user.first_name %> <%= @user.last_name %></h1>
+
+  <ul class="list-group">
+    <li class="list-group-item"><strong>Email:</strong> <%= @user.email %></li>
+    <li class="list-group-item"><strong>Phone:</strong> <%= @user.phone %></li>
+    <li class="list-group-item"><strong>Birthday:</strong> <%= @user.birthday.strftime("%d/%m/%Y") %></li>
+    <li class="list-group-item"><strong>Role:</strong> <%= @user.role.titleize %></li>
+    <li class="list-group-item"><strong>Status:</strong> <%= @user.active? ? "Active" : "Inactive" %></li>
+    <li class="list-group-item"><strong>Address:</strong> <%= @user.address %></li>
+  </ul>
+
+  <% unless @user.admin? %>
+    <% if current_user.admin? %>
+      <div class="mt-4 d-flex gap-2">
+        <%= button_to "Make #{@user.employee? ? 'Manager' : 'Employee'}",
+                      toggle_role_user_path(@user),
+                      method: :patch,
+                      class: "btn btn-outline-primary" %>
+
+        <%= button_to(@user.active? ? "Deactivate" : "Reactivate",
+                      @user.active? ? deactivate_user_path(@user) : activate_user_path(@user),
+                      method: :patch,
+                      class: "btn #{@user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
+      </div>
+
+    <% elsif current_user.manager? && @user.employee? %>
+      <div class="mt-4">
+        <%= button_to(@user.active? ? "Deactivate" : "Reactivate",
+                      @user.active? ? deactivate_user_path(@user) : activate_user_path(@user),
+                      method: :patch,
+                      class: "btn #{@user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
+      </div>
+    <% end %>
+  <% end %>
+
+  <%= link_to "Back", admin_dashboard_path, class: "btn btn-secondary mt-3" %>
+</div>

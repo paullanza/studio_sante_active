@@ -1,0 +1,2 @@
+class ServiceDefinition < ApplicationRecord
+end
