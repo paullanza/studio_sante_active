@@ -17,6 +17,7 @@ module FliipApi
         plural_two = info[:updated_users] != 1 ? 'users' : 'user'
         puts "Sync complete: Elapsed time: #{elapsed_time} "
         puts "#{info[:new_users]} new #{plural_one}, #{info[:updated_users]} updated #{plural_two}."
+        ServiceDefinition.create_missing_definitions!
       end
 
       private
@@ -69,26 +70,6 @@ module FliipApi
           profile_step: data[:profile_step],
           member_since: parse_date(data[:member_since])
         }
-      end
-
-      def sync_contracts_for(user)
-        # build a ContractSync helper tied to this user
-        contract_syncer = FliipApi::UserSync::ContractSync.new(user)
-
-        # 1) current contracts
-        @api_client.fetch_user_contracts(user.remote_id).each do |c_data|
-          contract_syncer.upsert_contract(c_data)
-        end
-
-        # 2) future contracts
-        @api_client.fetch_future_user_contracts(user.remote_id).each do |c_data|
-          contract_syncer.upsert_contract(c_data)
-        end
-
-        # 3) history contracts
-        @api_client.fetch_history_user_contracts(user.remote_id).each do |c_data|
-          contract_syncer.upsert_contract(c_data)
-        end
       end
 
       # Parse a date string into a Date object, nil if invalid or blank

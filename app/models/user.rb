@@ -5,6 +5,7 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable
 
   has_one :signup_code, foreign_key: "used_by_id", dependent: :nullify
+  has_many :sessions
 
 
   # Virtual attribute for the access code entered at signup

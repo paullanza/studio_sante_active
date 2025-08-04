@@ -2,8 +2,13 @@
   <h1>
     Fliip User
     <small class="text-muted">#<%= @fliip_user.remote_id %></small>
+    <%= button_to "⟳ Refresh from API",
+                  refresh_fliip_user_path(@fliip_user.remote_id),
+                  method: :post,
+                  form_class: "d-inline",
+                  class: "btn btn-sm btn-outline-secondary ms-2",
+                  data: { turbo: false } %>
   </h1>
-
   <h2 class="mt-4">Attributes</h2>
   <table class="table table-bordered table-sm">
     <tbody>

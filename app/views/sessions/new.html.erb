@@ -1,0 +1,80 @@
+<div class="container mt-4" data-controller="filter-services">
+  <h1 class="mb-4">New Session</h1>
+
+  <%= form_with(model: @session, local: true) do |f| %>
+    <div class="mb-3 d-flex gap-3 align-items-end flex-wrap">
+      <div class="flex-fill">
+        <%= f.label :fliip_user_id, "Client" %>
+        <%= f.select :fliip_user_id,
+                     options_from_collection_for_select(@fliip_users, :id, ->(u) { "#{u.user_lastname.strip}, #{u.user_firstname.strip}" }),
+                     {},
+                     class: "form-select",
+                     data: {
+                       filter_services_target: "userSelect",
+                       action: "change->filter-services#filter"
+                     } %>
+      </div>
+
+      <div class="flex-fill">
+        <%= f.label :fliip_service_id, "Service" %>
+        <select name="session[fliip_service_id]" class="form-select" data-filter-services-target="serviceSelect">
+          <% @fliip_services.each do |service| %>
+            <option value="<%= service.id %>" data-user-id="<%= service.fliip_user_id %>">
+              <%= service.service_name %> (ID: <%= service.id %>)
+            </option>
+          <% end %>
+        </select>
+      </div>
+
+      <div class="form-check mt-4">
+        <%= f.check_box :present, class: "form-check-input" %>
+        <%= f.label :present, "Présent", class: "form-check-label" %>
+      </div>
+    </div>
+
+    <div class="mb-3 d-flex gap-3">
+      <div class="flex-fill">
+        <%= f.label :date %>
+        <%= f.date_field :date, value: Date.today, class: "form-control" %>
+      </div>
+
+      <div class="flex-fill">
+        <%= f.label :time %>
+        <%= f.select :time,
+                    options_for_select(
+                      (6..20).flat_map { |h| ["%02d:00" % h, "%02d:30" % h] },
+                      Time.current.strftime("%H:%M")
+                    ),
+                    {},
+                    class: "form-select" %>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <%= f.label :note %>
+      <%= f.text_area :note, class: "form-control", rows: 3 %>
+    </div>
+
+    <%= f.submit "Create Session", class: "btn btn-primary" %>
+  <% end %>
+
+  <hr>
+  <h2>Unconfirmed Sessions</h2>
+
+  <% if current_user.sessions.unconfirmed.any? %>
+    <ul class="list-group">
+      <% current_user.sessions.unconfirmed.each do |session| %>
+        <li class="list-group-item">
+          <strong><%= session.fliip_user.user_firstname %> <%= session.fliip_user.user_lastname %></strong> —
+          <%= session.fliip_service.service_name %> —
+          <%= session.date.strftime("%d/%m/%Y") %> at <%= session.time.strftime("%H:%M") %>
+          <% if session.note.present? %><br><em>Note:</em> <%= session.note %><% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="text-muted">No unconfirmed sessions.</p>
+  <% end %>
+
+  <div id="session-stats" class="mt-4"></div>
+</div>

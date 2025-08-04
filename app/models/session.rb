@@ -8,4 +8,7 @@ class Session < ApplicationRecord
     scope: [:fliip_service_id, :date, :time],
     message: "already has a session at this time with this service"
   }
+
+  scope :unconfirmed, -> { where(confirmed: false) }
+  scope :confirmed, -> { where(confirmed: true) }
 end

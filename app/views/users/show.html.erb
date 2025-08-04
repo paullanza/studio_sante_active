@@ -34,5 +34,18 @@
     <% end %>
   <% end %>
 
+  <% if @clients.any? %>
+    <div class="mt-5">
+      <h2>Clients with Sessions by This User</h2>
+      <ul class="list-group">
+        <% @clients.each do |client| %>
+          <li class="list-group-item">
+            <%= link_to "#{client.user_lastname.strip}, #{client.user_firstname.strip}", fliip_user_path(client), class: "text-decoration-none" %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
   <%= link_to "Back", admin_dashboard_path, class: "btn btn-secondary mt-3" %>
 </div>

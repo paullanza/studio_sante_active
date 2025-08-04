@@ -29,6 +29,19 @@ class SignupCode < ApplicationRecord
     self.status = :used
   end
 
+  def self.expire_old_codes!
+    active.where("expiry_date < ?", Time.current).find_each do |code|
+      code.update!(status: :expired)
+    end
+  end
+
+  def safely_deactivate!
+    return false unless active? && expiry_date.future?
+
+    update!(status: :deactivated)
+    true
+  end
+
   private
 
   def generate_code

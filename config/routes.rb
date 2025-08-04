@@ -7,18 +7,24 @@ Rails.application.routes.draw do
 
   # Public routes
   resources :fliip_users, only: [:show]
+  post "fliip_users/:remote_id/refresh", to: "fliip_users#refresh", as: :refresh_fliip_user
+
 
   # Admin dashboard and features (flat controller)
   get   "admin/dashboard",                to: "admin#dashboard",              as: :admin_dashboard
 
   # Service session definitions
   get   "admin/services",                 to: "admin#services",               as: :admin_services
-  post  "admin/services",                 to: "admin#create_service",         as: :create_admin_service
   patch "admin/services/:id",            to: "admin#update_service",         as: :update_admin_service
 
   # Signup codes
   post  "admin/signup_codes",            to: "admin#create_signup_code",     as: :admin_signup_codes
   patch "admin/signup_codes/:id/deactivate", to: "admin#deactivate_signup_code", as: :deactivate_admin_signup_code
+
+  # Confirmation of sessions routes
+  get  "admin/unconfirmed_sessions", to: "admin#unconfirmed_sessions", as: :admin_unconfirmed_sessions
+  patch "admin/confirm_sessions",     to: "admin#confirm_sessions",     as: :admin_confirm_sessions
+
 
   # User profiles and admin/mod actions
   resources :users, only: [:show] do
@@ -28,6 +34,8 @@ Rails.application.routes.draw do
       patch :deactivate
     end
   end
+
+  resources :sessions, only: [:new, :create]
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

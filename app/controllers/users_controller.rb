@@ -3,7 +3,10 @@ class UsersController < ApplicationController
   before_action :set_user, only: [:show, :toggle_role, :activate, :deactivate]
 
   def show
-    # Pundit-style authorization to be added later
+    @clients = FliipUser.joins(:sessions)
+                              .where(sessions: { user_id: @user.id })
+                              .distinct
+                              .order(:user_lastname, :user_firstname)
   end
 
   def toggle_role

@@ -12,29 +12,16 @@
       </tr>
     </thead>
     <tbody>
-      <% @known_services.each do |service| %>
-        <% defn = @service_definitions[service.service_id] %>
+      <% @services.each_value do |defn| %>
         <tr>
-          <td><%= service.service_id %></td>
-          <td><%= service.service_name %></td>
-
-          <% if defn.present? %>
-            <%= form_with url: update_admin_service_path(defn), method: :patch, class: "d-flex", local: true do |f| %>
-              <td><%= f.number_field :paid_sessions, value: defn.paid_sessions, class: "form-control form-control-sm" %></td>
-              <td><%= f.number_field :free_sessions, value: defn.free_sessions, class: "form-control form-control-sm" %></td>
-              <td class="text-end">
-                <%= f.submit "Update", class: "btn btn-sm btn-outline-primary" %>
-              </td>
-            <% end %>
-          <% else %>
-            <%= form_with url: admin_services_path, method: :post, class: "d-flex", local: true do |f| %>
-              <%= hidden_field_tag :service_id, service.service_id %>
-              <td><%= number_field_tag :paid_sessions, 0, class: "form-control form-control-sm" %></td>
-              <td><%= number_field_tag :free_sessions, 0, class: "form-control form-control-sm" %></td>
-              <td class="text-end">
-                <%= submit_tag "Add", class: "btn btn-sm btn-outline-success" %>
-              </td>
-            <% end %>
+          <td><%= defn.service_id %></td>
+          <td><%= defn.service_name %></td>
+          <%= form_with url: update_admin_service_path(defn), method: :patch, class: "d-flex", local: true do |f| %>
+            <td><%= f.number_field :paid_sessions, value: defn.paid_sessions, class: "form-control form-control-sm" %></td>
+            <td><%= f.number_field :free_sessions, value: defn.free_sessions, class: "form-control form-control-sm" %></td>
+            <td class="text-end">
+              <%= f.submit "Update", class: "btn btn-sm btn-outline-primary" %>
+            </td>
           <% end %>
         </tr>
       <% end %>
