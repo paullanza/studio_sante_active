@@ -24,7 +24,7 @@ class AdminController < ApplicationController
   end
 
   def services
-    @services = ServiceDefinition.all.index_by(&:service_id)
+    @services = ServiceDefinition.order(:service_id).index_by(&:service_id)
   end
 
   def update_service

@@ -3,30 +3,37 @@ class SessionsController < ApplicationController
 
   def new
     @session = Session.new
-    service_user_ids = FliipService.distinct.pluck(:fliip_user_id)
-
-    @fliip_users = FliipUser
-      .where(id: service_user_ids)
-      .sort_by { |u| I18n.transliterate("#{u.user_lastname.strip} #{u.user_firstname.strip}").downcase }
-
-    @fliip_services = FliipService.order(:service_name)
+    load_fliip_users_and_services
   end
 
   def create
     @session = Session.new(session_params)
     @session.user = current_user
     @session.confirmed = false
+    @session.present = params[:session][:present] == "1"
 
     if @session.save
       redirect_to root_path, notice: "Session created successfully."
     else
-      @fliip_users = FliipUser.order(:first_name, :last_name)
+      load_fliip_users_and_services
       flash.now[:alert] = "There was a problem creating the session."
       render :new
     end
   end
 
   private
+
+  def load_fliip_users_and_services
+    service_user_ids = FliipService.distinct.pluck(:fliip_user_id)
+
+    @fliip_users = FliipUser
+      .where(id: service_user_ids)
+      .sort_by do |u|
+        I18n.transliterate("#{u.user_lastname.strip} #{u.user_firstname.strip}").downcase
+      end
+
+    @fliip_services = FliipService.order(:service_name)
+  end
 
   def session_params
     params.require(:session).permit(
@@ -35,7 +42,8 @@ class SessionsController < ApplicationController
       :date,
       :time,
       :present,
-      :note
+      :note,
+      :duration
     )
   end
 end

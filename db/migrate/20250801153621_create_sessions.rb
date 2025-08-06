@@ -9,6 +9,8 @@ class CreateSessions < ActiveRecord::Migration[7.1]
       t.boolean :present
       t.text :note
       t.boolean :confirmed
+      t.string :session_type, null: false, default: "paid"
+      t.float :duration, null: false, default: 1
 
       t.timestamps
     end

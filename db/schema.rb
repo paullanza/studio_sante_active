@@ -115,6 +115,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_01_160001) do
     t.boolean "present"
     t.text "note"
     t.boolean "confirmed"
+    t.string "session_type", default: "paid", null: false
+    t.float "duration", default: 1.0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["fliip_service_id"], name: "index_sessions_on_fliip_service_id"

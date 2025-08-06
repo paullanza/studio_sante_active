@@ -20,7 +20,7 @@
         <select name="session[fliip_service_id]" class="form-select" data-filter-services-target="serviceSelect">
           <% @fliip_services.each do |service| %>
             <option value="<%= service.id %>" data-user-id="<%= service.fliip_user_id %>">
-              <%= service.service_name %> (ID: <%= service.id %>)
+              <%= service.service_name %> (ID: <%= service.id %>) (Status: <%= service.purchase_status %>)
             </option>
           <% end %>
         </select>
@@ -51,6 +51,14 @@
     </div>
 
     <div class="mb-3">
+      <%= f.label :duration, "Durée" %>
+      <%= f.select :duration,
+                   options_for_select([["1 heure", 1.0], ["30 minutes", 0.5]], selected: 1.0),
+                   {},
+                   class: "form-select" %>
+    </div>
+
+    <div class="mb-3">
       <%= f.label :note %>
       <%= f.text_area :note, class: "form-control", rows: 3 %>
     </div>
@@ -62,16 +70,34 @@
   <h2>Unconfirmed Sessions</h2>
 
   <% if current_user.sessions.unconfirmed.any? %>
-    <ul class="list-group">
-      <% current_user.sessions.unconfirmed.each do |session| %>
-        <li class="list-group-item">
-          <strong><%= session.fliip_user.user_firstname %> <%= session.fliip_user.user_lastname %></strong> —
-          <%= session.fliip_service.service_name %> —
-          <%= session.date.strftime("%d/%m/%Y") %> at <%= session.time.strftime("%H:%M") %>
-          <% if session.note.present? %><br><em>Note:</em> <%= session.note %><% end %>
-        </li>
-      <% end %>
-    </ul>
+    <table class="table table-bordered table-striped mt-3">
+      <thead class="table-light">
+        <tr>
+          <th>Client</th>
+          <th>Service</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Duration</th>
+          <th>Présence</th>
+          <th>Type</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% current_user.sessions.unconfirmed.each do |session| %>
+          <tr>
+            <td><%= session.fliip_user.user_firstname %> <%= session.fliip_user.user_lastname %></td>
+            <td><%= session.fliip_service.service_name %></td>
+            <td><%= session.date.strftime("%d/%m/%Y") %></td>
+            <td><%= session.time.strftime("%H:%M") %></td>
+            <td><%= session.duration_display %></td>
+            <td><%= session.present? ? "Présent·e" : "Absent·e" %></td>
+            <td><%= session.session_type.capitalize %></td>
+            <td><%= session.note.presence || "—" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
   <% else %>
     <p class="text-muted">No unconfirmed sessions.</p>
   <% end %>
