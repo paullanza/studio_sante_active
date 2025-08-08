@@ -11,9 +11,9 @@ class Session < ApplicationRecord
   validate :service_is_active, on: :create
 
   def service_is_active
-    errors.add(:base, "The service has ended.") if date > fliip_service.expire_date
+    errors.add(:base, "The service has ended.") if date > fliip_service.expire_date.next_month
 
-    errors.add(:base, "The service has not started.") if date < fliip_service.start_date
+    errors.add(:base, "The service has not started.") if date < fliip_service.start_date.last_month
   end
 
   scope :unconfirmed, -> { where(confirmed: false) }

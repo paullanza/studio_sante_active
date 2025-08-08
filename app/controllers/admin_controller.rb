@@ -1,4 +1,5 @@
 class AdminController < ApplicationController
+  require "csv"
   before_action :authenticate_user!
   before_action :ensure_admin!
 
@@ -48,7 +49,88 @@ class AdminController < ApplicationController
                 notice: "#{confirmed} session#{'s' unless confirmed == 1} confirmed."
   end
 
+  def client_services
+    services = FliipService
+      .includes(:fliip_user, :service_definition)
+      .order(:fliip_user_id, :service_name)
+
+    service_ids = services.map(&:id)
+
+    # Sessions usage (sum of duration) by service + type
+    session_sums = Session
+      .where(fliip_service_id: service_ids)
+      .group(:fliip_service_id, :session_type)
+      .sum(:duration) # => { [id,"paid"]=>7.5, [id,"free"]=>2.0 }
+
+    # Optional: ledger adjustments if present
+    adj_sums =
+      if defined?(UsageAdjustment)
+        UsageAdjustment
+          .where(fliip_service_id: service_ids)
+          .group(:fliip_service_id, :kind)
+          .sum(:amount) # => { [id,"paid"]=>1.0, [id,"free"]=>0.5 }
+      else
+        {}
+      end
+
+    headers = %w[
+      client_id
+      client_remote_id
+      client_name
+      service_id
+      service_remote_purchase_id
+      service_name
+      purchase_status
+      start_date
+      expire_date
+      paid_used
+      paid_included
+      free_used
+      free_included
+    ]
+
+    csv_str = CSV.generate(headers: true) do |csv|
+      csv << headers
+
+      services.each do |svc|
+        user = svc.fliip_user
+        defn = svc.service_definition
+
+        paid_used =
+          session_sums.fetch([svc.id, "paid"], 0.0).to_f +
+          adj_sums.fetch([svc.id, "paid"], 0.0).to_f
+
+        free_used =
+          session_sums.fetch([svc.id, "free"], 0.0).to_f +
+          adj_sums.fetch([svc.id, "free"], 0.0).to_f
+
+        csv << [
+          user&.id,
+          user&.remote_id,
+          [user&.user_firstname, user&.user_lastname].compact.join(" "),
+          svc.id,
+          svc.remote_purchase_id,
+          svc.service_name,
+          svc.purchase_status, # A/I/P/C/S
+          fmt_date(svc.start_date),
+          fmt_date(svc.expire_date),
+          paid_used,
+          defn&.paid_sessions,
+          free_used,
+          defn&.free_sessions
+        ]
+      end
+    end
+
+    filename = "clients_services_#{Time.current.strftime('%Y%m%d-%H%M%S')}.csv"
+    send_data csv_str, filename:, type: "text/csv"
+  end
+
   private
+
+  def fmt_date(d)
+    d.present? ? d.strftime("%d/%m/%Y") : nil
+  end
 
   def ensure_admin!
     redirect_to root_path, alert: "Not authorized" unless current_user.admin?

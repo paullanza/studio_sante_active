@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   resources :fliip_users, only: [:show]
   post "fliip_users/:remote_id/refresh", to: "fliip_users#refresh", as: :refresh_fliip_user
 
+  get "admin/client_services", to: "admin#client_services", defaults: { format: :csv }
 
   # Admin dashboard and features (flat controller)
   get   "admin/dashboard",                to: "admin#dashboard",              as: :admin_dashboard
@@ -35,7 +36,11 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :sessions, only: [:new, :create]
+  resources :sessions, only: [:new, :create] do
+    collection do
+      get :services_for_user
+    end
+  end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

@@ -7,31 +7,39 @@ class FliipService < ApplicationRecord
     sessions.confirmed
   end
 
-  def confirmed_present_sessions
-    confirmed_sessions.where(present: true).sum(:duration)
+  def paid_sessions
+    sessions.where(session_type: "paid")
   end
 
-  def confirmed_absent_sessions
-    confirmed_sessions.where(present: false).sum(:duration)
+  def free_sessions
+    sessions.where(session_type: "free")
   end
 
   def remaining_paid_sessions
     return nil unless service_definition
 
-    total = service_definition.paid_sessions
-    used = confirmed_present_sessions + [confirmed_absent_sessions - service_definition.free_sessions, 0].max
-    [total - used, 0].max
-  end
-
-  def used_paid_sessions
-
+    total = service_definition.paid_sessions.to_f
+    used  = paid_sessions.sum(:duration).to_f
+    [total - used, 0.0].max
   end
 
   def remaining_free_sessions
     return nil unless service_definition
 
-    total = service_definition.free_sessions
-    used = confirmed_absent_sessions
-    [total - used, 0].max
+    total = service_definition.free_sessions.to_f
+    used  = free_sessions.sum(:duration).to_f
+    [total - used, 0.0].max
+  end
+
+  def usage_stats
+    paid_used  = paid_sessions.sum(:duration).to_f
+    free_used  = free_sessions.sum(:duration).to_f
+    paid_inc   = service_definition&.paid_sessions
+    free_inc   = service_definition&.free_sessions
+
+    {
+      paid: { used_sessions: paid_used, included: paid_inc },
+      free: { used_sessions: free_used, included: free_inc }
+    }
   end
 end
