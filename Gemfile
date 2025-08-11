@@ -2,6 +2,9 @@ source "https://rubygems.org"
 
 ruby "3.3.5"
 
+# Pagy for easy pagination
+gem "pagy"
+
 # Devise gem for user authentication
 gem "devise"
 

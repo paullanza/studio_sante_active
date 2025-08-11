@@ -1,12 +1,17 @@
 Rails.application.routes.draw do
-  # Root path
-  root "fliip_users#index"
-
   # Devise authentication
   devise_for :users
 
+  unauthenticated do
+    root to: "devise/sessions#new", as: :unauthenticated_root
+  end
+
+  authenticated :user do
+    root to: "admin#dashboard", as: :authenticated_root # default if no special logic
+  end
+
   # Public routes
-  resources :fliip_users, only: [:show]
+  resources :fliip_users, only: [:index, :show]
   post "fliip_users/:remote_id/refresh", to: "fliip_users#refresh", as: :refresh_fliip_user
 
   get "admin/client_services", to: "admin#client_services", defaults: { format: :csv }
@@ -41,6 +46,9 @@ Rails.application.routes.draw do
       get :services_for_user
     end
   end
+
+  post "refresh_clients", to: "sessions#refresh_clients", as: :refresh_clients
+
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

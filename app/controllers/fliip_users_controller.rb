@@ -1,6 +1,10 @@
 class FliipUsersController < ApplicationController
   def index
-    @fliip_users = FliipUser.order(:id)
+    scope = FliipUser
+            .includes(:fliip_contracts, :fliip_services)
+            .order(:id)
+
+    @pagy, @fliip_users = pagy(scope)
   end
 
   def show

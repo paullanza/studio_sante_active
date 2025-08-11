@@ -47,8 +47,10 @@ class SignupCode < ApplicationRecord
   def generate_code
     return if code.present?
 
+    chars = ('A'..'Z').to_a.concat(('0'..'9').to_a) - %w[0 O 1 I L]
+
     loop do
-      self.code = SecureRandom.alphanumeric(8).upcase
+      self.code = Array.new(8) { chars.sample }.join
       break unless SignupCode.exists?(code: code)
     end
   end

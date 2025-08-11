@@ -1,5 +1,12 @@
 <div class="container mt-4" data-controller="filter-services">
-  <h1 class="mb-4">New Session</h1>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">New Session</h1>
+    <%= button_to "Refresh Clients",
+                  refresh_clients_path,
+                  method: :post,
+                  class: "btn btn-outline-secondary btn-sm",
+                  form: { data: { turbo_confirm: "This will refresh the client list from Fliip. Continue?" } } %>
+  </div>
 
   <%= form_with(model: @session, local: true) do |f| %>
     <div class="mb-3 d-flex gap-3 align-items-end flex-wrap">

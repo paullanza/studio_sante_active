@@ -1,5 +1,18 @@
 class ApplicationController < ActionController::Base
+  include Pagy::Backend
+
   before_action :configure_permitted_parameters, if: :devise_controller?
+
+  def after_sign_in_path_for(resource)
+    case resource.role
+    when "admin"
+      admin_dashboard_path
+    when "manager"
+      manager_dashboard_path
+    else
+      employee_dashboard_path
+    end
+  end
 
   protected
 

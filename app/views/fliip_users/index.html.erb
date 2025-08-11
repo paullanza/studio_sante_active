@@ -1,5 +1,13 @@
 <div class="container mt-4">
   <h1>Fliip Users</h1>
+
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="text-muted small">
+      Page <%= @pagy.page %> of <%= @pagy.pages %> — <%= @pagy.count %> clients
+    </div>
+    <div><%== pagy_bootstrap_nav(@pagy) %></div>
+  </div>
+
   <table class="table table-hover">
     <thead class="table-light">
       <tr>
@@ -26,10 +34,14 @@
           <td><%= user.member_type || "–" %></td>
           <td><%= user.user_email || "–" %></td>
           <td><%= user.user_status || "–" %></td>
-          <td><%= user.fliip_contracts.count %></td>
-          <td><%= user.fliip_services.count %></td>
+          <td><%= user.fliip_contracts.size %></td>
+          <td><%= user.fliip_services.size %></td>
         </tr>
       <% end %>
     </tbody>
   </table>
+
+  <div class="d-flex justify-content-end">
+    <%== pagy_bootstrap_nav(@pagy) %>
+  </div>
 </div>

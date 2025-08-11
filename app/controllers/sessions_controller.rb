@@ -19,7 +19,7 @@ class SessionsController < ApplicationController
       today        = Date.current
       future_limit = today.next_month
       past_limit   = today.last_month
-      if (svc.start_date.present?  && svc.start_date  > future_limit) ||
+      if (svc.start_date.present? && svc.start_date  > future_limit) ||
         (svc.expire_date.present? && svc.expire_date < past_limit)
         load_fliip_users
         flash.now[:alert] = "This service can’t be booked (outside allowed dates)."
@@ -28,7 +28,7 @@ class SessionsController < ApplicationController
     end
 
     if @session.save
-      redirect_to root_path, notice: "Session created successfully."
+      redirect_to new_session_path, notice: "Session created successfully."
     else
       load_fliip_users
       flash.now[:alert] = "There was a problem creating the session."
@@ -79,6 +79,13 @@ class SessionsController < ApplicationController
     end
 
     render json: payload
+  end
+
+  def refresh_clients
+    FliipApi::UserSync::NewUserImporter.call
+    redirect_to new_session_path, notice: "Client list refreshed."
+  rescue => e
+    redirect_to new_session_path, alert: "Could not refresh clients: #{e.message}"
   end
 
   private
