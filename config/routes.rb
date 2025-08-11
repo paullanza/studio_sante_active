@@ -2,12 +2,14 @@ Rails.application.routes.draw do
   # Devise authentication
   devise_for :users
 
-  unauthenticated do
-    root to: "devise/sessions#new", as: :unauthenticated_root
+  devise_scope :user do
+    unauthenticated do
+      root to: "devise/sessions#new", as: :unauthenticated_root
+    end
   end
 
   authenticated :user do
-    root to: "admin#dashboard", as: :authenticated_root # default if no special logic
+    root to: "admin#dashboard", as: :authenticated_root
   end
 
   # Public routes
