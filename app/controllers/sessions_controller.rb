@@ -84,8 +84,8 @@ class SessionsController < ApplicationController
   def refresh_clients
     FliipApi::UserSync::NewUserImporter.call
     redirect_to new_session_path, notice: "Client list refreshed."
-  rescue => e
-    redirect_to new_session_path, alert: "Could not refresh clients: #{e.message}"
+    rescue => e
+      redirect_to new_session_path, alert: "Could not refresh clients: #{e.message}"
   end
 
   private

@@ -50,6 +50,7 @@ Rails.application.routes.draw do
   end
 
   post "refresh_clients", to: "sessions#refresh_clients", as: :refresh_clients
+  post "import_clients", to: "admin#import_clients", as: :import_clients
 
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

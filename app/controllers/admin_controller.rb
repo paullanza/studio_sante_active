@@ -49,6 +49,13 @@ class AdminController < ApplicationController
                 notice: "#{confirmed} session#{'s' unless confirmed == 1} confirmed."
   end
 
+  def import_clients
+    FliipApi::UserSync::UserImporter.call
+    redirect_to new_session_path, notice: "Client list refreshed."
+    rescue => e
+      redirect_to new_session_path, alert: "Could not refresh clients: #{e.message}"
+  end
+
   def client_services
     services = FliipService
       .includes(:fliip_user, :service_definition)

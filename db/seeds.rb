@@ -8,27 +8,27 @@
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
 
-puts "⏳ Clearing existing SignupCodes and Users..."
-SignupCode.delete_all
-User.delete_all
-puts "✅ Cleared database."
+# puts "⏳ Clearing existing SignupCodes and Users..."
+# SignupCode.delete_all
+# User.delete_all
+# puts "✅ Cleared database."
 
-puts "🛠 Seeding data..."
+# puts "🛠 Seeding data..."
 
-# --- Admin ---
-admin_code = SignupCode.create!
-admin = User.create!(
-  first_name:         "Paul",
-  last_name:          "Lanza",
-  phone:              "4380000001",
-  address:            "123 Main St, Montréal, QC",
-  birthday:           Date.new(1990, 6, 26),
-  email:              "a@a.a",
-  password:           "aaaa1111",
-  signup_code_token:  admin_code.code,
-  role:               :admin
-)
-puts "  • Created Admin: #{admin.first_name} #{admin.last_name} (#{admin.email})"
+# # --- Admin ---
+# admin_code = SignupCode.create!
+# admin = User.create!(
+#   first_name:         "Paul",
+#   last_name:          "Lanza",
+#   phone:              "4380000001",
+#   address:            "123 Main St, Montréal, QC",
+#   birthday:           Date.new(1990, 6, 26),
+#   email:              "a@a.a",
+#   password:           "aaaa1111",
+#   signup_code_token:  admin_code.code,
+#   role:               :admin
+# )
+# puts "  • Created Admin: #{admin.first_name} #{admin.last_name} (#{admin.email})"
 
 # # --- Manager ---
 # manager_code = SignupCode.create!
