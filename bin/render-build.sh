@@ -1,11 +1,12 @@
-# Exit on error
+#!/usr/bin/env bash
 set -o errexit
 
 bundle install
-bin/rails assets:precompile
-bin/rails assets:clean
+bundle exec rails assets:precompile
+bundle exec rails assets:clean
 
-# If you have a paid instance type, we recommend moving
-# database migrations like this one from the build command
-# to the pre-deploy command:
-bin/rails db:migrate
+# If you're using a Free instance type, you need to
+# perform database migrations in the build command.
+# Uncomment the following line:
+
+bundle exec rails db:migrate
