@@ -2,6 +2,9 @@ source "https://rubygems.org"
 
 ruby "3.3.5"
 
+# Ostruct gem to remove error and allow use of OpenStruct
+gem "ostruct"
+
 # Pagy for easy pagination
 gem "pagy"
 
