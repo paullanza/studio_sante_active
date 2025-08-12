@@ -35,7 +35,11 @@ module FliipApi
       # IDs greater than the last_remote_id tracked in Base.
       def fetch_new_api_users
         users = @api_client.fetch_all_users
-        users.select { |user| user[:user_id].to_i > @last_remote_id }
+        if @last_remote_id
+          users.select { |user| user[:user_id].to_i > @last_remote_id }
+        else
+          user
+        end
       end
     end
   end

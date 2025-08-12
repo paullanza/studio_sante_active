@@ -8,6 +8,8 @@
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
 
+User.first.update!(role: :super_admin)
+
 # puts "⏳ Clearing existing SignupCodes and Users..."
 # SignupCode.delete_all
 # User.delete_all

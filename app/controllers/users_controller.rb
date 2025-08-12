@@ -1,6 +1,7 @@
 class UsersController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_user, only: [:show, :toggle_role, :activate, :deactivate]
+  before_action :set_user, only: [:show, :make_employee, :make_manager, :make_admin, :activate, :deactivate]
+  before_action :authorize_role_changes!, only: [:make_employee, :make_manager, :make_admin]
 
   def show
     @clients = FliipUser.joins(:sessions)
@@ -9,21 +10,45 @@ class UsersController < ApplicationController
                               .order(:user_lastname, :user_firstname)
   end
 
-  def toggle_role
-    unless current_user.admin?
-      redirect_back fallback_location: user_path(@user), alert: "Not authorized."
-      return
+  def make_employee
+    # Allowed: admin or super_admin, target must be manager
+    unless @user.manager?
+      return redirect_back fallback_location: user_path(@user), alert: "Only managers can be demoted to employee."
     end
 
-    if @user.admin?
-      redirect_back fallback_location: user_path(@user), alert: "You can't change an admin's role."
-      return
+    @user.update!(role: :employee)
+    redirect_back fallback_location: user_path(@user), notice: "#{@user.first_name} is now an Employee."
+  end
+
+  def make_manager
+    # Allowed:
+    # - admin or super_admin can promote employee -> manager
+    # - super_admin can demote admin -> manager
+    if @user.employee?
+      # ok for admin/super_admin
+      @user.update!(role: :manager)
+      redirect_back fallback_location: user_path(@user), notice: "#{@user.first_name} is now a Manager."
+    elsif @user.admin?
+      # only super_admin may demote admin -> manager
+      return redirect_back fallback_location: user_path(@user), alert: "Not authorized." unless current_user.super_admin?
+      @user.update!(role: :manager)
+      redirect_back fallback_location: user_path(@user), notice: "#{@user.first_name} is now a Manager."
+    else
+      redirect_back fallback_location: user_path(@user), alert: "This change isn’t allowed."
+    end
+  end
+
+  def make_admin
+    # Allowed: super_admin only, target must be manager
+    unless current_user.super_admin?
+      return redirect_back fallback_location: user_path(@user), alert: "Not authorized."
+    end
+    unless @user.manager?
+      return redirect_back fallback_location: user_path(@user), alert: "Only managers can be promoted to admin."
     end
 
-    new_role = @user.employee? ? :manager : :employee
-    @user.update!(role: new_role)
-
-    redirect_back fallback_location: user_path(@user), notice: "#{@user.first_name} is now a #{new_role.to_s.humanize}."
+    @user.update!(role: :admin)
+    redirect_back fallback_location: user_path(@user), notice: "#{@user.first_name} is now an Admin."
   end
 
   def activate
@@ -48,5 +73,18 @@ class UsersController < ApplicationController
 
   def set_user
     @user = User.find(params[:id])
+  end
+
+
+  def authorize_role_changes!
+    # Nobody can change a super_admin
+    if @user.super_admin?
+      redirect_back fallback_location: user_path(@user), alert: "You can't change a Super Admin." and return
+    end
+
+    # Only admins or super_admins can change roles at all
+    unless current_user.admin? || current_user.super_admin?
+      redirect_back fallback_location: user_path(@user), alert: "Not authorized." and return
+    end
   end
 end

@@ -1,14 +1,17 @@
 <div class="container mt-4">
   <h1 class="mb-4">Admin Dashboard</h1>
 
-  <div class="mb-4 d-flex gap-3">
-        <%= button_to "Import All Clients",
+  <div class="mb-4 d-flex flex-wrap gap-3">
+    <%= button_to "Import All Clients",
                   import_clients_path,
                   method: :post,
                   class: "btn btn-danger",
                   form: { data: { turbo_confirm: "This will import all clients from Fliip. Continue?" } } %>
+
     <%= link_to "Manage Service Session Limits", admin_services_path, class: "btn btn-outline-dark" %>
+
     <%= link_to "Review Unconfirmed Sessions", admin_unconfirmed_sessions_path, class: "btn btn-outline-primary" %>
+
     <%= link_to "Export Clients & Services (CSV)",
                 admin_client_services_path(format: :csv),
                 class: "btn btn-outline-success" %>
@@ -17,8 +20,8 @@
   <!-- Users Section -->
   <section class="mb-5">
     <h2>Users</h2>
-    <table class="table table-hover">
-      <thead>
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
         <tr>
           <th>Name</th>
           <th>Role</th>
@@ -29,28 +32,91 @@
       <tbody>
         <% @users.each do |user| %>
           <tr>
-            <td><%= link_to "#{user.first_name} #{user.last_name}", user_path(user), class: "text-decoration-none" %></td>
-            <td><%= user.role.titleize %></td>
+            <td>
+              <%= link_to user.full_name, user_path(user), class: "text-decoration-none" %>
+            </td>
+
+            <td>
+              <% role_badge_class =
+                   case
+                   when user.super_admin? then "bg-dark"
+                   when user.admin?       then "bg-primary"
+                   when user.manager?     then "bg-info text-dark"
+                   else                        "bg-secondary"
+                   end %>
+              <span class="badge <%= role_badge_class %>">
+                <%= user.role.titleize %>
+              </span>
+            </td>
+
             <td>
               <span class="badge <%= user.active? ? 'bg-success' : 'bg-secondary' %>">
                 <%= user.active? ? 'Active' : 'Inactive' %>
               </span>
             </td>
+
             <td class="text-end">
-              <% unless user.admin? %>
+              <% if user.super_admin? %>
+                <em>Super Admin</em>
+
+              <% elsif current_user.super_admin? %>
                 <div class="d-flex justify-content-end gap-2">
-                  <%= button_to "Make #{user.employee? ? 'Manager' : 'Employee'}",
-                                toggle_role_user_path(user),
-                                method: :patch,
-                                class: "btn btn-sm btn-outline-primary" %>
+                  <% if user.admin? %>
+                    <%= button_to "Make Manager",
+                                  make_manager_user_path(user),
+                                  method: :patch,
+                                  class: "btn btn-sm btn-outline-primary" %>
+                  <% elsif user.manager? %>
+                    <%= button_to "Make Employee",
+                                  make_employee_user_path(user),
+                                  method: :patch,
+                                  class: "btn btn-sm btn-outline-secondary" %>
+                    <%= button_to "Make Admin",
+                                  make_admin_user_path(user),
+                                  method: :patch,
+                                  class: "btn btn-sm btn-outline-dark" %>
+                  <% else %> <%# employee %>
+                    <%= button_to "Make Manager",
+                                  make_manager_user_path(user),
+                                  method: :patch,
+                                  class: "btn btn-sm btn-outline-primary" %>
+                  <% end %>
 
                   <%= button_to(user.active? ? 'Deactivate' : 'Reactivate',
                                 user.active? ? deactivate_user_path(user) : activate_user_path(user),
                                 method: :patch,
                                 class: "btn btn-sm #{user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
                 </div>
+
+              <% elsif current_user.admin? %>
+                <% if user.admin? %>
+                  <em>Admin</em>
+                <% elsif user.manager? %>
+                  <div class="d-flex justify-content-end gap-2">
+                    <%= button_to "Make Employee",
+                                  make_employee_user_path(user),
+                                  method: :patch,
+                                  class: "btn btn-sm btn-outline-secondary" %>
+                    <%= button_to(user.active? ? 'Deactivate' : 'Reactivate',
+                                  user.active? ? deactivate_user_path(user) : activate_user_path(user),
+                                  method: :patch,
+                                  class: "btn btn-sm #{user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
+                  </div>
+                <% else %> <%# employee %>
+                  <div class="d-flex justify-content-end gap-2">
+                    <%= button_to "Make Manager",
+                                  make_manager_user_path(user),
+                                  method: :patch,
+                                  class: "btn btn-sm btn-outline-primary" %>
+                    <%= button_to(user.active? ? 'Deactivate' : 'Reactivate',
+                                  user.active? ? deactivate_user_path(user) : activate_user_path(user),
+                                  method: :patch,
+                                  class: "btn btn-sm #{user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
+                  </div>
+                <% end %>
+
               <% else %>
-                <em>Admin</em>
+                <em>—</em>
               <% end %>
             </td>
           </tr>
@@ -67,8 +133,8 @@
                   method: :post,
                   class: "btn btn-primary mb-3" %>
 
-    <table class="table table-hover">
-      <thead>
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
         <tr>
           <th>Code</th>
           <th>Expires At</th>

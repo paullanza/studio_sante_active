@@ -12,7 +12,7 @@ class User < ApplicationRecord
   attr_accessor :signup_code_token
 
   # Roles
-  enum role: [:employee, :manager, :admin]
+  enum role: [:employee, :manager, :admin, :super_admin]
 
   # Scopes for active/inactive users
   scope :active,   -> { where(active: true) }

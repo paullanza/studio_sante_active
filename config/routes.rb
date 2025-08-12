@@ -37,7 +37,9 @@ Rails.application.routes.draw do
   # User profiles and admin/mod actions
   resources :users, only: [:show] do
     member do
-      patch :toggle_role
+      patch :make_employee
+      patch :make_manager
+      patch :make_admin
       patch :activate
       patch :deactivate
     end
