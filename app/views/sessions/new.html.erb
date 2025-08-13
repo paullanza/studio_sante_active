@@ -8,28 +8,38 @@
                   form: { data: { turbo_confirm: "This will refresh the client list from Fliip. Continue?" } } %>
   </div>
 
-  <%= form_with(model: @session, local: true) do |f| %>
+  <%= simple_form_for @session, html: { class: "mb-4" } do |f| %>
+    <%= f.error_notification %>
+
     <div class="mb-3 d-flex gap-3 align-items-end flex-wrap">
       <div class="flex-fill">
-        <%= f.label :fliip_user_id, "Client" %>
-        <%= f.select :fliip_user_id,
-                     options_from_collection_for_select(@fliip_users, :id, ->(u) { "#{u.user_lastname.strip}, #{u.user_firstname.strip}" }),
-                     { include_blank: "Select a client" },
-                     class: "form-select",
-                     data: {
-                       filter_services_target: "userSelect",
-                       action: "change->filter-services#onUserChange"
-                     } %>
+        <%= f.input :fliip_user_id,
+                    label: "Client",
+                    as: :select,
+                    collection: @fliip_users,
+                    value_method: :id,
+                    label_method: ->(u) { "#{u.user_lastname.strip}, #{u.user_firstname.strip}" },
+                    include_blank: "Select a client",
+                    input_html: {
+                      class: "form-select",
+                      data: {
+                        filter_services_target: "userSelect",
+                        action: "change->filter-services#onUserChange"
+                      }
+                    } %>
       </div>
 
       <div class="flex-fill">
-        <%= f.label :fliip_service_id, "Service" %>
-        <select name="session[fliip_service_id]"
-                class="form-select"
-                disabled
-                data-filter-services-target="serviceSelect">
-          <option value="">Select a client first</option>
-        </select>
+        <%= f.input :fliip_service_id,
+                    label: "Service",
+                    as: :select,
+                    collection: [], # options are populated by Stimulus
+                    include_blank: false,
+                    input_html: {
+                      class: "form-select",
+                      disabled: true,
+                      "data-filter-services-target": "serviceSelect"
+                    } %>
       </div>
 
       <div class="form-check mt-4">
@@ -39,39 +49,37 @@
 
       <!-- Top-level (not nested) half-hour checkbox -->
       <div class="form-check mt-4">
-        <input type="checkbox"
-               name="half_hour"
-               id="half_hour"
-               value="1"
-               class="form-check-input">
-        <label for="half_hour" class="form-check-label">Half Hour (30 min)</label>
+        <%= check_box_tag :half_hour, "1", params[:half_hour] == "1", class: "form-check-input", id: "half_hour" %>
+        <%= label_tag :half_hour, "Half Hour (30 min)", class: "form-check-label" %>
       </div>
     </div>
 
     <div class="mb-3 d-flex gap-3">
       <div class="flex-fill">
-        <%= f.label :date %>
-        <%= f.date_field :date, value: Date.today, class: "form-control" %>
+        <%= f.input :date,
+                    as: :string,
+                    label: "Date",
+                    input_html: {
+                      type: "date",
+                      value: (@session.date || Date.today),
+                      class: "form-control"
+                    } %>
       </div>
 
       <div class="flex-fill">
-        <%= f.label :time %>
-        <%= f.select :time,
-                     options_for_select(
-                       (6..20).flat_map { |h| ["%02d:00" % h, "%02d:30" % h] },
-                       Time.current.strftime("%H:%M")
-                     ),
-                     {},
-                     class: "form-select" %>
+        <%= f.input :time,
+                    as: :select,
+                    label: "Time",
+                    collection: (6..20).flat_map { |h| ["%02d:00" % h, "%02d:30" % h] },
+                    selected: (@session.time&.strftime("%H:%M") || Time.current.strftime("%H:%M")),
+                    include_blank: false,
+                    input_html: { class: "form-select" } %>
       </div>
     </div>
 
-    <div class="mb-3">
-      <%= f.label :note %>
-      <%= f.text_area :note, class: "form-control", rows: 3 %>
-    </div>
+    <%= f.input :note, as: :text, label: "Note", input_html: { rows: 3, class: "form-control" } %>
 
-    <%= f.submit "Create Session", class: "btn btn-primary" %>
+    <%= f.button :submit, "Create Session", class: "btn btn-primary" %>
   <% end %>
 
   <hr>

@@ -2,6 +2,18 @@ source "https://rubygems.org"
 
 ruby "3.3.5"
 
+# PGSearch gem for advanced search capabilities
+gem "pg_search"
+
+# Simple form gem for simplified form building
+gem "simple_form"
+
+# Bootstrap gem to enable Bootstrap styles and components
+gem "bootstrap", "~> 5.3.3"
+
+# SassC for CSS preprocessing
+gem "sassc-rails"
+
 # Ostruct gem to remove error and allow use of OpenStruct
 gem "ostruct"
 

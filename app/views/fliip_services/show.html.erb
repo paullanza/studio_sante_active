@@ -1,0 +1,140 @@
+<!-- app/views/fliip_services/show.html.erb -->
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">
+      <%= @service.service_name.presence %>
+      <small class="text-muted">(#<%= @service.remote_purchase_id %>)</small>
+    </h1>
+    <%= link_to "← Back to Client",
+                fliip_user_path(@service.fliip_user),
+                class: "btn btn-outline-secondary" %>
+  </div>
+
+  <!-- Summary -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="text-muted small">Client</div>
+          <div class="fw-bold">
+            <%= link_to @service.fliip_user.full_name,
+                        fliip_user_path(@service.fliip_user),
+                        class: "text-decoration-none" %>
+          </div>
+          <div class="text-muted small">Remote Purchase: <%= @service.remote_purchase_id || "—" %></div>
+          <div class="text-muted small">Status: <span class="badge bg-secondary"><%= @status_label %></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-5">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="text-muted small">Dates</div>
+          <div>
+            Start: <strong><%= @service.start_date || "—" %></strong>
+            &nbsp;•&nbsp;
+            End: <strong><%= @service.expire_date || "—" %></strong>
+          </div>
+
+          <%# Time progress bar %>
+          <% sd = @service.start_date; ed = @service.expire_date %>
+          <% time_pct =
+               if sd.present? && ed.present? && ed > sd
+                 span = (ed - sd).to_f
+                 elapsed = (Date.current - sd).to_f
+                 [[(elapsed / span * 100).round, 0].max, 100].min
+               else
+                 0
+               end %>
+
+          <div class="d-flex justify-content-between small mt-2">
+            <span>Time</span>
+            <span><%= sd&.strftime("%d/%m/%Y") || "—" %> → <%= ed&.strftime("%d/%m/%Y") || "—" %> • <%= time_pct %>%</span>
+          </div>
+          <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= time_pct %>">
+            <div class="progress-bar bg-info" style="width: <%= time_pct %>%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="text-muted small">Usage (paid)</div>
+          <% paid_pct =
+               if @paid_total.to_i > 0
+                 [[(@paid_used / @paid_total.to_f * 100).round, 0].max, 100].min
+               else
+                 0
+               end %>
+          <div class="d-flex justify-content-between small">
+            <span><%= "#{@paid_used}/#{@paid_total || '—'} sessions" %></span>
+            <span><%= paid_pct %>%</span>
+          </div>
+          <div class="progress mb-3" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= paid_pct %>">
+            <div class="progress-bar bg-success" style="width: <%= paid_pct %>%"></div>
+          </div>
+
+          <div class="text-muted small">Usage (free)</div>
+          <% free_pct =
+               if @free_total.to_i > 0
+                 [[(@free_used / @free_total.to_f * 100).round, 0].max, 100].min
+               else
+                 0
+               end %>
+          <div class="d-flex justify-content-between small">
+            <span><%= "#{@free_used}/#{@free_total || '—'} sessions" %></span>
+            <span><%= free_pct %>%</span>
+          </div>
+          <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= free_pct %>">
+            <div class="progress-bar bg-secondary" style="width: <%= free_pct %>%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sessions Table -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Duration</th>
+          <th>Presence</th>
+          <th>Type</th>
+          <th>Confirmed</th>
+          <th>Note</th>
+          <th>Created at</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @sessions.each do |s| %>
+          <tr>
+            <td><%= s.date&.strftime("%d/%m/%Y") || "—" %></td>
+            <td><%= s.time&.strftime("%H:%M") || "—" %></td>
+            <td><%= s.duration_display %></td>
+            <td><%= s.present? ? "Présent·e" : "Absent·e" %></td>
+            <td><%= s.session_type.to_s.capitalize %></td>
+            <td>
+              <% if s.confirmed? %>
+                <span class="badge bg-success">Yes</span>
+              <% else %>
+                <span class="badge bg-warning text-dark">No</span>
+              <% end %>
+            </td>
+            <td><%= s.note.presence || "—" %></td>
+            <td><%= s.created_at.strftime("%d/%m/%Y %H:%M") %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="d-flex justify-content-end">
+    <%== pagy_bootstrap_nav(@pagy) %>
+  </div>
+</div>

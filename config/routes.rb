@@ -54,6 +54,7 @@ Rails.application.routes.draw do
   post "refresh_clients", to: "sessions#refresh_clients", as: :refresh_clients
   post "import_clients", to: "admin#import_clients", as: :import_clients
 
+  resources :fliip_services, only: [:show]
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

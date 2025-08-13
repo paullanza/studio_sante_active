@@ -13,29 +13,17 @@ class SessionsController < ApplicationController
     @session.present   = params[:session][:present] == "1"
     @session.duration  = params[:half_hour] == "1" ? 0.5 : 1.0
 
-    # Block selecting services outside the allowed window
-    svc = FliipService.find_by(id: @session.fliip_service_id)
-    if svc
-      today        = Date.current
-      future_limit = today.next_month
-      past_limit   = today.last_month
-      if (svc.start_date.present? && svc.start_date  > future_limit) ||
-        (svc.expire_date.present? && svc.expire_date < past_limit)
-        load_fliip_users
-        flash.now[:alert] = "This service can’t be booked (outside allowed dates)."
-        return render :new
-      end
-    end
-
     if @session.save
+      # Stay on the new page with a cleared form
       redirect_to new_session_path, notice: "Session created successfully."
     else
       load_fliip_users
-      flash.now[:alert] = "There was a problem creating the session."
-      render :new
+      flash.now[:alert] = @session.errors.full_messages.to_sentence.presence || "There was a problem creating the session."
+      render :new, status: :unprocessable_entity
     end
   end
 
+  # GET /sessions/services_for_user?fliip_user_id=...
   def services_for_user
     fliip_user_id = params.require(:fliip_user_id)
 
@@ -55,7 +43,7 @@ class SessionsController < ApplicationController
     future_limit = today + 1.month
     past_limit   = today - 1.month
 
-    status_label = { "A"=>"Active", "I"=>"Inactive", "P"=>"Planned", "C"=>"Cancelled", "S"=>"Stopped" }
+    status_label = { "A" => "Active", "I" => "Inactive", "P" => "Planned", "C" => "Cancelled", "S" => "Stopped" }
 
     payload = services.map do |svc|
       starts_too_late = svc.start_date.present?  && svc.start_date  > future_limit
@@ -68,9 +56,9 @@ class SessionsController < ApplicationController
         name:          svc.service_name,
         start_date:    svc.start_date,
         expire_date:   svc.expire_date,
-        status:        svc.purchase_status,                  # "A", "I", "P", "C", "S"
+        status:        svc.purchase_status,
         status_label:  status_label[svc.purchase_status] || "-",
-        selectable:    selectable,                           # bool for disabling option
+        selectable:    selectable,
         paid_used:     usage_sums.fetch([svc.id, "paid"], 0.0).to_f,
         paid_total:    svc.service_definition&.paid_sessions,
         free_used:     usage_sums.fetch([svc.id, "free"], 0.0).to_f,
@@ -84,20 +72,17 @@ class SessionsController < ApplicationController
   def refresh_clients
     FliipApi::UserSync::NewUserImporter.call
     redirect_to new_session_path, notice: "Client list refreshed."
-    rescue => e
-      redirect_to new_session_path, alert: "Could not refresh clients: #{e.message}"
+  rescue => e
+    redirect_to new_session_path, alert: "Could not refresh clients: #{e.message}"
   end
 
   private
 
   def load_fliip_users
     service_user_ids = FliipService.distinct.pluck(:fliip_user_id)
-
     @fliip_users = FliipUser
       .where(id: service_user_ids)
-      .sort_by do |u|
-        I18n.transliterate("#{u.user_lastname.strip} #{u.user_firstname.strip}").downcase
-      end
+      .sort_by { |u| I18n.transliterate("#{u.user_lastname.to_s.strip} #{u.user_firstname.to_s.strip}").downcase }
   end
 
   def session_params

@@ -8,6 +8,8 @@
                   form_class: "d-inline",
                   class: "btn btn-sm btn-outline-secondary ms-2",
                   data: { turbo: false } %>
+
+    <%# <a href="#" onclick="window.print();return false;" class= "btn btn-sm btn-outline-secondary ms-2">🖨</a> %>
   </h1>
   <h2 class="mt-4">Attributes</h2>
   <table class="table table-bordered table-sm">
@@ -34,25 +36,14 @@
           <tr>
             <th>Contract #</th>
             <th>Status</th>
-            <th>Main?</th>
             <th>Start Date</th>
             <th>End Date</th>
             <th>Stop Date</th>
             <th>Resume Date</th>
             <th>Cancel Date</th>
             <th>Membership Name</th>
-            <th>Plan Base Type</th>
-            <th>Plan Type</th>
             <th>Plan Description</th>
-            <th>Plan Classes</th>
-            <th>Payment Terms</th>
             <th>Duration</th>
-            <th>Billed at Purchase</th>
-            <th>Rebate</th>
-            <th>Discount Name</th>
-            <th>Ledger Account</th>
-            <th>Pack Class #</th>
-            <th>Pack Class Used</th>
           </tr>
         </thead>
         <tbody>
@@ -60,25 +51,14 @@
             <tr>
               <td><%= contract.remote_contract_id %></td>
               <td><%= contract.status.presence || "–" %></td>
-              <td><%= contract.main_user_contract ? "Yes" : "No" %></td>
               <td><%= contract.start_date || "–" %></td>
               <td><%= contract.end_date   || "–" %></td>
               <td><%= contract.stop_date  || "–" %></td>
               <td><%= contract.resume_date || "–" %></td>
               <td><%= contract.cancel_date || "–" %></td>
               <td><%= contract.membership_name.presence || "–" %></td>
-              <td><%= contract.plan_base_type.presence || "–" %></td>
-              <td><%= contract.plan_type.presence || "–" %></td>
               <td><%= contract.plan_description.presence || "–" %></td>
-              <td><%= contract.plan_classes.presence || "–" %></td>
-              <td><%= contract.payment_terms.presence || "–" %></td>
               <td><%= contract.duration.presence || "–" %></td>
-              <td><%= contract.billed_at_purchase || 0 %></td>
-              <td><%= contract.rebate.presence || "–" %></td>
-              <td><%= contract.discount_name.presence || "–" %></td>
-              <td><%= contract.ledger_account.presence || "–" %></td>
-              <td><%= contract.pack_class_num || 0 %></td>
-              <td><%= contract.pack_class_used || 0 %></td>
             </tr>
           <% end %>
         </tbody>
@@ -101,20 +81,11 @@
             <th>Purchase Date</th>
             <th>Stop Date</th>
             <th>Cancel Date</th>
-            <th>Rebate</th>
-            <th>Stop Payments?</th>
-            <th>Discount Name</th>
             <th>Service ID</th>
             <th>Service Name</th>
-            <th>Service Type</th>
-            <th>Category</th>
-            <th>Coach</th>
-            <th>Payment Terms</th>
             <th>Duration</th>
-            <th>Online Enabled</th>
             <th>Description</th>
-            <th>Billed at Purchase</th>
-            <th>Ledger Account</th>
+            <th>Progress</th>
           </tr>
         </thead>
         <tbody>
@@ -127,20 +98,45 @@
               <td><%= svc.purchase_date || "–" %></td>
               <td><%= svc.stop_date || "–" %></td>
               <td><%= svc.cancel_date || "–" %></td>
-              <td><%= svc.rebate.presence || "–" %></td>
-              <td><%= svc.stop_payments ? "Yes" : "No" %></td>
-              <td><%= svc.discount_name.presence || "–" %></td>
               <td><%= svc.service_id %></td>
-              <td><%= svc.service_name.presence || "–" %></td>
-              <td><%= svc.service_type.presence || "–" %></td>
-              <td><%= svc.service_category_name.presence || "–" %></td>
-              <td><%= svc.coach.presence || "–" %></td>
-              <td><%= svc.payment_terms.presence || "–" %></td>
+              <td>
+                <%= link_to (svc.service_name.presence || "Service ##{svc.id}"),
+                            fliip_service_path(svc),
+                            class: "text-decoration-none" %>
+              </td>
               <td><%= svc.duration.presence || "–" %></td>
-              <td><%= svc.online_enabled.presence || "–" %></td>
               <td><%= svc.service_description.presence || "–" %></td>
-              <td><%= svc.billed_at_purchase || 0 %></td>
-              <td><%= svc.ledger_account.presence || "–" %></td>
+              <td style="min-width: 240px;">
+                <!-- Time progress -->
+                <div class="mb-2">
+                  <div class="d-flex justify-content-between small">
+                    <span>Time</span>
+                    <span><%= time_range_label(svc) %> • <%= time_progress_percent(svc) %>%</span>
+                  </div>
+                  <div class="progress" role="progressbar"
+                      aria-label="Time progress"
+                      aria-valuemin="0" aria-valuemax="100"
+                      aria-valuenow="<%= time_progress_percent(svc) %>">
+                    <div class="progress-bar bg-info"
+                        style="width: <%= time_progress_percent(svc) %>%"></div>
+                  </div>
+                </div>
+
+                <!-- Paid sessions usage -->
+                <div>
+                  <div class="d-flex justify-content-between small">
+                    <span>Sessions (paid)</span>
+                    <span><%= paid_usage_label(svc, @usage_sums) %> • <%= paid_usage_percent(svc, @usage_sums) %>%</span>
+                  </div>
+                  <div class="progress" role="progressbar"
+                      aria-label="Paid sessions usage"
+                      aria-valuemin="0" aria-valuemax="100"
+                      aria-valuenow="<%= paid_usage_percent(svc, @usage_sums) %>">
+                    <div class="progress-bar bg-success"
+                        style="width: <%= paid_usage_percent(svc, @usage_sums) %>%"></div>
+                  </div>
+                </div>
+              </td>
             </tr>
           <% end %>
         </tbody>
