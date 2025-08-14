@@ -1,0 +1,67 @@
+<div class="container mt-4">
+  <h1 class="mb-3">Preview Adjustments</h1>
+
+  <% if @errors.present? %>
+    <div class="alert alert-warning">
+      <strong>Some rows could not be resolved:</strong>
+      <ul class="mb-0">
+        <% @errors.each do |e| %>
+          <li><%= e %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if @rows.blank? %>
+    <p class="text-muted">No valid rows found.</p>
+    <%= link_to "Back", admin_adjustments_new_path, class: "btn btn-secondary" %>
+  <% else %>
+    <div class="table-responsive mb-3">
+      <table class="table table-bordered table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Service ID</th>
+            <th>Remote Purchase ID</th>
+            <th>Service</th>
+            <th>Client</th>
+            <th class="text-end">Paid Used Δ</th>
+            <th class="text-end">Free Used Δ</th>
+            <th class="text-end">Bonus Paid Δ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @rows.each do |r| %>
+            <tr>
+              <td><%= r[:rownum] %></td>
+              <td><%= r[:service_id] %></td>
+              <td><%= r[:remote_purchase_id] %></td>
+              <td><%= r[:service_label] %></td>
+              <td><%= r[:fliip_user_name].presence || "—" %></td>
+              <td class="text-end"><%= r[:paid_used_delta].to_f.zero? ? "—" : r[:paid_used_delta] %></td>
+              <td class="text-end"><%= r[:free_used_delta].to_f.zero? ? "—" : r[:free_used_delta] %></td>
+              <td class="text-end"><%= r[:bonus_paid_delta].to_f.zero? ? "—" : r[:bonus_paid_delta] %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%= form_with url: admin_adjustments_commit_path, method: :post, local: true, class: "card p-3" do %>
+      <div class="mb-3">
+        <label class="form-label">Associate all rows to employee (trainer)</label>
+        <%= select_tag :employee_id,
+              options_from_collection_for_select(@users_for_select, :id, :full_name, @default_employee_id),
+              include_blank: "Choose an employee (optional)",
+              class: "form-select" %>
+      </div>
+
+      <%= hidden_field_tag :payload, @payload_json %>
+
+      <div class="d-flex gap-2">
+        <%= link_to "Back", admin_adjustments_new_path, class: "btn btn-outline-secondary" %>
+        <%= submit_tag "Confirm Import", class: "btn btn-success" %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

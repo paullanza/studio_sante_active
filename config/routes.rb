@@ -33,6 +33,10 @@ Rails.application.routes.draw do
   get  "admin/unconfirmed_sessions", to: "admin#unconfirmed_sessions", as: :admin_unconfirmed_sessions
   patch "admin/confirm_sessions",     to: "admin#confirm_sessions",     as: :admin_confirm_sessions
 
+  # Service Adjustments (admin-only)
+  get  "admin/adjustments/new",     to: "admin#adjustments_new",     as: :admin_adjustments_new
+  post "admin/adjustments/preview", to: "admin#adjustments_preview", as: :admin_adjustments_preview
+  post "admin/adjustments/commit",  to: "admin#adjustments_commit",  as: :admin_adjustments_commit
 
   # User profiles and admin/mod actions
   resources :users, only: [:show] do

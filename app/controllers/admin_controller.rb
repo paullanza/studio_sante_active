@@ -133,6 +133,124 @@ class AdminController < ApplicationController
     send_data csv_str, filename:, type: "text/csv"
   end
 
+  def adjustments_new
+    @users_for_select = User.order(:first_name, :last_name) # pick any staff member (employee/manager/admin)
+  end
+
+  # --- Parse & Preview (no DB writes yet) ---
+  def adjustments_preview
+    unless params[:csv].respond_to?(:read)
+      redirect_to admin_adjustments_new_path, alert: "Please choose a CSV file." and return
+    end
+
+    @default_employee_id = params[:employee_id].presence
+    csv_io = params[:csv]
+    csv_text = csv_io.read
+
+    require "csv"
+
+    # Expected headers from your export
+    # client_id, client_remote_id, client_name,
+    # service_id, service_remote_purchase_id, service_name, purchase_status,
+    # start_date, expire_date, paid_used, paid_included, free_used, free_included,
+    # bonus_sessions, trainer
+    parsed = CSV.parse(csv_text, headers: true)
+
+    @rows = []
+    @errors = []
+
+    parsed.each_with_index do |row, idx|
+      rownum = idx + 2 # header is line 1, data starts at 2
+
+      # Resolve service
+      service = nil
+      local_id  = row["service_id"].to_s.strip
+      remote_id = row["service_remote_purchase_id"].to_s.strip
+
+      if local_id.present?
+        service = FliipService.find_by(id: local_id)
+      end
+      if service.nil? && remote_id.present?
+        service = FliipService.find_by(remote_purchase_id: remote_id)
+      end
+
+      # Parse numeric deltas (blank => 0.0)
+      paid_used_delta  = to_f_or_zero(row["paid_used"])
+      free_used_delta  = to_f_or_zero(row["free_used"])
+      bonus_paid_delta = to_f_or_zero(row["bonus_sessions"])
+
+      if service.nil?
+        @errors << "Row #{rownum}: Could not resolve service (service_id: #{local_id.presence || '—'}, remote_purchase_id: #{remote_id.presence || '—'})."
+        next
+      end
+
+      @rows << {
+        rownum: rownum,
+        service_id: service.id,
+        remote_purchase_id: service.remote_purchase_id,
+        service_label: "#{service.service_name.presence || 'Service'} (##{service.id})",
+        fliip_user_name: service.fliip_user&.full_name,
+        paid_used_delta:  paid_used_delta,
+        free_used_delta:  free_used_delta,
+        bonus_paid_delta: bonus_paid_delta
+      }
+    end
+
+    # Serialize payload for commit
+    @payload_json = {
+      default_employee_id: @default_employee_id,
+      rows: @rows
+    }.to_json
+
+    @users_for_select = User.order(:first_name, :last_name)
+  end
+
+  # --- Commit to DB ---
+  def adjustments_commit
+    payload = JSON.parse(params[:payload].to_s) rescue nil
+    unless payload && payload["rows"].is_a?(Array)
+      redirect_to admin_adjustments_new_path, alert: "Invalid or missing import payload." and return
+    end
+
+    default_employee_id = payload["default_employee_id"].presence
+    selected_employee_id = params[:employee_id].presence || default_employee_id
+
+    created = 0
+    skipped = 0
+    errors  = []
+
+    ActiveRecord::Base.transaction do
+      payload["rows"].each do |r|
+        service = FliipService.find_by(id: r["service_id"])
+        if service.nil?
+          skipped += 1
+          errors << "Service ##{r['service_id']} no longer exists (row #{r['rownum']})."
+          next
+        end
+
+        ServiceUsageAdjustment.create!(
+          fliip_service_id: service.id,
+          user_id: selected_employee_id,
+          paid_used_delta:  r["paid_used_delta"].to_f,
+          free_used_delta:  r["free_used_delta"].to_f,
+          paid_bonus_delta: r["bonus_paid_delta"].to_f
+        )
+        created += 1
+      end
+    end
+
+    msg = "Adjustments imported: #{created} created"
+    msg += ", #{skipped} skipped" if skipped > 0
+    msg += "."
+    if errors.any?
+      redirect_to admin_dashboard_path, notice: msg, alert: errors.join(" ")
+    else
+      redirect_to admin_dashboard_path, notice: msg
+    end
+  rescue => e
+    redirect_to admin_adjustments_new_path, alert: "Import failed: #{e.message}"
+  end
+
   private
 
   def fmt_date(d)
@@ -141,5 +259,13 @@ class AdminController < ApplicationController
 
   def ensure_admin!
     redirect_to root_path, alert: "Not authorized" unless current_user.admin? || current_user.super_admin?
+  end
+
+  def to_f_or_zero(value)
+    s = value.to_s.strip
+    return 0.0 if s.blank?
+    Float(s)
+  rescue ArgumentError
+    0.0
   end
 end

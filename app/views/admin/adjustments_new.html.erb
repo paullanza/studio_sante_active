@@ -1,0 +1,32 @@
+<div class="container mt-4">
+  <h1 class="mb-3">Upload Service Adjustments</h1>
+  <p class="text-muted">
+    Upload a CSV exported from your client/services report. We’ll parse it and show a preview before anything is saved.
+  </p>
+
+  <%= form_with url: admin_adjustments_preview_path,
+                multipart: true,
+                local: true,
+                data: { turbo: false},
+                class: "card p-3" do |f| %>
+    <div class="mb-3">
+      <label class="form-label">CSV file</label>
+      <%= file_field_tag :csv, accept: ".csv", class: "form-control", required: true %>
+      <div class="form-text">
+        Expected headers include: <code>service_id</code>, <code>service_remote_purchase_id</code>,
+        <code>paid_used</code>, <code>free_used</code>, <code>bonus_sessions</code>, etc.
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Associate rows to employee (trainer)</label>
+      <%= select_tag :employee_id,
+            options_from_collection_for_select(@users_for_select, :id, :full_name),
+            include_blank: "Choose an employee (optional)",
+            class: "form-select" %>
+      <div class="form-text">Who should these adjustments be attributed to?</div>
+    </div>
+
+    <%= submit_tag "Preview Import", class: "btn btn-primary" %>
+  <% end %>
+</div>
