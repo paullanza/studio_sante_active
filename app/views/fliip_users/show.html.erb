@@ -8,9 +8,8 @@
                   form_class: "d-inline",
                   class: "btn btn-sm btn-outline-secondary ms-2",
                   data: { turbo: false } %>
-
-    <%# <a href="#" onclick="window.print();return false;" class= "btn btn-sm btn-outline-secondary ms-2">🖨</a> %>
   </h1>
+
   <h2 class="mt-4">Attributes</h2>
   <table class="table table-bordered table-sm">
     <tbody>
@@ -34,13 +33,13 @@
       <table class="table table-bordered table-sm">
         <thead class="thead-light">
           <tr>
-            <th>Contract #</th>
+            <th>Contract #</th>
             <th>Status</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Stop Date</th>
-            <th>Resume Date</th>
-            <th>Cancel Date</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Stop Date</th>
+            <th>Resume Date</th>
+            <th>Cancel Date</th>
             <th>Membership Name</th>
             <th>Plan Description</th>
             <th>Duration</th>
@@ -74,14 +73,14 @@
       <table class="table table-bordered table-sm">
         <thead class="thead-light">
           <tr>
-            <th>Purchase #</th>
+            <th>Purchase #</th>
             <th>Status</th>
-            <th>Start Date</th>
-            <th>Expire Date</th>
-            <th>Purchase Date</th>
-            <th>Stop Date</th>
-            <th>Cancel Date</th>
-            <th>Service ID</th>
+            <th>Start Date</th>
+            <th>Expire Date</th>
+            <th>Purchase Date</th>
+            <th>Stop Date</th>
+            <th>Cancel Date</th>
+            <th>Service ID</th>
             <th>Service Name</th>
             <th>Duration</th>
             <th>Description</th>
@@ -90,6 +89,12 @@
         </thead>
         <tbody>
           <% @fliip_user.fliip_services.each do |svc| %>
+            <%# helpers: time_range_label, time_progress_percent, paid_usage_label, paid_usage_percent %>
+            <% fmt = ->(n) { ('%.1f' % n.to_f) } %>
+            <% free_used  = fmt.call((@usage_sums[[svc.id, "free"]] || 0.0)) %>
+            <% free_total = svc.service_definition&.free_sessions %>
+            <% free_total_s = free_total.nil? ? "—" : free_total.to_s %>
+
             <tr>
               <td><%= svc.remote_purchase_id %></td>
               <td><%= svc.purchase_status.presence || "–" %></td>
@@ -106,7 +111,8 @@
               </td>
               <td><%= svc.duration.presence || "–" %></td>
               <td><%= svc.service_description.presence || "–" %></td>
-              <td style="min-width: 240px;">
+
+              <td style="min-width: 260px;">
                 <!-- Time progress -->
                 <div class="mb-2">
                   <div class="d-flex justify-content-between small">
@@ -114,26 +120,30 @@
                     <span><%= time_range_label(svc) %> • <%= time_progress_percent(svc) %>%</span>
                   </div>
                   <div class="progress" role="progressbar"
-                      aria-label="Time progress"
-                      aria-valuemin="0" aria-valuemax="100"
-                      aria-valuenow="<%= time_progress_percent(svc) %>">
+                       aria-label="Time progress"
+                       aria-valuemin="0" aria-valuemax="100"
+                       aria-valuenow="<%= time_progress_percent(svc) %>">
                     <div class="progress-bar bg-info"
-                        style="width: <%= time_progress_percent(svc) %>%"></div>
+                         style="width: <%= time_progress_percent(svc) %>%"></div>
                   </div>
                 </div>
 
-                <!-- Paid sessions usage -->
+                <!-- Sessions (paid bar) + free usage bracket -->
                 <div>
                   <div class="d-flex justify-content-between small">
-                    <span>Sessions (paid)</span>
-                    <span><%= paid_usage_label(svc, @usage_sums) %> • <%= paid_usage_percent(svc, @usage_sums) %>%</span>
+                    <span>Sessions</span>
+                    <span>
+                      <%= paid_usage_label(svc, @usage_sums) %> •
+                      <%= paid_usage_percent(svc, @usage_sums) %>%
+                      <span class="ms-2 text-muted">[<%= free_used %>/<%= free_total_s %> absences]</span>
+                    </span>
                   </div>
                   <div class="progress" role="progressbar"
-                      aria-label="Paid sessions usage"
-                      aria-valuemin="0" aria-valuemax="100"
-                      aria-valuenow="<%= paid_usage_percent(svc, @usage_sums) %>">
+                       aria-label="Paid sessions usage"
+                       aria-valuemin="0" aria-valuemax="100"
+                       aria-valuenow="<%= paid_usage_percent(svc, @usage_sums) %>">
                     <div class="progress-bar bg-success"
-                        style="width: <%= paid_usage_percent(svc, @usage_sums) %>%"></div>
+                         style="width: <%= paid_usage_percent(svc, @usage_sums) %>%"></div>
                   </div>
                 </div>
               </td>

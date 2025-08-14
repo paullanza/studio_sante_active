@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_08_01_160001) do
+ActiveRecord::Schema[7.1].define(version: 2025_08_13_223928) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -106,6 +106,20 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_01_160001) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "service_usage_adjustments", force: :cascade do |t|
+    t.bigint "fliip_service_id", null: false
+    t.bigint "user_id", null: false
+    t.float "paid_used_delta"
+    t.float "free_used_delta"
+    t.float "paid_bonus_delta"
+    t.string "idempotency_key"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["fliip_service_id"], name: "index_service_usage_adjustments_on_fliip_service_id"
+    t.index ["idempotency_key"], name: "index_service_usage_adjustments_on_idempotency_key", unique: true
+    t.index ["user_id"], name: "index_service_usage_adjustments_on_user_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "fliip_user_id", null: false
@@ -156,6 +170,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_01_160001) do
 
   add_foreign_key "fliip_contracts", "fliip_users"
   add_foreign_key "fliip_services", "fliip_users"
+  add_foreign_key "service_usage_adjustments", "fliip_services"
+  add_foreign_key "service_usage_adjustments", "users"
   add_foreign_key "sessions", "fliip_services"
   add_foreign_key "sessions", "fliip_users"
   add_foreign_key "sessions", "users"

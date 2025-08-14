@@ -14,32 +14,32 @@
     <div class="mb-3 d-flex gap-3 align-items-end flex-wrap">
       <div class="flex-fill">
         <%= f.input :fliip_user_id,
-                    label: "Client",
-                    as: :select,
-                    collection: @fliip_users,
-                    value_method: :id,
-                    label_method: ->(u) { "#{u.user_lastname.strip}, #{u.user_firstname.strip}" },
-                    include_blank: "Select a client",
-                    input_html: {
-                      class: "form-select",
-                      data: {
-                        filter_services_target: "userSelect",
-                        action: "change->filter-services#onUserChange"
-                      }
-                    } %>
+          label: "Client",
+          as: :select,
+          collection: @fliip_users,
+          value_method: :id,
+          label_method: ->(u) { "#{u.user_lastname.strip}, #{u.user_firstname.strip}" },
+          include_blank: "Select a client",
+          input_html: {
+            class: "form-select",
+            data: {
+              filter_services_target: "userSelect",
+              action: "change->filter-services#onUserChange"
+            }
+          } %>
       </div>
 
       <div class="flex-fill">
         <%= f.input :fliip_service_id,
-                    label: "Service",
-                    as: :select,
-                    collection: [], # options are populated by Stimulus
-                    include_blank: false,
-                    input_html: {
-                      class: "form-select",
-                      disabled: true,
-                      "data-filter-services-target": "serviceSelect"
-                    } %>
+          label: "Service",
+          as: :select,
+          collection: [], # Stimulus will populate
+          include_blank: false,
+          input_html: {
+            class: "form-select",
+            disabled: true,
+            "data-filter-services-target": "serviceSelect"
+          } %>
       </div>
 
       <div class="form-check mt-4">
@@ -47,7 +47,7 @@
         <%= f.label :present, "Présent", class: "form-check-label", for: "session_present" %>
       </div>
 
-      <!-- Top-level (not nested) half-hour checkbox -->
+      <!-- Half-hour (non-model) -->
       <div class="form-check mt-4">
         <%= check_box_tag :half_hour, "1", params[:half_hour] == "1", class: "form-check-input", id: "half_hour" %>
         <%= label_tag :half_hour, "Half Hour (30 min)", class: "form-check-label" %>
@@ -57,27 +57,27 @@
     <div class="mb-3 d-flex gap-3">
       <div class="flex-fill">
         <%= f.input :date,
-                    as: :string,
-                    label: "Date",
-                    input_html: {
-                      type: "date",
-                      value: (@session.date || Date.today),
-                      class: "form-control"
-                    } %>
+          label: "Date",
+          as: :string,
+          input_html: {
+            type: "date",
+            value: (@session.date || Date.today),
+            class: "form-control"
+          } %>
       </div>
 
       <div class="flex-fill">
         <%= f.input :time,
-                    as: :select,
-                    label: "Time",
-                    collection: (6..20).flat_map { |h| ["%02d:00" % h, "%02d:30" % h] },
-                    selected: (@session.time&.strftime("%H:%M") || Time.current.strftime("%H:%M")),
-                    include_blank: false,
-                    input_html: { class: "form-select" } %>
+          label: "Time",
+          as: :select,
+          collection: (6..20).flat_map { |h| ["%02d:00" % h, "%02d:30" % h] },
+          selected: (@session.time&.strftime("%H:%M") || Time.current.strftime("%H:%M")),
+          include_blank: false,
+          input_html: { class: "form-select" } %>
       </div>
     </div>
 
-    <%= f.input :note, as: :text, label: "Note", input_html: { rows: 3, class: "form-control" } %>
+    <%= f.input :note, as: :text, label: "Note", input_html: { rows: 1, class: "form-control" } %>
 
     <%= f.button :submit, "Create Session", class: "btn btn-primary" %>
   <% end %>
@@ -97,17 +97,22 @@
       <table class="table table-bordered table-striped align-middle">
         <thead class="table-light">
           <tr>
-            <th>Service</th>
-            <th>Start</th>
-            <th>End</th>
+            <th>Purchase #</th>
             <th>Status</th>
-            <th>Paid (used/total)</th>
-            <th>Free (used/total)</th>
+            <th>Start Date</th>
+            <th>Expire Date</th>
+            <th>Purchase Date</th>
+            <th>Stop Date</th>
+            <th>Cancel Date</th>
+            <th>Service Name</th>
+            <th>Duration</th>
+            <th style="min-width: 260px;">Progress</th>
           </tr>
         </thead>
         <tbody data-filter-services-target="servicesTbody">
+          <!-- Initial placeholder row; Stimulus will replace with actual rows -->
           <tr data-filter-services-target="emptyRow" class="text-muted">
-            <td colspan="6">Select a client to view services.</td>
+            <td colspan="10">Select a client to view services.</td>
           </tr>
         </tbody>
       </table>
@@ -149,6 +154,4 @@
   <% else %>
     <p class="text-muted">No unconfirmed sessions.</p>
   <% end %>
-
-  <div id="session-stats" class="mt-4"></div>
 </div>

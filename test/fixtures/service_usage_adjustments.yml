@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  fliip_service: one
+  user: one
+  paid_used_delta: 1.5
+  free_used_delta: 1.5
+  paid_bonus_delta: 1.5
+  idempotency_key: MyString
+
+two:
+  fliip_service: two
+  user: two
+  paid_used_delta: 1.5
+  free_used_delta: 1.5
+  paid_bonus_delta: 1.5
+  idempotency_key: MyString
