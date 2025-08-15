@@ -1,9 +1,35 @@
-# app/models/fliip_service.rb
 class FliipService < ApplicationRecord
-  belongs_to :fliip_user
-  has_many   :sessions, dependent: :nullify
-  has_one    :service_definition, primary_key: :service_id, foreign_key: :service_id
-  has_many :service_usage_adjustments, dependent: :destroy
+  belongs_to :fliip_user, inverse_of: :fliip_services
+  has_many   :sessions, dependent: :restrict_with_error, inverse_of: :fliip_service
+  belongs_to :service_definition,
+              primary_key: :service_id,
+              foreign_key: :service_id,
+              optional: true
+  has_many   :service_usage_adjustments, dependent: :destroy, inverse_of: :fliip_service
+
+  scope :active,    -> { where(purchase_status: "A") }
+  scope :inactive,  -> { where(purchase_status: "I") }
+  scope :planned,   -> { where(purchase_status: "P") }
+  scope :cancelled, -> { where(purchase_status: "C") }
+  scope :stopped,   -> { where(purchase_status: "S") }
+
+  scope :current, -> {
+    where(purchase_status: "A")
+      .where("start_date IS NULL OR start_date <= ?", Date.current)
+      .where("expire_date IS NULL OR expire_date >= ?", Date.current)
+  }
+
+  STATUS_MAP = {
+    "A" => "Active",
+    "I" => "Inactive",
+    "P" => "Planned",
+    "C" => "Cancelled",
+    "S" => "Stopped"
+  }
+
+  def status_name
+    STATUS_MAP[purchase_status]
+  end
 
   # --- Convenience scopes/collections ---
   def confirmed_sessions
@@ -19,8 +45,8 @@ class FliipService < ApplicationRecord
   end
 
   # --- Adjustment sums (float-safe) ---
-  def paid_bonus_total
-    service_usage_adjustments.sum(:paid_bonus_delta).to_f
+  def bonus_sessions_total
+    service_usage_adjustments.sum(:bonus_sessions).to_f
   end
 
   def paid_used_adjustment
@@ -40,10 +66,10 @@ class FliipService < ApplicationRecord
     free_sessions.sum(:duration).to_f + free_used_adjustment
   end
 
-  # --- Allowed totals (base from definition + bonus) ---
+  # --- Allowed totals ---
   def paid_allowed_total
     base = service_definition&.paid_sessions.to_f
-    base + paid_bonus_total
+    base + bonus_sessions_total
   end
 
   def free_allowed_total
@@ -53,7 +79,7 @@ class FliipService < ApplicationRecord
   # --- Remaining (clamped at 0.0) ---
   def remaining_paid_sessions
     total = paid_allowed_total
-    return nil if total.zero? && service_definition.nil? # keep your original nil semantics
+    return nil if total.zero? && service_definition.nil?
     [total - paid_used_total, 0.0].max
   end
 
@@ -69,7 +95,7 @@ class FliipService < ApplicationRecord
       paid: {
         used_sessions:  paid_used_total,
         included:       service_definition&.paid_sessions,
-        bonus:          paid_bonus_total,
+        bonus:          bonus_sessions_total,
         allowed_total:  paid_allowed_total,
         remaining:      remaining_paid_sessions
       },
@@ -82,7 +108,16 @@ class FliipService < ApplicationRecord
     }
   end
 
-  # --- Nice-to-have for progress bars (0–100) ---
+  def next_session_type
+    return "free" if remaining_free_sessions.to_f > 0.0
+    return "paid" if remaining_paid_sessions.to_f > 0.0
+    nil
+  end
+
+  def can_book_session?
+    next_session_type.present?
+  end
+
   def paid_progress_percent
     total = paid_allowed_total
     return nil if total.to_f <= 0.0

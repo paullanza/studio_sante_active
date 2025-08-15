@@ -1,12 +1,11 @@
-# app/models/user.rb
 class User < ApplicationRecord
   # Devise modules
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
-  has_one :signup_code, foreign_key: "used_by_id", dependent: :nullify
+  has_one :signup_code, foreign_key: "used_by_id", inverse_of: :used_by, dependent: :nullify
   has_many :sessions
-
+  has_many :service_usage_adjustments, dependent: :nullify
 
   # Virtual attribute for the access code entered at signup
   attr_accessor :signup_code_token
@@ -26,7 +25,8 @@ class User < ApplicationRecord
   after_create :consume_signup_code
 
   def active_status_change_allowed?(actor)
-    actor.admin? || (actor.manager? && employee?)
+    return false if actor == self
+    actor.super_admin? || actor.admin? || (actor.manager? && employee?)
   end
 
   # Activate this user if the actor has permission
@@ -56,21 +56,27 @@ class User < ApplicationRecord
   private
 
   def validate_signup_code
-    code = SignupCode.find_by(code: signup_code_token)
+    if signup_code_token.blank?
+      errors.add(:signup_code_token, "cannot be blank")
+      return
+    end
 
-    case
-    when signup_code_token.blank?                  then errors.add(:signup_code_token, "cannot be blank")
-    when code.nil?                                 then errors.add(:signup_code_token, "is invalid")
-    when code.deactivated?                         then errors.add(:signup_code_token, "has been deactivated")
-    when code.used?                                then errors.add(:signup_code_token, "has already been used")
-    when code.expired? || code.expired_by_time?    then errors.add(:signup_code_token, "has expired")
+    code = SignupCode.find_by(code: signup_code_token)
+    if code.nil?
+      errors.add(:signup_code_token, "is invalid")
+    elsif code.deactivated?
+      errors.add(:signup_code_token, "has been deactivated")
+    elsif code.used?
+      errors.add(:signup_code_token, "has already been used")
+    elsif code.expired? || code.respond_to?(:expired_by_time?) && code.expired_by_time?
+      errors.add(:signup_code_token, "has expired")
     end
   end
 
   def consume_signup_code
-    code = SignupCode.find_by(code: signup_code_token)
+    code = SignupCode.lock.find_by(code: signup_code_token)
     return unless code&.usable?
 
-    code.update!(status: :used, used_by: self)
+    code.used!(by: self)
   end
 end

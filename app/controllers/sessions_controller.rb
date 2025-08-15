@@ -25,7 +25,7 @@ class SessionsController < ApplicationController
   end
 
   # GET /sessions/services_for_user?fliip_user_id=...
-    def services_for_user
+  def services_for_user
     fliip_user_id = params.require(:fliip_user_id)
 
     services = FliipService

@@ -10,23 +10,23 @@ class SignupCode < ApplicationRecord
   before_validation :generate_code, on: :create
   before_validation :set_expiry_date, on: :create
 
-  # Returns true if the code is valid and can be used
+  scope :usable, -> { active.where("expiry_date > ?", Time.current) }
+
   def usable?
     active? && expiry_date.future?
   end
 
-  # Returns true if the code should now be expired (for internal checks)
   def expired_by_time?
     active? && expiry_date.past?
   end
 
-  # Optionally call this to change the status if the code is expired
   def mark_as_expired!
-    update!(status: :expired) if expired_by_time?
+    return false unless expired_by_time?
+    update!(status: :expired)
   end
 
-  def used!
-    self.status = :used
+  def used!(by:)
+    update!(status: :used, used_by: by)
   end
 
   def self.expire_old_codes!
@@ -37,9 +37,7 @@ class SignupCode < ApplicationRecord
 
   def safely_deactivate!
     return false unless active? && expiry_date.future?
-
     update!(status: :deactivated)
-    true
   end
 
   private

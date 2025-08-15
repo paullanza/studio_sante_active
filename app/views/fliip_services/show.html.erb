@@ -66,27 +66,33 @@
         <div class="card-body">
           <% fmt = ->(n) { ('%.1f' % n.to_f) } %>
 
-          <% paid_used  = @paid_used || 0.0 %>
-          <% paid_total = @paid_total %>
-          <% paid_bonus = @paid_bonus || 0.0 %>
+          <% paid_used   = @paid_used.to_f %>
+          <% paid_base   = @paid_total %>        <%# included from definition (may be nil) %>
+          <% paid_bonus  = @paid_bonus.to_f %>
+          <% paid_allow  = (paid_base.to_f.nonzero? ? paid_base.to_f : 0.0) + paid_bonus %>
+
           <% paid_pct =
-               if paid_total.to_i > 0
-                 [[((paid_used.to_f / paid_total.to_f) * 100).round, 0].max, 100].min
+               if paid_allow.positive?
+                 [[((paid_used / paid_allow) * 100).round, 0].max, 100].min
                else
                  0
                end %>
 
-          <% free_used   = @free_used || 0.0 %>
+          <% free_used   = @free_used.to_f %>
           <% free_total  = @free_total %>
           <% free_total_s = free_total.nil? ? "—" : free_total.to_s %>
 
           <div class="text-muted small mb-1">Sessions</div>
           <div class="d-flex justify-content-between small">
             <span>
-              <%= "#{fmt.call(paid_used)}/#{paid_total || '—'} sessions (paid)" %>
-              <% if paid_bonus.to_f.nonzero? %>
-                <span class="text-muted">( +<%= fmt.call(paid_bonus) %> bonus )</span>
-              <% end %>
+              <%= "#{fmt.call(paid_used)}/#{paid_allow.positive? ? fmt.call(paid_allow) : '—'} sessions (paid)" %>
+              <%# breakdown: base + bonus %>
+              <span class="text-muted">
+                (
+                  <%= paid_base.nil? ? "—" : paid_base %> base
+                  <% if paid_bonus.nonzero? %> + <%= fmt.call(paid_bonus) %> bonus<% end %>
+                )
+              </span>
             </span>
             <span>
               <%= paid_pct %>%
@@ -117,15 +123,11 @@
         </div>
         <div class="col-md-4">
           <div class="small text-muted">Paid used (adjustments only)</div>
-          <div class="fw-semibold">
-            <%= fmt.call(@service.paid_used_adjustment) %>
-          </div>
+          <div class="fw-semibold"><%= fmt.call(@service.paid_used_adjustment) %></div>
         </div>
         <div class="col-md-4">
           <div class="small text-muted">Free used (adjustments only)</div>
-          <div class="fw-semibold">
-            <%= fmt.call(@service.free_used_adjustment) %>
-          </div>
+          <div class="fw-semibold"><%= fmt.call(@service.free_used_adjustment) %></div>
         </div>
       </div>
 
@@ -139,7 +141,6 @@
                 <th class="text-end">Paid Used Δ</th>
                 <th class="text-end">Free Used Δ</th>
                 <th class="text-end">Paid Bonus Δ</th>
-                <th>Idempotency Key</th>
               </tr>
             </thead>
             <tbody>
@@ -150,7 +151,6 @@
                   <td class="text-end"><%= adj.paid_used_delta.to_f.zero? ? "—" : fmt.call(adj.paid_used_delta) %></td>
                   <td class="text-end"><%= adj.free_used_delta.to_f.zero? ? "—" : fmt.call(adj.free_used_delta) %></td>
                   <td class="text-end"><%= adj.paid_bonus_delta.to_f.zero? ? "—" : fmt.call(adj.paid_bonus_delta) %></td>
-                  <td class="text-monospace"><%= adj.idempotency_key.presence || "—" %></td>
                 </tr>
               <% end %>
             </tbody>

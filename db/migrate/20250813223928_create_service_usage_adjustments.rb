@@ -5,12 +5,9 @@ class CreateServiceUsageAdjustments < ActiveRecord::Migration[7.1]
       t.references :user, null: false, foreign_key: true
       t.float :paid_used_delta
       t.float :free_used_delta
-      t.float :paid_bonus_delta
-      t.string :idempotency_key
+      t.float :bonus_sessions
 
       t.timestamps
     end
-
-    add_index :service_usage_adjustments, :idempotency_key, unique: true
   end
 end
