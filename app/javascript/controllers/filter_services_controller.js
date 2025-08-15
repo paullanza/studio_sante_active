@@ -69,7 +69,7 @@ export default class extends Controller {
   }
 
   #renderServicesRows(services) {
-    const COLS = 10 // matches headers you specified
+    const COLS = 10
     this.servicesTbodyTarget.innerHTML = ""
 
     if (!services || services.length === 0) {
@@ -81,13 +81,33 @@ export default class extends Controller {
       const isGrey = svc.status === "I" || svc.status === "C"
       const rowClass = isGrey ? "text-muted table-secondary" : ""
 
-      const timePct  = this.#num(svc.time_progress_percent)
-      const timeLbl  = this.#escape(svc.time_range_label || "—")
-      const paidPct  = this.#num(svc.paid_usage_percent)
-      const paidUsed = this.#fmtNumber(svc.paid_used)
-      const paidTot  = svc.paid_total == null ? "—" : this.#escape(String(svc.paid_total))
-      const freeUsed = this.#fmtNumber(svc.free_used)
-      const freeTot  = svc.free_total == null ? "—" : this.#escape(String(svc.free_total))
+      // Time progress (from backend or default)
+      const timePct = this.#num(svc.time_progress_percent)
+      const timeLbl = this.#escape(svc.time_range_label || "—")
+
+      // Prefer flat keys; fallback to nested usage_stats to be resilient
+      const us = svc.usage_stats || {}
+      const paidObj = us.paid || {}
+      const freeObj = us.free || {}
+
+      const paidUsed  = this.#num1( svc.paid_used_total ?? svc.paid_used ?? paidObj.used_sessions )
+      const paidIncl  = this.#firstPresent( svc.paid_included, svc.paid_total, paidObj.included )
+      const paidBonus = this.#num1( svc.paid_bonus_total ?? paidObj.bonus )
+      const paidAllow = this.#num1( svc.paid_allowed_total ?? paidObj.allowed_total ?? ((this.#present(paidIncl) ? Number(paidIncl) : 0) + (paidBonus || 0)) )
+      const paidPct   = this.#num( svc.paid_usage_percent ?? svc.paid_progress_percent ?? (paidAllow > 0 ? (paidUsed / paidAllow) * 100 : 0) )
+
+      const freeUsed  = this.#num1( svc.free_used_total ?? svc.free_used ?? freeObj.used_sessions )
+      const freeIncl  = this.#firstPresent( svc.free_included, svc.free_total, freeObj.included )
+
+      // Labels
+      const paidUsedLabel = this.#fmtNumber(paidUsed)
+      const paidInclLabel = this.#present(paidIncl) ? this.#escape(String(paidIncl)) : "—"
+      const bonusLabel = paidBonus && paidBonus !== 0 ? ` <span class="text-muted">( +${this.#fmtNumber(paidBonus)} bonus )</span>` : ""
+
+      const hasFree = this.#present(freeUsed) || this.#present(freeIncl)
+      const freeUsedLabel = this.#present(freeUsed) ? this.#fmtNumber(freeUsed) : "—"
+      const freeInclLabel = this.#present(freeIncl) ? this.#escape(String(freeIncl)) : "—"
+      const freeBracket = hasFree ? `<span class="ms-2 text-muted">[${freeUsedLabel}/${freeInclLabel} absences]</span>` : ""
 
       return `
         <tr class="${rowClass}">
@@ -107,7 +127,7 @@ export default class extends Controller {
                 <span>${timeLbl} • ${timePct}%</span>
               </div>
               <div class="progress" role="progressbar" aria-label="Time progress"
-                  aria-valuemin="0" aria-valuemax="100" aria-valuenow="${timePct}">
+                   aria-valuemin="0" aria-valuemax="100" aria-valuenow="${timePct}">
                 <div class="progress-bar bg-info" style="width:${timePct}%"></div>
               </div>
             </div>
@@ -116,12 +136,13 @@ export default class extends Controller {
               <div class="d-flex justify-content-between small">
                 <span>Sessions</span>
                 <span>
-                  ${paidUsed}/${paidTot} • ${paidPct}%
-                  <span class="ms-2 text-muted">[${freeUsed}/${freeTot} absences]</span>
+                  ${paidUsedLabel}/${paidInclLabel} sessions
+                  ${bonusLabel} • ${paidPct}%
+                  ${freeBracket}
                 </span>
               </div>
               <div class="progress" role="progressbar" aria-label="Paid sessions usage"
-                  aria-valuemin="0" aria-valuemax="100" aria-valuenow="${paidPct}">
+                   aria-valuemin="0" aria-valuemax="100" aria-valuenow="${paidPct}">
                 <div class="progress-bar bg-success" style="width:${paidPct}%"></div>
               </div>
             </div>
@@ -187,6 +208,22 @@ export default class extends Controller {
     if (v < 0) return 0
     if (v > 100) return 100
     return Math.round(v)
+  }
+
+  #num1(n) {
+    const v = Number(n)
+    return Number.isFinite(v) ? v : 0
+  }
+
+  #present(v) {
+    return !(v === null || v === undefined || v === "")
+  }
+
+  #firstPresent(...vals) {
+    for (const v of vals) {
+      if (this.#present(v)) return v
+    }
+    return null
   }
 
   #escape(s) {

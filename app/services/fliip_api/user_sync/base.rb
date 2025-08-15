@@ -15,9 +15,10 @@ module FliipApi
         elapsed_time = Time.at(seconds).utc.strftime("%-H hours, %-M minutes, %-S seconds")
         plural_one = info[:new_users] != 1 ? 'users' : 'user'
         plural_two = info[:updated_users] != 1 ? 'users' : 'user'
-        puts "Sync complete: Elapsed time: #{elapsed_time} "
-        puts "#{info[:new_users]} new #{plural_one}, #{info[:updated_users]} updated #{plural_two}."
         ServiceDefinition.create_missing_definitions!
+        part_one = "Sync complete: Elapsed time: #{elapsed_time} | "
+        part_two = "#{info[:new_users]} new #{plural_one}, #{info[:updated_users]} updated #{plural_two}."
+        part_one + part_two
       end
 
       private

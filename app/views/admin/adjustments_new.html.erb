@@ -18,15 +18,6 @@
       </div>
     </div>
 
-    <div class="mb-3">
-      <label class="form-label">Associate rows to employee (trainer)</label>
-      <%= select_tag :employee_id,
-            options_from_collection_for_select(@users_for_select, :id, :full_name),
-            include_blank: "Choose an employee (optional)",
-            class: "form-select" %>
-      <div class="form-text">Who should these adjustments be attributed to?</div>
-    </div>
-
     <%= submit_tag "Preview Import", class: "btn btn-primary" %>
   <% end %>
 </div>

@@ -12,7 +12,7 @@
     </div>
   <% end %>
 
-  <% if @rows.blank? %>
+  <% if @adjustments.blank? %>
     <p class="text-muted">No valid rows found.</p>
     <%= link_to "Back", admin_adjustments_new_path, class: "btn btn-secondary" %>
   <% else %>
@@ -20,39 +20,49 @@
       <table class="table table-bordered table-striped align-middle">
         <thead class="table-light">
           <tr>
-            <th>#</th>
+            <th>Row Number</th>
+            <th>Client ID</th>
+            <th>Client Remote ID</th>
+            <th>Client Name</th>
             <th>Service ID</th>
-            <th>Remote Purchase ID</th>
-            <th>Service</th>
-            <th>Client</th>
+            <th>Service Remote Purchase ID</th>
+            <th>Service Name</th>
+            <th>Purchase Status</th>
+            <th>Start Date</th>
+            <th>Expire Date</th>
             <th class="text-end">Paid Used Δ</th>
             <th class="text-end">Free Used Δ</th>
             <th class="text-end">Bonus Paid Δ</th>
           </tr>
         </thead>
         <tbody>
-          <% @rows.each do |r| %>
+          <% @adjustments.each do |r| %>
             <tr>
-              <td><%= r[:rownum] %></td>
+              <td><%= r[:row_number] %></td>
+              <td><%= r[:client_id] %></td>
+              <td><%= r[:client_remote_id] %></td>
+              <td><%= r[:client_name] %></td>
               <td><%= r[:service_id] %></td>
-              <td><%= r[:remote_purchase_id] %></td>
-              <td><%= r[:service_label] %></td>
-              <td><%= r[:fliip_user_name].presence || "—" %></td>
-              <td class="text-end"><%= r[:paid_used_delta].to_f.zero? ? "—" : r[:paid_used_delta] %></td>
-              <td class="text-end"><%= r[:free_used_delta].to_f.zero? ? "—" : r[:free_used_delta] %></td>
-              <td class="text-end"><%= r[:bonus_paid_delta].to_f.zero? ? "—" : r[:bonus_paid_delta] %></td>
+              <td><%= r[:service_remote_purchase_id] %></td>
+              <td><%= r[:service_name] %></td>
+              <td><%= r[:purchase_status] %></td>
+              <td><%= r[:start_date] %></td>
+              <td><%= r[:expire_date] %></td>
+              <td class="text-end"><%= r[:paid_used].to_f.zero? ? "—" : r[:paid_used] %></td>
+              <td class="text-end"><%= r[:free_used].to_f.zero? ? "—" : r[:free_used] %></td>
+              <td class="text-end"><%= r[:bonus_sessions].to_f.zero? ? "—" : r[:bonus_sessions] %></td>
             </tr>
           <% end %>
         </tbody>
       </table>
     </div>
 
-    <%= form_with url: admin_adjustments_commit_path, method: :post, local: true, class: "card p-3" do %>
+    <%= form_with url: admin_adjustments_commit_path, method: :post, local: true, data: { turbo: false }, class: "card p-3" do %>
       <div class="mb-3">
         <label class="form-label">Associate all rows to employee (trainer)</label>
         <%= select_tag :employee_id,
-              options_from_collection_for_select(@users_for_select, :id, :full_name, @default_employee_id),
-              include_blank: "Choose an employee (optional)",
+              options_from_collection_for_select(@users_for_select, :id, :full_name, @employee_id),
+              include_blank: "Choose an employee",
               class: "form-select" %>
       </div>
 

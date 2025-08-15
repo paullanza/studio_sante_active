@@ -25,37 +25,29 @@ class SessionsController < ApplicationController
   end
 
   # GET /sessions/services_for_user?fliip_user_id=...
-  def services_for_user
+    def services_for_user
     fliip_user_id = params.require(:fliip_user_id)
 
     services = FliipService
       .where(fliip_user_id: fliip_user_id)
-      .includes(:service_definition)
+      .includes(:service_definition, :service_usage_adjustments) # avoid N+1 for helpers
       .order(:expire_date, :service_name)
-
-    usage_sums = Session
-      .where(fliip_service_id: services.ids)
-      .group(:fliip_service_id, :session_type)
-      .sum(:duration)
 
     today        = Date.current
     future_limit = today + 1.month
     past_limit   = today - 1.month
 
-    status_label = { "A" => "Active", "I" => "Inactive", "P" => "Planned", "C" => "Cancelled", "S" => "Stopped" }
+    status_label = {
+      "A" => "Active", "I" => "Inactive", "P" => "Planned",
+      "C" => "Cancelled", "S" => "Stopped"
+    }.freeze
 
     payload = services.map do |svc|
       starts_too_late = svc.start_date.present?  && svc.start_date  > future_limit
       ended_too_long  = svc.expire_date.present? && svc.expire_date < past_limit
       selectable      = !(starts_too_late || ended_too_long)
 
-      paid_used   = usage_sums.fetch([svc.id, "paid"], 0.0).to_f
-      paid_total  = svc.service_definition&.paid_sessions
-      paid_pct    = paid_total.to_f.positive? ? ((paid_used / paid_total.to_f) * 100).round : 0
-
-      free_used   = usage_sums.fetch([svc.id, "free"], 0.0).to_f
-      free_total  = svc.service_definition&.free_sessions
-
+      # Dates label + time progress (fallback to 0 when missing)
       time_label =
         if svc.start_date.present? && svc.expire_date.present?
           "#{svc.start_date.strftime('%d/%m/%Y')} → #{svc.expire_date.strftime('%d/%m/%Y')}"
@@ -73,27 +65,67 @@ class SessionsController < ApplicationController
           0
         end
 
+      # Use model helpers so adjustments are included and everything stays consistent with the views
+      paid_used_total   = svc.paid_used_total
+      paid_included     = svc.service_definition&.paid_sessions
+      paid_bonus_total  = svc.paid_bonus_total
+      paid_allowed_total= svc.paid_allowed_total
+      paid_pct          = svc.paid_progress_percent || 0
+
+      free_used_total   = svc.free_used_total
+      free_included     = svc.service_definition&.free_sessions
+
       {
-        id:                     svc.id,
-        fliip_user_id:          svc.fliip_user_id,
-        remote_purchase_id:     svc.remote_purchase_id,
-        service_name:           svc.service_name,
-        status:                 svc.purchase_status,
-        status_label:           status_label[svc.purchase_status] || "-",
-        start_date:             svc.start_date,
-        expire_date:            svc.expire_date,
-        purchase_date:          svc.purchase_date,
-        stop_date:              svc.stop_date,
-        cancel_date:            svc.cancel_date,
-        duration:               svc.duration,
-        selectable:             selectable,
-        paid_used:              paid_used,
-        paid_total:             paid_total,
-        paid_usage_percent:     paid_pct,
-        free_used:              free_used,   # <-- NEW
-        free_total:             free_total,  # <-- NEW
-        time_range_label:       time_label,
-        time_progress_percent:  time_pct
+        id:                    svc.id,
+        fliip_user_id:         svc.fliip_user_id,
+        remote_purchase_id:    svc.remote_purchase_id,
+        service_name:          svc.service_name,
+        status:                svc.purchase_status,
+        status_label:          status_label[svc.purchase_status] || "-",
+        start_date:            svc.start_date,
+        expire_date:           svc.expire_date,
+        purchase_date:         svc.purchase_date,
+        stop_date:             svc.stop_date,
+        cancel_date:           svc.cancel_date,
+        duration:              svc.duration,
+        selectable:            selectable,
+
+        # ---- flat fields (backward/forward compatible with your Stimulus) ----
+        paid_used_total:       paid_used_total,
+        paid_included:         paid_included,
+        paid_bonus_total:      paid_bonus_total,
+        paid_allowed_total:    paid_allowed_total,
+        paid_usage_percent:    paid_pct,
+
+        free_used_total:       free_used_total,
+        free_included:         free_included,
+
+        # Keep older names too, in case anything still reads them
+        paid_used:             paid_used_total,
+        paid_total:            paid_included,
+        free_used:             free_used_total,
+        free_total:            free_included,
+
+        # time UI
+        time_range_label:      time_label,
+        time_progress_percent: time_pct,
+
+        # ---- nested usage_stats (matches FliipService#usage_stats) ----
+        usage_stats: {
+          paid: {
+            used_sessions:  paid_used_total,
+            included:       paid_included,
+            bonus:          paid_bonus_total,
+            allowed_total:  paid_allowed_total,
+            remaining:      svc.remaining_paid_sessions
+          },
+          free: {
+            used_sessions:  free_used_total,
+            included:       free_included,
+            allowed_total:  svc.free_allowed_total,
+            remaining:      svc.remaining_free_sessions
+          }
+        }
       }
     end
 
@@ -101,8 +133,8 @@ class SessionsController < ApplicationController
   end
 
   def refresh_clients
-    FliipApi::UserSync::NewUserImporter.call
-    redirect_to new_session_path, notice: "Client list refreshed."
+    msg = FliipApi::UserSync::NewUserImporter.call
+    redirect_to new_session_path, notice: msg
   rescue => e
     redirect_to new_session_path, alert: "Could not refresh clients: #{e.message}"
   end
