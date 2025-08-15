@@ -1,44 +1,61 @@
 Rails.application.routes.draw do
-  # Devise authentication
+  # -----------------------------------------
+  # Devise authentication routes (PUBLIC)
+  # -----------------------------------------
   devise_for :users
 
+  # Public root for visitors who are NOT signed in
   devise_scope :user do
     unauthenticated do
       root to: "devise/sessions#new", as: :unauthenticated_root
     end
   end
 
+  # -----------------------------------------
+  # All remaining routes are PRIVATE
+  # -----------------------------------------
+  # Authenticated root: dashboard (private)
   authenticated :user do
     root to: "admin#dashboard", as: :authenticated_root
   end
 
-  # Public routes
+  # -----------------------------------------
+  # Client & Service management
+  # -----------------------------------------
   resources :fliip_users, only: [:index, :show]
   post "fliip_users/:remote_id/refresh", to: "fliip_users#refresh", as: :refresh_fliip_user
 
   get "admin/client_services", to: "admin#client_services", defaults: { format: :csv }
 
-  # Admin dashboard and features (flat controller)
-  get   "admin/dashboard",                to: "admin#dashboard",              as: :admin_dashboard
+  # -----------------------------------------
+  # Admin dashboard & services
+  # -----------------------------------------
+  get   "admin/dashboard",  to: "admin#dashboard",      as: :admin_dashboard
+  get   "admin/services",   to: "admin#services",       as: :admin_services
+  patch "admin/services/:id", to: "admin#update_service", as: :update_admin_service
 
-  # Service session definitions
-  get   "admin/services",                 to: "admin#services",               as: :admin_services
-  patch "admin/services/:id",            to: "admin#update_service",         as: :update_admin_service
-
+  # -----------------------------------------
   # Signup codes
-  post  "admin/signup_codes",            to: "admin#create_signup_code",     as: :admin_signup_codes
+  # -----------------------------------------
+  post  "admin/signup_codes", to: "admin#create_signup_code", as: :admin_signup_codes
   patch "admin/signup_codes/:id/deactivate", to: "admin#deactivate_signup_code", as: :deactivate_admin_signup_code
 
-  # Confirmation of sessions routes
-  get  "admin/unconfirmed_sessions", to: "admin#unconfirmed_sessions", as: :admin_unconfirmed_sessions
+  # -----------------------------------------
+  # Session confirmation
+  # -----------------------------------------
+  get   "admin/unconfirmed_sessions", to: "admin#unconfirmed_sessions", as: :admin_unconfirmed_sessions
   patch "admin/confirm_sessions",     to: "admin#confirm_sessions",     as: :admin_confirm_sessions
 
-  # Service Adjustments (admin-only)
+  # -----------------------------------------
+  # Service usage adjustments
+  # -----------------------------------------
   get  "admin/adjustments/new",     to: "admin#adjustments_new",     as: :admin_adjustments_new
   post "admin/adjustments/preview", to: "admin#adjustments_preview", as: :admin_adjustments_preview
   post "admin/adjustments/commit",  to: "admin#adjustments_commit",  as: :admin_adjustments_commit
 
-  # User profiles and admin/mod actions
+  # -----------------------------------------
+  # User profile & role management
+  # -----------------------------------------
   resources :users, only: [:show] do
     member do
       patch :make_employee
@@ -49,6 +66,9 @@ Rails.application.routes.draw do
     end
   end
 
+  # -----------------------------------------
+  # Session creation / booking
+  # -----------------------------------------
   resources :sessions, only: [:new, :create] do
     collection do
       get :services_for_user
@@ -56,13 +76,15 @@ Rails.application.routes.draw do
   end
 
   post "refresh_clients", to: "sessions#refresh_clients", as: :refresh_clients
-  post "import_clients", to: "admin#import_clients", as: :import_clients
+  post "import_clients",  to: "admin#import_clients",     as: :import_clients
 
+  # -----------------------------------------
+  # Fliip service details
+  # -----------------------------------------
   resources :fliip_services, only: [:show]
 
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
+  # -----------------------------------------
+  # Health check (PUBLIC, typically safe)
+  # -----------------------------------------
   get "up" => "rails/health#show", as: :rails_health_check
 end
