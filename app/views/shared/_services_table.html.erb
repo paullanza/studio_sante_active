@@ -1,0 +1,127 @@
+<% raise ArgumentError, "services is required" unless local_assigns[:services].present? %>
+
+<% fmt_date = ->(d) { d.present? ? d.strftime("%d/%m/%Y") : "—" } %>
+<% fmt_num  = ->(n) { ('%.1f' % n.to_f) } %>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>Client</th>
+        <th>ID</th>
+        <th>Remote Purchase ID</th>
+        <th>Status</th>
+        <th>Start</th>
+        <th>Expire</th>
+        <th>Purchased</th>
+        <th>Stopped</th>
+        <th>Cancelled</th>
+        <th>Service ID</th>
+        <th>Service Name</th>
+        <th>Duration</th>
+        <th>Description</th>
+        <th style="min-width:260px;">Progress</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% if services.any? %>
+        <% services.each do |svc| %>
+          <%# --- numbers via model helpers (keeps ERB light) --- %>
+          <% paid_used  = svc.paid_used_total %>
+          <% paid_incl  = svc.service_definition&.paid_sessions %>
+          <% paid_bonus = svc.bonus_sessions_total %>
+          <% paid_pct   = svc.paid_progress_percent || 0 %>
+          <% free_used  = svc.free_used_total %>
+          <% free_incl  = svc.service_definition&.free_sessions %>
+
+          <%# time helpers: prefer your helpers if present, fallback to simple defaults %>
+          <% time_pct   = respond_to?(:time_progress_percent) ? time_progress_percent(svc) : 0 %>
+          <% time_label = respond_to?(:time_range_label)     ? time_range_label(svc)     : "—" %>
+
+          <%# progress color classes (green/yellow/orange/red). if helper missing, use sane defaults %>
+          <% if respond_to?(:progress_color_classes)
+               time_bg, time_text = progress_color_classes(time_pct)
+               paid_bg, paid_text = progress_color_classes(paid_pct)
+             else
+               time_bg = "bg-info";  time_text = ""
+               paid_bg = "bg-success"; paid_text = ""
+             end %>
+
+          <% badge_class =
+               case svc.purchase_status
+               when "A" then "bg-success"
+               when "P" then "bg-info text-dark"
+               when "S" then "bg-warning text-dark"
+               when "C" then "bg-danger"
+               else           "bg-secondary"
+               end %>
+
+          <tr>
+            <td>
+              <% if svc.fliip_user %>
+                <%= link_to svc.fliip_user.full_name, fliip_user_path(svc.fliip_user), class: "text-decoration-none" %>
+              <% else %>
+                <span class="text-muted">—</span>
+              <% end %>
+            </td>
+
+            <td><%= svc.id %></td>
+            <td><%= svc.remote_purchase_id %></td>
+            <td><span class="badge <%= badge_class %>"><%= svc.status_name %></span></td>
+
+            <td><%= fmt_date.call(svc.start_date) %></td>
+            <td><%= fmt_date.call(svc.expire_date) %></td>
+            <td><%= fmt_date.call(svc.purchase_date) %></td>
+            <td><%= fmt_date.call(svc.stop_date) %></td>
+            <td><%= fmt_date.call(svc.cancel_date) %></td>
+
+            <td><%= svc.service_id %></td>
+            <td>
+              <%= link_to (svc.service_name.presence || "Service ##{svc.id}"),
+                          fliip_service_path(svc),
+                          class: "text-decoration-none" %>
+            </td>
+            <td><%= svc.duration.presence || "—" %></td>
+            <td><%= svc.service_description.presence || "—" %></td>
+
+            <td>
+              <!-- Time progress -->
+              <div class="mb-2">
+                <div class="d-flex justify-content-between small">
+                  <span>Time</span>
+                  <span><%= time_label %> • <%= time_pct %>%</span>
+                </div>
+                <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= time_pct %>">
+                  <div class="progress-bar <%= time_bg %> <%= time_text %>" style="width:<%= time_pct %>%"></div>
+                </div>
+              </div>
+
+              <!-- Sessions (paid bar) + free usage bracket -->
+              <div>
+                <div class="d-flex justify-content-between small">
+                  <span>Sessions</span>
+                  <span>
+                    <%= "#{fmt_num.call(paid_used)}/#{paid_incl.nil? ? '—' : paid_incl} sessions" %>
+                    <% if paid_bonus.to_f.nonzero? %>
+                      <span class="text-muted">( +<%= fmt_num.call(paid_bonus) %> bonus )</span>
+                    <% end %>
+                    • <%= paid_pct %>%
+                    <span class="ms-2 text-muted">[<%= fmt_num.call(free_used) %>/<%= free_incl.nil? ? '—' : free_incl %> absences]</span>
+                  </span>
+                </div>
+                <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= paid_pct %>">
+                  <div class="progress-bar <%= paid_bg %> <%= paid_text %>" style="width:<%= paid_pct %>%"></div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      <% else %>
+        <tr>
+          <td colspan="14" class="text-muted">No services to display.</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

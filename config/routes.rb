@@ -32,6 +32,7 @@ Rails.application.routes.draw do
   # -----------------------------------------
   get   "admin/dashboard",  to: "admin#dashboard",      as: :admin_dashboard
   get   "admin/services",   to: "admin#services",       as: :admin_services
+  get   "admin/services/:id", to: "admin#service_show", as: :admin_service
   patch "admin/services/:id", to: "admin#update_service", as: :update_admin_service
 
   # -----------------------------------------
@@ -69,10 +70,8 @@ Rails.application.routes.draw do
   # -----------------------------------------
   # Session creation / booking
   # -----------------------------------------
-  resources :sessions, only: [:new, :create] do
-    collection do
-      get :services_for_user
-    end
+  resources :sessions, only: [:new, :create, :update, :destroy] do
+    collection { get :services_for_user }
   end
 
   post "refresh_clients", to: "sessions#refresh_clients", as: :refresh_clients

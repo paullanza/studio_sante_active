@@ -1,3 +1,4 @@
+<!-- app/views/admin/dashboard.html.erb -->
 <div class="container mt-4">
   <h1 class="mb-4">Admin Dashboard</h1>
 
@@ -9,17 +10,9 @@
                   form: { data: { turbo_confirm: "This will import all clients from Fliip. Continue?" } } %>
 
     <%= link_to "Manage Service Session Limits", admin_services_path, class: "btn btn-outline-dark" %>
-
     <%= link_to "Review Unconfirmed Sessions", admin_unconfirmed_sessions_path, class: "btn btn-outline-primary" %>
-
-    <%= link_to "Export Clients & Services (CSV)",
-                admin_client_services_path(format: :csv),
-                class: "btn btn-outline-success" %>
-
-    <%= link_to "Upload Service Adjustments",
-                admin_adjustments_new_path,
-                class: "btn btn-outline-warning" %>
-
+    <%= link_to "Export Clients & Services (CSV)", admin_client_services_path(format: :csv), class: "btn btn-outline-success" %>
+    <%= link_to "Upload Service Adjustments", admin_adjustments_new_path, class: "btn btn-outline-warning" %>
   </div>
 
   <!-- Users Section -->
@@ -31,15 +24,15 @@
           <th>Name</th>
           <th>Role</th>
           <th>Status</th>
+          <th class="text-center">Unconf.</th>
+          <th class="text-center">Services</th>
           <th class="text-end">Actions</th>
         </tr>
       </thead>
       <tbody>
         <% @users.each do |user| %>
           <tr>
-            <td>
-              <%= link_to user.full_name, user_path(user), class: "text-decoration-none" %>
-            </td>
+            <td><%= link_to user.full_name, user_path(user), class: "text-decoration-none" %></td>
 
             <td>
               <% role_badge_class =
@@ -49,14 +42,24 @@
                    when user.manager?     then "bg-info text-dark"
                    else                        "bg-secondary"
                    end %>
-              <span class="badge <%= role_badge_class %>">
-                <%= user.role.titleize %>
-              </span>
+              <span class="badge <%= role_badge_class %>"><%= user.role.titleize %></span>
             </td>
 
             <td>
               <span class="badge <%= user.active? ? 'bg-success' : 'bg-secondary' %>">
                 <%= user.active? ? 'Active' : 'Inactive' %>
+              </span>
+            </td>
+
+            <!-- New: per-user activity summaries -->
+            <td class="text-center">
+              <span class="badge bg-warning text-dark">
+                <%= @unconfirmed_counts[user.id].to_i %>
+              </span>
+            </td>
+            <td class="text-center">
+              <span class="badge bg-secondary">
+                <%= @services_touched_counts[user.id].to_i %>
               </span>
             </td>
 
@@ -67,26 +70,13 @@
               <% elsif current_user.super_admin? %>
                 <div class="d-flex justify-content-end gap-2">
                   <% if user.admin? %>
-                    <%= button_to "Make Manager",
-                                  make_manager_user_path(user),
-                                  method: :patch,
-                                  class: "btn btn-sm btn-outline-primary" %>
+                    <%= button_to "Make Manager", make_manager_user_path(user), method: :patch, class: "btn btn-sm btn-outline-primary" %>
                   <% elsif user.manager? %>
-                    <%= button_to "Make Employee",
-                                  make_employee_user_path(user),
-                                  method: :patch,
-                                  class: "btn btn-sm btn-outline-secondary" %>
-                    <%= button_to "Make Admin",
-                                  make_admin_user_path(user),
-                                  method: :patch,
-                                  class: "btn btn-sm btn-outline-dark" %>
-                  <% else %> <%# employee %>
-                    <%= button_to "Make Manager",
-                                  make_manager_user_path(user),
-                                  method: :patch,
-                                  class: "btn btn-sm btn-outline-primary" %>
+                    <%= button_to "Make Employee", make_employee_user_path(user), method: :patch, class: "btn btn-sm btn-outline-secondary" %>
+                    <%= button_to "Make Admin",    make_admin_user_path(user),    method: :patch, class: "btn btn-sm btn-outline-dark" %>
+                  <% else %>
+                    <%= button_to "Make Manager",  make_manager_user_path(user),  method: :patch, class: "btn btn-sm btn-outline-primary" %>
                   <% end %>
-
                   <%= button_to(user.active? ? 'Deactivate' : 'Reactivate',
                                 user.active? ? deactivate_user_path(user) : activate_user_path(user),
                                 method: :patch,
@@ -98,21 +88,15 @@
                   <em>Admin</em>
                 <% elsif user.manager? %>
                   <div class="d-flex justify-content-end gap-2">
-                    <%= button_to "Make Employee",
-                                  make_employee_user_path(user),
-                                  method: :patch,
-                                  class: "btn btn-sm btn-outline-secondary" %>
+                    <%= button_to "Make Employee", make_employee_user_path(user), method: :patch, class: "btn btn-sm btn-outline-secondary" %>
                     <%= button_to(user.active? ? 'Deactivate' : 'Reactivate',
                                   user.active? ? deactivate_user_path(user) : activate_user_path(user),
                                   method: :patch,
                                   class: "btn btn-sm #{user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
                   </div>
-                <% else %> <%# employee %>
+                <% else %>
                   <div class="d-flex justify-content-end gap-2">
-                    <%= button_to "Make Manager",
-                                  make_manager_user_path(user),
-                                  method: :patch,
-                                  class: "btn btn-sm btn-outline-primary" %>
+                    <%= button_to "Make Manager",  make_manager_user_path(user),  method: :patch, class: "btn btn-sm btn-outline-primary" %>
                     <%= button_to(user.active? ? 'Deactivate' : 'Reactivate',
                                   user.active? ? deactivate_user_path(user) : activate_user_path(user),
                                   method: :patch,
@@ -131,12 +115,9 @@
   </section>
 
   <!-- Signup Codes Section -->
-  <section>
+  <section class="mb-5">
     <h2>Signup Codes</h2>
-    <%= button_to "Generate New Code",
-                  admin_signup_codes_path,
-                  method: :post,
-                  class: "btn btn-primary mb-3" %>
+    <%= button_to "Generate New Code", admin_signup_codes_path, method: :post, class: "btn btn-primary mb-3" %>
 
     <table class="table table-hover align-middle">
       <thead class="table-light">
@@ -150,11 +131,11 @@
       <tbody>
         <% @signup_codes.each do |code| %>
           <tr>
-            <td><%= code.code %></td>
+            <td><code><%= code.code %></code></td>
             <td><%= code.usable? ? code.expiry_date.strftime("%d/%m/%Y") : "—" %></td>
             <td>
               <% if code.used? %>
-                <%= "#{code.used_by&.first_name} #{code.used_by&.last_name}" %>
+                <%= [code.used_by&.first_name, code.used_by&.last_name].compact.join(" ") %>
               <% elsif code.deactivated? %>
                 Deactivated
               <% else %>
@@ -163,10 +144,7 @@
             </td>
             <td class="text-end">
               <% if code.usable? %>
-                <%= button_to "Deactivate",
-                              deactivate_admin_signup_code_path(code),
-                              method: :patch,
-                              class: "btn btn-sm btn-outline-danger" %>
+                <%= button_to "Deactivate", deactivate_admin_signup_code_path(code), method: :patch, class: "btn btn-sm btn-outline-danger" %>
               <% else %>
                 <em>—</em>
               <% end %>
@@ -176,4 +154,21 @@
       </tbody>
     </table>
   </section>
+
+  <!-- Services ending soon -->
+  <section class="mb-5">
+    <h2>Services Ending in Next 30 Days</h2>
+    <div class="table-responsive">
+      <%= render "shared/services_table", services: @services_ending_soon %>
+    </div>
+  </section>
+
+  <!-- Services ended recently -->
+  <section class="mb-5">
+    <h2>Services Ended in Last 30 Days</h2>
+    <div class="table-responsive">
+      <%= render "shared/services_table", services: @services_ended_recent %>
+    </div>
+  </section>
+
 </div>

@@ -4,10 +4,42 @@ class AdminController < ApplicationController
   before_action :ensure_admin!
 
   def dashboard
-    SignupCode.expire_old_codes!
-    @users = User.order(:last_name, :first_name)
-    @signup_codes = SignupCode.order(created_at: :desc)
-  end
+    # Staff list (order by role then name)
+    @users = User.order(role: :desc, last_name: :asc, first_name: :asc)
+
+    # Per-user unconfirmed session counts (include nil as unconfirmed)
+    @unconfirmed_counts = Session
+      .where(confirmed: [false, nil])
+      .group(:user_id)
+      .count
+
+    # Distinct services touched per user (sessions or adjustments)
+    # (kept simple & readable; can optimize with a SQL UNION later if needed)
+    sessions_pairs = Session.distinct.pluck(:user_id, :fliip_service_id)
+    adjust_pairs   = ServiceUsageAdjustment.distinct.pluck(:user_id, :fliip_service_id)
+
+    tmp = Hash.new { |h, k| h[k] = [] }
+    sessions_pairs.each { |uid, sid| tmp[uid] << sid }
+    adjust_pairs.each { |uid, sid| tmp[uid] << sid }
+
+    @services_touched_counts = tmp.transform_values { |arr| arr.uniq.size }
+
+    # Signup codes (small slice to keep dashboard light)
+    @signup_codes = SignupCode.order(created_at: :desc).limit(20)
+
+    # Services ending soon (next 30 days) and ended recently (last 30 days)
+    today = Date.current
+    @services_ending_soon = FliipService
+      .active
+      .where(expire_date: today..(today + 30.days))
+      .includes(:fliip_user, :service_definition, :service_usage_adjustments)
+      .order(:expire_date)
+
+    @services_ended_recent = FliipService
+      .where(expire_date: (today - 30.days)..(today - 1.day))
+      .includes(:fliip_user, :service_definition, :service_usage_adjustments)
+      .order(expire_date: :desc)
+    end
 
   def create_signup_code
     SignupCode.create!
@@ -30,23 +62,37 @@ class AdminController < ApplicationController
 
   def update_service
     definition = ServiceDefinition.find(params[:id])
-    definition.update!(paid_sessions: params[:paid_sessions],
-                       free_sessions: params[:free_sessions])
+    definition.update!(paid_sessions: params[:paid_sessions].to_i,
+                       free_sessions: params[:free_sessions].to_i
+                      )
     redirect_to admin_services_path, notice: "Service definition updated."
   end
 
+  def service_show
+    @definition = ServiceDefinition.find(params[:id])
+
+    @services = FliipService
+      .where(service_id: @definition.service_id)
+      .includes(:fliip_user, :service_definition, :service_usage_adjustments)
+      .order(Arel.sql("expire_date NULLS LAST"), :service_name)
+
+    @active_count = @services.select { |s| s.purchase_status == "A" }.size
+    @total_count  = @services.size
+  end
+
   def unconfirmed_sessions
-    @sessions = Session.unconfirmed
-                       .includes(:fliip_user, :fliip_service, :user)
-                       .order(:date, :time)
+    @sessions = Session.where(confirmed: [false, nil])
+                      .includes(:fliip_user, :fliip_service, :user)
+                      .order(date: :desc, time: :desc)
+
+    @staff = User.active.order(:last_name, :first_name) # for reassign dropdown
   end
 
   def confirm_sessions
     session_ids = params[:session_ids] || []
     confirmed = Session.where(id: session_ids).update_all(confirmed: true)
-
     redirect_to admin_unconfirmed_sessions_path,
-                notice: "#{confirmed} session#{'s' unless confirmed == 1} confirmed."
+                notice: "#{confirmed} #{'session'.pluralize(confirmed)} confirmed."
   end
 
   def import_clients
@@ -67,18 +113,18 @@ class AdminController < ApplicationController
     session_sums = Session
       .where(fliip_service_id: service_ids)
       .group(:fliip_service_id, :session_type)
-      .sum(:duration) # => { [id,"paid"]=>7.5, [id,"free"]=>2.0 }
+      .sum(:duration) # { [id,"paid"]=>7.5, [id,"free"]=>2.0 }
 
-    # Optional: ledger adjustments if present
-    adj_sums =
-      if defined?(UsageAdjustment)
-        UsageAdjustment
-          .where(fliip_service_id: service_ids)
-          .group(:fliip_service_id, :kind)
-          .sum(:amount) # => { [id,"paid"]=>1.0, [id,"free"]=>0.5 }
-      else
-        {}
-      end
+    # Adjustments: sum deltas by service
+    adj_paid = ServiceUsageAdjustment
+      .where(fliip_service_id: service_ids)
+      .group(:fliip_service_id)
+      .sum(:paid_used_delta)   # { id => 1.0 }
+
+    adj_free = ServiceUsageAdjustment
+      .where(fliip_service_id: service_ids)
+      .group(:fliip_service_id)
+      .sum(:free_used_delta)   # { id => 0.5 }
 
     headers = %w[
       client_id
@@ -103,13 +149,8 @@ class AdminController < ApplicationController
         user = svc.fliip_user
         defn = svc.service_definition
 
-        paid_used =
-          session_sums.fetch([svc.id, "paid"], 0.0).to_f +
-          adj_sums.fetch([svc.id, "paid"], 0.0).to_f
-
-        free_used =
-          session_sums.fetch([svc.id, "free"], 0.0).to_f +
-          adj_sums.fetch([svc.id, "free"], 0.0).to_f
+        paid_used = session_sums.fetch([svc.id, "paid"], 0.0).to_f + adj_paid.fetch(svc.id, 0.0).to_f
+        free_used = session_sums.fetch([svc.id, "free"], 0.0).to_f + adj_free.fetch(svc.id, 0.0).to_f
 
         csv << [
           user&.id,
@@ -137,7 +178,6 @@ class AdminController < ApplicationController
     @users_for_select = User.order(:first_name, :last_name) # pick any staff member (employee/manager/admin)
   end
 
-  # --- Parse & Preview (no DB writes yet) ---
   def adjustments_preview
     unless params[:csv].respond_to?(:read)
       redirect_to admin_adjustments_new_path, alert: "Please choose a CSV file." and return
@@ -149,7 +189,7 @@ class AdminController < ApplicationController
     CSV.foreach(params[:csv], headers: :first_row, header_converters: :symbol) do |row|
       hashed_row = row.to_hash
       hashed_row[:row_number] = @adjustments.count + 2
-      hashed_row[:bonus_sessions] = 0 if hashed_row[:bonus_sessions].nil?
+      hashed_row[:bonus_sessions] = 0.0 if hashed_row[:bonus_sessions].nil?
       hashed_row[:paid_used] = hashed_row[:paid_used].to_f
       hashed_row[:free_used] = hashed_row[:free_used].to_f
       hashed_row[:bonus_sessions] = hashed_row[:bonus_sessions].to_f
@@ -170,7 +210,6 @@ class AdminController < ApplicationController
     end
 
     employee_id = params[:employee_id]
-
     created = 0
 
     payload["rows"].each do |row|
@@ -179,7 +218,7 @@ class AdminController < ApplicationController
         user_id: employee_id.to_i,
         paid_used_delta: row["paid_used"].to_f,
         free_used_delta: row["free_used"].to_f,
-        paid_bonus_delta: row["bonus_sessions"].to_f
+        bonus_sessions: row["bonus_sessions"].to_f
       )
       created += 1
     end
