@@ -13,13 +13,55 @@
  *= require_tree .
  *= require_self
  */
- @import "bootstrap";
- @import "components/index";
+@import "bootstrap";
+@import "components/index";
 
- table {
-   font-size: 0.75rem;
- }
+table {
+  font-size: 0.75rem;
+}
 
- .bg-orange {
-    background-color: #fd7e14 !important;
+.bg-orange {
+  background-color: #fd7e14 !important;
+}
+
+$brand: #49c5c1; // tweak to taste
+
+.brand-panel {
+  background: $brand;
+}
+
+.btn-brand {
+  background-color: $brand;
+  border-color: $brand;
+  color: #fff;
+
+  &:hover,
+  &:focus {
+    background-color: darken($brand, 5%);
+    border-color: darken($brand, 5%);
+    color: #fff;
   }
+}
+
+.link-brand {
+  color: $brand;
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}
+
+.auth-card {
+  /* Subtle card feel without heavy borders */
+  background: #fff;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,.04);
+}
+
+.auth-form .form-control-lg {
+  border-radius: .75rem;
+}
+
+.auth-form .form-check-input {
+  cursor: pointer;
+}
