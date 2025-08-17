@@ -14,9 +14,20 @@
     <tbody>
       <% @services.each_value do |defn| %>
         <tr>
-          <td><%= defn.service_id %></td>
-          <td><%= defn.service_name %></td>
-          <%= form_with url: update_admin_service_path(defn), method: :patch, class: "d-flex", local: true do |f| %>
+          <td>
+            <%= link_to defn.service_id, admin_service_path(defn), class: "text-decoration-none" %>
+          </td>
+
+          <td>
+            <%= link_to(defn.service_name.presence || "—",
+                        admin_service_path(defn),
+                        class: "text-decoration-none") %>
+          </td>
+
+          <%= form_with url: update_admin_service_path(defn),
+                        method: :patch,
+                        class: "d-flex",
+                        local: true do |f| %>
             <td><%= f.number_field :paid_sessions, value: defn.paid_sessions, class: "form-control form-control-sm" %></td>
             <td><%= f.number_field :free_sessions, value: defn.free_sessions, class: "form-control form-control-sm" %></td>
             <td class="text-end">

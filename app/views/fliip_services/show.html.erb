@@ -1,8 +1,7 @@
-<!-- app/views/fliip_services/show.html.erb -->
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="mb-0">
-      <%= @service.service_name.presence %>
+      <%= @service.service_name.presence || "Service ##{@service.id}" %>
       <small class="text-muted">(#<%= @service.remote_purchase_id %>)</small>
     </h1>
     <%= link_to "← Back to Client",
@@ -23,7 +22,19 @@
                         class: "text-decoration-none" %>
           </div>
           <div class="text-muted small">Remote Purchase: <%= @service.remote_purchase_id || "—" %></div>
-          <div class="text-muted small">Status: <span class="badge bg-secondary"><%= @status_label %></span></div>
+
+          <% badge_class =
+               case @service.purchase_status
+               when "A" then "bg-success"
+               when "P" then "bg-info text-dark"
+               when "S" then "bg-warning text-dark"
+               when "C" then "bg-danger"
+               else           "bg-secondary"
+               end %>
+          <div class="text-muted small">
+            Status:
+            <span class="badge <%= badge_class %>"><%= @service.status_name %></span>
+          </div>
         </div>
       </div>
     </div>
@@ -39,62 +50,68 @@
             End: <strong><%= @service.expire_date || "—" %></strong>
           </div>
 
-          <% sd = @service.start_date; ed = @service.expire_date %>
-          <% time_pct =
-               if sd.present? && ed.present? && ed > sd
-                 span = (ed - sd).to_f
-                 elapsed = (Date.current - sd).to_f
-                 [[(elapsed / span * 100).round, 0].max, 100].min
-               else
-                 0
-               end %>
+          <% time_pct = svc_time_progress_percent(@service) %>
+          <% time_bg, time_text = progress_color_classes(time_pct) %>
 
           <div class="d-flex justify-content-between small mt-2">
             <span>Time</span>
-            <span><%= sd&.strftime("%d/%m/%Y") || "—" %> → <%= ed&.strftime("%d/%m/%Y") || "—" %> • <%= time_pct %>%</span>
+            <span><%= svc_time_range_label(@service) %> • <%= time_pct %>%</span>
           </div>
           <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= time_pct %>">
-            <div class="progress-bar bg-info" style="width: <%= time_pct %>%"></div>
+            <div class="progress-bar <%= time_bg %> <%= time_text %>" style="width: <%= time_pct %>%"></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Sessions (paid bar + free bracket) -->
+    <!-- Sessions (progress uses total allowed = base + bonus) -->
     <div class="col-md-4">
       <div class="card h-100">
         <div class="card-body">
-          <% fmt = ->(n) { ('%.1f' % n.to_f) } %>
+          <% paid_used    = @service.paid_used_total %>
+          <% paid_base    = @service.service_definition&.paid_sessions %>
+          <% bonus_total  = @service.bonus_sessions_total %>
+          <% total_allowed = @service.paid_allowed_total %> <!-- base + bonus -->
+          <% pct          = @service.paid_progress_percent || 0 %>
+          <% bar_bg, bar_text = progress_color_classes(pct) %>
 
-          <% paid_used  = @paid_used || 0.0 %>
-          <% paid_total = @paid_total %>
-          <% paid_bonus = @paid_bonus || 0.0 %>
-          <% paid_pct =
-               if paid_total.to_i > 0
-                 [[((paid_used.to_f / paid_total.to_f) * 100).round, 0].max, 100].min
-               else
-                 0
-               end %>
-
-          <% free_used   = @free_used || 0.0 %>
-          <% free_total  = @free_total %>
-          <% free_total_s = free_total.nil? ? "—" : free_total.to_s %>
+          <% free_used    = @service.free_used_total %>
+          <% free_base    = @service.service_definition&.free_sessions %>
 
           <div class="text-muted small mb-1">Sessions</div>
+
           <div class="d-flex justify-content-between small">
             <span>
-              <%= "#{fmt.call(paid_used)}/#{paid_total || '—'} sessions (paid)" %>
-              <% if paid_bonus.to_f.nonzero? %>
-                <span class="text-muted">( +<%= fmt.call(paid_bonus) %> bonus )</span>
-              <% end %>
+              <%= "#{fmt1(paid_used)}/#{total_allowed.to_f.positive? ? fmt1(total_allowed) : '—'} sessions" %>
+              <span class="text-muted">
+                (base: <%= paid_base.nil? ? "—" : paid_base %>
+                <% if bonus_total.to_f.nonzero? %>, bonus: <%= fmt1(bonus_total) %><% end %>)
+              </span>
             </span>
             <span>
-              <%= paid_pct %>%
-              <span class="ms-2 text-muted">[<%= fmt.call(free_used) %>/<%= free_total_s %> absences]</span>
+              <%= pct %>%
+              <span class="ms-2 text-muted">[<%= fmt1(free_used) %>/<%= free_base.nil? ? '—' : free_base %> absences]</span>
             </span>
           </div>
-          <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= paid_pct %>">
-            <div class="progress-bar bg-success" style="width: <%= paid_pct %>%"></div>
+
+          <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= pct %>">
+            <div class="progress-bar <%= bar_bg %> <%= bar_text %>" style="width: <%= pct %>%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Included (definition) -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body py-2">
+          <div class="small text-muted">Included sessions</div>
+          <div>
+            Paid: <strong><%= @service.service_definition&.paid_sessions || "—" %></strong>
+            &nbsp;•&nbsp;
+            Free: <strong><%= @service.service_definition&.free_sessions || "—" %></strong>
           </div>
         </div>
       </div>
@@ -106,26 +123,20 @@
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center mb-2">
         <h5 class="mb-0">Adjustments</h5>
-        <%# TODO: enable when edit is built %>
-        <%#= link_to "Edit adjustments", edit_fliip_service_adjustments_path(@service), class: "btn btn-sm btn-outline-primary" %>
       </div>
 
       <div class="row g-3 mb-2">
         <div class="col-md-4">
-          <div class="small text-muted">Paid bonus total</div>
-          <div class="fw-semibold"><%= fmt.call(@paid_bonus || 0.0) %></div>
+          <div class="small text-muted">Bonus sessions total</div>
+          <div class="fw-semibold"><%= fmt1(@service.bonus_sessions_total) %></div>
         </div>
         <div class="col-md-4">
           <div class="small text-muted">Paid used (adjustments only)</div>
-          <div class="fw-semibold">
-            <%= fmt.call(@service.paid_used_adjustment) %>
-          </div>
+          <div class="fw-semibold"><%= fmt1(@service.paid_used_adjustment) %></div>
         </div>
         <div class="col-md-4">
           <div class="small text-muted">Free used (adjustments only)</div>
-          <div class="fw-semibold">
-            <%= fmt.call(@service.free_used_adjustment) %>
-          </div>
+          <div class="fw-semibold"><%= fmt1(@service.free_used_adjustment) %></div>
         </div>
       </div>
 
@@ -138,8 +149,7 @@
                 <th>Employee</th>
                 <th class="text-end">Paid Used Δ</th>
                 <th class="text-end">Free Used Δ</th>
-                <th class="text-end">Paid Bonus Δ</th>
-                <th>Idempotency Key</th>
+                <th class="text-end">Bonus Sessions Δ</th>
               </tr>
             </thead>
             <tbody>
@@ -147,10 +157,19 @@
                 <tr>
                   <td><%= adj.created_at.strftime("%d/%m/%Y %H:%M") %></td>
                   <td><%= adj.user&.full_name || "—" %></td>
-                  <td class="text-end"><%= adj.paid_used_delta.to_f.zero? ? "—" : fmt.call(adj.paid_used_delta) %></td>
-                  <td class="text-end"><%= adj.free_used_delta.to_f.zero? ? "—" : fmt.call(adj.free_used_delta) %></td>
-                  <td class="text-end"><%= adj.paid_bonus_delta.to_f.zero? ? "—" : fmt.call(adj.paid_bonus_delta) %></td>
-                  <td class="text-monospace"><%= adj.idempotency_key.presence || "—" %></td>
+                  <td class="text-end"><%= adj.paid_used_delta.to_f.zero? ? "—" : fmt1(adj.paid_used_delta) %></td>
+                  <td class="text-end"><%= adj.free_used_delta.to_f.zero? ? "—" : fmt1(adj.free_used_delta) %></td>
+                  <td class="text-end"><%= adj.bonus_sessions.to_f.zero? ? "—" : fmt1(adj.bonus_sessions) %></td>
+                  <% if current_user.admin? || current_user.super_admin? %>
+                    <td class="text-end">
+                      <%= link_to "Edit", edit_fliip_service_service_usage_adjustment_path(@service, adj), class: "btn btn-sm btn-outline-primary" %>
+                      <%= button_to "Delete",
+                            fliip_service_service_usage_adjustment_path(@service, adj),
+                            method: :delete,
+                            data: { turbo_confirm: "Delete this adjustment?" },
+                            class: "btn btn-sm btn-outline-danger" %>
+                    </td>
+                  <% end %>
                 </tr>
               <% end %>
             </tbody>
@@ -159,6 +178,13 @@
       <% else %>
         <p class="text-muted mb-0">No adjustments recorded for this service.</p>
       <% end %>
+      <div class="card mt-3">
+        <div class="card-body">
+          <h5 class="card-title mb-2">Add Adjustment</h5>
+          <% @adjustment = @service.service_usage_adjustments.new(user: current_user) %>
+          <%= render "service_usage_adjustments/form", cancel_path: fliip_service_path(@service) %>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -174,6 +200,7 @@
           <th>Type</th>
           <th>Confirmed</th>
           <th>Note</th>
+          <th>Created by</th>
           <th>Created at</th>
         </tr>
       </thead>
@@ -193,6 +220,7 @@
               <% end %>
             </td>
             <td><%= s.note.presence || "—" %></td>
+            <td><%= s.user&.full_name || "—" %></td>
             <td><%= s.created_at.strftime("%d/%m/%Y %H:%M") %></td>
           </tr>
         <% end %>

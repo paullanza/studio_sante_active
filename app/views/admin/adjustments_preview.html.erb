@@ -1,77 +1,51 @@
 <div class="container mt-4">
-  <h1 class="mb-3">Preview Adjustments</h1>
+  <h1 class="mb-3">Adjustments Preview</h1>
 
-  <% if @errors.present? %>
-    <div class="alert alert-warning">
-      <strong>Some rows could not be resolved:</strong>
-      <ul class="mb-0">
-        <% @errors.each do |e| %>
-          <li><%= e %></li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
+  <% if @rows.present? %>
+    <%= form_with url: admin_adjustments_commit_path, method: :post, local: true do %>
+      <div class="row g-2 align-items-end mb-3">
+        <div class="col-md-6">
+          <label for="employee_id" class="form-label">Assign adjustments to</label>
+          <%= select_tag :employee_id,
+                options_from_collection_for_select(@users_for_select, :id, :full_name),
+                include_blank: "Select an employee",
+                class: "form-select",
+                required: true %>
+        </div>
+        <div class="col-md-6 text-end">
+          <%= hidden_field_tag :payload, @payload_json %>
+          <%= submit_tag "Commit Adjustments",
+                class: "btn btn-primary",
+                data: { turbo_confirm: "Create adjustments for the selected employee? This cannot be undone." } %>
+        </div>
+      </div>
+    <% end %>
 
-  <% if @adjustments.blank? %>
-    <p class="text-muted">No valid rows found.</p>
-    <%= link_to "Back", admin_adjustments_new_path, class: "btn btn-secondary" %>
-  <% else %>
-    <div class="table-responsive mb-3">
-      <table class="table table-bordered table-striped align-middle">
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered align-middle">
         <thead class="table-light">
           <tr>
-            <th>Row Number</th>
-            <th>Client ID</th>
-            <th>Client Remote ID</th>
-            <th>Client Name</th>
-            <th>Service ID</th>
-            <th>Service Remote Purchase ID</th>
-            <th>Service Name</th>
-            <th>Purchase Status</th>
-            <th>Start Date</th>
-            <th>Expire Date</th>
-            <th class="text-end">Paid Used Δ</th>
-            <th class="text-end">Free Used Δ</th>
-            <th class="text-end">Bonus Paid Δ</th>
+            <% @headers.each do |h| %>
+              <th><%= h %></th>
+            <% end %>
           </tr>
         </thead>
         <tbody>
-          <% @adjustments.each do |r| %>
+          <% @rows.each do |r| %>
             <tr>
-              <td><%= r[:row_number] %></td>
-              <td><%= r[:client_id] %></td>
-              <td><%= r[:client_remote_id] %></td>
-              <td><%= r[:client_name] %></td>
-              <td><%= r[:service_id] %></td>
-              <td><%= r[:service_remote_purchase_id] %></td>
-              <td><%= r[:service_name] %></td>
-              <td><%= r[:purchase_status] %></td>
-              <td><%= r[:start_date] %></td>
-              <td><%= r[:expire_date] %></td>
-              <td class="text-end"><%= r[:paid_used].to_f.zero? ? "—" : r[:paid_used] %></td>
-              <td class="text-end"><%= r[:free_used].to_f.zero? ? "—" : r[:free_used] %></td>
-              <td class="text-end"><%= r[:bonus_sessions].to_f.zero? ? "—" : r[:bonus_sessions] %></td>
+              <% @headers.each do |h| %>
+                <td><%= r[h] %></td>
+              <% end %>
             </tr>
           <% end %>
         </tbody>
       </table>
     </div>
-
-    <%= form_with url: admin_adjustments_commit_path, method: :post, local: true, data: { turbo: false }, class: "card p-3" do %>
-      <div class="mb-3">
-        <label class="form-label">Associate all rows to employee (trainer)</label>
-        <%= select_tag :employee_id,
-              options_from_collection_for_select(@users_for_select, :id, :full_name, @employee_id),
-              include_blank: "Choose an employee",
-              class: "form-select" %>
-      </div>
-
-      <%= hidden_field_tag :payload, @payload_json %>
-
-      <div class="d-flex gap-2">
-        <%= link_to "Back", admin_adjustments_new_path, class: "btn btn-outline-secondary" %>
-        <%= submit_tag "Confirm Import", class: "btn btn-success" %>
-      </div>
-    <% end %>
+  <% else %>
+    <p class="text-muted">No rows found in the CSV.</p>
   <% end %>
+
+  <div class="mt-3">
+    <%= link_to "Back", admin_adjustments_new_path, class: "btn btn-secondary" %>
+  </div>
 </div>

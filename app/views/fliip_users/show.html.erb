@@ -1,4 +1,3 @@
-<!-- app/views/fliip_users/show.html.erb -->
 <div class="container mt-4">
   <h1>
     Fliip User
@@ -71,95 +70,7 @@
   <h2 class="mt-4">Services</h2>
   <% if @fliip_user.fliip_services.any? %>
     <div class="table-responsive">
-      <table class="table table-bordered table-sm">
-        <thead class="thead-light">
-          <tr>
-            <th>ID</th>
-            <th>Purchase #</th>
-            <th>Status</th>
-            <th>Start Date</th>
-            <th>Expire Date</th>
-            <th>Purchase Date</th>
-            <th>Stop Date</th>
-            <th>Cancel Date</th>
-            <th>Service ID</th>
-            <th>Service Name</th>
-            <th>Duration</th>
-            <th>Description</th>
-            <th>Progress</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @fliip_user.fliip_services.each do |svc| %>
-            <%# Numbers via model helpers for consistency %>
-            <% fmt        = ->(n) { ('%.1f' % n.to_f) } %>
-            <% paid_used  = svc.paid_used_total %>
-            <% paid_incl  = svc.service_definition&.paid_sessions %>
-            <% paid_bonus = svc.paid_bonus_total %>
-            <% paid_pct   = svc.paid_progress_percent || 0 %>
-            <% free_used  = svc.free_used_total %>
-            <% free_incl  = svc.service_definition&.free_sessions %>
-
-            <tr>
-              <td><%= svc.id %></td>
-              <td><%= svc.remote_purchase_id %></td>
-              <td><%= svc.purchase_status.presence || "–" %></td>
-              <td><%= svc.start_date || "–" %></td>
-              <td><%= svc.expire_date || "–" %></td>
-              <td><%= svc.purchase_date || "–" %></td>
-              <td><%= svc.stop_date || "–" %></td>
-              <td><%= svc.cancel_date || "–" %></td>
-              <td><%= svc.service_id %></td>
-              <td>
-                <%= link_to (svc.service_name.presence || "Service ##{svc.id}"),
-                            fliip_service_path(svc),
-                            class: "text-decoration-none" %>
-              </td>
-              <td><%= svc.duration.presence || "–" %></td>
-              <td><%= svc.service_description.presence || "–" %></td>
-
-              <td style="min-width: 260px;">
-                <!-- Time progress -->
-                <div class="mb-2">
-                  <div class="d-flex justify-content-between small">
-                    <span>Time</span>
-                    <span><%= time_range_label(svc) %> • <%= time_progress_percent(svc) %>%</span>
-                  </div>
-                  <div class="progress" role="progressbar"
-                       aria-label="Time progress"
-                       aria-valuemin="0" aria-valuemax="100"
-                       aria-valuenow="<%= time_progress_percent(svc) %>">
-                    <div class="progress-bar bg-info"
-                         style="width: <%= time_progress_percent(svc) %>%"></div>
-                  </div>
-                </div>
-
-                <!-- Sessions (paid bar) + free usage bracket -->
-                <div>
-                  <div class="d-flex justify-content-between small">
-                    <span>Sessions</span>
-                    <span>
-                      <%= "#{fmt.call(paid_used)}/#{paid_incl.nil? ? '—' : paid_incl} sessions" %>
-                      <% if paid_bonus.to_f.nonzero? %>
-                        <span class="text-muted">( +<%= fmt.call(paid_bonus) %> bonus )</span>
-                      <% end %>
-                      • <%= paid_pct %>%
-                      <span class="ms-2 text-muted">[<%= fmt.call(free_used) %>/<%= free_incl.nil? ? '—' : free_incl %> absences]</span>
-                    </span>
-                  </div>
-                  <div class="progress" role="progressbar"
-                       aria-label="Paid sessions usage"
-                       aria-valuemin="0" aria-valuemax="100"
-                       aria-valuenow="<%= paid_pct %>">
-                    <div class="progress-bar bg-success"
-                         style="width: <%= paid_pct %>%"></div>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
+      <%= render "shared/services_table", services: @fliip_user.fliip_services %>
     </div>
   <% else %>
     <p class="text-muted">No services found for this user.</p>

@@ -1,0 +1,5 @@
+<div class="container mt-4">
+  <h1 class="mb-3">Edit Adjustment</h1>
+  <% @adjustment ||= @service.service_usage_adjustments.find(params[:id]) %>
+  <%= render "service_usage_adjustments/form", cancel_path: fliip_service_path(@service) %>
+</div>

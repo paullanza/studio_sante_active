@@ -1,14 +1,10 @@
-<!-- app/views/fliip_users/index.html.erb -->
 <div class="container mt-4">
   <h1>Fliip Users</h1>
 
   <div class="row justify-content-center">
     <div class="col-sm-8 my-3">
       <%= form_with url: fliip_users_path, method: :get, class: "d-flex gap-2", local: true do %>
-        <%= text_field_tag :query,
-              params[:query],
-              class: "form-control",
-              placeholder: "Search by name, email, or ID…" %>
+        <%= text_field_tag :query, params[:query], class: "form-control", placeholder: "Search by name, email, or ID…" %>
         <%= submit_tag "Search", name: "", class: "btn btn-primary" %>
         <% if params[:query].present? %>
           <%= link_to "Clear", fliip_users_path, class: "btn btn-outline-secondary" %>
@@ -58,13 +54,16 @@
 
           <td>
             <% if svc.present? %>
-              <% fmt = ->(n) { ('%.1f' % n.to_f) } %>
               <% paid_used   = svc.paid_used_total %>
               <% paid_incl   = svc.service_definition&.paid_sessions %>
-              <% paid_bonus  = svc.paid_bonus_total %>
+              <% paid_bonus  = svc.bonus_sessions_total %>
               <% paid_pct    = svc.paid_progress_percent || 0 %>
               <% free_used   = svc.free_used_total %>
               <% free_incl   = svc.service_definition&.free_sessions %>
+
+              <% time_pct    = svc_time_progress_percent(svc) %>
+              <% time_bg,  time_text  = progress_color_classes(time_pct) %>
+              <% paid_bg,  paid_text  = progress_color_classes(paid_pct) %>
 
               <div class="small mb-1">
                 <strong><%= svc.service_name.presence || "Service" %></strong>
@@ -77,13 +76,10 @@
               <div class="mb-2">
                 <div class="d-flex justify-content-between small">
                   <span>Time</span>
-                  <span><%= time_range_label(svc) %> • <%= time_progress_percent(svc) %>%</span>
+                  <span><%= svc_time_range_label(svc) %> • <%= time_pct %>%</span>
                 </div>
-                <div class="progress" role="progressbar"
-                     aria-label="Time progress" aria-valuemin="0" aria-valuemax="100"
-                     aria-valuenow="<%= time_progress_percent(svc) %>">
-                  <div class="progress-bar bg-info"
-                       style="width: <%= time_progress_percent(svc) %>%"></div>
+                <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= time_pct %>">
+                  <div class="progress-bar <%= time_bg %> <%= time_text %>" style="width: <%= time_pct %>%"></div>
                 </div>
               </div>
 
@@ -92,20 +88,16 @@
                 <div class="d-flex justify-content-between small">
                   <span>Sessions</span>
                   <span>
-                    <%# Paid label: used / included (+bonus if any) %>
-                    <%= "#{fmt.call(paid_used)}/#{paid_incl.nil? ? '—' : paid_incl} sessions" %>
+                    <%= "#{fmt1(paid_used)}/#{paid_incl.nil? ? '—' : paid_incl} sessions" %>
                     <% if paid_bonus.to_f.nonzero? %>
-                      <span class="text-muted">( +<%= fmt.call(paid_bonus) %> bonus )</span>
+                      <span class="text-muted">( +<%= fmt1(paid_bonus) %> bonus )</span>
                     <% end %>
                     • <%= paid_pct %>%
-                    <span class="ms-2 text-muted">[<%= fmt.call(free_used) %>/<%= free_incl.nil? ? '—' : free_incl %> absences]</span>
+                    <span class="ms-2 text-muted">[<%= fmt1(free_used) %>/<%= free_incl.nil? ? '—' : free_incl %> absences]</span>
                   </span>
                 </div>
-                <div class="progress" role="progressbar"
-                     aria-label="Paid sessions usage" aria-valuemin="0" aria-valuemax="100"
-                     aria-valuenow="<%= paid_pct %>">
-                  <div class="progress-bar bg-success"
-                       style="width: <%= paid_pct %>%"></div>
+                <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= paid_pct %>">
+                  <div class="progress-bar <%= paid_bg %> <%= paid_text %>" style="width: <%= paid_pct %>%"></div>
                 </div>
               </div>
             <% else %>

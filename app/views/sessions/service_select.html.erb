@@ -1,0 +1,42 @@
+<%= turbo_frame_tag "service_select" do %>
+  <% today        = Date.current %>
+  <% future_limit = today + 1.month %>
+  <% past_limit   = today - 1.month %>
+
+  <div class="flex-fill">
+    <label for="session_fliip_service_id" class="form-label">Service</label>
+    <select name="session[fliip_service_id]" id="session_fliip_service_id" class="form-select" required>
+      <option value="">Select a service</option>
+
+      <% @services.each do |svc| %>
+        <% starts_too_late = svc.start_date.present?  && svc.start_date  > future_limit %>
+        <% ended_too_long  = svc.expire_date.present? && svc.expire_date < past_limit %>
+        <% cancelled       = (svc.purchase_status == "C") %>
+        <% used_up         = !svc.can_book_session? %> <%# both remaining are <= 0 %>
+
+        <% disabled = (starts_too_late || ended_too_long || cancelled || used_up) %>
+
+        <% reason =
+             if cancelled
+               "Cancelled"
+             elsif starts_too_late
+               "Starts more than a month from now"
+             elsif ended_too_long
+               "Ended more than a month ago"
+             elsif used_up
+               "All sessions used"
+             end %>
+
+        <% label = svc.service_name.presence || "Service ##{svc.id}" %>
+        <% label += " (ends #{svc.expire_date.strftime('%d/%m/%Y')})" if svc.expire_date.present? %>
+
+        <option
+          value="<%= svc.id %>"
+          <%= "disabled" if disabled %>
+          <%= %(title="#{reason}") if disabled %>>
+          <%= label %>
+        </option>
+      <% end %>
+    </select>
+  </div>
+<% end %>

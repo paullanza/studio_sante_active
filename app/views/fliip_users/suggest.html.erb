@@ -1,0 +1,17 @@
+<%= turbo_frame_tag "client_suggestions" do %>
+  <% if @users.any? %>
+    <ul class="list-group shadow-sm">
+      <% @users.each do |u| %>
+        <li
+          class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+          role="option"
+          data-action="click->client-search#pick"
+          data-id="<%= u.id %>"
+          data-name="<%= "#{u.user_firstname} #{u.user_lastname}" %>">
+          <span><%= u.user_firstname %> <%= u.user_lastname %></span>
+          <small class="text-muted">#<%= u.remote_id %></small>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+<% end %>

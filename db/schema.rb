@@ -111,12 +111,10 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_13_223928) do
     t.bigint "user_id", null: false
     t.float "paid_used_delta"
     t.float "free_used_delta"
-    t.float "paid_bonus_delta"
-    t.string "idempotency_key"
+    t.float "bonus_sessions"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["fliip_service_id"], name: "index_service_usage_adjustments_on_fliip_service_id"
-    t.index ["idempotency_key"], name: "index_service_usage_adjustments_on_idempotency_key", unique: true
     t.index ["user_id"], name: "index_service_usage_adjustments_on_user_id"
   end
 
