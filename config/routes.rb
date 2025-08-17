@@ -22,10 +22,13 @@ Rails.application.routes.draw do
   # -----------------------------------------
   # Client & Service management
   # -----------------------------------------
-  resources :fliip_users, only: [:index, :show]
-  post "fliip_users/:remote_id/refresh", to: "fliip_users#refresh", as: :refresh_fliip_user
+  resources :fliip_users, only: [:index, :show] do
+    collection do
+      get :suggest
+    end
+  end
 
-  get "admin/client_services", to: "admin#client_services", defaults: { format: :csv }
+  post "fliip_users/:remote_id/refresh", to: "fliip_users#refresh", as: :refresh_fliip_user
 
   # -----------------------------------------
   # Admin dashboard & services
@@ -34,6 +37,7 @@ Rails.application.routes.draw do
   get   "admin/services",   to: "admin#services",       as: :admin_services
   get   "admin/services/:id", to: "admin#service_show", as: :admin_service
   patch "admin/services/:id", to: "admin#update_service", as: :update_admin_service
+  get   "admin/client_services", to: "admin#client_services", defaults: { format: :csv }
 
   # -----------------------------------------
   # Signup codes
@@ -57,7 +61,7 @@ Rails.application.routes.draw do
   # -----------------------------------------
   # User profile & role management
   # -----------------------------------------
-  resources :users, only: [:show] do
+  resources :users, only: [:show, :update] do
     member do
       patch :make_employee
       patch :make_manager
@@ -71,7 +75,10 @@ Rails.application.routes.draw do
   # Session creation / booking
   # -----------------------------------------
   resources :sessions, only: [:new, :create, :update, :destroy] do
-    collection { get :services_for_user }
+    collection do
+      get :services_table
+      get :service_select
+    end
   end
 
   post "refresh_clients", to: "sessions#refresh_clients", as: :refresh_clients
@@ -80,7 +87,9 @@ Rails.application.routes.draw do
   # -----------------------------------------
   # Fliip service details
   # -----------------------------------------
-  resources :fliip_services, only: [:show]
+  resources :fliip_services, only: [:show] do
+    resources :service_usage_adjustments, only: [:create, :edit, :update, :destroy]
+  end
 
   # -----------------------------------------
   # Health check (PUBLIC, typically safe)

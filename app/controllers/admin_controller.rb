@@ -39,7 +39,9 @@ class AdminController < ApplicationController
       .where(expire_date: (today - 30.days)..(today - 1.day))
       .includes(:fliip_user, :service_definition, :service_usage_adjustments)
       .order(expire_date: :desc)
-    end
+
+    @exportable_services_count = FliipService.count
+  end
 
   def create_signup_code
     SignupCode.create!
@@ -96,134 +98,67 @@ class AdminController < ApplicationController
   end
 
   def import_clients
-    FliipApi::UserSync::UserImporter.call
-    redirect_to new_session_path, notice: "Client list refreshed."
-    rescue => e
-      redirect_to new_session_path, alert: "Could not refresh clients: #{e.message}"
+    msg = FliipApi::UserSync::UserImporter.call
+    redirect_to dashboard_path, notice: msg
+  rescue => e
+      redirect_to dashboard_path, alert: "Could not refresh clients: #{e.message}"
   end
 
   def client_services
-    services = FliipService
-      .includes(:fliip_user, :service_definition)
-      .order(:fliip_user_id, :service_name)
-
-    service_ids = services.map(&:id)
-
-    # Sessions usage (sum of duration) by service + type
-    session_sums = Session
-      .where(fliip_service_id: service_ids)
-      .group(:fliip_service_id, :session_type)
-      .sum(:duration) # { [id,"paid"]=>7.5, [id,"free"]=>2.0 }
-
-    # Adjustments: sum deltas by service
-    adj_paid = ServiceUsageAdjustment
-      .where(fliip_service_id: service_ids)
-      .group(:fliip_service_id)
-      .sum(:paid_used_delta)   # { id => 1.0 }
-
-    adj_free = ServiceUsageAdjustment
-      .where(fliip_service_id: service_ids)
-      .group(:fliip_service_id)
-      .sum(:free_used_delta)   # { id => 0.5 }
-
-    headers = %w[
-      client_id
-      client_remote_id
-      client_name
-      service_id
-      service_remote_purchase_id
-      service_name
-      purchase_status
-      start_date
-      expire_date
-      paid_used
-      paid_included
-      free_used
-      free_included
-    ]
-
-    csv_str = CSV.generate(headers: true) do |csv|
-      csv << headers
-
-      services.each do |svc|
-        user = svc.fliip_user
-        defn = svc.service_definition
-
-        paid_used = session_sums.fetch([svc.id, "paid"], 0.0).to_f + adj_paid.fetch(svc.id, 0.0).to_f
-        free_used = session_sums.fetch([svc.id, "free"], 0.0).to_f + adj_free.fetch(svc.id, 0.0).to_f
-
-        csv << [
-          user&.id,
-          user&.remote_id,
-          [user&.user_firstname, user&.user_lastname].compact.join(" "),
-          svc.id,
-          svc.remote_purchase_id,
-          svc.service_name,
-          svc.purchase_status, # A/I/P/C/S
-          fmt_date(svc.start_date),
-          fmt_date(svc.expire_date),
-          paid_used,
-          defn&.paid_sessions,
-          free_used,
-          defn&.free_sessions
-        ]
-      end
-    end
-
-    filename = "clients_services_#{Time.current.strftime('%Y%m%d-%H%M%S')}.csv"
+    csv_str, filename = CsvPorter::Exporter::Services.call
     send_data csv_str, filename:, type: "text/csv"
   end
 
   def adjustments_new
-    @users_for_select = User.order(:first_name, :last_name) # pick any staff member (employee/manager/admin)
   end
 
   def adjustments_preview
-    unless params[:csv].respond_to?(:read)
+    file = params[:csv]
+    unless file&.respond_to?(:path)
       redirect_to admin_adjustments_new_path, alert: "Please choose a CSV file." and return
     end
 
     require "csv"
+    @headers = nil
+    @rows    = []
 
-    @adjustments = []
-    CSV.foreach(params[:csv], headers: :first_row, header_converters: :symbol) do |row|
-      hashed_row = row.to_hash
-      hashed_row[:row_number] = @adjustments.count + 2
-      hashed_row[:bonus_sessions] = 0.0 if hashed_row[:bonus_sessions].nil?
-      hashed_row[:paid_used] = hashed_row[:paid_used].to_f
-      hashed_row[:free_used] = hashed_row[:free_used].to_f
-      hashed_row[:bonus_sessions] = hashed_row[:bonus_sessions].to_f
-      @adjustments << hashed_row
+    CSV.foreach(file, headers: true) do |row|
+      @headers ||= row.headers
+      @rows << row
     end
 
-    @payload_json = { rows: @adjustments }.to_json
+    # used by the commit action
+    @payload_json = { rows: @rows.map(&:to_h) }.to_json
 
+    # dropdown options
     @users_for_select = User.order(:first_name, :last_name)
+
+  rescue => e
+    redirect_to admin_adjustments_new_path, alert: "Could not read CSV: #{e.message}"
   end
 
-  # --- Commit to DB ---
   def adjustments_commit
     payload = JSON.parse(params[:payload].to_s) rescue nil
-
     unless payload && payload["rows"].is_a?(Array)
       redirect_to admin_adjustments_new_path, alert: "Invalid or missing import payload." and return
     end
 
-    employee_id = params[:employee_id]
-    created = 0
-
-    payload["rows"].each do |row|
-      ServiceUsageAdjustment.create!(
-        fliip_service_id: row["service_id"].to_i,
-        user_id: employee_id.to_i,
-        paid_used_delta: row["paid_used"].to_f,
-        free_used_delta: row["free_used"].to_f,
-        bonus_sessions: row["bonus_sessions"].to_f
-      )
-      created += 1
+    employee_id = params[:employee_id].presence
+    unless employee_id
+      redirect_to admin_adjustments_new_path, alert: "Please select an employee." and return
     end
 
-    redirect_to admin_dashboard_path, notice: "Adjustments imported: #{created} created"
+    result = CsvPorter::Importer::Adjustments.call(
+      rows: payload["rows"],
+      employee_id: employee_id
+    )
+
+    if result.success?
+      redirect_to admin_dashboard_path, notice: "Adjustments imported: #{result.created} created."
+    else
+      msg = "Created #{result.created}. #{result.errors.size} error#{'s' unless result.errors.size == 1}."
+      redirect_to admin_dashboard_path, alert: msg
+    end
   end
 
   private

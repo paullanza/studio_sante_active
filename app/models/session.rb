@@ -89,6 +89,8 @@ class Session < ApplicationRecord
   def set_session_type_and_duration
     self.duration = (duration.presence || 1.0).to_f
 
+    return if fliip_service_id.blank? || fliip_service.nil?
+
     if present
       self.session_type = "paid"
       return
@@ -110,7 +112,8 @@ class Session < ApplicationRecord
   # Prevent booking if quotas would be exceeded.
   # Uses FliipService's quota calculations (which include bonuses and adjustments).
   def respect_quota_limits
-    return if fliip_service.service_definition.nil? # skip if definition is missing
+    return if fliip_service.blank?
+    return if fliip_service.service_definition.nil?
 
     if session_type == "paid"
       remaining = fliip_service.remaining_paid_sessions.to_f
@@ -127,7 +130,7 @@ class Session < ApplicationRecord
 
   # Checks that the service is active on the chosen session date.
   def service_is_active
-    return if date.blank?
+    return if fliip_service.blank? || date.blank?
 
     if fliip_service.expire_date.present? && date > fliip_service.expire_date
       errors.add(:base, "The service has ended.")
@@ -140,6 +143,7 @@ class Session < ApplicationRecord
 
   # Prevent booking outside the allowed ± 1 month window relative to today.
   def within_booking_window
+    return if fliip_service.blank?
     today        = Date.current
     future_limit = today.next_month
     past_limit   = today.last_month
