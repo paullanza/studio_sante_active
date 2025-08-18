@@ -1,63 +1,89 @@
-<h2>Sign up</h2>
+<div class="auth-page min-vh-100 d-flex align-items-center justify-content-center p-4">
+  <div class="auth-card w-100" style="max-width: 640px;">
+    <h1 class="mb-2 fw-bold">Créer un compte</h1>
 
-<%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
-  <%= render "devise/shared/error_messages", resource: resource %>
+    <div class="mb-4 small text-muted">
+      Vous avez déjà un compte ?
+      <%= link_to "Se connecter", user_session_path, class: "link-brand fw-semibold" %>
+    </div>
 
-  <div class="field">
-    <%= f.label :signup_code_token, "Access Code" %><br />
-    <%= f.text_field :signup_code_token, autocomplete: "off" %>
+    <%= simple_form_for(resource,
+          as: resource_name,
+          url: registration_path(resource_name),
+          html: { class: "auth-form" }) do |f| %>
+
+      <%= f.error_notification %>
+
+      <div class="mb-3">
+        <%= f.input :signup_code_token,
+              label: "Code d’accès",
+              required: true,
+              input_html: { autocomplete: "off", class: "form-control form-control-lg" } %>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <%= f.input :first_name,
+                label: "Prénom",
+                required: true,
+                input_html: { class: "form-control form-control-lg" } %>
+        </div>
+        <div class="col-md-6">
+          <%= f.input :last_name,
+                label: "Nom",
+                required: true,
+                input_html: { class: "form-control form-control-lg" } %>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-0">
+        <div class="col-md-6">
+          <%= f.input :phone,
+                label: "Téléphone",
+                as: :tel,
+                input_html: { autocomplete: "tel", class: "form-control form-control-lg" } %>
+        </div>
+        <div class="col-md-6">
+          <%= f.input :birthday,
+                label: "Date de naissance",
+                as: :string,
+                input_html: { type: "date", max: Date.today, class: "form-control form-control-lg" } %>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <%= f.input :address,
+              label: "Adresse",
+              input_html: { class: "form-control form-control-lg" } %>
+      </div>
+
+      <div class="mb-3">
+        <%= f.input :email,
+              label: "Courriel",
+              required: true,
+              input_html: { autocomplete: "email", class: "form-control form-control-lg" } %>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <%= f.input :password,
+                label: ("Mot de passe" + ( @minimum_password_length ? " (#{@minimum_password_length} caractères min.)" : "" )),
+                required: true,
+                input_html: { autocomplete: "new-password", class: "form-control form-control-lg" } %>
+        </div>
+        <div class="col-md-6">
+          <%= f.input :password_confirmation,
+                label: "Confirmer le mot de passe",
+                required: true,
+                input_html: { autocomplete: "new-password", class: "form-control form-control-lg" } %>
+        </div>
+      </div>
+
+      <div class="d-grid mt-4">
+        <%= f.button :submit, "Créer mon compte",
+              class: "btn btn-lg rounded-pill shadow-sm btn-brand" %>
+      </div>
+    <% end %>
+
   </div>
-
-  <div class="field">
-    <%= f.label :first_name %><br />
-    <%= f.text_field :first_name, autofocus: true %>
-  </div>
-
-  <div class="field">
-    <%= f.label :last_name %><br />
-    <%= f.text_field :last_name %>
-  </div>
-
-  <div class="field">
-    <%= f.label :phone %><br />
-    <%= f.telephone_field :phone %>
-  </div>
-
-  <div class="field">
-    <%= f.label :address %><br />
-    <%= f.text_field :address %>
-  </div>
-
-  <div class="field">
-    <%= f.label :birthday %><br />
-    <%= f.date_select :birthday,
-          start_year: Date.today.year - 100,
-          end_year:   Date.today.year,
-          use_month_numbers: true,
-          order: [:day, :month, :year] %>
-  </div>
-
-  <div class="field">
-    <%= f.label :email %><br />
-    <%= f.email_field :email, autocomplete: "email" %>
-  </div>
-
-  <div class="field">
-    <%= f.label :password %>
-    <% if @minimum_password_length %>
-      <em>(<%= @minimum_password_length %> characters minimum)</em>
-    <% end %><br />
-    <%= f.password_field :password, autocomplete: "new-password" %>
-  </div>
-
-  <div class="field">
-    <%= f.label :password_confirmation %><br />
-    <%= f.password_field :password_confirmation, autocomplete: "new-password" %>
-  </div>
-
-  <div class="actions">
-    <%= f.submit "Sign up" %>
-  </div>
-<% end %>
-
-<%= render "devise/shared/links" %>
+</div>

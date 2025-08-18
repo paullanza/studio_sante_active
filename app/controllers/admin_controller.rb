@@ -83,18 +83,24 @@ class AdminController < ApplicationController
   end
 
   def unconfirmed_sessions
-    @sessions = Session.where(confirmed: [false, nil])
-                      .includes(:fliip_user, :fliip_service, :user)
-                      .order(date: :desc, time: :desc)
+    @filter_params = permitted_session_filters
+    @sessions = Session.unconfirmed
+                       .apply_filters(@filter_params)
+                       .with_associations
+                       .recent
 
-    @staff = User.active.order(:last_name, :first_name) # for reassign dropdown
+    # For the employee dropdown in filters
+    @staff = User.where(active: true).order(:first_name, :last_name)
   end
 
   def confirm_sessions
-    session_ids = params[:session_ids] || []
-    confirmed = Session.where(id: session_ids).update_all(confirmed: true)
-    redirect_to admin_unconfirmed_sessions_path,
-                notice: "#{confirmed} #{'session'.pluralize(confirmed)} confirmed."
+    ids = Array(params[:session_ids]).map(&:to_i)
+    if ids.any?
+      Session.where(id: ids).update_all(confirmed: true, updated_at: Time.current)
+      redirect_to admin_unconfirmed_sessions_path, notice: "#{ids.size} sessions confirmed."
+    else
+      redirect_to admin_unconfirmed_sessions_path, alert: "No sessions selected."
+    end
   end
 
   def import_clients
@@ -162,6 +168,17 @@ class AdminController < ApplicationController
   end
 
   private
+
+  def permitted_session_filters
+    params.permit(
+      :q,
+      :employee_id,
+      :session_date_from, :session_date_to,
+      :created_from, :created_to,
+      :present, :session_type
+    )
+  end
+
 
   def fmt_date(d)
     d.present? ? d.strftime("%d/%m/%Y") : nil
