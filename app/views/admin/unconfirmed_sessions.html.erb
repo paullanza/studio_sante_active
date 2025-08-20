@@ -1,9 +1,7 @@
 <div class="container mt-4">
   <h1 class="mb-3">Unconfirmed Sessions</h1>
 
-  <%= render "shared/sessions_filters",
-             filter_params: @filter_params,
-             staff: @staff %>
+  <%= render "shared/sessions_filters", filter_params: @filter_params, staff: @staff %>
 
   <%= form_with url: admin_confirm_sessions_path, method: :patch, local: true do %>
     <div class="mb-3 d-flex gap-2">
@@ -13,7 +11,7 @@
     <%= render "shared/sessions_table",
                sessions: @sessions,
                show_bulk_checkbox: true,
-               scope_name: :unconfirmed,
-               compact: true %>
+               inline_edit: true,
+               scope_name: :unconfirmed %>
   <% end %>
 </div>

@@ -1,7 +1,7 @@
 # app/controllers/sessions_controller.rb
 class SessionsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_session, only: [:update, :destroy]
+  before_action :set_session, only: [:edit, :update, :destroy]
 
   def new
     @session = Session.new
@@ -28,7 +28,26 @@ class SessionsController < ApplicationController
     end
   end
 
+  def show
+    render partial: "shared/session_row", locals: { session: @session }
+  end
+
+  def edit
+    unless can_modify?(@session, action: :edit)
+      return redirect_back fallback_location: admin_unconfirmed_sessions_path, alert: "Not authorized."
+    end
+
+    render partial: "shared/session_form_row", locals: { session: @session }
+  end
+
   def update
+    unless can_modify?(@session, action: :update)
+      return respond_to do |format|
+        format.json { head :forbidden }
+        format.html  { redirect_back fallback_location: admin_unconfirmed_sessions_path, alert: "Not authorized." }
+      end
+    end
+
     @session.assign_attributes(session_params)
 
     # present flag (same semantics as create)
@@ -49,23 +68,17 @@ class SessionsController < ApplicationController
     @session.user_id = creator_id if creator_id
 
     if @session.save
-      respond_to do |format|
-        format.json { render json: session_payload(@session), status: :ok }
-        format.html { redirect_back fallback_location: admin_unconfirmed_sessions_path, notice: "Session updated." }
-      end
+      render partial: "shared/session_row", locals: { session: @session }
     else
-      respond_to do |format|
-        format.json { render json: { errors: @session.errors.full_messages }, status: :unprocessable_entity }
-        format.html  { redirect_back fallback_location: admin_unconfirmed_sessions_path, alert: @session.errors.full_messages.to_sentence }
-      end
+      render partial: "shared/session_form_row", locals: { session: @session }, status: :unprocessable_entity
     end
   end
 
   def destroy
-    unless current_user.admin? || current_user.super_admin?
+    unless can_modify?(@session, action: :destroy)
       return respond_to do |format|
         format.json { head :forbidden }
-        format.html  { redirect_back fallback_location: admin_unconfirmed_sessions_path, alert: "Not authorized." }
+        format.html { redirect_back fallback_location: admin_unconfirmed_sessions_path, alert: "Not authorized." }
       end
     end
 
@@ -108,6 +121,12 @@ class SessionsController < ApplicationController
 
   def admin_like?
     current_user.admin? || current_user.super_admin?
+  end
+
+  def can_modify?(session, action:)
+    return true if admin_like?
+    # creators may modify only if the session is unconfirmed
+    session.user_id == current_user.id && !session.confirmed?
   end
 
   def chosen_creator_for_create

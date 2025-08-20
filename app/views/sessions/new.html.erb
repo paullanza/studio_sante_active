@@ -21,12 +21,12 @@
           class="form-control"
           placeholder="Search client by name or email…"
           data-client-search-target="input"
-            data-action="
-              input->client-search#onInput
-              focus->client-search#onFocus
-              blur->client-search#onBlur
-              keydown.enter->client-search#preventSubmit
-            ">
+          data-action="
+            input->client-search#onInput
+            focus->client-search#onFocus
+            blur->client-search#onBlur
+            keydown.enter->client-search#preventSubmit
+          ">
 
         <!-- store chosen client id for the form -->
         <%= hidden_field_tag "session[fliip_user_id]", nil, data: { client_search_target: "hiddenId" } %>
@@ -50,8 +50,14 @@
       <% if current_user.admin? || current_user.super_admin? %>
         <div class="flex-fill" style="min-width:260px;">
           <label for="session_user_id" class="form-label">Created by</label>
-          <select name="session[user_id]" id="session_user_id" class="form-select">
-            <!-- Blank means “me”; controller falls back to current_user -->
+          <select name="session[user_id]"
+                  id="session_user_id"
+                  class="form-select"
+                  data-controller="user-sessions"
+                  data-user-sessions-url-value="<%= recent_sessions_path %>"
+                  data-user-sessions-frame-value="recent_sessions_frame"
+                  data-user-sessions-current-user-value="<%= current_user.id %>"
+                  data-action="change->user-sessions#load">
             <option value="">Me (<%= current_user.full_name %>)</option>
             <% @staff.each do |u| %>
               <option value="<%= u.id %>"><%= u.full_name %></option>
@@ -95,65 +101,16 @@
   <!-- Services table (Turbo frame) -->
   <h2 class="mb-3">Client Services</h2>
   <%= turbo_frame_tag "services_table" do %>
-    <div class="table-responsive">
-      <table class="table table-bordered table-striped align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Purchase #</th>
-            <th>Status</th>
-            <th>Start Date</th>
-            <th>Expire Date</th>
-            <th>Purchase Date</th>
-            <th>Stop Date</th>
-            <th>Cancel Date</th>
-            <th>Service Name</th>
-            <th>Duration</th>
-            <th style="min-width: 260px;">Progress</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="text-muted">
-            <td colspan="10">Select a client to view services.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
   <% end %>
 
   <hr>
-  <h2>Unconfirmed Sessions</h2>
 
-  <% if @recent_unconfirmed_sessions.any? %>
-    <p class="text-muted small">Showing the 10 most recent unconfirmed sessions.</p>
-    <table class="table table-bordered table-striped mt-3">
-      <thead class="table-light">
-        <tr>
-          <th>Client</th>
-          <th>Service</th>
-          <th>Date</th>
-          <th>Time</th>
-          <th>Duration</th>
-          <th>Présence</th>
-          <th>Type</th>
-          <th>Note</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @recent_unconfirmed_sessions.each do |session| %>
-          <tr>
-            <td><%= [session.fliip_user&.user_firstname, session.fliip_user&.user_lastname].compact.join(" ") %></td>
-            <td><%= session.fliip_service&.service_name || "—" %></td>
-            <td><%= session.date&.strftime("%d/%m/%Y") || "—" %></td>
-            <td><%= session.time&.strftime("%H:%M") || "—" %></td>
-            <td><%= session.duration_display %></td>
-            <td><%= session.present? ? "Présent·e" : "Absent·e" %></td>
-            <td><%= session.session_type.to_s.capitalize %></td>
-            <td><%= session.note.presence || "—" %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  <% else %>
-    <p class="text-muted">No unconfirmed sessions.</p>
-  <% end %>
+  <!-- Recent sessions (Turbo frame) -->
+  <h2 class="mb-0">Recent sessions</h2>
+  <p class="text-muted small mb-2">Last 25 sessions by creator.</p>
+
+  <turbo-frame id="recent_sessions_frame"
+               src="<%= recent_sessions_path(user_id: current_user.id) %>">
+    <div class="text-muted small">Loading recent sessions…</div>
+  </turbo-frame>
 </div>
