@@ -1,4 +1,20 @@
+# app/models/session.rb
 class Session < ApplicationRecord
+  include PgSearch::Model
+  # -----------------------------------------
+  # PGSearch: search by client or employee names
+  # -----------------------------------------
+  # FliipUser fields: user_firstname, user_lastname
+  # User fields: first_name, last_name
+  pg_search_scope :search_names,
+    against: [], # we only search through associated models below
+    associated_against: {
+      fliip_user: [:user_firstname, :user_lastname]
+    },
+    using: {
+      tsearch: { prefix: true, normalization: 2 }
+    }
+
   # -----------------------------------------
   # Associations
   # -----------------------------------------
@@ -50,12 +66,74 @@ class Session < ApplicationRecord
   before_validation :set_session_type_and_duration, on: :create
 
   # -----------------------------------------
-  # Scopes
+  # Scopes (status)
   # -----------------------------------------
   # Sessions awaiting confirmation (false or nil).
   scope :unconfirmed, -> { where(confirmed: [false, nil]) }
   # Sessions that have been confirmed.
   scope :confirmed,   -> { where(confirmed: true) }
+
+  # -----------------------------------------
+  # Scopes (preloading & ordering)
+  # -----------------------------------------
+  # Preload graph commonly needed by views to avoid N+1.
+  scope :with_associations, -> {
+    includes(:user, :fliip_user, fliip_service: :service_definition)
+  }
+
+  scope :recent, -> { order(created_at: :desc) }
+
+  # -----------------------------------------
+  # Scopes (filters for server-side search)
+  # -----------------------------------------
+  scope :by_employee, ->(user_id) {
+    where(user_id: user_id) if user_id.present?
+  }
+
+  scope :date_between, ->(from_date, to_date) {
+    rel = all
+    rel = rel.where("date >= ?", from_date) if from_date.present?
+    rel = rel.where("date <= ?", to_date)   if to_date.present?
+    rel
+  }
+
+  scope :created_between, ->(from_dt, to_dt) {
+    rel = all
+    rel = rel.where("created_at >= ?", from_dt) if from_dt.present?
+    rel = rel.where("created_at <= ?", to_dt)   if to_dt.present?
+    rel
+  }
+
+  # present_param accepts: "yes", "no", "any"/nil
+  scope :present_value, ->(present_param) {
+    case present_param
+    when "yes" then where(present: true)
+    when "no"  then where(present: [false, nil])
+    else             all
+    end
+  }
+
+  # type_param accepts: "paid", "free", "any"/nil
+  scope :of_type, ->(type_param) {
+    case type_param
+    when "paid" then where(session_type: "paid")
+    when "free" then where(session_type: "free")
+    else              all
+    end
+  }
+
+  # Convenience: composes the common filter set in a single call.
+  # Keep controllers skinny; still returns a Relation (chainable).
+  def self.apply_filters(params)
+    rel = all
+    rel = rel.search_names(params[:q])                               if params[:q].present?
+    rel = rel.by_employee(params[:employee_id])
+    rel = rel.date_between(params[:session_date_from], params[:session_date_to])
+    rel = rel.created_between(params[:created_from], params[:created_to])
+    rel = rel.present_value(params[:present])
+    rel = rel.of_type(params[:session_type])
+    rel
+  end
 
   # -----------------------------------------
   # Display Helpers
@@ -70,6 +148,14 @@ class Session < ApplicationRecord
     when 0.5 then "30 minutes"
     else          "#{duration.to_f} h"
     end
+  end
+
+  # Small helper used by the table to render presence meaning succinctly.
+  # (Can be moved to a view helper later if you prefer.)
+  def presence_label
+    return "Présent" if present
+
+    session_type == "paid" ? "Absent (-24h)" : "Absent"
   end
 
   private

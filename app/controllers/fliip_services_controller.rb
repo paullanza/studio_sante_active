@@ -1,4 +1,3 @@
-# app/controllers/fliip_services_controller.rb
 class FliipServicesController < ApplicationController
   before_action :authenticate_user!
 

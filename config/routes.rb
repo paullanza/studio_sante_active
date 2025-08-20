@@ -74,7 +74,7 @@ Rails.application.routes.draw do
   # -----------------------------------------
   # Session creation / booking
   # -----------------------------------------
-  resources :sessions, only: [:new, :create, :update, :destroy] do
+  resources :sessions, only: [:new, :create, :destroy] do
     collection do
       get :services_table
       get :service_select

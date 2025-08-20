@@ -142,34 +142,12 @@
     <h2 class="h5 mb-2">Unconfirmed Sessions</h2>
 
     <% if @unconfirmed_sessions.any? %>
-      <div class="table-responsive">
-        <table class="table table-striped table-bordered align-middle">
-          <thead>
-            <tr>
-              <th>Client</th>
-              <th>Service</th>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Présent</th>
-              <th>Note</th>
-              <th>Créé par</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @unconfirmed_sessions.each do |s| %>
-              <tr>
-                <td><%= s.fliip_user&.full_name %></td>
-                <td><%= s.fliip_service&.service_name %></td>
-                <td><%= s.date&.strftime("%Y-%m-%d") || "—" %></td>
-                <td><%= s.time&.strftime("%H:%M") || "—" %></td>
-                <td><%= s.present? ? "Oui" : "Non" %></td>
-                <td><%= s.note.presence || "–" %></td>
-                <td><%= s.user&.full_name || "–" %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
+      <!-- Sessions Table -->
+    <%= render "shared/sessions_table",
+        sessions: @unconfirmed_sessions,
+        show_bulk_checkbox: false,
+        scope_name: :new_session %>
+
     <% else %>
       <p class="text-muted">No unconfirmed sessions found.</p>
     <% end %>

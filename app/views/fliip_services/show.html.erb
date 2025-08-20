@@ -189,44 +189,10 @@
   </div>
 
   <!-- Sessions Table -->
-  <div class="table-responsive">
-    <table class="table table-bordered table-striped align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>Date</th>
-          <th>Time</th>
-          <th>Duration</th>
-          <th>Presence</th>
-          <th>Type</th>
-          <th>Confirmed</th>
-          <th>Note</th>
-          <th>Created by</th>
-          <th>Created at</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @sessions.each do |s| %>
-          <tr>
-            <td><%= s.date&.strftime("%d/%m/%Y") || "—" %></td>
-            <td><%= s.time&.strftime("%H:%M") || "—" %></td>
-            <td><%= s.duration_display %></td>
-            <td><%= s.present? ? "Présent·e" : "Absent·e" %></td>
-            <td><%= s.session_type.to_s.capitalize %></td>
-            <td>
-              <% if s.confirmed? %>
-                <span class="badge bg-success">Yes</span>
-              <% else %>
-                <span class="badge bg-warning text-dark">No</span>
-              <% end %>
-            </td>
-            <td><%= s.note.presence || "—" %></td>
-            <td><%= s.user&.full_name || "—" %></td>
-            <td><%= s.created_at.strftime("%d/%m/%Y %H:%M") %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
+    <%= render "shared/sessions_table",
+        sessions: @sessions,
+        show_bulk_checkbox: false,
+        scope_name: :new_session %>
 
   <div class="d-flex justify-content-end">
     <%== pagy_bootstrap_nav(@pagy) %>

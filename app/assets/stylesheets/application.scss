@@ -24,13 +24,13 @@ table {
   background-color: #fd7e14 !important;
 }
 
-$brand: #49c5c1; // tweak to taste
+$brand: #49c5c1;
 
 .brand-panel {
   background: $brand;
 }
 
-.btn-brand {
+.btn.btn-brand {
   background-color: $brand;
   border-color: $brand;
   color: #fff;
@@ -42,7 +42,6 @@ $brand: #49c5c1; // tweak to taste
     color: #fff;
   }
 }
-
 .link-brand {
   color: $brand;
   text-decoration: none;

@@ -1,0 +1,51 @@
+<%# Locals: filter_params:, staff: %>
+<%= form_with url: admin_unconfirmed_sessions_path, method: :get, local: true, class: "row g-2 mb-3" do %>
+  <div class="col-md-3">
+    <%= label_tag :q, "Recherche (client)", class: "form-label" %>
+    <%= text_field_tag :q, filter_params[:q], class: "form-control", placeholder: "Nom du client" %>
+  </div>
+
+  <div class="col-md-3">
+    <%= label_tag :employee_id, "Employé·e", class: "form-label" %>
+    <%= select_tag :employee_id,
+          options_for_select([["—", nil]] + staff.map { |u| ["#{u.last_name}, #{u.first_name}", u.id] }, filter_params[:employee_id]),
+          class: "form-select" %>
+  </div>
+
+  <div class="col-md-3">
+    <%= label_tag :session_date_from, "Date séance (de)", class: "form-label" %>
+    <%= date_field_tag :session_date_from, filter_params[:session_date_from], class: "form-control" %>
+  </div>
+
+  <div class="col-md-3">
+    <%= label_tag :session_date_to, "Date séance (à)", class: "form-label" %>
+    <%= date_field_tag :session_date_to, filter_params[:session_date_to], class: "form-control" %>
+  </div>
+
+  <div class="col-md-3">
+    <%= label_tag :created_from, "Créé (de)", class: "form-label" %>
+    <%= date_field_tag :created_from, filter_params[:created_from], class: "form-control" %>
+  </div>
+
+  <div class="col-md-3">
+    <%= label_tag :created_to, "Créé (à)", class: "form-label" %>
+    <%= date_field_tag :created_to, filter_params[:created_to], class: "form-control" %>
+  </div>
+
+  <div class="col-md-3">
+    <%= label_tag :present, "Présence", class: "form-label" %>
+    <%= select_tag :present, options_for_select([["—", nil], ["Oui", "yes"], ["Non", "no"]], filter_params[:present]),
+                   class: "form-select" %>
+  </div>
+
+  <div class="col-md-3">
+    <%= label_tag :session_type, "Type", class: "form-label" %>
+    <%= select_tag :session_type, options_for_select([["—", nil], ["Payée", "paid"], ["Gratuite", "free"]], filter_params[:session_type]),
+                   class: "form-select" %>
+  </div>
+
+  <div class="col-12 d-flex gap-2 mt-2">
+    <%= submit_tag "Filtrer", class: "btn btn-primary" %>
+    <%= link_to "Réinitialiser", admin_unconfirmed_sessions_path, class: "btn btn-outline-secondary" %>
+  </div>
+<% end %>
