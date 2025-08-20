@@ -1,13 +1,19 @@
 # app/controllers/sessions_controller.rb
 class SessionsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_session, only: [:edit, :update, :destroy]
+  before_action :set_session, only: [:destroy]
 
   def new
     @session = Session.new
     load_fliip_users
     @staff = User.active.order(:last_name, :first_name) if admin_like?
-    load_recent_unconfirmed_sessions
+
+    @sessions = Session
+                  .where(user_id: current_user.id)
+                  .unconfirmed
+                  .with_associations
+                  .order(date: :desc, time: :desc, created_at: :desc)
+                  .limit(25)
   end
 
   def create
@@ -22,55 +28,8 @@ class SessionsController < ApplicationController
     else
       load_fliip_users
       @staff = User.active.order(:last_name, :first_name) if admin_like?
-      load_recent_unconfirmed_sessions
       flash.now[:alert] = @session.errors.full_messages.to_sentence.presence || "There was a problem creating the session."
       render :new, status: :unprocessable_entity
-    end
-  end
-
-  def show
-    render partial: "shared/session_row", locals: { session: @session }
-  end
-
-  def edit
-    unless can_modify?(@session, action: :edit)
-      return redirect_back fallback_location: admin_unconfirmed_sessions_path, alert: "Not authorized."
-    end
-
-    render partial: "shared/session_form_row", locals: { session: @session }
-  end
-
-  def update
-    unless can_modify?(@session, action: :update)
-      return respond_to do |format|
-        format.json { head :forbidden }
-        format.html  { redirect_back fallback_location: admin_unconfirmed_sessions_path, alert: "Not authorized." }
-      end
-    end
-
-    @session.assign_attributes(session_params)
-
-    # present flag (same semantics as create)
-    present_param = params[:session][:present]
-    unless present_param.nil?
-      @session.present = (present_param == "1")
-      @session.session_type = "paid" if @session.present?
-    end
-
-    # half_hour flag (same semantics as create)
-    half_hour = params[:session][:half_hour]
-    unless half_hour.nil?
-      @session.duration = (half_hour == "1") ? 0.5 : 1.0
-    end
-
-    # NEW: allow admin to reassign creator
-    creator_id = chosen_creator_id_from_params
-    @session.user_id = creator_id if creator_id
-
-    if @session.save
-      render partial: "shared/session_row", locals: { session: @session }
-    else
-      render partial: "shared/session_form_row", locals: { session: @session }, status: :unprocessable_entity
     end
   end
 
@@ -148,14 +107,6 @@ class SessionsController < ApplicationController
       .sort_by do |u|
         I18n.transliterate("#{u.user_lastname.to_s.strip} #{u.user_firstname.to_s.strip}").downcase
       end
-  end
-
-  def load_recent_unconfirmed_sessions
-    @recent_unconfirmed_sessions = Session
-      .where(user_id: current_user.id, confirmed: [false, nil])
-      .includes(:fliip_user, :fliip_service)
-      .order(date: :desc, time: :desc, created_at: :desc)
-      .limit(10)
   end
 
   def session_params

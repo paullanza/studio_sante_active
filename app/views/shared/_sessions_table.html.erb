@@ -25,17 +25,16 @@
         <th class="text-end"   style="width:1%;">Actions</th>
       </tr>
     </thead>
-
-    <tbody>
-      <% if sessions.any? %>
-        <% sessions.each do |s| %>
-          <%= render "shared/session_row", session: s, show_bulk_checkbox: local_assigns[:show_bulk_checkbox] %>
+      <tbody>
+        <% if sessions.any? %>
+          <% sessions.each do |s| %>
+            <%= render "shared/session_row", session: s, show_bulk_checkbox: local_assigns[:show_bulk_checkbox] %>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="<%= local_assigns[:show_bulk_checkbox] ? 8 : 7 %>" class="text-muted">No sessions to display.</td>
+          </tr>
         <% end %>
-      <% else %>
-        <tr>
-          <td colspan="<%= local_assigns[:show_bulk_checkbox] ? 8 : 7 %>" class="text-muted">No sessions to display.</td>
-        </tr>
-      <% end %>
-    </tbody>
+      </tbody>
   </table>
 </div>

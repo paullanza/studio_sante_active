@@ -52,12 +52,7 @@
           <label for="session_user_id" class="form-label">Created by</label>
           <select name="session[user_id]"
                   id="session_user_id"
-                  class="form-select"
-                  data-controller="user-sessions"
-                  data-user-sessions-url-value="<%= recent_sessions_path %>"
-                  data-user-sessions-frame-value="recent_sessions_frame"
-                  data-user-sessions-current-user-value="<%= current_user.id %>"
-                  data-action="change->user-sessions#load">
+                  class="form-select">
             <option value="">Me (<%= current_user.full_name %>)</option>
             <% @staff.each do |u| %>
               <option value="<%= u.id %>"><%= u.full_name %></option>
@@ -86,7 +81,7 @@
       <div class="flex-fill">
         <%= f.input :time, label: "Time", as: :select,
               collection: (6..20).flat_map { |h| ["%02d:00" % h, "%02d:30" % h] },
-              selected: (@session.time&.strftime("%H:%M") || default_time_slot_str ),
+              selected: (@session.time&.strftime("%H:%M") || default_time_slot_str),
               include_blank: false,
               input_html: { class: "form-select" } %>
       </div>
@@ -105,12 +100,12 @@
 
   <hr>
 
-  <!-- Recent sessions (Turbo frame) -->
+  <!-- Recent sessions -->
   <h2 class="mb-0">Recent sessions</h2>
-  <p class="text-muted small mb-2">Last 25 sessions by creator.</p>
+  <p class="text-muted small mb-2">Last 25 sessions created by you.</p>
 
-  <turbo-frame id="recent_sessions_frame"
-               src="<%= recent_sessions_path(user_id: current_user.id) %>">
-    <div class="text-muted small">Loading recent sessions…</div>
-  </turbo-frame>
+  <%= render "shared/sessions_table",
+        sessions: @sessions,
+        show_bulk_checkbox: false,
+        scope_name: :new_session %>
 </div>
