@@ -96,8 +96,8 @@ class AdminController < ApplicationController
   def confirm_sessions
     ids = Array(params[:session_ids]).map(&:to_i)
     if ids.any?
-      Session.where(id: ids).update_all(confirmed: true, updated_at: Time.current)
-      redirect_to admin_unconfirmed_sessions_path, notice: "#{ids.size} sessions confirmed."
+      updated = Session.bulk_confirm(ids)
+      redirect_to admin_unconfirmed_sessions_path, notice: "#{updated} sessions confirmed."
     else
       redirect_to admin_unconfirmed_sessions_path, alert: "No sessions selected."
     end

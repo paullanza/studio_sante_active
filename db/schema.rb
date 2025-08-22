@@ -122,15 +122,18 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_13_223928) do
     t.bigint "user_id", null: false
     t.bigint "fliip_user_id", null: false
     t.bigint "fliip_service_id", null: false
+    t.bigint "created_by_id", null: false
+    t.datetime "confirmed_at"
     t.date "date"
     t.time "time"
     t.boolean "present"
     t.text "note"
     t.boolean "confirmed"
-    t.string "session_type", default: "paid", null: false
+    t.integer "session_type", null: false
     t.float "duration", default: 1.0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_sessions_on_created_by_id"
     t.index ["fliip_service_id"], name: "index_sessions_on_fliip_service_id"
     t.index ["fliip_user_id"], name: "index_sessions_on_fliip_user_id"
     t.index ["user_id"], name: "index_sessions_on_user_id"
@@ -173,5 +176,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_13_223928) do
   add_foreign_key "sessions", "fliip_services"
   add_foreign_key "sessions", "fliip_users"
   add_foreign_key "sessions", "users"
+  add_foreign_key "sessions", "users", column: "created_by_id"
   add_foreign_key "signup_codes", "users", column: "used_by_id"
 end

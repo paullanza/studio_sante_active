@@ -18,7 +18,9 @@ class SessionsController < ApplicationController
 
   def create
     @session = Session.new(session_params)
-    @session.user      = chosen_creator_for_create
+    @session.user       = chosen_creator_for_create
+    @session.created_by = current_user
+
     @session.confirmed = false
     @session.present   = params[:session][:present] == "1"
     @session.duration  = params[:half_hour] == "1" ? 0.5 : 1.0
@@ -85,7 +87,7 @@ class SessionsController < ApplicationController
   def can_modify?(session, action:)
     return true if admin_like?
     # creators may modify only if the session is unconfirmed
-    session.user_id == current_user.id && !session.confirmed?
+    session.created_by_id == current_user.id && !session.confirmed?
   end
 
   def chosen_creator_for_create
