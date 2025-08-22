@@ -21,6 +21,9 @@ class Session < ApplicationRecord
   # The staff member who created or is responsible for the session.
   belongs_to :user
 
+  # Creator of the record (may differ from :user when admins create for others)
+  belongs_to :created_by, class_name: "User"
+
   # The client (from Fliip) who is attending the session.
   belongs_to :fliip_user
 
@@ -35,7 +38,7 @@ class Session < ApplicationRecord
   validates :duration, numericality: { greater_than: 0 }, allow_nil: true
 
   # These fields must always be provided when creating a session.
-  validates :fliip_user_id, :fliip_service_id, :date, :time, presence: true
+  validates :fliip_user_id, :fliip_service_id, :date, :time, :created_by_id, presence: true
 
   # Prevents duplicate bookings:
   #   - Same client (fliip_user_id)
@@ -64,6 +67,9 @@ class Session < ApplicationRecord
   #   - Determine whether this session is "free" or "paid"
   #   - Set default duration if not provided
   before_validation :set_session_type_and_duration, on: :create
+
+  #   - Default created_by to the responsible user when not explicitly set
+  before_validation :default_created_by, on: :create
 
   # -----------------------------------------
   # Scopes (status)
@@ -189,6 +195,13 @@ class Session < ApplicationRecord
 
     free_remaining = fliip_service.remaining_free_sessions.to_f
     self.session_type = free_remaining >= duration ? "free" : "paid"
+  end
+
+  # Default creator fallback
+  def default_created_by
+    if created_by_id.blank?
+      self.created_by_id = user_id
+    end
   end
 
   # -----------------------------------------
