@@ -38,6 +38,7 @@
   <td class="text-nowrap small" style="width:1%;">
     <div><strong><%= [s.date&.strftime("%d/%m/%Y"), s.time&.strftime("%H:%M")].compact.join(" ") %></strong></div>
     <div class="text-muted"><small>(créé : <%= s.created_at.strftime("%d/%m/%Y %H:%M") %>)</small></div>
+    <div class="text-muted"><small>(cronfirmed : <%= s.confirmed_at %>)</small></div>
   </td>
 
   <!-- Client -->
