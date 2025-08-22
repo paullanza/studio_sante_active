@@ -19,7 +19,7 @@ class SessionsController < ApplicationController
   def create
     @session = Session.new(session_params)
     @session.user       = chosen_creator_for_create
-    @session.created_by = current_user       # ← actor creating the record
+    @session.created_by = current_user
 
     @session.confirmed = false
     @session.present   = params[:session][:present] == "1"
