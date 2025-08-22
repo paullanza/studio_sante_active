@@ -1,9 +1,11 @@
+# app/models/session.rb
 class Session < ApplicationRecord
   include PgSearch::Model
   # -----------------------------------------
   # PGSearch: search by client or employee names
   # -----------------------------------------
   # FliipUser fields: user_firstname, user_lastname
+  # User fields: first_name, last_name
   pg_search_scope :search_names,
     against: [], # we only search through associated models below
     associated_against: {
@@ -19,7 +21,7 @@ class Session < ApplicationRecord
   # The staff member who created or is responsible for the session.
   belongs_to :user
 
-  # The staff member who created the record (may differ from :user).
+  # Creator of the record (may differ from :user when admins create for others)
   belongs_to :created_by, class_name: "User"
 
   # The client (from Fliip) who is attending the session.
@@ -36,7 +38,7 @@ class Session < ApplicationRecord
   validates :duration, numericality: { greater_than: 0 }, allow_nil: true
 
   # These fields must always be provided when creating a session.
-  validates :fliip_user_id, :fliip_service_id, :date, :time, presence: true
+  validates :fliip_user_id, :fliip_service_id, :date, :time, :created_by_id, presence: true
 
   # Prevents duplicate bookings:
   #   - Same client (fliip_user_id)
@@ -65,6 +67,9 @@ class Session < ApplicationRecord
   #   - Determine whether this session is "free" or "paid"
   #   - Set default duration if not provided
   before_validation :set_session_type_and_duration, on: :create
+
+  #   - Default created_by to the responsible user when not explicitly set
+  before_validation :default_created_by, on: :create
 
   # -----------------------------------------
   # Scopes (status)
@@ -159,13 +164,6 @@ class Session < ApplicationRecord
     session_type == "paid" ? "Absent (-24h)" : "Absent"
   end
 
-  # Confirms the session and sets the confirmed_at timestamp atomically.
-  # Fast, single SQL. Returns number of rows updated.
-  def self.bulk_confirm(ids)
-    where(id: ids).where.not(confirmed: true)
-      .update_all(confirmed: true, confirmed_at: Time.current, updated_at: Time.current)
-  end
-
   private
 
   # -----------------------------------------
@@ -197,6 +195,13 @@ class Session < ApplicationRecord
 
     free_remaining = fliip_service.remaining_free_sessions.to_f
     self.session_type = free_remaining >= duration ? "free" : "paid"
+  end
+
+  # Default creator fallback
+  def default_created_by
+    if created_by_id.blank?
+      self.created_by_id = user_id
+    end
   end
 
   # -----------------------------------------
