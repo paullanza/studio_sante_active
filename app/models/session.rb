@@ -1,11 +1,9 @@
-# app/models/session.rb
 class Session < ApplicationRecord
   include PgSearch::Model
   # -----------------------------------------
   # PGSearch: search by client or employee names
   # -----------------------------------------
   # FliipUser fields: user_firstname, user_lastname
-  # User fields: first_name, last_name
   pg_search_scope :search_names,
     against: [], # we only search through associated models below
     associated_against: {
@@ -20,6 +18,9 @@ class Session < ApplicationRecord
   # -----------------------------------------
   # The staff member who created or is responsible for the session.
   belongs_to :user
+
+  # The staff member who created the record (may differ from :user).
+  belongs_to :created_by, class_name: "User"
 
   # The client (from Fliip) who is attending the session.
   belongs_to :fliip_user
@@ -156,6 +157,13 @@ class Session < ApplicationRecord
     return "Présent" if present
 
     session_type == "paid" ? "Absent (-24h)" : "Absent"
+  end
+
+  # Confirms the session and sets the confirmed_at timestamp atomically.
+  # Fast, single SQL. Returns number of rows updated.
+  def self.bulk_confirm(ids)
+    where(id: ids).where.not(confirmed: true)
+      .update_all(confirmed: true, confirmed_at: Time.current, updated_at: Time.current)
   end
 
   private
