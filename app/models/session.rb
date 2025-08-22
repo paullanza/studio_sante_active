@@ -1,6 +1,14 @@
 # app/models/session.rb
 class Session < ApplicationRecord
   include PgSearch::Model
+
+  # -----------------------------------------
+  # Enums
+  # -----------------------------------------
+  # Backed by an integer column in the DB (0, 1…)
+  # We define the mapping explicitly so ordering stays stable.
+  enum session_type: [:paid, :free]
+
   # -----------------------------------------
   # PGSearch: search by client or employee names
   # -----------------------------------------
@@ -161,7 +169,7 @@ class Session < ApplicationRecord
   def presence_label
     return "Présent" if present
 
-    session_type == "paid" ? "Absent (-24h)" : "Absent"
+    paid? ? "Absent (-24h)" : "Absent"
   end
 
   private
@@ -184,17 +192,17 @@ class Session < ApplicationRecord
     return if fliip_service_id.blank? || fliip_service.nil?
 
     if present
-      self.session_type = "paid"
+      self.session_type = :paid
       return
     end
 
     if fliip_service.service_definition.nil?
-      self.session_type = "paid"
+      self.session_type = :paid
       return
     end
 
     free_remaining = fliip_service.remaining_free_sessions.to_f
-    self.session_type = free_remaining >= duration ? "free" : "paid"
+    self.session_type = free_remaining >= duration ? :free : :paid
   end
 
   # Default creator fallback

@@ -71,12 +71,12 @@ class FliipService < ApplicationRecord
 
   # Returns only paid sessions.
   def paid_sessions
-    sessions.where(session_type: "paid")
+    sessions.paid
   end
 
   # Returns only free sessions.
   def free_sessions
-    sessions.where(session_type: "free")
+    sessions.free
   end
 
   # -----------------------------------------
