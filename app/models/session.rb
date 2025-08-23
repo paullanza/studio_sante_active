@@ -1,4 +1,3 @@
-# app/models/session.rb
 class Session < ApplicationRecord
   include PgSearch::Model
 
@@ -13,7 +12,6 @@ class Session < ApplicationRecord
   # PGSearch: search by client or employee names
   # -----------------------------------------
   # FliipUser fields: user_firstname, user_lastname
-  # User fields: first_name, last_name
   pg_search_scope :search_names,
     against: [], # we only search through associated models below
     associated_against: {
@@ -92,7 +90,7 @@ class Session < ApplicationRecord
   # -----------------------------------------
   # Preload graph commonly needed by views to avoid N+1.
   scope :with_associations, -> {
-    includes(:user, :fliip_user, fliip_service: :service_definition)
+    includes(:user, :created_by, :fliip_user, fliip_service: :service_definition)
   }
 
   scope :recent, -> { order(created_at: :desc) }
@@ -158,8 +156,8 @@ class Session < ApplicationRecord
   #   - "<value> h" for other values
   def duration_display
     case duration
-    when 1.0 then "1 hour"
-    when 0.5 then "30 minutes"
+    when 1.0 then "1 heure"
+    when 0.5 then "Démi-heure"
     else          "#{duration.to_f} h"
     end
   end
@@ -170,6 +168,56 @@ class Session < ApplicationRecord
     return "Présent" if present
 
     paid? ? "Absent (-24h)" : "Absent"
+  end
+
+  def date_time_label
+    [date&.strftime('%d/%m/%Y'), time&.strftime('%H:%M')].compact.join(' ')
+  end
+
+  def created_at_label
+    "créé : #{created_at.strftime('%d/%m/%Y %H:%M')}"
+  end
+
+  def presence_with_duration_label
+    base = presence_label # from your model
+    "#{duration_display} #{base}"
+  end
+
+  def presence_badge_variant
+    return 'bg-success' if present
+    paid? ? 'bg-danger' : 'bg-warning'
+  end
+
+  def modifiable_by?(current_user)
+    return false if confirmed?
+    return true  if current_user&.admin? || current_user&.super_admin?
+    user_id == current_user&.id
+  end
+
+  # Sequence number within this FliipService & session_type (paid/free)
+  # Based on creation time ascending; ties broken by id.
+  #
+  # Note: This is O(1) query but runs per-row; acceptable for moderate table sizes.
+  # If you need to optimize for large lists, we can precompute via a window function.
+  def sequence_number_in_service
+    return nil unless fliip_service_id && session_type
+
+    Session
+      .where(fliip_service_id: fliip_service_id, session_type: session_type)
+      .where(
+        "created_at < :ts OR (created_at = :ts AND id <= :id)",
+        ts: created_at, id: id
+      )
+      .count
+  end
+
+  # Label like "Paid #7" or "Free #1"
+  # Shorter variations: "P#7" / "F#1" if you want to go ultra-compact.
+  def sequence_label
+    n = sequence_number_in_service
+    return nil unless n
+    type = paid? ? "Paid" : "Free"
+    "#{type} ##{n}"
   end
 
   private

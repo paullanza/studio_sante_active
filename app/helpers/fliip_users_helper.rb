@@ -1,4 +1,3 @@
-# app/helpers/fliip_users_helper.rb
 module FliipUsersHelper
   # Returns 0..100 based on dates; 0 if missing/invalid
   def time_progress_percent(service, today: Date.current)

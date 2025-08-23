@@ -101,32 +101,24 @@
 
           <!-- ROW 2: progress bars (compact, side-by-side) -->
           <tr class="align-middle bar-row">
-            <td colspan="5">
-              <div class="label-row d-flex justify-content-between align-items-center">
-                <span class="text-muted"><%= time_label %></span>
-                <span class="badge bg-light text-muted badge-percent"><%= time_pct %>%</span>
-              </div>
-              <div class="progress progress-thin" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= time_pct %>">
-                <div class="progress-bar <%= time_bg %> <%= time_text %>" style="width:<%= time_pct %>%"></div>
-              </div>
-            </td>
+          <%# Left half: Time %>
+          <td colspan="5">
+            <% time_pct = svc.time_progress_percent || 0 %>
+            <%= bar_with_label(
+                  percent: time_pct,
+                  label:   "#{svc.time_range_label} • #{time_pct}%"
+                ) %>
+          </td>
 
-            <td colspan="6">
-              <div class="label-row d-flex justify-content-between align-items-center">
-                <span class="text-muted">
-                  <%= "#{fmt_num.call(paid_used)}/#{paid_allow.positive? ? fmt_num.call(paid_allow) : '—'}" %>
-                  (base: <%= paid_incl.nil? ? "—" : paid_incl %>, bonus: <%= fmt_num.call(bonus_total) %>)
-                  <% if free_used.to_f.nonzero? || free_incl.present? %>
-                    <span class="ms-2">[<%= fmt_num.call(free_used) %>/<%= free_incl.nil? ? "—" : free_incl %> absences]</span>
-                  <% end %>
-                </span>
-                <span class="badge bg-light text-muted badge-percent"><%= paid_pct %>%</span>
-              </div>
-              <div class="progress progress-thin" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= paid_pct %>">
-                <div class="progress-bar <%= paid_bg %> <%= paid_text %>" style="width:<%= paid_pct %>%"></div>
-              </div>
-            </td>
-          </tr>
+          <%# Right half: Sessions %>
+          <td colspan="6">
+            <% paid_pct = svc.paid_progress_percent || 0 %>
+            <%= bar_with_label(
+                  percent: paid_pct,
+                  label:   "#{svc.paid_usage_compact_str} #{svc.absences_compact_str} • #{paid_pct}%"
+                ) %>
+          </td>
+        </tr>
         <% end %>
       <% else %>
         <tr>

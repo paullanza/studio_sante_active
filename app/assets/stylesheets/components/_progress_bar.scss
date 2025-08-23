@@ -1,31 +1,26 @@
-/* slimmer, rounded progress bars */
-.progress-thin {
-  height: 6px;          /* was ~1rem in Bootstrap */
-  border-radius: 999px; /* fully pill */
-}
+/* thin, pill bars used everywhere */
+.progress-thin { height: 12px; border-radius: 999px; }
+.progress-thin .progress-bar { border-radius: 999px; }
 
-/* compact label row above each bar */
-.compact-bars .label-row {
-  margin-bottom: .25rem;   /* tighter than mb-1 */
-  font-size: .75rem;       /* smaller text */
-  line-height: 1.1;
-}
-
-/* small, unobtrusive percent badge */
-.compact-bars .badge-percent {
-  font-weight: 600;
+/* overlay label sits above the bar; centered; clipped if too long */
+.progress-with-label { position: relative; }
+.progress-with-label .progress-label {
+  position: absolute;
+  inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 .5rem;
   font-size: .7rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  border-radius: 999px;
 }
 
-/* optional: slightly tighter row height for the second row */
-.compact-bars .bar-row td {
-  padding-top: .25rem;
-  padding-bottom: .5rem;
+/* readable on any background */
+.progress-with-label .progress-label.label-light {
+  color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,.35);
+}
+.progress-with-label .progress-label.label-dark {
+  color: #111; text-shadow: 0 1px 0 rgba(255,255,255,.35);
 }
 
-/* if you’re using the custom orange from helpers */
+/* custom orange for 75–94% */
 .bg-orange { background-color: #fd7e14 !important; }
-
-// /* keep bars super compact on session table */
-// .progress-ultrathin { height: 4px; }
-// .compact-bars .progress { margin-bottom: .125rem; }

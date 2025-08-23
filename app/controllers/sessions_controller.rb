@@ -1,4 +1,3 @@
-# app/controllers/sessions_controller.rb
 class SessionsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_session, only: [:destroy]
