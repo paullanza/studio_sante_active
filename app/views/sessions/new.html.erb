@@ -11,9 +11,10 @@
   <%= simple_form_for @session, html: { class: "mb-4" } do |f| %>
     <%= f.error_notification %>
 
-    <div class="mb-3 d-flex gap-3 align-items-start flex-wrap">
-      <!-- Client search -->
-      <div class="flex-fill position-relative" style="min-width:260px;">
+    <!-- Row 1: Client / Service / Created by (always 3 columns on md+) -->
+    <div class="row g-3 align-items-end mb-3">
+      <!-- Client -->
+      <div class="col-md-4 position-relative">
         <label class="form-label" for="client_search_input">Client</label>
         <input
           id="client_search_input"
@@ -28,82 +29,101 @@
             keydown.enter->client-search#preventSubmit
           ">
 
-        <!-- store chosen client id for the form -->
         <%= hidden_field_tag "session[fliip_user_id]", nil, data: { client_search_target: "hiddenId" } %>
 
-        <!-- suggestions dropdown (Turbo frame) -->
-        <div class="position-absolute start-0 end-0 mt-1" style="z-index: 20;">
+        <div class="position-absolute start-0 end-0 mt-1" style="z-index:20;">
           <%= turbo_frame_tag "client_suggestions" %>
         </div>
       </div>
 
-      <!-- Service select (Turbo frame replaces this block) -->
-      <%= turbo_frame_tag "service_select" do %>
-        <div class="flex-fill">
+      <!-- Service (Frame lives INSIDE the column) -->
+      <div class="col-md-4">
+        <%= turbo_frame_tag "service_select" do %>
           <label class="form-label">Service</label>
           <select class="form-select" disabled>
             <option>Select a client first</option>
           </select>
-        </div>
-      <% end %>
+        <% end %>
+      </div>
 
+      <!-- Created by -->
       <% if current_user.admin? || current_user.super_admin? %>
-        <div class="flex-fill" style="min-width:260px;">
+        <div class="col-md-4">
           <label for="session_user_id" class="form-label">Created by</label>
-          <select name="session[user_id]"
-                  id="session_user_id"
-                  class="form-select">
+          <select name="session[user_id]" id="session_user_id" class="form-select">
             <option value="">Me (<%= current_user.full_name %>)</option>
             <% @staff.each do |u| %>
               <option value="<%= u.id %>"><%= u.full_name %></option>
             <% end %>
           </select>
         </div>
+      <% else %>
+        <div class="col-md-4"></div>
       <% end %>
-
-      <!-- Presence + Half-hour -->
-      <div class="form-check mt-4">
-        <%= f.check_box :present, class: "form-check-input", id: "session_present" %>
-        <%= f.label :present, "Présent", class: "form-check-label", for: "session_present" %>
-      </div>
-
-      <div class="form-check mt-4">
-        <%= check_box_tag :half_hour, "1", params[:half_hour] == "1", class: "form-check-input", id: "half_hour" %>
-        <%= label_tag :half_hour, "Half Hour (30 min)", class: "form-check-label" %>
-      </div>
     </div>
 
-    <div class="mb-3 d-flex gap-3">
-      <div class="flex-fill">
+    <!-- Row 2: Date / Time / Note -->
+    <div class="row g-3 align-items-end mb-3" data-controller="flatpickr">
+      <div class="col-md-3">
         <%= f.input :date, label: "Date", as: :string,
-              input_html: { type: "date", value: (@session.date || Date.today), class: "form-control" } %>
+              input_html: {
+                type: "text",
+                value: (@session.date || Date.today),
+                class: "form-control",
+                data: { flatpickr_target: "date" }
+              } %>
       </div>
-      <div class="flex-fill">
-        <%= f.input :time, label: "Time", as: :select,
-              collection: (6..20).flat_map { |h| ["%02d:00" % h, "%02d:30" % h] },
-              selected: (@session.time&.strftime("%H:%M") || default_time_slot_str),
-              include_blank: false,
-              input_html: { class: "form-select" } %>
+
+      <div class="col-md-3">
+        <%= f.input :time, label: "Heure", as: :string,
+              input_html: {
+                type: "text",
+                step: 1800,                 # 30-min step for native mobile pickers
+                inputmode: "numeric",
+                value: (@session.time&.strftime("%H:%M") || default_time_slot_str),
+                class: "form-control",
+                data: { flatpickr_target: "time" } # Flatpickr: minuteIncrement: 30
+              } %>
+      </div>
+
+      <div class="col-md-6">
+        <%= f.input :note, as: :text, label: "Note",
+              input_html: { rows: 2, class: "form-control" } %>
       </div>
     </div>
 
-    <%= f.input :note, as: :text, label: "Note", input_html: { rows: 1, class: "form-control" } %>
-    <%= f.button :submit, "Create Session", class: "btn btn-primary" %>
+    <!-- Row 3: Checkboxes + Submit -->
+    <div class="row g-3 align-items-center">
+      <div class="col-auto">
+        <div class="form-check">
+          <%= f.check_box :present, class: "form-check-input", id: "session_present" %>
+          <%= f.label :present, "Présent", class: "form-check-label", for: "session_present" %>
+        </div>
+      </div>
+
+      <div class="col-auto">
+        <div class="form-check">
+          <%= check_box_tag :half_hour, "1", params[:half_hour] == "1", class: "form-check-input", id: "half_hour" %>
+          <%= label_tag :half_hour, "Half Hour (30 min)", class: "form-check-label" %>
+        </div>
+      </div>
+
+      <div class="col-auto ms-auto">
+        <%= f.button :submit, "Create Session", class: "btn btn-primary" %>
+      </div>
+    </div>
   <% end %>
 
   <hr>
 
-  <!-- Services table (Turbo frame) -->
   <h2 class="mb-3">Client Services</h2>
   <%= turbo_frame_tag "services_table" do %>
   <% end %>
 
   <hr>
 
-  <!-- Recent sessions -->
   <h2 class="mb-0">Recent sessions</h2>
   <p class="text-muted small mb-2">Last 25 sessions created by you.</p>
-
   <%= render "shared/sessions_table",
         sessions: @sessions,
         show_bulk_checkbox: false,
