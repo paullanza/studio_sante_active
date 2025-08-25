@@ -34,7 +34,7 @@ export default class extends Controller {
       dateFormat: "H:i",
       time_24hr: true,
       allowInput: true,
-      disableMobile: false,
+      disableMobile: true,
       minuteIncrement: 30
     }
 
