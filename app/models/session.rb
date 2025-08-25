@@ -116,11 +116,14 @@ class Session < ApplicationRecord
   # -----------------------------------------
   # Scopes (filters for server-side search)
   # -----------------------------------------
+
   scope :by_employee, ->(user_id) {
+    # Accepts a single user_id. No-op if blank.
     where(user_id: user_id) if user_id.present?
   }
 
   scope :date_between, ->(from_date, to_date) {
+    # from/to are expected as YYYY-MM-DD (Flatpickr submits ISO via hidden fields)
     rel = all
     rel = rel.where("date >= ?", from_date) if from_date.present?
     rel = rel.where("date <= ?", to_date)   if to_date.present?
@@ -128,27 +131,44 @@ class Session < ApplicationRecord
   }
 
   scope :created_between, ->(from_dt, to_dt) {
+    # from/to timestamps as strings are fine; DB handles casting
     rel = all
     rel = rel.where("created_at >= ?", from_dt) if from_dt.present?
     rel = rel.where("created_at <= ?", to_dt)   if to_dt.present?
     rel
   }
 
-  # present_param accepts: "yes", "no", "any"/nil
+  # present_param accepts:
+  #   - "yes", "no", "any"/nil (backward compatible)
+  #   - OR an Array like ["yes", "no"], ["yes"], ["no"] (from checkbox groups)
   scope :present_value, ->(present_param) {
-    case present_param
-    when "yes" then where(present: true)
-    when "no"  then where(present: [false, nil])
-    else             all
+    vals = Array(present_param).reject(&:blank?).map(&:to_s)
+
+    if vals.include?("yes") && vals.include?("no")
+      all # both boxes checked → no filtering
+    elsif vals.include?("yes")
+      where(present: true)
+    elsif vals.include?("no")
+      where(present: [false, nil])
+    else
+      all # nil / "any" / [] → no filtering
     end
   }
 
-  # type_param accepts: "paid", "free", "any"/nil
+  # type_param accepts:
+  #   - "paid", "free", "any"/nil (backward compatible)
+  #   - OR an Array like ["paid", "free"], ["paid"], ["free"]
   scope :of_type, ->(type_param) {
-    case type_param
-    when "paid" then where(session_type: "paid")
-    when "free" then where(session_type: "free")
-    else              all
+    vals = Array(type_param).reject(&:blank?).map(&:to_s)
+
+    if vals.include?("paid") && vals.include?("free")
+      all
+    elsif vals.include?("paid")
+      where(session_type: "paid")
+    elsif vals.include?("free")
+      where(session_type: "free")
+    else
+      all
     end
   }
 
@@ -156,12 +176,12 @@ class Session < ApplicationRecord
   # Keep controllers skinny; still returns a Relation (chainable).
   def self.apply_filters(params)
     rel = all
-    rel = rel.search_names(params[:q])                               if params[:q].present?
+    rel = rel.search_names(params[:q]) if params[:q].present?
     rel = rel.by_employee(params[:employee_id])
     rel = rel.date_between(params[:session_date_from], params[:session_date_to])
     rel = rel.created_between(params[:created_from], params[:created_to])
-    rel = rel.present_value(params[:present])
-    rel = rel.of_type(params[:session_type])
+    rel = rel.present_value(params[:present])         # now supports single value OR array
+    rel = rel.of_type(params[:session_type])          # now supports single value OR array
     rel
   end
 

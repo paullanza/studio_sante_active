@@ -182,7 +182,7 @@ class AdminController < ApplicationController
       :employee_id,
       :session_date_from, :session_date_to,
       :created_from, :created_to,
-      :present, :session_type
+      present: [], session_type: []
     )
   end
 
