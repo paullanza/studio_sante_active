@@ -199,4 +199,55 @@ class FliipService < ApplicationRecord
     return nil if total.to_f <= 0.0
     ((free_used_total / total) * 100).round
   end
+
+    # --- Time window progress (date-based) ---
+  # We assume start_date/expire_date come from API and are present most of the time.
+  # Still clamp and guard if expire < start for safety.
+  def time_progress_percent(today: Date.current)
+    return nil if start_date.blank? || expire_date.blank? || expire_date < start_date
+
+    total_days = (expire_date - start_date).to_f
+    return nil if total_days <= 0.0
+
+    elapsed = (today - start_date).to_f
+    pct     = ((elapsed / total_days) * 100).clamp(0.0, 100.0)
+    pct.round
+  end
+
+  def time_range_label
+    return "—" if start_date.blank? || expire_date.blank?
+    "#{start_date.strftime('%d/%m/%Y')} – #{expire_date.strftime('%d/%m/%Y')}"
+  end
+
+  # --- Paid usage breakdown for display (pre-formatted) ---
+  def paid_breakdown
+    used  = paid_used_total.to_f
+    base  = service_definition&.paid_sessions
+    bonus = bonus_sessions_total.to_f
+    allow = paid_allowed_total.to_f
+    pct   = paid_progress_percent # may be nil if no allowed
+
+    {
+      used: used, included: base, bonus: bonus, allowed: allow, percent: pct,
+      used_str: format('%.1f', used),
+      included_str: base.nil? ? "—" : base.to_s,
+      bonus_str: format('%.1f', bonus),
+      allowed_str: allow.positive? ? format('%.1f', allow) : "—",
+      percent_str: pct.nil? ? "—" : pct.to_s
+    }
+  end
+
+  # --- Paid usage breakdown for display ---
+  # Returns: "12.5/(48.0 + 0.0)"
+  def paid_usage_compact_str
+    used  = paid_used_total.to_f
+    base  = service_definition&.paid_sessions.to_f
+    bonus = bonus_sessions_total.to_f
+    "#{format('%.1f', used)}/(#{format('%.1f', base)} + #{format('%.1f', bonus)})"
+  end
+
+  # Returns: "[1.0/4.0 absences]" or "[1.0/— absences]" if allowed is unknown
+  def absences_compact_str
+    "[#{format('%.1f', free_used_total)}/#{free_allowed_total} absences]"
+  end
 end

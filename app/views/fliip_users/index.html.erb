@@ -27,19 +27,15 @@
         <th>Remote ID</th>
         <th>Name</th>
         <th>Email</th>
-        <th>Active Contracts</th>
-        <th>Active Services</th>
-        <th style="min-width:260px;">Most Recent Service — Progress</th>
+        <th>Member Since</th>
+        <th style="min-width:260px;">Most Recent Service</th>
       </tr>
     </thead>
     <tbody>
-      <% active_codes = %w[A S P] %>
-
       <% @fliip_users.each do |user| %>
-        <% active_contracts_count = user.fliip_contracts.count { |c| active_codes.include?(c.status.to_s) } %>
-        <% active_services_count  = user.fliip_services.count  { |s| active_codes.include?(s.purchase_status.to_s) } %>
         <% svc = @recent_services_by_user_id[user.id] %>
 
+        <!-- ROW 1: main info -->
         <tr>
           <td><%= user.id %></td>
           <td><%= user.remote_id %></td>
@@ -49,62 +45,47 @@
                         class: "text-decoration-none" %>
           </td>
           <td><%= user.user_email.presence || "—" %></td>
-          <td><span class="badge bg-primary"><%= active_contracts_count %></span></td>
-          <td><span class="badge bg-success"><%= active_services_count %></span></td>
-
+          <td class="text-nowrap">
+            <%= user.member_since ? user.member_since.strftime("%d/%m/%Y") : "—" %>
+          </td>
           <td>
             <% if svc.present? %>
-              <% paid_used   = svc.paid_used_total %>
-              <% paid_incl   = svc.service_definition&.paid_sessions %>
-              <% paid_bonus  = svc.bonus_sessions_total %>
-              <% paid_pct    = svc.paid_progress_percent || 0 %>
-              <% free_used   = svc.free_used_total %>
-              <% free_incl   = svc.service_definition&.free_sessions %>
-
-              <% time_pct    = svc_time_progress_percent(svc) %>
-              <% time_bg,  time_text  = progress_color_classes(time_pct) %>
-              <% paid_bg,  paid_text  = progress_color_classes(paid_pct) %>
-
-              <div class="small mb-1">
-                <strong><%= svc.service_name.presence || "Service" %></strong>
+              <div class="small">
+                <strong>
+                  <%= link_to (svc.service_name.presence || "Service"), fliip_service_path(svc), class: "text-decoration-none" %>
+                </strong>
                 <% if svc.expire_date.present? %>
                   <span class="text-muted"> • ends <%= svc.expire_date.strftime("%d/%m/%Y") %></span>
                 <% end %>
-              </div>
-
-              <!-- Time progress -->
-              <div class="mb-2">
-                <div class="d-flex justify-content-between small">
-                  <span>Time</span>
-                  <span><%= svc_time_range_label(svc) %> • <%= time_pct %>%</span>
-                </div>
-                <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= time_pct %>">
-                  <div class="progress-bar <%= time_bg %> <%= time_text %>" style="width: <%= time_pct %>%"></div>
-                </div>
-              </div>
-
-              <!-- Sessions (paid bar) + free usage bracket -->
-              <div>
-                <div class="d-flex justify-content-between small">
-                  <span>Sessions</span>
-                  <span>
-                    <%= "#{fmt1(paid_used)}/#{paid_incl.nil? ? '—' : paid_incl} sessions" %>
-                    <% if paid_bonus.to_f.nonzero? %>
-                      <span class="text-muted">( +<%= fmt1(paid_bonus) %> bonus )</span>
-                    <% end %>
-                    • <%= paid_pct %>%
-                    <span class="ms-2 text-muted">[<%= fmt1(free_used) %>/<%= free_incl.nil? ? '—' : free_incl %> absences]</span>
-                  </span>
-                </div>
-                <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= paid_pct %>">
-                  <div class="progress-bar <%= paid_bg %> <%= paid_text %>" style="width: <%= paid_pct %>%"></div>
-                </div>
               </div>
             <% else %>
               <span class="text-muted">—</span>
             <% end %>
           </td>
         </tr>
+
+        <%# ROW 2: progress bars under the whole row (two halves) %>
+        <% if svc.present? %>
+          <tr class="align-middle bar-row">
+            <%# Left half: Time progress %>
+            <td colspan="3">
+              <% time_pct = svc.time_progress_percent || 0 %>
+              <%= bar_with_label(
+                    percent: time_pct,
+                    label:   "#{svc.time_range_label} • #{time_pct}%"
+                  ) %>
+            </td>
+
+            <%# Right half: Sessions progress %>
+            <td colspan="3">
+              <% paid_pct = svc.paid_progress_percent || 0 %>
+              <%= bar_with_label(
+                    percent: paid_pct,
+                    label:   "#{svc.paid_usage_compact_str} #{svc.absences_compact_str} • #{paid_pct}%"
+                  ) %>
+            </td>
+          </tr>
+        <% end %>
       <% end %>
     </tbody>
   </table>

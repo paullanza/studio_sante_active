@@ -1,4 +1,3 @@
-# app/models/service_usage_adjustment.rb
 class ServiceUsageAdjustment < ApplicationRecord
   # -----------------------------------------
   # Associations

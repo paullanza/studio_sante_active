@@ -10,7 +10,7 @@ class FliipServicesController < ApplicationController
 
         # Paginate sessions
     @pagy, @sessions = pagy(
-      @service.sessions.includes(:user, :fliip_user).order(date: :desc, time: :desc),
+      @service.sessions.includes(:user, :fliip_user).order_by_occurred_at_desc,
       items: 25
     )
   end
