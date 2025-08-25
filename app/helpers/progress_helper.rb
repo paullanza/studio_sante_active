@@ -2,13 +2,14 @@ module ProgressHelper
   # Map % → Bootstrap color classes
   # <50 green, 50-74 yellow, 75-94 orange, 95-99 red, 100 blue
   def progress_palette(percent)
-    p = percent.to_i
-    case
-    when p >= 100 then ['bg-primary', :light]  # blue
-    when p >= 95  then ['bg-danger',  :light]  # red
-    when p >= 75  then ['bg-orange',  :dark]   # orange (#fd7e14)
-    when p >= 50  then ['bg-warning', :dark]   # yellow
-    else               ['bg-success', :light]  # green
+    p = percent.to_i.clamp(0, 100)
+
+    case p
+    when 100..100 then ['bg-primary', :light] # blue
+    when 95..99   then ['bg-danger',  :light] # red
+    when 75..94   then ['bg-orange',  :dark]  # orange
+    when 50..74   then ['bg-warning', :dark]  # yellow
+    else               ['bg-success', :light] # green
     end
   end
 
@@ -19,7 +20,7 @@ module ProgressHelper
     tone      = (bg_class.in?(%w[bg-warning bg-orange]) ? 'label-dark' : 'label-light')
 
     content_tag :div,
-      class: "progress progress-thin progress-with-label",
+      class: "progress progress-thin progress-with-label progress-dark-bg",
       role: "progressbar",
       aria: { valuemin: 0, valuemax: 100, valuenow: percent.to_i } do
 

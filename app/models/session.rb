@@ -8,6 +8,9 @@ class Session < ApplicationRecord
   # We define the mapping explicitly so ordering stays stable.
   enum session_type: [:paid, :free]
 
+  # Virtual attribute (typed) populated when selected as SQL alias
+  attribute :occurred_at, :datetime
+
   # -----------------------------------------
   # PGSearch: search by client or employee names
   # -----------------------------------------
@@ -88,6 +91,21 @@ class Session < ApplicationRecord
   # -----------------------------------------
   # Scopes (preloading & ordering)
   # -----------------------------------------
+
+  # Select the merged value from DB as "occurred_at"
+  scope :with_occurred_at, -> {
+    select("#{table_name}.*",
+           "(#{table_name}.date::timestamp + #{table_name}.time) AS occurred_at")
+  }
+
+  # Order by the merged value; include NULLS LAST to keep incomplete rows at the end
+  scope :order_by_occurred_at_desc, -> {
+    with_occurred_at.order(Arel.sql("occurred_at DESC NULLS LAST"))
+  }
+  scope :order_by_occurred_at_asc, -> {
+    with_occurred_at.order(Arel.sql("occurred_at ASC NULLS FIRST"))
+  }
+
   # Preload graph commonly needed by views to avoid N+1.
   scope :with_associations, -> {
     includes(:user, :created_by, :fliip_user, fliip_service: :service_definition)
@@ -192,6 +210,17 @@ class Session < ApplicationRecord
     return false if confirmed?
     return true  if current_user&.admin? || current_user&.super_admin?
     user_id == current_user&.id
+  end
+
+  def self.confirm(ids)
+    ids = Array(ids).map(&:to_i).uniq
+    return 0 if ids.empty?
+
+    # Idempotent: only touch currently-unconfirmed rows.
+    where(id: ids).unconfirmed.update_all(
+      confirmed: true,
+      confirmed_at: Time.current
+    )
   end
 
   # Sequence number within this FliipService & session_type (paid/free)
