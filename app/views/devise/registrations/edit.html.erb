@@ -1,43 +1,106 @@
-<h2>Edit <%= resource_name.to_s.humanize %></h2>
+<div class="auth-page min-vh-100 d-flex align-items-center justify-content-center p-4">
+  <div class="auth-card w-100" style="max-width: 640px;">
+    <h1 class="mb-2 fw-bold">Modifier mon profil</h1>
 
-<%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
-  <%= render "devise/shared/error_messages", resource: resource %>
+    <div class="mb-4 small text-muted">
+      <%= link_to "Retour à mon profil", user_path(resource), class: "link-brand fw-semibold" %>
+    </div>
 
-  <div class="field">
-    <%= f.label :email %><br />
-    <%= f.email_field :email, autofocus: true, autocomplete: "email" %>
-  </div>
+    <%= simple_form_for(resource,
+          as: resource_name,
+          url: registration_path(resource_name),
+          html: { method: :put, class: "auth-form" }) do |f| %>
 
-  <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
-    <div>Currently waiting confirmation for: <%= resource.unconfirmed_email %></div>
-  <% end %>
+      <%= f.error_notification %>
 
-  <div class="field">
-    <%= f.label :password %> <i>(leave blank if you don't want to change it)</i><br />
-    <%= f.password_field :password, autocomplete: "new-password" %>
-    <% if @minimum_password_length %>
-      <br />
-      <em><%= @minimum_password_length %> characters minimum</em>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <%= f.input :first_name,
+                label: "Prénom",
+                input_html: { class: "form-control form-control-lg" } %>
+        </div>
+        <div class="col-md-6">
+          <%= f.input :last_name,
+                label: "Nom",
+                input_html: { class: "form-control form-control-lg" } %>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-0">
+        <div class="col-md-6">
+          <%= f.input :phone,
+                label: "Téléphone",
+                as: :tel,
+                input_html: { autocomplete: "tel", class: "form-control form-control-lg" } %>
+        </div>
+        <div class="col-md-6">
+          <%= f.input :birthday,
+                label: "Date de naissance",
+                as: :string,
+                input_html: { type: "date", max: Date.today, class: "form-control form-control-lg" } %>
+        </div>
+      </div>
+
+      <!-- Adresse (Mapbox autocomplete; underlying input stays as the model source) -->
+      <div class="mb-3">
+        <%= f.input :address,
+              label: "Adresse",
+              input_html: {
+                class: "form-control form-control-lg d-none",     # hide real input; Stimulus fills it
+                data: { address_autocomplete_target: "address" }
+              },
+              wrapper_html: {
+                class: "position-relative",
+                data: {
+                  controller: "address-autocomplete",
+                  address_autocomplete_api_key_value: ENV["MAPBOX_API_KEY"]
+                }
+              } %>
+      </div>
+
+      <div class="mb-3">
+        <%= f.input :email,
+              label: "Courriel",
+              input_html: { autocomplete: "email", class: "form-control form-control-lg" } %>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <%= f.input :password,
+                label: ("Nouveau mot de passe" + ( @minimum_password_length ? " (#{@minimum_password_length} caractères min.)" : "" )),
+                hint: "Laissez vide pour ne pas changer",
+                input_html: { autocomplete: "new-password", class: "form-control form-control-lg" } %>
+        </div>
+        <div class="col-md-6">
+          <%= f.input :password_confirmation,
+                label: "Confirmer le nouveau mot de passe",
+                input_html: { autocomplete: "new-password", class: "form-control form-control-lg" } %>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <%= f.input :current_password,
+              label: "Mot de passe actuel",
+              hint: "Requis pour confirmer les changements",
+              input_html: { autocomplete: "current-password", class: "form-control form-control-lg" } %>
+      </div>
+
+      <div class="d-grid mt-4">
+        <%= f.button :submit, "Enregistrer",
+              class: "btn btn-lg rounded-pill shadow-sm btn-brand" %>
+      </div>
     <% end %>
+
+    <hr class="my-4">
+
+    <h3 class="h6">Supprimer mon compte</h3>
+    <div class="d-flex flex-wrap gap-2">
+      <%= button_to "Supprimer mon compte",
+            registration_path(resource_name),
+            method: :delete,
+            data: { turbo_confirm: "Êtes-vous sûr·e ?" },
+            class: "btn btn-outline-danger btn-sm" %>
+      <%= link_to "Annuler", user_path(resource), class: "btn btn-outline-secondary btn-sm" %>
+    </div>
   </div>
-
-  <div class="field">
-    <%= f.label :password_confirmation %><br />
-    <%= f.password_field :password_confirmation, autocomplete: "new-password" %>
-  </div>
-
-  <div class="field">
-    <%= f.label :current_password %> <i>(we need your current password to confirm your changes)</i><br />
-    <%= f.password_field :current_password, autocomplete: "current-password" %>
-  </div>
-
-  <div class="actions">
-    <%= f.submit "Update" %>
-  </div>
-<% end %>
-
-<h3>Cancel my account</h3>
-
-<div>Unhappy? <%= button_to "Cancel my account", registration_path(resource_name), data: { confirm: "Are you sure?", turbo_confirm: "Are you sure?" }, method: :delete %></div>
-
-<%= link_to "Back", :back %>
+</div>
