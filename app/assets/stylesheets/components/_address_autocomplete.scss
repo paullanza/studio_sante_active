@@ -1,0 +1,143 @@
+.auth-form [data-controller="address-autocomplete"] {
+  position: relative;
+
+  .mapboxgl-ctrl-geocoder--icon-loading {
+    position: absolute;
+    right: 2.25rem;             /* sits where the clear “X” already reserves space */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1rem;
+    height: 1rem;
+    margin: 0 !important;
+    pointer-events: none;       /* ignore clicks */
+    display: block;             /* ensure it renders without affecting flow */
+  }
+
+  /* Input container — look like a Bootstrap input */
+  .mapboxgl-ctrl-geocoder {
+    position: relative;
+    display: block;          /* no flex: let input control height */
+    width: 100%;
+    background: #fff;
+    border: 1px solid #ced4da;
+    border-radius: .5rem;    /* .form-control */
+    box-shadow: none;
+    padding: 0;              /* input handles padding */
+  }
+
+  /* Optional: hide the left search icon to keep it minimal */
+  .mapboxgl-ctrl-geocoder--icon {
+    display: none;
+  }
+
+  /* Text input — same feel as .form-control-lg */
+  .mapboxgl-ctrl-geocoder--input {
+    display: block;
+    width: 100%;
+    font-size: 1.25rem;      /* .form-control-lg */
+    line-height: 1.5;
+    padding: .5rem 2.25rem .5rem .75rem; /* right pad reserves X button space */
+    border: 0;
+    outline: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* Focus ring like Bootstrap */
+  &:focus-within .mapboxgl-ctrl-geocoder {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 .2rem rgba(13,110,253,.15);
+  }
+
+  /* Clear “X” — absolute so it never reflows or shifts content */
+  .mapboxgl-ctrl-geocoder--button {
+    position: absolute;
+    right: .5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.5rem; height: 1.5rem;
+    display: flex;
+    align-items: center; justify-content: center;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    opacity: .7;
+  }
+
+  /* --- DROPDOWN --- */
+
+  /* Dropdown directly under the field */
+  .suggestions,
+  .suggestions ul {
+    position: absolute;
+    top: calc(100% - 1px);   /* fuse with top border */
+    left: 0; right: 0;
+    margin: 0; padding: 0;
+    list-style: none;        /* no bullets */
+    background: #fff;
+    border: 1px solid #ced4da;
+    border-top: 0;
+    border-radius: 0 0 .5rem .5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,.06);
+    z-index: 1050;
+  }
+
+  /* Each row */
+  .suggestions li {
+    list-style: none;
+    padding: 0;              /* anchor handles padding */
+    border-top: 1px solid #f1f3f5;
+  }
+  .suggestions li:first-child { border-top: 0; }
+
+  /* Mapbox anchor inside each row (older DOM variant) */
+  .suggestions > li > a.mapboxgl-ctrl-geocoder--suggestion {
+    display: block !important;     /* no flex/grid -> no big gaps */
+    padding: .375rem .75rem;
+    text-decoration: none;
+    color: inherit;
+    width: 100%;
+  }
+
+  /* Flatten title + address into a single inline line */
+  .mapboxgl-ctrl-geocoder--suggestion-title,
+  .mapboxgl-ctrl-geocoder--suggestion-address {
+    display: inline;
+    vertical-align: baseline;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mapboxgl-ctrl-geocoder--suggestion-title {
+    font-weight: 500;
+    color: #212529;
+    margin-right: .25rem;
+  }
+  .mapboxgl-ctrl-geocoder--suggestion-address {
+    color: #6c757d;
+    font-size: .875rem;
+    /* remove fixed max-width that truncated the city/province */
+  }
+
+  /* Hover/active */
+  .suggestions li:hover,
+  .mapboxgl-ctrl-geocoder--suggestion:hover,
+  .mapboxgl-ctrl-geocoder--suggestion.selected {
+    background: #f8f9fa;
+  }
+
+  .mapboxgl-ctrl-geocoder--powered-by {
+    display: block; padding: .25rem .5rem; font-size: .75rem; color: #6c757d;
+  }
+
+  /* --- FIX: ensure left padding inside each suggestion for all DOM variants --- */
+  .suggestions a.mapboxgl-ctrl-geocoder--suggestion,
+  .suggestions .mapboxgl-ctrl-geocoder--suggestion {
+    display: block !important;       /* ensure block to respect padding */
+    box-sizing: border-box;
+    padding: .375rem 1rem !important;/* adds left space inside dropdown */
+    text-decoration: none;
+    color: inherit;
+    width: 100%;
+  }
+}
