@@ -18,24 +18,24 @@
   </div>
 
   <!-- Users Section -->
-<section class="mb-5">
-  <h2>Users</h2>
+  <section class="mb-5">
+    <h2>Users</h2>
 
-  <%= render "shared/users_table",
-             users: @users,
-             unconfirmed_counts: @unconfirmed_counts,
-             services_touched_counts: @services_touched_counts,
-             show_actions: true %>
-</section>
+    <%= render "shared/users_table",
+              users: @users,
+              unconfirmed_counts: @unconfirmed_counts,
+              services_touched_counts: @services_touched_counts,
+              show_actions: true %>
+  </section>
 
   <!-- Signup Codes Section -->
-<section class="mb-5">
-  <h2>Signup Codes</h2>
-  <%= button_to "Generate New Code", admin_signup_codes_path, method: :post, class: "btn btn-primary mb-3" %>
+  <section class="mb-5">
+    <h2>Signup Codes</h2>
+    <%= button_to "Generate New Code", admin_signup_codes_path, method: :post, class: "btn btn-primary mb-3" %>
 
-  <%= render "shared/signup_codes_table",
-             signup_codes: @signup_codes %>
-</section>
+    <%= render "shared/signup_codes_table",
+              signup_codes: @signup_codes %>
+  </section>
 
   <!-- Services ending soon -->
   <section class="mb-5">
