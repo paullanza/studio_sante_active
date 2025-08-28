@@ -4,15 +4,15 @@ class ApplicationController < ActionController::Base
   before_action :configure_permitted_parameters, if: :devise_controller?
 
   def after_sign_in_path_for(resource)
-    case resource.role
-    when "super_admin"
-      admin_dashboard_path
-    when "admin"
+    return super unless resource.is_a?(User)
+
+    case resource.role.to_s
+    when "super_admin", "admin"
       admin_dashboard_path
     when "manager"
       manager_dashboard_path
     else
-      employee_dashboard_path
+      user_path(resource) # employees → profile only
     end
   end
 
