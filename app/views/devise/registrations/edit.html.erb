@@ -64,16 +64,19 @@
               input_html: { autocomplete: "email", class: "form-control form-control-lg" } %>
       </div>
 
+      <!-- Password section header -->
+      <h3 class="h6 mb-2">Changer le mot de passe</h3>
+
       <div class="row g-3">
         <div class="col-md-6">
           <%= f.input :password,
-                label: ("Nouveau mot de passe" + ( @minimum_password_length ? " (#{@minimum_password_length} caractères min.)" : "" )),
+                label: ("Mot de passe" + ( @minimum_password_length ? " (#{@minimum_password_length} caractères min.)" : "" )),
                 hint: "Laissez vide pour ne pas changer",
                 input_html: { autocomplete: "new-password", class: "form-control form-control-lg" } %>
         </div>
         <div class="col-md-6">
           <%= f.input :password_confirmation,
-                label: "Confirmer le nouveau mot de passe",
+                label: "Confirmer le mot de passe",
                 input_html: { autocomplete: "new-password", class: "form-control form-control-lg" } %>
         </div>
       </div>
@@ -92,14 +95,7 @@
     <% end %>
 
     <hr class="my-4">
-
-    <h3 class="h6">Supprimer mon compte</h3>
     <div class="d-flex flex-wrap gap-2">
-      <%= button_to "Supprimer mon compte",
-            registration_path(resource_name),
-            method: :delete,
-            data: { turbo_confirm: "Êtes-vous sûr·e ?" },
-            class: "btn btn-outline-danger btn-sm" %>
       <%= link_to "Annuler", user_path(resource), class: "btn btn-outline-secondary btn-sm" %>
     </div>
   </div>
