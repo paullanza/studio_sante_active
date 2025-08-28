@@ -18,144 +18,24 @@
   </div>
 
   <!-- Users Section -->
-  <section class="mb-5">
-    <h2>Users</h2>
-    <table class="table table-hover align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>Name</th>
-          <th>Role</th>
-          <th>Status</th>
-          <th class="text-center">Unconf.</th>
-          <th class="text-center">Services</th>
-          <th class="text-end">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @users.each do |user| %>
-          <tr>
-            <td><%= link_to user.full_name, user_path(user), class: "text-decoration-none" %></td>
+<section class="mb-5">
+  <h2>Users</h2>
 
-            <td>
-              <% role_badge_class =
-                   case
-                   when user.super_admin? then "bg-dark"
-                   when user.admin?       then "bg-primary"
-                   when user.manager?     then "bg-info text-dark"
-                   else                        "bg-secondary"
-                   end %>
-              <span class="badge <%= role_badge_class %>"><%= user.role.titleize %></span>
-            </td>
-
-            <td>
-              <span class="badge <%= user.active? ? 'bg-success' : 'bg-secondary' %>">
-                <%= user.active? ? 'Active' : 'Inactive' %>
-              </span>
-            </td>
-
-            <!-- New: per-user activity summaries -->
-            <td class="text-center">
-              <span class="badge bg-warning text-dark">
-                <%= @unconfirmed_counts[user.id].to_i %>
-              </span>
-            </td>
-            <td class="text-center">
-              <span class="badge bg-secondary">
-                <%= @services_touched_counts[user.id].to_i %>
-              </span>
-            </td>
-
-            <td class="text-end">
-              <% if user.super_admin? %>
-                <em>Super Admin</em>
-
-              <% elsif current_user.super_admin? %>
-                <div class="d-flex justify-content-end gap-2">
-                  <% if user.admin? %>
-                    <%= button_to "Make Manager", make_manager_user_path(user), method: :patch, class: "btn btn-sm btn-outline-primary" %>
-                  <% elsif user.manager? %>
-                    <%= button_to "Make Employee", make_employee_user_path(user), method: :patch, class: "btn btn-sm btn-outline-secondary" %>
-                    <%= button_to "Make Admin",    make_admin_user_path(user),    method: :patch, class: "btn btn-sm btn-outline-dark" %>
-                  <% else %>
-                    <%= button_to "Make Manager",  make_manager_user_path(user),  method: :patch, class: "btn btn-sm btn-outline-primary" %>
-                  <% end %>
-                  <%= button_to(user.active? ? 'Deactivate' : 'Reactivate',
-                                user.active? ? deactivate_user_path(user) : activate_user_path(user),
-                                method: :patch,
-                                class: "btn btn-sm #{user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
-                </div>
-
-              <% elsif current_user.admin? %>
-                <% if user.admin? %>
-                  <em>Admin</em>
-                <% elsif user.manager? %>
-                  <div class="d-flex justify-content-end gap-2">
-                    <%= button_to "Make Employee", make_employee_user_path(user), method: :patch, class: "btn btn-sm btn-outline-secondary" %>
-                    <%= button_to(user.active? ? 'Deactivate' : 'Reactivate',
-                                  user.active? ? deactivate_user_path(user) : activate_user_path(user),
-                                  method: :patch,
-                                  class: "btn btn-sm #{user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
-                  </div>
-                <% else %>
-                  <div class="d-flex justify-content-end gap-2">
-                    <%= button_to "Make Manager",  make_manager_user_path(user),  method: :patch, class: "btn btn-sm btn-outline-primary" %>
-                    <%= button_to(user.active? ? 'Deactivate' : 'Reactivate',
-                                  user.active? ? deactivate_user_path(user) : activate_user_path(user),
-                                  method: :patch,
-                                  class: "btn btn-sm #{user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
-                  </div>
-                <% end %>
-
-              <% else %>
-                <em>—</em>
-              <% end %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </section>
+  <%= render "shared/users_table",
+             users: @users,
+             unconfirmed_counts: @unconfirmed_counts,
+             services_touched_counts: @services_touched_counts,
+             show_actions: true %>
+</section>
 
   <!-- Signup Codes Section -->
-  <section class="mb-5">
-    <h2>Signup Codes</h2>
-    <%= button_to "Generate New Code", admin_signup_codes_path, method: :post, class: "btn btn-primary mb-3" %>
+<section class="mb-5">
+  <h2>Signup Codes</h2>
+  <%= button_to "Generate New Code", admin_signup_codes_path, method: :post, class: "btn btn-primary mb-3" %>
 
-    <table class="table table-hover align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>Code</th>
-          <th>Expires At</th>
-          <th>Used By</th>
-          <th class="text-end">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @signup_codes.each do |code| %>
-          <tr>
-            <td><code><%= code.code %></code></td>
-            <td><%= code.usable? ? code.expiry_date.strftime("%d/%m/%Y") : "—" %></td>
-            <td>
-              <% if code.used? %>
-                <%= [code.used_by&.first_name, code.used_by&.last_name].compact.join(" ") %>
-              <% elsif code.deactivated? %>
-                Deactivated
-              <% else %>
-                —
-              <% end %>
-            </td>
-            <td class="text-end">
-              <% if code.usable? %>
-                <%= button_to "Deactivate", deactivate_admin_signup_code_path(code), method: :patch, class: "btn btn-sm btn-outline-danger" %>
-              <% else %>
-                <em>—</em>
-              <% end %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </section>
+  <%= render "shared/signup_codes_table",
+             signup_codes: @signup_codes %>
+</section>
 
   <!-- Services ending soon -->
   <section class="mb-5">

@@ -1,0 +1,34 @@
+<table class="table table-hover align-middle">
+  <thead class="table-light">
+    <tr>
+      <th>Code</th>
+      <th>Expires At</th>
+      <th>Used By</th>
+      <th class="text-end">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% signup_codes.each do |code| %>
+      <tr>
+        <td><code><%= code.code %></code></td>
+        <td><%= code.usable? ? code.expiry_date.strftime("%d/%m/%Y") : "—" %></td>
+        <td>
+          <% if code.used? %>
+            <%= [code.used_by&.first_name, code.used_by&.last_name].compact.join(" ") %>
+          <% elsif code.deactivated? %>
+            Deactivated
+          <% else %>
+            —
+          <% end %>
+        </td>
+        <td class="text-end">
+          <% if code.usable? %>
+            <%= button_to "Deactivate", deactivate_admin_signup_code_path(code), method: :patch, class: "btn btn-sm btn-outline-danger" %>
+          <% else %>
+            <em>—</em>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
