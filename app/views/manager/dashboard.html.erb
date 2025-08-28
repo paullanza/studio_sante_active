@@ -1,0 +1,47 @@
+<div class="container mt-4">
+  <h1 class="mb-4">Manager Dashboard</h1>
+
+  <div class="mb-4 d-flex flex-wrap gap-3">
+    <!-- Managers: can browse/manage services via manager routes -->
+    <%= link_to "Manage Service Session Limits", manager_services_path, class: "btn btn-outline-dark" %>
+
+    <!-- (Optional) Add safe links for managers only if you have equivalents:
+         e.g., <%= link_to "Browse Clients", fliip_users_path, class: "btn btn-outline-secondary" %> -->
+  </div>
+
+  <!-- Users Section -->
+  <section class="mb-5">
+    <h2>Users</h2>
+
+    <%= render "shared/users_table",
+              users: @users,
+              unconfirmed_counts: @unconfirmed_counts,
+              services_touched_counts: @services_touched_counts,
+              show_actions: true %>
+  </section>
+
+  <!-- Signup Codes Section -->
+  <section class="mb-5">
+    <h2>Signup Codes</h2>
+    <%= button_to "Generate New Code", admin_signup_codes_path, method: :post, class: "btn btn-primary mb-3" %>
+
+    <%= render "shared/signup_codes_table",
+              signup_codes: @signup_codes %>
+  </section>
+
+  <!-- Services ending soon -->
+  <section class="mb-5">
+    <h2>Services Ending in Next 30 Days</h2>
+    <div class="table-responsive">
+      <%= render "shared/services_table", services: @services_ending_soon %>
+    </div>
+  </section>
+
+  <!-- Services ended recently -->
+  <section class="mb-5">
+    <h2>Services Ended in Last 30 Days</h2>
+    <div class="table-responsive">
+      <%= render "shared/services_table", services: @services_ended_recent %>
+    </div>
+  </section>
+</div>

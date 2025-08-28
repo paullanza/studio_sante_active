@@ -1,0 +1,97 @@
+<% show_actions = local_assigns.fetch(:show_actions, true) %>
+
+<table class="table table-hover align-middle">
+  <thead class="table-light">
+    <tr>
+      <th>Name</th>
+      <th>Role</th>
+      <th>Status</th>
+      <th class="text-center">Unconf.</th>
+      <th class="text-center">Services</th>
+      <% if show_actions %><th class="text-end">Actions</th><% end %>
+    </tr>
+  </thead>
+  <tbody>
+    <% users.each do |user| %>
+      <tr>
+        <td><%= link_to user.full_name, user_path(user), class: "text-decoration-none" %></td>
+
+        <td>
+          <% role_badge_class =
+               case
+               when user.super_admin? then "bg-dark"
+               when user.admin?       then "bg-primary"
+               when user.manager?     then "bg-info text-dark"
+               else                        "bg-secondary"
+               end %>
+          <span class="badge <%= role_badge_class %>"><%= user.role.titleize %></span>
+        </td>
+
+        <td>
+          <span class="badge <%= user.active? ? 'bg-success' : 'bg-secondary' %>">
+            <%= user.active? ? 'Active' : 'Inactive' %>
+          </span>
+        </td>
+
+        <td class="text-center">
+          <span class="badge bg-warning text-dark">
+            <%= unconfirmed_counts[user.id].to_i %>
+          </span>
+        </td>
+        <td class="text-center">
+          <span class="badge bg-secondary">
+            <%= services_touched_counts[user.id].to_i %>
+          </span>
+        </td>
+
+        <% if show_actions %>
+          <td class="text-end">
+            <% if user.super_admin? %>
+              <em>Super Admin</em>
+
+            <% elsif current_user.super_admin? %>
+              <div class="d-flex justify-content-end gap-2">
+                <% if user.admin? %>
+                  <%= button_to "Make Manager", make_manager_user_path(user), method: :patch, class: "btn btn-sm btn-outline-primary" %>
+                <% elsif user.manager? %>
+                  <%= button_to "Make Employee", make_employee_user_path(user), method: :patch, class: "btn btn-sm btn-outline-secondary" %>
+                  <%= button_to "Make Admin",    make_admin_user_path(user),    method: :patch, class: "btn btn-sm btn-outline-dark" %>
+                <% else %>
+                  <%= button_to "Make Manager",  make_manager_user_path(user),  method: :patch, class: "btn btn-sm btn-outline-primary" %>
+                <% end %>
+                <%= button_to(user.active? ? 'Deactivate' : 'Reactivate',
+                              user.active? ? deactivate_user_path(user) : activate_user_path(user),
+                              method: :patch,
+                              class: "btn btn-sm #{user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
+              </div>
+
+            <% elsif current_user.admin? %>
+              <% if user.admin? %>
+                <em>Admin</em>
+              <% elsif user.manager? %>
+                <div class="d-flex justify-content-end gap-2">
+                  <%= button_to "Make Employee", make_employee_user_path(user), method: :patch, class: "btn btn-sm btn-outline-secondary" %>
+                  <%= button_to(user.active? ? 'Deactivate' : 'Reactivate',
+                                user.active? ? deactivate_user_path(user) : activate_user_path(user),
+                                method: :patch,
+                                class: "btn btn-sm #{user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
+                </div>
+              <% else %>
+                <div class="d-flex justify-content-end gap-2">
+                  <%= button_to "Make Manager",  make_manager_user_path(user),  method: :patch, class: "btn btn-sm btn-outline-primary" %>
+                  <%= button_to(user.active? ? 'Deactivate' : 'Reactivate',
+                                user.active? ? deactivate_user_path(user) : activate_user_path(user),
+                                method: :patch,
+                                class: "btn btn-sm #{user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
+                </div>
+              <% end %>
+
+            <% else %>
+              <em>—</em>
+            <% end %>
+          </td>
+        <% end %>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

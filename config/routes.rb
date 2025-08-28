@@ -16,7 +16,7 @@ Rails.application.routes.draw do
   # -----------------------------------------
   # Authenticated root: dashboard (private)
   authenticated :user do
-    root to: "admin#dashboard", as: :authenticated_root
+    root to: "root#redirect", as: :authenticated_root
   end
 
   # -----------------------------------------
@@ -57,6 +57,10 @@ Rails.application.routes.draw do
   get  "admin/adjustments/new",     to: "admin#adjustments_new",     as: :admin_adjustments_new
   post "admin/adjustments/preview", to: "admin#adjustments_preview", as: :admin_adjustments_preview
   post "admin/adjustments/commit",  to: "admin#adjustments_commit",  as: :admin_adjustments_commit
+
+  get "manager/dashboard",     to: "manager#dashboard",     as: :manager_dashboard
+  get "manager/services",      to: "manager#services",      as: :manager_services
+  get "manager/services/:id",  to: "manager#service_show",  as: :manager_service
 
   # -----------------------------------------
   # User profile & role management
