@@ -20,75 +20,9 @@
     <div><%== pagy_bootstrap_nav(@pagy) %></div>
   </div>
 
-  <table class="table table-hover align-middle">
-    <thead class="table-light">
-      <tr>
-        <th>ID</th>
-        <th>Remote ID</th>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Member Since</th>
-        <th style="min-width:260px;">Most Recent Service</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @fliip_users.each do |user| %>
-        <% svc = @recent_services_by_user_id[user.id] %>
-
-        <!-- ROW 1: main info -->
-        <tr>
-          <td><%= user.id %></td>
-          <td><%= user.remote_id %></td>
-          <td>
-            <%= link_to "#{user.user_firstname} #{user.user_lastname}",
-                        fliip_user_path(user),
-                        class: "text-decoration-none" %>
-          </td>
-          <td><%= user.user_email.presence || "—" %></td>
-          <td class="text-nowrap">
-            <%= user.member_since ? user.member_since.strftime("%d/%m/%Y") : "—" %>
-          </td>
-          <td>
-            <% if svc.present? %>
-              <div class="small">
-                <strong>
-                  <%= link_to (svc.service_name.presence || "Service"), fliip_service_path(svc), class: "text-decoration-none" %>
-                </strong>
-                <% if svc.expire_date.present? %>
-                  <span class="text-muted"> • ends <%= svc.expire_date.strftime("%d/%m/%Y") %></span>
-                <% end %>
-              </div>
-            <% else %>
-              <span class="text-muted">—</span>
-            <% end %>
-          </td>
-        </tr>
-
-        <%# ROW 2: progress bars under the whole row (two halves) %>
-        <% if svc.present? %>
-          <tr class="align-middle bar-row">
-            <%# Left half: Time progress %>
-            <td colspan="3">
-              <% time_pct = svc.time_progress_percent || 0 %>
-              <%= bar_with_label(
-                    percent: time_pct,
-                    label:   "#{svc.time_range_label} • #{time_pct}%"
-                  ) %>
-            </td>
-
-            <%# Right half: Sessions progress %>
-            <td colspan="3">
-              <% paid_pct = svc.paid_progress_percent || 0 %>
-              <%= bar_with_label(
-                    percent: paid_pct,
-                    label:   "#{svc.paid_usage_compact_str} #{svc.absences_compact_str} • #{paid_pct}%"
-                  ) %>
-            </td>
-          </tr>
-        <% end %>
-      <% end %>
-    </tbody>
-  </table>
+  <%= render "shared/client_table",
+             fliip_users: @fliip_users,
+             recent_services_by_user_id: @recent_services_by_user_id %>
 
   <div class="d-flex justify-content-end">
     <%== pagy_bootstrap_nav(@pagy) %>

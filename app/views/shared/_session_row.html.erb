@@ -1,3 +1,4 @@
+<%# app/views/shared/_session_row.html.erb %>
 <% s   = session %>
 <% svc = s.fliip_service %>
 
@@ -48,29 +49,7 @@
     <% end %>
   </td>
 
-  <%# 5) Progress (compact) %>
-  <td class="align-middle" style="width:18%;">
-    <% if svc %>
-      <% time_pct = svc.time_progress_percent || 0 %>
-      <% paid_pct = svc.paid_progress_percent || 0 %>
-
-      <%= bar_with_label(
-            percent: time_pct,
-            label:   "#{svc.time_range_label} • #{time_pct}%"
-          ) %>
-
-      <div class="mt-1">
-        <%= bar_with_label(
-              percent: paid_pct,
-              label:   "#{svc.paid_usage_compact_str} #{svc.absences_compact_str} • #{paid_pct}%"
-            ) %>
-      </div>
-    <% else %>
-      <span class="text-muted small">—</span>
-    <% end %>
-  </td>
-
-  <%# 6) Presence (color + duration) + confirmed subtext ONLY when confirmed %>
+  <%# 5) Presence (color + duration) + confirmed subtext ONLY when confirmed %>
   <td class="text-nowrap align-middle">
     <span class="badge <%= s.presence_badge_variant %>"><%= s.presence_with_duration_label %></span>
     <% if s.confirmed? && s.confirmed_at.present? %>
@@ -78,7 +57,7 @@
     <% end %>
   </td>
 
-  <%# 7) Employee (linked); show "created by" if different %>
+  <%# 6) Employee (linked); show "created by" if different %>
   <td class="text-nowrap align-middle">
     <% if s.user %>
       <%= link_to s.user.full_name, user_path(s.user), class: "text-decoration-none" %>
@@ -90,13 +69,13 @@
     <% end %>
   </td>
 
-  <%# 8) Actions (right-aligned; plug in when ready) %>
+  <%# 7) Actions (right-aligned; plug in when ready) %>
   <td class="text-end align-middle" style="width:1%;"></td>
 </tr>
 
 <% if s.note.present? %>
   <tr class="note-row" id="<%= dom_id(s, :note) %>">
-    <td colspan="<%= (local_assigns[:show_bulk_checkbox] ? 8 : 7) %>" class="py-1">
+    <td colspan="<%= (local_assigns[:show_bulk_checkbox] ? 7 : 6) %>" class="py-1">
       <div class="small text-muted">
         <strong>Note :</strong>
         <span><%= s.note %></span>
