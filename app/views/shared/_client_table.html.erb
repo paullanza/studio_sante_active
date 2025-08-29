@@ -1,0 +1,32 @@
+<%# Locals:
+#   fliip_users: REQUIRED (ActiveRecord::Relation or Array<FliipUser>)
+#   recent_services_by_user_id: REQUIRED (Hash{fliip_user_id => FliipService or nil})
+%>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle compact-bars">
+    <thead class="table-light">
+      <tr>
+        <th>ID</th>
+        <th>Remote ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Member Since</th>
+        <th style="min-width:260px;">Most Recent Service</th>
+        <th class="text-nowrap" style="width:18%;">Progress</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if fliip_users.any? %>
+        <%= render partial: "shared/client_row",
+                   collection: fliip_users,
+                   as: :user,
+                   locals: { recent_services_by_user_id: recent_services_by_user_id } %>
+      <% else %>
+        <tr>
+          <td colspan="7" class="text-muted">No clients to display.</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

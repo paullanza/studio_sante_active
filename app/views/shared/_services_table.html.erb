@@ -14,97 +14,15 @@
         <th class="text-nowrap" style="width:1%;">Cancelled</th>
         <th class="text-nowrap">Service</th>
         <th class="text-nowrap" style="width:1%;">Duration</th>
+        <th class="text-nowrap" style="width:18%;">Progress</th>
       </tr>
     </thead>
 
     <tbody>
       <% if services.any? %>
         <% services.each do |svc| %>
-          <%# --- precompute numbers (model does the heavy lifting) --- %>
-          <% paid_used   = svc.paid_used_total %>
-          <% paid_incl   = svc.service_definition&.paid_sessions %>
-          <% bonus_total = svc.bonus_sessions_total %>
-          <% paid_allow  = paid_incl.to_f + bonus_total.to_f %>
-          <% paid_pct    = svc.paid_progress_percent || 0 %>
-
-          <% free_used   = svc.free_used_total %>
-          <% free_incl   = svc.service_definition&.free_sessions %>
-
-          <% time_pct   = respond_to?(:svc_time_progress_percent) ? svc_time_progress_percent(svc) : 0 %>
-          <% time_label = respond_to?(:svc_time_range_label)     ? svc_time_range_label(svc)     : "—" %>
-
-          <% if respond_to?(:progress_color_classes)
-               time_bg, time_text = progress_color_classes(time_pct)
-               paid_bg, paid_text = progress_color_classes(paid_pct)
-             else
-               time_bg = "bg-info";    time_text = ""
-               paid_bg = "bg-success"; paid_text = ""
-             end %>
-
-          <% badge_class =
-               case svc.purchase_status
-               when "A" then "bg-success"
-               when "P" then "bg-info text-dark"
-               when "S" then "bg-warning text-dark"
-               when "C" then "bg-danger"
-               else           "bg-secondary"
-               end %>
-
-          <!-- ROW 1: textual data -->
-          <tr>
-            <td class="text-nowrap">
-              <% if svc.fliip_user %>
-                <%= link_to svc.fliip_user.full_name, fliip_user_path(svc.fliip_user), class: "text-decoration-none" %>
-                <div class="text-muted small">
-                  UserID: <%= svc.fliip_user.id %> • RemoteID: <%= svc.fliip_user.remote_id %>
-                </div>
-              <% else %>
-                <span class="text-muted">—</span>
-              <% end %>
-            </td>
-
-            <td class="text-nowrap" style="width:1%;">
-              <span class="badge <%= badge_class %>"><%= svc.status_name %></span>
-            </td>
-
-            <td class="text-nowrap" style="width:1%;"><%= fmt_date.call(svc.start_date) %></td>
-            <td class="text-nowrap" style="width:1%;"><%= fmt_date.call(svc.expire_date) %></td>
-            <td class="text-nowrap" style="width:1%;"><%= fmt_date.call(svc.purchase_date) %></td>
-            <td class="text-nowrap" style="width:1%;"><%= fmt_date.call(svc.stop_date) %></td>
-            <td class="text-nowrap" style="width:1%;"><%= fmt_date.call(svc.cancel_date) %></td>
-
-            <td class="text-nowrap">
-              <%= link_to (svc.service_name.presence || "Service ##{svc.id}"),
-                          fliip_service_path(svc),
-                          class: "text-decoration-none" %>
-              <div class="text-muted small">
-                Svc#: <%= svc.id %> • Purch#: <%= svc.remote_purchase_id || "—" %> • DefID: <%= svc.service_definition&.service_id || svc.service_id || "—" %>
-              </div>
-            </td>
-
-            <td class="text-nowrap" style="width:1%;"><%= svc.duration.presence || "—" %></td>
-          </tr>
-
-          <!-- ROW 2: progress bars (compact, side-by-side) -->
-          <tr class="align-middle bar-row">
-          <%# Left half: Time %>
-          <td colspan="6">
-            <% time_pct = svc.time_progress_percent || 0 %>
-            <%= bar_with_label(
-                  percent: time_pct,
-                  label:   "#{svc.time_range_label} • #{time_pct}%"
-                ) %>
-          </td>
-
-          <%# Right half: Sessions %>
-          <td colspan="6">
-            <% paid_pct = svc.paid_progress_percent || 0 %>
-            <%= bar_with_label(
-                  percent: paid_pct,
-                  label:   "#{svc.paid_usage_compact_str} #{svc.absences_compact_str} • #{paid_pct}%"
-                ) %>
-          </td>
-        </tr>
+          <%# Render each service row %>
+          <%= render partial: "shared/service_row", locals: { svc: svc } %>
         <% end %>
       <% else %>
         <tr>

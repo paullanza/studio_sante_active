@@ -19,22 +19,24 @@
         <th class="text-nowrap" style="width:1%;">Date &amp; Heure</th>
         <th class="text-nowrap">Client</th>
         <th class="text-nowrap">Service</th>
-        <th class="text-nowrap" style="width:14%;">Progression</th>
         <th class="text-nowrap" style="width:1%;">Présence</th>
         <th class="text-nowrap" style="width:1%;">Employé·e</th>
         <th class="text-end"   style="width:1%;">Actions</th>
       </tr>
     </thead>
-      <tbody>
-        <% if sessions.any? %>
-          <% sessions.each do |s| %>
-            <%= render "shared/session_row", session: s, show_bulk_checkbox: local_assigns[:show_bulk_checkbox] %>
-          <% end %>
-        <% else %>
-          <tr>
-            <td colspan="<%= local_assigns[:show_bulk_checkbox] ? 8 : 7 %>" class="text-muted">No sessions to display.</td>
-          </tr>
+
+    <tbody>
+      <% if sessions.any? %>
+        <% sessions.each do |s| %>
+          <%= render "shared/session_row",
+                     session: s,
+                     show_bulk_checkbox: local_assigns[:show_bulk_checkbox] %>
         <% end %>
-      </tbody>
+      <% else %>
+        <tr>
+          <td colspan="<%= local_assigns[:show_bulk_checkbox] ? 7 : 6 %>" class="text-muted">No sessions to display.</td>
+        </tr>
+      <% end %>
+    </tbody>
   </table>
 </div>
