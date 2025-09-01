@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_08_13_223928) do
+ActiveRecord::Schema[7.1].define(version: 2025_09_01_151132) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -124,8 +124,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_13_223928) do
     t.bigint "fliip_service_id", null: false
     t.bigint "created_by_id", null: false
     t.datetime "confirmed_at"
-    t.date "date"
-    t.time "time"
     t.boolean "present"
     t.text "note"
     t.boolean "confirmed"
@@ -133,9 +131,11 @@ ActiveRecord::Schema[7.1].define(version: 2025_08_13_223928) do
     t.float "duration", default: 1.0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "occurred_at"
     t.index ["created_by_id"], name: "index_sessions_on_created_by_id"
     t.index ["fliip_service_id"], name: "index_sessions_on_fliip_service_id"
     t.index ["fliip_user_id"], name: "index_sessions_on_fliip_user_id"
+    t.index ["occurred_at"], name: "index_sessions_on_occurred_at"
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 

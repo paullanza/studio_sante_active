@@ -68,7 +68,7 @@
         <%= f.input :date, label: "Date", as: :string,
               input_html: {
                 type: "text",
-                value: (@session.date || Date.today),
+                value: (@session.occurred_at&.to_date || Date.today),
                 class: "form-control",
                 data: { flatpickr_target: "date" }
               } %>
@@ -78,11 +78,11 @@
         <%= f.input :time, label: "Heure", as: :string,
               input_html: {
                 type: "text",
-                step: 1800,                 # 30-min step for native mobile pickers
+                step: 900,
                 inputmode: "numeric",
-                value: (@session.time&.strftime("%H:%M") || default_time_slot_str),
+                value: (@session.occurred_at&.strftime("%H:%M") || default_time_slot_str),
                 class: "form-control",
-                data: { flatpickr_target: "time" } # Flatpickr: minuteIncrement: 30
+                data: { flatpickr_target: "time" }
               } %>
       </div>
 

@@ -34,8 +34,10 @@ export default class extends Controller {
       dateFormat: "H:i",
       time_24hr: true,
       allowInput: true,
-      disableMobile: true,
-      minuteIncrement: 30
+      disableMobile: false,
+      minuteIncrement: 15,
+      minTime: "6:00",
+      maxTime: "20:45",
     }
 
     // --- Session RANGE ---
