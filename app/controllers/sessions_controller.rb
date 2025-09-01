@@ -11,7 +11,7 @@ class SessionsController < ApplicationController
                   .where(user_id: current_user.id)
                   .unconfirmed
                   .with_associations
-                  .order(date: :desc, time: :desc, created_at: :desc)
+                  .order_by_occurred_at_desc
                   .limit(25)
   end
 
@@ -19,6 +19,9 @@ class SessionsController < ApplicationController
     @session = Session.new(session_params)
     @session.user       = chosen_creator_for_create
     @session.created_by = current_user
+
+    # Always assign from parsed date/time
+    @session.occurred_at = parsed_occurred_at_from_params
 
     @session.confirmed = false
     @session.present   = params[:session][:present] == "1"
@@ -114,18 +117,35 @@ class SessionsController < ApplicationController
     params.require(:session).permit(
       :fliip_user_id,
       :fliip_service_id,
-      :date,
-      :time,
       :present,
-      :note
+      :note,
+      :occurred_at
     )
+  end
+
+  def parsed_occurred_at_from_params
+    d = params.dig(:session, :date).to_s.strip
+    t = params.dig(:session, :time).to_s.strip
+    return nil if d.blank? || t.blank?
+
+    begin
+      date = Date.parse(d)
+      if /\A\d{1,2}:\d{2}\z/ === t
+        h, m = t.split(":").map(&:to_i)
+        Time.zone.local(date.year, date.month, date.day, h, m)
+      else
+        Time.zone.parse("#{d} #{t}")
+      end
+    rescue ArgumentError
+      nil
+    end
   end
 
   def session_payload(s)
     {
       id: s.id,
-      date: s.date&.strftime("%Y-%m-%d"),
-      time: s.time&.strftime("%H:%M"),
+      date: s.occurred_at&.to_date&.strftime("%Y-%m-%d"),
+      time: s.occurred_at&.strftime("%H:%M"),
       present: s.present?,
       note: s.note.to_s,
       duration: s.duration.to_f,

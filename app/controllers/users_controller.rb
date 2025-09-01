@@ -19,7 +19,7 @@ class UsersController < ApplicationController
     @unconfirmed_sessions = Session
       .where(user_id: @user.id, confirmed: [false, nil])
       .includes(:fliip_user, :fliip_service)
-      .order(date: :desc, time: :desc, created_at: :desc)
+      .order_by_occurred_at_desc
   end
 
   # PATCH /users/:id

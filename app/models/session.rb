@@ -8,9 +8,6 @@ class Session < ApplicationRecord
   # We define the mapping explicitly so ordering stays stable.
   enum session_type: [:paid, :free]
 
-  # Virtual attribute (typed) populated when selected as SQL alias
-  attribute :occurred_at, :datetime
-
   # -----------------------------------------
   # PGSearch: search by client or employee names
   # -----------------------------------------
@@ -47,14 +44,14 @@ class Session < ApplicationRecord
   validates :duration, numericality: { greater_than: 0 }, allow_nil: true
 
   # These fields must always be provided when creating a session.
-  validates :fliip_user_id, :fliip_service_id, :date, :time, :created_by_id, presence: true
+  validates :fliip_user_id, :fliip_service_id, :created_by_id, :occurred_at, presence: true
 
   # Prevents duplicate bookings:
   #   - Same client (fliip_user_id)
   #   - Same service (fliip_service_id)
-  #   - Same date and time
+  #   - Same occurred_at
   validates :fliip_user_id, uniqueness: {
-    scope: [:fliip_service_id, :date, :time],
+    scope: [:fliip_service_id, :occurred_at],
     message: "already has a session at this time with this service"
   }
 
@@ -92,18 +89,12 @@ class Session < ApplicationRecord
   # Scopes (preloading & ordering)
   # -----------------------------------------
 
-  # Select the merged value from DB as "occurred_at"
-  scope :with_occurred_at, -> {
-    select("#{table_name}.*",
-           "(#{table_name}.date::timestamp + #{table_name}.time) AS occurred_at")
-  }
-
-  # Order by the merged value; include NULLS LAST to keep incomplete rows at the end
+  # Order by the occurred_at value; include NULLS LAST to keep incomplete rows at the end
   scope :order_by_occurred_at_desc, -> {
-    with_occurred_at.order(Arel.sql("occurred_at DESC NULLS LAST"))
+    order(Arel.sql("occurred_at DESC NULLS LAST"))
   }
   scope :order_by_occurred_at_asc, -> {
-    with_occurred_at.order(Arel.sql("occurred_at ASC NULLS FIRST"))
+    order(Arel.sql("occurred_at ASC NULLS FIRST"))
   }
 
   # Preload graph commonly needed by views to avoid N+1.
@@ -125,8 +116,8 @@ class Session < ApplicationRecord
   scope :date_between, ->(from_date, to_date) {
     # from/to are expected as YYYY-MM-DD (Flatpickr submits ISO via hidden fields)
     rel = all
-    rel = rel.where("date >= ?", from_date) if from_date.present?
-    rel = rel.where("date <= ?", to_date)   if to_date.present?
+    rel = rel.where("occurred_at::date >= ?", from_date) if from_date.present?
+    rel = rel.where("occurred_at::date <= ?", to_date)   if to_date.present?
     rel
   }
 
@@ -209,7 +200,7 @@ class Session < ApplicationRecord
   end
 
   def date_time_label
-    [date&.strftime('%d/%m/%Y'), time&.strftime('%H:%M')].compact.join(' ')
+    occurred_at&.strftime('%d/%m/%Y %H:%M') || ""
   end
 
   def created_at_label
@@ -248,16 +239,34 @@ class Session < ApplicationRecord
   #
   # Note: This is O(1) query but runs per-row; acceptable for moderate table sizes.
   # If you need to optimize for large lists, we can precompute via a window function.
+  # Sequence number within this FliipService & session_type (paid/free)
+  # Now based on occurred_at ascending (ties by id), plus adjustments that existed
+  # at or before this session's occurred_at.
   def sequence_number_in_service
-    return nil unless fliip_service_id && session_type
+    return nil unless fliip_service_id && session_type && occurred_at
 
-    Session
+    # Sessions up to and including this one in occurred_at order
+    sessions_count = Session
       .where(fliip_service_id: fliip_service_id, session_type: session_type)
-      .where(
-        "created_at < :ts OR (created_at = :ts AND id <= :id)",
-        ts: created_at, id: id
-      )
+      .where("occurred_at < :ts OR (occurred_at = :ts AND id <= :id)", ts: occurred_at, id: id)
       .count
+
+    offset = adjustments_used_before_self
+    sessions_count.to_f + offset.to_f
+  end
+
+  # Sum of “used” adjustments effective before this session occurs.
+  # (Adjustments don’t have occurred_at, so we treat created_at as their effective time.)
+  def adjustments_used_before_self
+    return 0.0 unless fliip_service_id && occurred_at
+
+    col = paid? ? :paid_used_delta : :free_used_delta
+
+    ServiceUsageAdjustment
+      .where(fliip_service_id: fliip_service_id)
+      .where("created_at <= ?", occurred_at)
+      .sum(col)
+      .to_f
   end
 
   # Label like "Paid #7" or "Free #1"
@@ -266,7 +275,8 @@ class Session < ApplicationRecord
     n = sequence_number_in_service
     return nil unless n
     type = paid? ? "Paid" : "Free"
-    "#{type} ##{n}"
+    formatted = (n % 1 == 0) ? n.to_i : n.round(2)
+    "#{type} ##{formatted}"
   end
 
   private
@@ -334,13 +344,15 @@ class Session < ApplicationRecord
 
   # Checks that the service is active on the chosen session date.
   def service_is_active
-    return if fliip_service.blank? || date.blank?
+    return if fliip_service.blank? || occurred_at.blank?
 
-    if fliip_service.expire_date.present? && date > fliip_service.expire_date
+    session_date = occurred_at.to_date
+
+    if fliip_service.expire_date.present? && session_date > fliip_service.expire_date
       errors.add(:base, "The service has ended.")
     end
 
-    if fliip_service.start_date.present? && date < fliip_service.start_date
+    if fliip_service.start_date.present? && session_date < fliip_service.start_date
       errors.add(:base, "The service has not started.")
     end
   end
@@ -366,5 +378,21 @@ class Session < ApplicationRecord
     if fliip_service.fliip_user_id != fliip_user_id
       errors.add(:fliip_service_id, "does not belong to the selected client")
     end
+  end
+
+  # --- helpers ---
+
+  # Sum of “used” adjustments before this session (tie-break by id on equal created_at)
+  # Uses paid_used_delta/free_used_delta depending on this session_type.
+  def adjustments_used_before_self
+    return 0.0 unless fliip_service_id
+
+    col = paid? ? :paid_used_delta : :free_used_delta
+
+    ServiceUsageAdjustment
+      .where(fliip_service_id: fliip_service_id)
+      .where("created_at < :ts OR (created_at = :ts AND id < :id)", ts: created_at, id: id)
+      .sum(col)
+      .to_f
   end
 end

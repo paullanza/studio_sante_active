@@ -87,7 +87,7 @@ class AdminController < ApplicationController
     @sessions = Session.unconfirmed
                        .apply_filters(@filter_params)
                        .with_associations
-                       .recent
+                       .order_by_occurred_at_desc
 
     # For the employee dropdown in filters
     @staff = User.where(active: true).order(:first_name, :last_name)
