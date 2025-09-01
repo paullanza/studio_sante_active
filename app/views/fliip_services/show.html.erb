@@ -202,7 +202,9 @@
   <%= render "shared/sessions_table",
       sessions: @sessions,
       show_bulk_checkbox: false,
-      scope_name: :new_session %>
+      scope_name: :new_session,
+      show_adjustment: true,
+      fliip_service: @service %>
 
   <div class="d-flex justify-content-end">
     <%== pagy_bootstrap_nav(@pagy) %>

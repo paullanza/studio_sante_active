@@ -37,6 +37,34 @@
           <td colspan="<%= local_assigns[:show_bulk_checkbox] ? 7 : 6 %>" class="text-muted">No sessions to display.</td>
         </tr>
       <% end %>
+      <% if local_assigns[:show_adjustment] && @service.service_usage_adjustments %>
+        <% service = local_assigns[:fliip_service] %>
+        <% if service.present? %>
+          <% paid_from_adjustments = service.paid_used_adjustment.to_f %>
+          <% free_from_adjustments = service.free_used_adjustment.to_f %>
+          <% bonus_from_adjustments = service.bonus_sessions_total.to_f %>
+
+          <tr class="table-light">
+            <td colspan="<%= local_assigns[:show_bulk_checkbox] ? 7 : 6 %>">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>Ajustements</strong> —
+                  <span>
+                    <%= format('%.1f', free_from_adjustments) %> séance(s) gratuites
+                    et <%= format('%.1f', paid_from_adjustments) %> séance(s) payantes
+                    ont été comptabilisées via des ajustements.
+                  </span>
+                </div>
+                <% if bonus_from_adjustments.nonzero? %>
+                  <div class="text-muted small">
+                    Bonus accordés : <%= format('%.1f', bonus_from_adjustments) %>
+                  </div>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      <% end %>
     </tbody>
   </table>
 </div>
