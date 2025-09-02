@@ -29,8 +29,8 @@ Rails.application.routes.draw do
   # CLIENTS (FLIIP USERS) — READ & SUGGESTIONS
   # ---------------------------------------------------------------------
   # Index/Show for client lookup and detail pages. `suggest` serves a
-  # lightweight search endpoint (e.g., for autocompletes). Refresh below
-  # pulls a fresh copy of a single Fliip user by remote_id.
+  # lightweight search endpoint (e.g., for the session creation page).
+  # Refresh below pulls a fresh copy of a single Fliip user by remote_id.
   # =====================================================================
   resources :fliip_users, only: [:index, :show] do
     collection do
