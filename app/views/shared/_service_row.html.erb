@@ -1,3 +1,4 @@
+<%# app/views/shared/_service_row.html.erb %>
 <%# Expects: svc %>
 
 <%# --- precompute (model does the heavy lifting) --- %>
@@ -15,7 +16,7 @@
 
 <tr>
   <%# 1) Client (name + IDs) %>
-  <td class="text-nowrap align-middle">
+  <td class="align-middle">
     <% if svc.fliip_user %>
       <%= link_to svc.fliip_user.full_name, fliip_user_path(svc.fliip_user), class: "text-decoration-none" %>
       <div class="text-muted small">
@@ -26,41 +27,35 @@
     <% end %>
   </td>
 
-  <%# 2) Status %>
-  <td class="text-nowrap align-middle" style="width:1%;">
-    <span class="badge <%= badge_class %>"><%= svc.status_name %></span>
-  </td>
-
-  <%# 3) Start %>
-  <td class="text-nowrap align-middle" style="width:1%;"><%= svc.start_date&.strftime("%d/%m/%Y") || "—" %></td>
-
-  <%# 4) Expire %>
-  <td class="text-nowrap align-middle" style="width:1%;"><%= svc.expire_date&.strftime("%d/%m/%Y") || "—" %></td>
-
-  <%# 5) Purchased %>
-  <td class="text-nowrap align-middle" style="width:1%;"><%= svc.purchase_date&.strftime("%d/%m/%Y") || "—" %></td>
-
-  <%# 6) Stopped %>
-  <td class="text-nowrap align-middle" style="width:1%;"><%= svc.stop_date&.strftime("%d/%m/%Y") || "—" %></td>
-
-  <%# 7) Cancelled %>
-  <td class="text-nowrap align-middle" style="width:1%;"><%= svc.cancel_date&.strftime("%d/%m/%Y") || "—" %></td>
-
-  <%# 8) Service (name + compact IDs) %>
-  <td class="text-nowrap align-middle">
-    <%= link_to (svc.service_name.presence || "Service ##{svc.id}"),
-                fliip_service_path(svc),
-                class: "text-decoration-none" %>
-    <div class="text-muted small">
-      Svc#: <%= svc.id %> • Purch#: <%= svc.remote_purchase_id || "—" %> • DefID: <%= svc.service_definition&.service_id || svc.service_id || "—" %>
+  <%# 2) Service (name + status badge + duration + compact IDs) %>
+  <td class="align-middle">
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <span class="badge <%= badge_class %>"><%= svc.status_name %></span>
+      <%= link_to (svc.service_name.presence || "Service ##{svc.id}"),
+                  fliip_service_path(svc),
+                  class: "text-decoration-none" %>
     </div>
+    <div class="text-muted small">Svc#: <%= svc.id %> • Purch#: <%= svc.remote_purchase_id || "—" %> Duration: <%= svc.duration.presence || "—" %></div>
   </td>
 
-  <%# 9) Duration %>
-  <td class="text-nowrap align-middle" style="width:1%;"><%= svc.duration.presence || "—" %></td>
+  <%# 3) Start (with Purchased underneath if present) %>
+  <td class="text-nowrap align-middle" style="width:1%;">
+    <div><%= svc.start_date&.strftime("%d/%m/%Y") || "—" %></div>
+    <% if svc.purchase_date.present? %>
+      <div class="text-muted small">Purchased: <%= svc.purchase_date.strftime("%d/%m/%Y") %></div>
+    <% end %>
+  </td>
 
-  <%# 10) Progress (stacked bars like Session Row) %>
-  <td class="align-middle" style="width:18%;">
+  <%# 4) Expire (with Stopped underneath if present) %>
+  <td class="text-nowrap align-middle" style="width:1%;">
+    <div><%= svc.expire_date&.strftime("%d/%m/%Y") || "—" %></div>
+    <% if svc.stop_date.present? %>
+      <div class="text-muted small">Stopped: <%= svc.stop_date.strftime("%d/%m/%Y") %></div>
+    <% end %>
+  </td>
+
+  <%# 5) Progress (stacked bars) %>
+  <td class="align-middle" style="min-width:220px;">
     <%= bar_with_label(
           percent: time_pct,
           label:   "#{svc.time_range_label} • #{time_pct}%",
