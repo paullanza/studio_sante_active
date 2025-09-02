@@ -4,29 +4,44 @@
 <tr>
   <%# 1) Optional bulk checkbox %>
   <% if local_assigns[:show_bulk_checkbox] %>
-    <td class="text-center align-middle" style="width:36px;">
+    <td class="text-center align-middle">
       <%= check_box_tag "session_ids[]", s.id, false,
-            class: "form-check-input",
+            class: "form-check-input m-0",
             data: { select_all_target: "checkboxItem" } %>
     </td>
   <% end %>
 
-  <%# 2) Date / time (with tiny sequence chip) %>
-  <td class="text-nowrap small align-middle" style="width:1%;">
-    <div class="d-flex align-items-center gap-2">
-      <strong><%= s.date_time_label %></strong>
-      <% if s.sequence_label.present? %>
-        <span class="badge text-bg-light border"><%= s.sequence_label %></span>
-      <% end %>
-    </div>
-    <div class="text-muted"><small><%= s.created_at_label %></small></div>
+  <%# 2) Session number (badge) %>
+  <td class="text-center align-middle">
+    <% if s.sequence_label.present? %>
+      <span class="badge text-bg-light border"><%= s.sequence_label %></span>
+    <% else %>
+      <span class="text-muted">—</span>
+    <% end %>
   </td>
 
-  <%# 3) Client (name + both IDs) %>
-  <td class="text-nowrap align-middle">
+  <%# 3) Date · Presence (wider via table header w-50) %>
+  <td class="small align-middle">
+    <div class="d-flex flex-column">
+      <div class="d-flex align-items-center gap-2">
+        <strong><%= s.date_time_label %></strong>
+        <span class="badge <%= s.presence_badge_variant %>"><%= s.presence_with_duration_label %></span>
+      </div>
+      <div class="text-muted"><small><%= s.created_at_label %></small>
+            <% if s.confirmed? && s.confirmed_at.present? %>
+              <small>| Confirmé : <%= s.confirmed_at.strftime('%d/%m/%Y %H:%M') %></small>
+            <% end %>
+      </div>
+    </div>
+  </td>
+
+  <%# 4) Client (thinner; truncated) %>
+  <td class="align-middle">
     <% if s.fliip_user %>
-      <%= link_to s.fliip_user.full_name, fliip_user_path(s.fliip_user), class: "text-decoration-none" %>
-      <div class="text-muted small">
+      <div class="text-truncate">
+        <%= link_to s.fliip_user.full_name, fliip_user_path(s.fliip_user), class: "text-decoration-none" %>
+      </div>
+      <div class="text-muted small text-truncate">
         FliipUserID: <%= s.fliip_user.id %> • RemoteID: <%= s.fliip_user.remote_id %>
       </div>
     <% else %>
@@ -34,13 +49,15 @@
     <% end %>
   </td>
 
-  <%# 4) Service (name + compact IDs line) %>
-  <td class="text-nowrap align-middle">
+  <%# 5) Service (thinner; truncated) %>
+  <td class="align-middle">
     <% if svc %>
-      <%= link_to (svc.service_name.presence || "Service ##{svc.id}"),
-                  fliip_service_path(svc),
-                  class: "text-decoration-none" %>
-      <div class="text-muted small">
+      <div class="text-truncate">
+        <%= link_to (svc.service_name.presence || "Service ##{svc.id}"),
+                    fliip_service_path(svc),
+                    class: "text-decoration-none" %>
+      </div>
+      <div class="text-muted small text-truncate">
         Svc#: <%= svc.id %> • Purch#: <%= svc.remote_purchase_id %> • DefID: <%= (svc.service_definition&.service_id || svc.service_id) %>
       </div>
     <% else %>
@@ -48,16 +65,8 @@
     <% end %>
   </td>
 
-  <%# 5) Presence (color + duration) + confirmed subtext ONLY when confirmed %>
-  <td class="text-nowrap align-middle">
-    <span class="badge <%= s.presence_badge_variant %>"><%= s.presence_with_duration_label %></span>
-    <% if s.confirmed? && s.confirmed_at.present? %>
-      <div class="small text-muted mt-1">Confirmé : <%= s.confirmed_at.strftime('%d/%m/%Y %H:%M') %></div>
-    <% end %>
-  </td>
-
-  <%# 6) Employee (linked); show "created by" if different %>
-  <td class="text-nowrap align-middle">
+  <%# 6) Employee (linked); show "created by" if different) %>
+  <td class="text-nowrap align-middle text-center">
     <% if s.user %>
       <%= link_to s.user.full_name, user_path(s.user), class: "text-decoration-none" %>
       <% if s.created_by_id.present? && s.created_by_id != s.user_id %>
@@ -68,8 +77,8 @@
     <% end %>
   </td>
 
-  <%# 7) Actions (right-aligned; plug in when ready) %>
-  <td class="text-end align-middle" style="width:1%;"></td>
+  <%# 7) Actions (right-aligned) %>
+  <td class="text-end align-middle text-nowrap"></td>
 </tr>
 
 <% if s.note.present? %>

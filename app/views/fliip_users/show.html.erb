@@ -58,7 +58,6 @@
             <div class="col-sm-4">
               <div class="text-muted small">Status</div>
               <div>
-                <%# light badge to make it pop but stay compact %>
                 <span class="badge bg-light text-dark"><%= status || "–" %></span>
               </div>
             </div>
@@ -84,7 +83,7 @@
     </div>
   </div>
 
-  <%# ===== Contracts (compact, service-table style) ===== %>
+  <%# ===== Contracts (compact, stacked sublabels on dates) ===== %>
   <% fmt_date = ->(d) { d.present? ? d.strftime("%d/%m/%Y") : "—" } %>
   <% status_badge = ->(code) do
       case code.to_s.strip.upcase
@@ -105,16 +104,12 @@
         <table class="table table-hover align-middle">
           <thead class="table-light">
             <tr>
-              <th class="text-nowrap" style="width:1%;">Contract #</th>
-              <th class="text-nowrap" style="width:1%;">Status</th>
-              <th class="text-nowrap" style="width:1%;">Start</th>
-              <th class="text-nowrap" style="width:1%;">End</th>
-              <th class="text-nowrap" style="width:1%;">Stopped</th>
-              <th class="text-nowrap" style="width:1%;">Resumed</th>
-              <th class="text-nowrap" style="width:1%;">Cancelled</th>
+              <th class="text-nowrap">Contract #</th>
+              <th class="text-nowrap">Status</th>
+              <th class="text-nowrap">Start</th>
+              <th class="text-nowrap">End</th>
               <th class="text-nowrap">Membership</th>
-              <th class="text-nowrap" style="width:1%;">Duration</th>
-              <th class="text-nowrap">Plan</th>
+              <th class="text-nowrap">Duration</th>
             </tr>
           </thead>
 
@@ -123,17 +118,29 @@
               <% label, color = status_badge.call(c.status) %>
               <tr>
                 <td class="text-nowrap"><%= c.remote_contract_id || "—" %></td>
-                <td class="text-nowrap"><span class="badge <%= color %>"><%= label %></span></td>
-                <td class="text-nowrap"><%= fmt_date.call(c.start_date) %></td>
-                <td class="text-nowrap"><%= fmt_date.call(c.end_date) %></td>
-                <td class="text-nowrap"><%= fmt_date.call(c.stop_date) %></td>
-                <td class="text-nowrap"><%= fmt_date.call(c.resume_date) %></td>
-                <td class="text-nowrap"><%= fmt_date.call(c.cancel_date) %></td>
+
+                <td class="text-nowrap">
+                  <span class="badge <%= color %>"><%= label %></span>
+                </td>
+
+                <%# Start with Stopped underneath if present %>
+                <td class="text-nowrap">
+                  <div><%= fmt_date.call(c.start_date) %></div>
+                  <% if c.stop_date.present? %>
+                    <div class="text-muted small">Stopped: <%= fmt_date.call(c.stop_date) %></div>
+                  <% end %>
+                </td>
+
+                <%# End with Cancelled underneath if present %>
+                <td class="text-nowrap">
+                  <div><%= fmt_date.call(c.end_date) %></div>
+                  <% if c.cancel_date.present? %>
+                    <div class="text-muted small">Cancelled: <%= fmt_date.call(c.cancel_date) %></div>
+                  <% end %>
+                </td>
+
                 <td class="text-nowrap"><%= c.membership_name.presence || "—" %></td>
                 <td class="text-nowrap"><%= c.duration.presence || "—" %></td>
-                <td class="text-truncate" style="max-width: 360px;">
-                  <%= c.plan_description.present? ? truncate(c.plan_description, length: 120) : "—" %>
-                </td>
               </tr>
             <% end %>
           </tbody>

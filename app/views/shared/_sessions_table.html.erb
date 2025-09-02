@@ -10,18 +10,26 @@
     <thead class="table-light">
       <tr>
         <% if local_assigns[:show_bulk_checkbox] %>
-          <th class="text-center" style="width:36px;">
+          <th class="text-center">
             <input type="checkbox"
+                   class="form-check-input m-0"
                    data-action="select-all#toggleAll"
                    data-select-all-target="checkbox">
           </th>
         <% end %>
-        <th class="text-nowrap" style="width:1%;">Date &amp; Heure</th>
-        <th class="text-nowrap">Client</th>
-        <th class="text-nowrap">Service</th>
-        <th class="text-nowrap" style="width:1%;">Présence</th>
-        <th class="text-nowrap" style="width:1%;">Employé·e</th>
-        <th class="text-end"   style="width:1%;">Actions</th>
+
+        <!-- Session number first (after checkbox) -->
+        <th class="text-center text-nowrap">Session #</th>
+
+        <!-- Wider date/presence column -->
+        <th class="text-nowrap w-50">Date · Présence</th>
+
+        <!-- Thinner client/service columns -->
+        <th class="text-nowrap w-25">Client</th>
+        <th class="text-nowrap w-25">Service</th>
+
+        <th class="text-nowrap text-center">Employé·e</th>
+        <th class="text-end text-nowrap">Actions</th>
       </tr>
     </thead>
 
@@ -37,11 +45,12 @@
           <td colspan="<%= local_assigns[:show_bulk_checkbox] ? 7 : 6 %>" class="text-muted">No sessions to display.</td>
         </tr>
       <% end %>
-      <% if local_assigns[:show_adjustment] && @service.service_usage_adjustments %>
+
+      <% if local_assigns[:show_adjustment] && @service&.service_usage_adjustments %>
         <% service = local_assigns[:fliip_service] %>
         <% if service.present? %>
-          <% paid_from_adjustments = service.paid_used_adjustment.to_f %>
-          <% free_from_adjustments = service.free_used_adjustment.to_f %>
+          <% paid_from_adjustments  = service.paid_used_adjustment.to_f %>
+          <% free_from_adjustments  = service.free_used_adjustment.to_f %>
           <% bonus_from_adjustments = service.bonus_sessions_total.to_f %>
 
           <tr class="table-light">

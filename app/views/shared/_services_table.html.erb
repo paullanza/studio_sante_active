@@ -1,3 +1,4 @@
+<%# app/views/shared/_services_table.html.erb %>
 <% fmt_date = ->(d) { d.present? ? d.strftime("%d/%m/%Y") : "—" } %>
 <% fmt_num  = ->(n) { ('%.1f' % n.to_f) } %>
 
@@ -6,27 +7,21 @@
     <thead class="table-light">
       <tr>
         <th class="text-nowrap">Client</th>
-        <th class="text-nowrap" style="width:1%;">Status</th>
+        <th class="text-nowrap">Service</th>
         <th class="text-nowrap" style="width:1%;">Start</th>
         <th class="text-nowrap" style="width:1%;">Expire</th>
-        <th class="text-nowrap" style="width:1%;">Purchased</th>
-        <th class="text-nowrap" style="width:1%;">Stopped</th>
-        <th class="text-nowrap" style="width:1%;">Cancelled</th>
-        <th class="text-nowrap">Service</th>
-        <th class="text-nowrap" style="width:1%;">Duration</th>
-        <th class="text-nowrap" style="width:18%;">Progress</th>
+        <th class="text-nowrap">Progress</th>
       </tr>
     </thead>
 
     <tbody>
       <% if services.any? %>
         <% services.each do |svc| %>
-          <%# Render each service row %>
           <%= render partial: "shared/service_row", locals: { svc: svc } %>
         <% end %>
       <% else %>
         <tr>
-          <td colspan="11" class="text-muted">No services to display.</td>
+          <td colspan="5" class="text-muted">No services to display.</td>
         </tr>
       <% end %>
     </tbody>

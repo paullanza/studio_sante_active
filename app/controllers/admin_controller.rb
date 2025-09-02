@@ -112,7 +112,7 @@ class AdminController < ApplicationController
 
   def import_clients
     msg = FliipApi::UserSync::UserImporter.call
-    redirect_to dashboard_path, notice: msg
+    redirect_to admin_dashboard_path, notice: msg
   rescue => e
       redirect_to admin_dashboard_path, alert: "Could not refresh clients: #{e.message}"
   end
