@@ -70,7 +70,7 @@
   <h2 class="mt-4">Services</h2>
   <% if @fliip_user.fliip_services.any? %>
     <div class="table-responsive">
-      <%= render "shared/services_table", services: @fliip_user.fliip_services %>
+      <%= render "shared/services_table", services: @fliip_user.fliip_services.order(expire_date: :desc) %>
     </div>
   <% else %>
     <p class="text-muted">No services found for this user.</p>
