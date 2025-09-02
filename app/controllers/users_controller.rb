@@ -14,7 +14,7 @@ class UsersController < ApplicationController
     @services_for_user = FliipService
       .where(id: svc_ids)
       .includes(:fliip_user, :service_definition, :service_usage_adjustments)
-      .order(:expire_date)
+      .order(expire_date: :asc)
 
     @unconfirmed_sessions = Session
       .where(user_id: @user.id, confirmed: [false, nil])
