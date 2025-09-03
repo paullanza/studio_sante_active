@@ -1,18 +1,8 @@
-<%# app/views/shared/_service_row.html.erb %>
 <%# Expects: svc %>
 
 <%# --- precompute (model does the heavy lifting) --- %>
 <% time_pct = svc.time_progress_percent || 0 %>
 <% paid_pct = svc.paid_progress_percent || 0 %>
-
-<% badge_class =
-     case svc.purchase_status
-     when "A" then "bg-success"
-     when "P" then "bg-info text-dark"
-     when "S" then "bg-warning text-dark"
-     when "C" then "bg-danger"
-     else           "bg-secondary"
-     end %>
 
 <tr>
   <%# 1) Client (name + IDs) %>
@@ -30,7 +20,7 @@
   <%# 2) Service (name + status badge + duration + compact IDs) %>
   <td class="align-middle">
     <div class="d-flex flex-wrap align-items-center gap-2">
-      <span class="badge <%= badge_class %>"><%= svc.status_name %></span>
+      <span class="badge <%= purchase_status_badge_class(svc.purchase_status) %>"><%= svc.status_name %></span>
       <%= link_to (svc.service_name.presence || "Service ##{svc.id}"),
                   fliip_service_path(svc),
                   class: "text-decoration-none" %>

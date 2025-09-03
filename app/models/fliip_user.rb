@@ -42,7 +42,8 @@ class FliipUser < ApplicationRecord
     against: [:user_firstname, :user_lastname, :user_email, :remote_id],
     using: {
       tsearch: { prefix: true, dictionary: 'simple' }
-    }
+    },
+    ignoring: :accents
 
   # -----------------------------------------
   # Instance Methods
