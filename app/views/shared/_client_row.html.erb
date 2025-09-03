@@ -5,31 +5,78 @@
 <% svc = recent_services_by_user_id[user.id] %>
 
 <tr>
-  <td><%= user.id %></td>
-  <td><%= user.remote_id %></td>
+  <!-- Client (avatar, name link, IDs stacked) -->
+  <td class="align-middle">
+    <div class="d-flex align-items-center">
+      <!-- Avatar -->
+      <div class="me-2 flex-shrink-0">
+        <% if user.user_image.present? %>
+          <%= image_tag user.user_image,
+                        alt: "#{user.user_firstname} #{user.user_lastname}",
+                        class: "rounded-circle avatar-xs",
+                        width: 24, height: 24,
+                        loading: "lazy", referrerpolicy: "no-referrer" %>
+        <% else %>
+          <!-- Minimal fallback circle with initials -->
+          <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center avatar-xs text-muted fw-semibold" style="width:24px;height:24px;font-size:11px;line-height:1;">
+            <%= "#{user.user_firstname.to_s.first}#{user.user_lastname.to_s.first}".upcase.presence || "?" %>
+          </div>
+        <% end %>
+      </div>
 
-  <td class="text-nowrap">
-    <%= link_to "#{user.user_firstname} #{user.user_lastname}",
-                fliip_user_path(user),
-                class: "text-decoration-none" %>
+      <!-- Name + IDs -->
+      <div class="min-w-0">
+        <div class="text-nowrap text-truncate">
+          <%= link_to "#{user.user_firstname} #{user.user_lastname}",
+                      fliip_user_path(user),
+                      class: "text-decoration-none fw-semibold" %>
+        </div>
+        <div class="small text-muted lh-1 text-nowrap">
+          <!-- IDs stacked under name -->
+          UserID: <%= user.id %> • RemoteID: <%= user.remote_id %>
+        </div>
+      </div>
+    </div>
   </td>
 
-  <td><%= user.user_email.presence || "—" %></td>
+  <!-- Contact (email + phone stacked) -->
+  <td class="align-middle">
+    <div class="text-truncate">
+      <%= user.user_email.presence || "—" %>
+    </div>
+    <div class="small text-muted lh-1 text-truncate">
+      <%= [user.user_phone1, user.user_phone2].compact_blank.first.presence || "—" %>
+    </div>
+  </td>
 
-  <td class="text-nowrap">
+  <!-- Member Since -->
+  <td class="text-nowrap align-middle">
     <%= user.member_since ? user.member_since.strftime("%d/%m/%Y") : "—" %>
   </td>
 
-  <td>
+  <!-- Most Recent Service -->
+  <td class="align-middle">
     <% if svc.present? %>
-      <div class="small">
+      <% badge_class = purchase_status_badge_class(svc.purchase_status) %>
+
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <span class="badge <%= badge_class %>"><%= svc.status_name %></span>
         <strong>
-          <%= link_to (svc.service_name.presence || "Service"),
+          <%= link_to (svc.service_name.presence || "Service ##{svc.id}"),
                       fliip_service_path(svc),
                       class: "text-decoration-none" %>
         </strong>
+      </div>
+
+      <div class="text-muted small lh-1 mt-1">
+        Svc#: <%= svc.id %>
+        <span class="mx-1">•</span>
+        Purch#: <%= svc.remote_purchase_id || "—" %>
+        <span class="mx-1">•</span>
+        Duration: <%= svc.duration.presence || "—" %>
         <% if svc.expire_date.present? %>
-          <span class="text-muted"> • ends <%= svc.expire_date.strftime("%d/%m/%Y") %></span>
+          <span class="mx-1">•</span>
+          Ends: <%= svc.expire_date.strftime("%d/%m/%Y") %>
         <% end %>
       </div>
     <% else %>
@@ -37,6 +84,7 @@
     <% end %>
   </td>
 
+  <!-- Progress -->
   <td class="align-middle" style="width:18%;">
     <% if svc.present? %>
       <% time_pct = svc.time_progress_percent || 0 %>

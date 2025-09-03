@@ -14,7 +14,7 @@
   <%# 2) Session number (badge) %>
   <td class="text-center align-middle">
     <% if s.sequence_label.present? %>
-      <span class="badge text-bg-light border"><%= s.sequence_label %></span>
+      <span class="badge <%= s.presence_badge_variant %>"><%= s.sequence_label %></span>
     <% else %>
       <span class="text-muted">—</span>
     <% end %>

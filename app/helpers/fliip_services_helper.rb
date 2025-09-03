@@ -1,4 +1,14 @@
 module FliipServicesHelper
+  def purchase_status_badge_class(status)
+    case status
+    when "A" then "bg-success"
+    when "P" then "bg-info text-dark"
+    when "S" then "bg-warning text-dark"
+    when "C" then "bg-danger"
+    else           "bg-secondary"
+    end
+  end
+
   def svc_time_range_label(svc)
     sd = svc.start_date&.strftime("%d/%m/%Y")
     ed = svc.expire_date&.strftime("%d/%m/%Y")

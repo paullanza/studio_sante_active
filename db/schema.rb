@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_09_01_151132) do
+ActiveRecord::Schema[7.1].define(version: 2025_09_03_162305) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+  enable_extension "unaccent"
 
   create_table "fliip_contracts", force: :cascade do |t|
     t.bigint "remote_contract_id"
