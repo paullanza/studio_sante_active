@@ -1,7 +1,7 @@
 <% s   = session %>
 <% svc = s.fliip_service %>
 
-<tr>
+<tr data-controller="session-row" data-session-row-id-value="<%= s.id %>">
   <%# 1) Optional bulk checkbox %>
   <% if local_assigns[:show_bulk_checkbox] %>
     <td class="text-center align-middle">
@@ -80,6 +80,7 @@
   <%# 7) Actions (right-aligned) %>
   <td class="text-end align-middle text-nowrap">
     <% if s.modifiable_by?(current_user) %>
+      <a href="<%= edit_session_path(s) %>" class="btn btn-sm btn-outline-secondary me-1" data-action="session-row#edit">Edit</a>
       <%= link_to "Delete",
                   session_path(s),
                   data: { turbo_method: :delete, turbo_confirm: "Delete this session?" },

@@ -1,6 +1,6 @@
 class SessionsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_session, only: [:destroy]
+  before_action :set_session, only: [:destroy, :edit, :update, :row]
 
   def new
     @session = Session.new
@@ -39,6 +39,35 @@ class SessionsController < ApplicationController
 
   def can_modify?(session, action:)
     session.modifiable_by?(current_user)
+  end
+
+  def edit
+    return forbid unless can_modify?(@session, action: :edit)
+    render partial: "shared/row_edit", locals: { session: @session }, layout: false
+  end
+
+  def row
+    render partial: "shared/session_row", locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? }, layout: false
+  end
+
+  def update
+    return forbid unless can_modify?(@session, action: :update)
+
+    # Assign editable fields (keep it minimal)
+    @session.note      = params.dig(:session, :note).to_s
+    @session.present   = params.dig(:session, :present) == "1"
+    @session.duration  = (params[:half_hour] == "1") ? 0.5 : 1.0
+    @session.occurred_at = parsed_occurred_at_from_params # you already have this
+
+    # Recompute type/duration according to your model rules
+    @session.send(:set_session_type_and_duration)
+
+    if @session.save
+      # Re-render the display row (main + optional note row)
+      render partial: "sessions/row", locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? }, layout: false
+    else
+      render partial: "sessions/row_edit", locals: { session: @session }, status: :unprocessable_entity, layout: false
+    end
   end
 
   def destroy
@@ -90,10 +119,11 @@ class SessionsController < ApplicationController
     current_user.admin? || current_user.super_admin?
   end
 
-  def can_modify?(session, action:)
-    return true if admin_like?
-    # creators may modify only if the session is unconfirmed
-    session.created_by_id == current_user.id && !session.confirmed?
+  def forbid
+    respond_to do |format|
+      format.json { head :forbidden }
+      format.html { redirect_back fallback_location: admin_unconfirmed_sessions_path, alert: "Not authorized." }
+    end
   end
 
   def chosen_creator_for_create
