@@ -1,11 +1,11 @@
 class SessionsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_session, only: [:destroy, :edit, :update, :row]
+  before_action :load_staff,  only: [:new, :edit, :update]
 
   def new
     @session = Session.new
     load_fliip_users
-    @staff = User.active.order(:last_name, :first_name) if admin_like?
 
     @sessions = Session
                   .where(user_id: current_user.id)
@@ -43,30 +43,40 @@ class SessionsController < ApplicationController
 
   def edit
     return forbid unless can_modify?(@session, action: :edit)
-    render partial: "shared/row_edit", locals: { session: @session }, layout: false
+    render partial: "shared/row_edit",
+          locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
+          layout: false
   end
 
   def row
-    render partial: "shared/session_row", locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? }, layout: false
+    render partial: "shared/session_row",
+          locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
+          layout: false
   end
 
   def update
     return forbid unless can_modify?(@session, action: :update)
 
-    # Assign editable fields (keep it minimal)
-    @session.note      = params.dig(:session, :note).to_s
-    @session.present   = params.dig(:session, :present) == "1"
-    @session.duration  = (params[:half_hour] == "1") ? 0.5 : 1.0
-    @session.occurred_at = parsed_occurred_at_from_params # you already have this
+    @session.note        = params.dig(:session, :note).to_s
+    @session.present     = params.dig(:session, :present) == "1"
+    @session.duration    = (params[:half_hour] == "1") ? 0.5 : 1.0
+    @session.occurred_at = parsed_occurred_at_from_params
 
-    # Recompute type/duration according to your model rules
+    if admin_like? && (uid = params.dig(:session, :user_id)).present?
+      @session.user_id = uid
+      @session.created_by = current_user
+    end
     @session.send(:set_session_type_and_duration)
 
     if @session.save
-      # Re-render the display row (main + optional note row)
-      render partial: "sessions/row", locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? }, layout: false
+      render partial: "shared/session_row",
+            locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
+            layout: false
     else
-      render partial: "sessions/row_edit", locals: { session: @session }, status: :unprocessable_entity, layout: false
+      render partial: "shared/row_edit",
+            locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
+            status: :unprocessable_entity,
+            layout: false
     end
   end
 
@@ -117,6 +127,10 @@ class SessionsController < ApplicationController
 
   def admin_like?
     current_user.admin? || current_user.super_admin?
+  end
+
+  def load_staff
+    @staff = User.active.order(:last_name, :first_name) if admin_like?
   end
 
   def forbid

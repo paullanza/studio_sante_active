@@ -1,7 +1,10 @@
 <% s   = session %>
 <% svc = s.fliip_service %>
 
-<tr data-controller="session-row" data-session-row-id-value="<%= s.id %>">
+<tr data-controller="session-row"
+    data-session-row-id-value="<%= s.id %>"
+    data-session-row-show-bulk-value="<%= local_assigns[:show_bulk_checkbox] %>">
+
   <%# 1) Optional bulk checkbox %>
   <% if local_assigns[:show_bulk_checkbox] %>
     <td class="text-center align-middle">
