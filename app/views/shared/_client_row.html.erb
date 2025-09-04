@@ -1,8 +1,8 @@
 <%# Expects:
 #   user: FliipUser (collection item)
-#   recent_services_by_user_id: Hash{Integer => FliipService or nil}
+#   recent_services_by_user_id: Hash{Integer => (FliipService|FliipContract|nil)}
 %>
-<% svc = recent_services_by_user_id[user.id] %>
+<% item = recent_services_by_user_id[user.id] %>
 
 <tr>
   <!-- Client (avatar, name link, IDs stacked) -->
@@ -54,9 +54,10 @@
     <%= user.member_since ? user.member_since.strftime("%d/%m/%Y") : "—" %>
   </td>
 
-  <!-- Most Recent Service -->
+  <!-- Most Recent Service OR Active Contract -->
   <td class="align-middle">
-    <% if svc.present? %>
+    <% if item.is_a?(FliipService) %>
+      <% svc = item %>
       <% badge_class = purchase_status_badge_class(svc.purchase_status) %>
 
       <div class="d-flex flex-wrap align-items-center gap-2">
@@ -79,27 +80,59 @@
           Ends: <%= svc.expire_date.strftime("%d/%m/%Y") %>
         <% end %>
       </div>
+
+    <% elsif item.is_a?(FliipContract) %>
+      <% contract = item %>
+      <% contract_badge =
+           case contract.status
+           when "A" then "badge bg-success"
+           when "S" then "badge bg-warning text-dark"
+           when "C" then "badge bg-danger"
+           else           "badge bg-secondary"
+           end %>
+
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <span class="<%= contract_badge %>"><%= contract.status_name %></span>
+        <strong>
+          <%= link_to (contract.membership_name.presence || "Contract ##{contract.id}"),
+                      fliip_user_path(user),
+                      class: "text-decoration-none" %>
+        </strong>
+      </div>
+
+      <div class="text-muted small lh-1 mt-1">
+        Contract#: <%= contract.id %>
+        <% if contract.start_date.present? %>
+          <span class="mx-1">•</span>
+          Start: <%= contract.start_date.strftime("%d/%m/%Y") %>
+        <% end %>
+        <% if contract.end_date.present? %>
+          <span class="mx-1">•</span>
+          Ends: <%= contract.end_date.strftime("%d/%m/%Y") %>
+        <% end %>
+      </div>
+
     <% else %>
       <span class="text-muted">—</span>
     <% end %>
   </td>
 
-  <!-- Progress -->
+  <!-- Progress (only for services) -->
   <td class="align-middle" style="width:18%;">
-    <% if svc.present? %>
-      <% time_pct = svc.time_progress_percent || 0 %>
-      <% paid_pct = svc.paid_progress_percent || 0 %>
+    <% if item.is_a?(FliipService) %>
+      <% time_pct = item.time_progress_percent || 0 %>
+      <% paid_pct = item.paid_progress_percent || 0 %>
 
       <%= bar_with_label(
             percent: time_pct,
-            label:   "#{svc.time_range_label} • #{time_pct}%",
+            label:   "#{item.time_range_label} • #{time_pct}%",
             bg_class: progress_base_color(time_pct)
           ) %>
 
       <div class="mt-1">
         <%= bar_with_label(
               percent: paid_pct,
-              label:   "#{svc.paid_usage_compact_str} #{svc.absences_compact_str} • #{paid_pct}%",
+              label:   "#{item.paid_usage_compact_str} #{item.absences_compact_str} • #{paid_pct}%",
               bg_class: progress_usage_color(paid_pct, time_pct)
             ) %>
       </div>

@@ -8,7 +8,10 @@
   <%# 1) Client (name + IDs) %>
   <td class="align-middle">
     <% if svc.fliip_user %>
-      <%= link_to svc.fliip_user.full_name, fliip_user_path(svc.fliip_user), class: "text-decoration-none" %>
+      <%= link_to svc.fliip_user.full_name,
+                  fliip_user_path(svc.fliip_user),
+                  class: "text-decoration-none",
+                  data: { turbo_frame: "_top" } %>
       <div class="text-muted small">
         UserID: <%= svc.fliip_user.id %> • RemoteID: <%= svc.fliip_user.remote_id %>
       </div>
@@ -23,9 +26,12 @@
       <span class="badge <%= purchase_status_badge_class(svc.purchase_status) %>"><%= svc.status_name %></span>
       <%= link_to (svc.service_name.presence || "Service ##{svc.id}"),
                   fliip_service_path(svc),
-                  class: "text-decoration-none" %>
+                  class: "text-decoration-none",
+                  data: { turbo_frame: "_top" } %>
     </div>
-    <div class="text-muted small">Svc#: <%= svc.id %> • Purch#: <%= svc.remote_purchase_id || "—" %> Duration: <%= svc.duration.presence || "—" %></div>
+    <div class="text-muted small">
+      Svc#: <%= svc.id %> • Purch#: <%= svc.remote_purchase_id || "—" %> Duration: <%= svc.duration.presence || "—" %>
+    </div>
   </td>
 
   <%# 3) Start (with Purchased underneath if present) %>

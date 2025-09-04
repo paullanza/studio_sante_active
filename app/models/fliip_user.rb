@@ -52,4 +52,23 @@ class FliipUser < ApplicationRecord
   def full_name
     "#{user_firstname} #{user_lastname}"
   end
+
+  def most_recent_index_service
+    return nil unless association(:fliip_services).loaded? || fliip_services.loaded? || fliip_services.exists?
+
+    allowed = fliip_services.select { |s| %w[A S P].include?(s.purchase_status) }
+    %w[A S P].each do |code|
+      bucket = allowed.select { |s| s.purchase_status == code }
+      next if bucket.empty?
+      return bucket.max_by { |s| [(s.expire_date || Date.new(0)), (s.start_date || Date.new(0))] }
+    end
+    nil
+  end
+
+  # If no suitable service, show the best active contract
+  def best_active_contract_for_index
+    active = fliip_contracts.select { |c| c.status == "A" }
+    return nil if active.empty?
+    active.max_by { |c| [(c.end_date || Date.new(0)), (c.start_date || Date.new(0))] }
+  end
 end
