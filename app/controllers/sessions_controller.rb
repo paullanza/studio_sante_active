@@ -37,6 +37,10 @@ class SessionsController < ApplicationController
     end
   end
 
+  def can_modify?(session, action:)
+    session.modifiable_by?(current_user)
+  end
+
   def destroy
     unless can_modify?(@session, action: :destroy)
       return respond_to do |format|

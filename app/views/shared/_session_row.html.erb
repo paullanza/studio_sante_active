@@ -78,7 +78,14 @@
   </td>
 
   <%# 7) Actions (right-aligned) %>
-  <td class="text-end align-middle text-nowrap"></td>
+  <td class="text-end align-middle text-nowrap">
+    <% if s.modifiable_by?(current_user) %>
+      <%= link_to "Delete",
+                  session_path(s),
+                  data: { turbo_method: :delete, turbo_confirm: "Delete this session?" },
+                  class: "btn btn-sm btn-outline-danger" %>
+    <% end %>
+  </td>
 </tr>
 
 <% if s.note.present? %>
