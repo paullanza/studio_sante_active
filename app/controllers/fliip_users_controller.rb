@@ -7,22 +7,20 @@ class FliipUsersController < ApplicationController
 
     scope = scope.includes(
       :fliip_contracts,
-      fliip_services: [
-        :service_definition,
-        :service_usage_adjustments,
-        :sessions
-      ]
+      fliip_services: [:service_definition, :service_usage_adjustments, :sessions]
     )
 
     @pagy, @fliip_users = pagy(scope)
 
-    # Pick a "most recent" service per user (by expire_date, then start_date)
     @recent_services_by_user_id = {}
     @fliip_users.each do |u|
-      svc = u.fliip_services.max_by do |s|
-        [s.expire_date || Date.new(0), s.start_date || Date.new(0)]
+      svc = u.most_recent_index_service
+      if svc
+        @recent_services_by_user_id[u.id] = svc
+      else
+        contract = u.best_active_contract_for_index
+        @recent_services_by_user_id[u.id] = contract if contract
       end
-      @recent_services_by_user_id[u.id] = svc if svc
     end
   end
 
