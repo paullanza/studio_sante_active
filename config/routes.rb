@@ -117,7 +117,11 @@ Rails.application.routes.draw do
   # the booking UI: `services_table` renders a table partial; `service_select`
   # provides a step to choose a client service before creating a session.
   # =====================================================================
-  resources :sessions, only: [:new, :create, :destroy] do
+  resources :sessions, only: [:new, :create, :destroy, :edit, :update] do
+    member do
+      get :row
+    end
+
     collection do
       get :services_table
       get :service_select
