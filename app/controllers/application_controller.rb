@@ -2,6 +2,7 @@ class ApplicationController < ActionController::Base
   include Pagy::Backend
 
   before_action :configure_permitted_parameters, if: :devise_controller?
+  before_action :logout_if_inactive
 
   def after_sign_in_path_for(resource)
     return super unless resource.is_a?(User)
@@ -17,6 +18,14 @@ class ApplicationController < ActionController::Base
   end
 
   protected
+
+  def logout_if_inactive
+    return unless user_signed_in?
+    return if current_user.active?
+
+    sign_out current_user
+    redirect_to new_user_session_path, alert: "Your account has been deactivated."
+  end
 
   def configure_permitted_parameters
     # For sign up

@@ -1,22 +1,28 @@
 <%= turbo_frame_tag "service_select" do %>
-  <% today        = Date.current %>
-  <% future_limit = today + 1.month %>
-  <% past_limit   = today - 1.month %>
+  <label class="form-label">Service</label>
 
-  <div class="flex-fill">
-    <label for="session_fliip_service_id" class="form-label">Service</label>
-    <select name="session[fliip_service_id]" id="session_fliip_service_id" class="form-select" required>
+  <% if @services.present? %>
+    <select name="session[fliip_service_id]"
+            id="session_fliip_service_id"
+            class="form-select"
+            required
+            data-session-form-target="service"
+            data-action="change->session-form#recheck">
       <option value="">Select a service</option>
 
+      <% today        = Date.current
+         future_limit = today + 1.month
+         past_limit   = today - 1.month %>
+
       <% @services.each do |svc| %>
-        <% starts_too_late = svc.start_date.present?  && svc.start_date  > future_limit %>
-        <% ended_too_long  = svc.expire_date.present? && svc.expire_date < past_limit %>
-        <% cancelled       = (svc.purchase_status == "C") %>
-        <% used_up         = !svc.can_book_session? %> <%# both remaining are <= 0 %>
+        <% starts_too_late = svc.start_date.present?  && svc.start_date  > future_limit
+           ended_too_long  = svc.expire_date.present? && svc.expire_date < past_limit
+           cancelled       = (svc.purchase_status == "C")
+           used_up         = !svc.can_book_session?
 
-        <% disabled = (starts_too_late || ended_too_long || cancelled || used_up) %>
+           disabled = (starts_too_late || ended_too_long || cancelled || used_up)
 
-        <% reason =
+           reason =
              if cancelled
                "Cancelled"
              elsif starts_too_late
@@ -25,18 +31,26 @@
                "Ended more than a month ago"
              elsif used_up
                "All sessions used"
-             end %>
+             end
 
-        <% label = svc.service_name.presence || "Service ##{svc.id}" %>
-        <% label += " (ends #{svc.expire_date.strftime('%d/%m/%Y')})" if svc.expire_date.present? %>
+           label = svc.service_name.presence || "Service ##{svc.id}"
+           label += " (ends #{svc.expire_date.strftime('%d/%m/%Y')})" if svc.expire_date.present?
+        %>
 
         <option
           value="<%= svc.id %>"
+          <%= "selected" if @selected_id.present? && svc.id == @selected_id.to_i %>
           <%= "disabled" if disabled %>
-          <%= %(title="#{reason}") if disabled %>>
+          <%= %(title="#{reason}") if disabled %>
+          data-has-def="<%= svc.service_definition.present? %>"
+          data-free-remaining="<%= svc.remaining_free_sessions.to_f %>">
           <%= label %>
         </option>
       <% end %>
     </select>
-  </div>
+  <% else %>
+    <select class="form-select" disabled>
+      <option>Select a client first</option>
+    </select>
+  <% end %>
 <% end %>

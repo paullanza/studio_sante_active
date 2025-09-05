@@ -36,6 +36,16 @@ class User < ApplicationRecord
   # Possible roles: employee (0), manager (1), admin (2), super_admin (3)
   enum role: [:employee, :manager, :admin, :super_admin]
 
+  # Only allow login when active == true
+  def active_for_authentication?
+    super && active?
+  end
+
+  # Customize the flash shown by Devise on failed login
+  def inactive_message
+    active? ? super : :inactive # uses devise.failure.inactive
+  end
+
   # -----------------------------------------
   # Scopes
   # -----------------------------------------
