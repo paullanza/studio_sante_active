@@ -19,20 +19,37 @@ class SessionsController < ApplicationController
     @session = Session.new(session_params)
     @session.user       = chosen_creator_for_create
     @session.created_by = current_user
-
-    # Always assign from parsed date/time
     @session.occurred_at = parsed_occurred_at_from_params
-
-    @session.confirmed = false
-    @session.present   = params[:session][:present] == "1"
-    @session.duration  = params[:half_hour] == "1" ? 0.5 : 1.0
+    @session.confirmed   = false
+    @session.present     = params[:session][:present] == "1"
+    @session.duration    = params[:half_hour] == "1" ? 0.5 : 1.0
 
     if @session.save
       redirect_to new_session_path, notice: "Session created successfully."
     else
+      # Rehydrate everything the :new template needs
       load_fliip_users
       @staff = User.active.order(:last_name, :first_name) if admin_like?
-      flash.now[:alert] = @session.errors.full_messages.to_sentence.presence || "There was a problem creating the session."
+      @sessions = Session
+                    .where(user_id: current_user.id)
+                    .unconfirmed
+                    .with_associations
+                    .order_by_occurred_at_desc
+                    .limit(25)
+
+      # If a client was selected, preload services so frames can render server-side
+      if @session.fliip_user_id.present?
+        @services = FliipService
+                      .where(fliip_user_id: @session.fliip_user_id)
+                      .includes(:fliip_user, :service_definition, :service_usage_adjustments)
+                      .order(:expire_date, :service_name)
+      else
+        @services = []
+      end
+
+      # Let the page render inline errors (422 is fine)
+      flash.now[:alert] = @session.errors.full_messages.to_sentence.presence ||
+                          "There was a problem creating the session."
       render :new, status: :unprocessable_entity
     end
   end
@@ -95,6 +112,24 @@ class SessionsController < ApplicationController
     end
   end
 
+  def preview_type
+    fliip_service_id = params[:fliip_service_id]
+    present          = params[:present] == "1"
+    duration         = (params[:half_hour] == "1") ? 0.5 : 1.0
+
+    svc = FliipService
+            .includes(:service_definition, :service_usage_adjustments, :sessions)
+            .find_by(id: fliip_service_id)
+
+    return render json: { error: "Service not found" }, status: :not_found unless svc
+
+    s = Session.new(fliip_service: svc, present: present, duration: duration)
+    # Important: reuse your model’s classification logic
+    s.send(:set_session_type_and_duration)
+
+    render json: { session_type: s.session_type } # "free" or "paid"
+  end
+
   def services_table
     fliip_user_id = params.require(:fliip_user_id)
     @services = FliipService
@@ -107,10 +142,11 @@ class SessionsController < ApplicationController
 
   # Turbo Frame: the <select name="session[fliip_service_id]">, server-rendered
   def service_select
-    fliip_user_id = params.require(:fliip_user_id)
+    fliip_user_id   = params.require(:fliip_user_id)
+    @selected_id    = params[:selected_id] # optional
     @services = FliipService
                   .where(fliip_user_id: fliip_user_id)
-                  .includes(:service_definition, :service_usage_adjustments)
+                  .includes(:fliip_user, :service_definition, :service_usage_adjustments)
                   .order(:service_name, :expire_date)
 
     render :service_select, layout: false

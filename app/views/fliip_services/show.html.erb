@@ -103,8 +103,9 @@
               <span>
                 <%= "#{fmt1(paid_used)}/#{total_allowed.to_f.positive? ? fmt1(total_allowed) : '—'} sessions" %>
                 <span class="text-muted">
-                  (base: <%= paid_base.nil? ? "—" : paid_base %>
-                  <% if bonus_total.to_f.nonzero? %>, bonus: <%= fmt1(bonus_total) %><% end %>)
+                  (base: <%= paid_base.nil? ? "—" : paid_base %><% if bonus_total.to_f.nonzero? %>
+                    , bonus: <%= fmt1(bonus_total) %>
+                  <% end %>)
                 </span>
               </span>
               <span>

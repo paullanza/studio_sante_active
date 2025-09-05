@@ -128,6 +128,8 @@ Rails.application.routes.draw do
     end
   end
 
+  get "sessions/preview_type", to: "sessions#preview_type"
+
   # Async helpers for booking/import flows:
   # - refresh_clients: refresh client list for the booking form
   # - import_clients: one‑off import invoked from admin
