@@ -5,8 +5,11 @@ class AdminController < ApplicationController
 
   def dashboard
     # Staff list (order by role then name)
-    @users = User.order(role: :desc, last_name: :asc, first_name: :asc)
-
+    if current_user.super_admin?
+      @users = User.order(role: :desc, last_name: :asc, first_name: :asc)
+    else
+      @users = User.where.not(role: :super_admin).order(role: :desc, last_name: :asc, first_name: :asc)
+    end
     # Per-user unconfirmed session counts (include nil as unconfirmed)
     @unconfirmed_counts = Session
       .where(confirmed: [false, nil])
