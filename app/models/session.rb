@@ -58,8 +58,6 @@ class Session < ApplicationRecord
   # Custom validations (only on create):
   # - Checks that the service is active for the date of the session
   validate :service_is_active, on: :create
-  # - Checks that the booking is within ± 1 month of today
-  validate :within_booking_window, on: :create
   # - Checks that booking the session does not exceed paid/free quotas
   validate :respect_quota_limits, on: :create
 
@@ -344,39 +342,26 @@ class Session < ApplicationRecord
     end
   end
 
-  # Checks that the service is active on the chosen session date.
+  # Checks that the session date is within the service window,
+  # allowing a 30-day grace period before start and after expiry.
   def service_is_active
     return if fliip_service.blank? || occurred_at.blank?
 
     session_date = occurred_at.to_date
 
-    # allow booking up to 30 days after expiry
+    # Too far after expiry (beyond +30 days)
     if fliip_service.expire_date.present? &&
       session_date > (fliip_service.expire_date + 30.days)
       errors.add(:base, "The service has ended (past 30-day grace).")
     end
 
-    # still block sessions before the start date (no pre-start grace)
+    # Too far before start (earlier than -30 days)
     if fliip_service.start_date.present? &&
-      session_date < (fliip_service.start_date + 30.days)
+      session_date < (fliip_service.start_date - 30.days)
       errors.add(:base, "The start date for this service is more than 30 days away.")
     end
   end
 
-  # Prevent booking outside the allowed ± 1 month window relative to today.
-  def within_booking_window
-    return if fliip_service.blank?
-    today        = Date.current
-    future_limit = today.next_month
-    past_limit   = today.last_month
-
-    starts_too_late = fliip_service.start_date.present?  && fliip_service.start_date  > future_limit
-    ended_too_long  = fliip_service.expire_date.present? && fliip_service.expire_date < past_limit
-
-    if starts_too_late || ended_too_long
-      errors.add(:base, "This service can’t be booked (outside allowed dates).")
-    end
-  end
 
   # Ensures the chosen service belongs to the selected client.
   def service_matches_client
