@@ -6,7 +6,7 @@ class ManagerController < ApplicationController
 
   def dashboard
 # Staff list (order by role then name)
-    @users = User.order(role: :desc, last_name: :asc, first_name: :asc)
+    @users = User.where.not(role: :super_admin).order(role: :desc, last_name: :asc, first_name: :asc)
 
     # Per-user unconfirmed session counts (include nil as unconfirmed)
     @unconfirmed_counts = Session

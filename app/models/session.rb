@@ -186,7 +186,7 @@ class Session < ApplicationRecord
   def duration_display
     case duration
     when 1.0 then "1 heure"
-    when 0.5 then "Démi-heure"
+    when 0.5 then "Demi-heure"
     else          "#{duration.to_f} h"
     end
   end
@@ -350,12 +350,16 @@ class Session < ApplicationRecord
 
     session_date = occurred_at.to_date
 
-    if fliip_service.expire_date.present? && session_date > fliip_service.expire_date
-      errors.add(:base, "The service has ended.")
+    # allow booking up to 30 days after expiry
+    if fliip_service.expire_date.present? &&
+      session_date > (fliip_service.expire_date + 30.days)
+      errors.add(:base, "The service has ended (past 30-day grace).")
     end
 
-    if fliip_service.start_date.present? && session_date < fliip_service.start_date
-      errors.add(:base, "The service has not started.")
+    # still block sessions before the start date (no pre-start grace)
+    if fliip_service.start_date.present? &&
+      session_date < (fliip_service.start_date + 30.days)
+      errors.add(:base, "The start date for this service is more than 30 days away.")
     end
   end
 
@@ -380,21 +384,5 @@ class Session < ApplicationRecord
     if fliip_service.fliip_user_id != fliip_user_id
       errors.add(:fliip_service_id, "does not belong to the selected client")
     end
-  end
-
-  # --- helpers ---
-
-  # Sum of “used” adjustments before this session (tie-break by id on equal created_at)
-  # Uses paid_used_delta/free_used_delta depending on this session_type.
-  def adjustments_used_before_self
-    return 0.0 unless fliip_service_id
-
-    col = paid? ? :paid_used_delta : :free_used_delta
-
-    ServiceUsageAdjustment
-      .where(fliip_service_id: fliip_service_id)
-      .where("created_at < :ts OR (created_at = :ts AND id < :id)", ts: created_at, id: id)
-      .sum(col)
-      .to_f
   end
 end
