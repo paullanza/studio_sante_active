@@ -15,22 +15,35 @@
   <body>
     <%= render 'layouts/navbar' %>
 
-    <div class="container mt-3">
-      <% flash.each do |type, message| %>
-        <% bs_class =
-             case type.to_sym
-             when :notice then "alert-success"
-             when :alert  then "alert-danger"
-             when :error  then "alert-danger"
-             when :warning then "alert-warning"
-             else "alert-info"
-             end %>
-        <div class="alert <%= bs_class %> alert-dismissible fade show" role="alert">
-          <%= message %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-      <% end %>
-    </div>
+    <% if flash.any? %>
+      <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+        <% flash.each do |type, message| %>
+          <% bg =
+               case type.to_sym
+               when :notice then "text-bg-success"
+               when :alert, :error then "text-bg-danger"
+               when :warning then "text-bg-warning"
+               else "text-bg-info"
+               end %>
+          <div
+            class="toast <%= bg %> border-0 mb-2 shadow"
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+            data-controller="toast"
+            data-toast-autohide-value="true"
+            data-toast-delay-value="5000"
+          >
+            <div class="d-flex">
+              <div class="toast-body">
+                <%= message %>
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
 
     <%= yield %>
 
