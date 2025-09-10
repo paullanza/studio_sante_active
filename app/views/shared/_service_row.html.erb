@@ -13,7 +13,7 @@
                   class: "text-decoration-none",
                   data: { turbo_frame: "_top" } %>
       <div class="text-muted small">
-        UserID: <%= svc.fliip_user.id %> • RemoteID: <%= svc.fliip_user.remote_id %>
+        FliipUserID: <%= svc.fliip_user.id %> • RemoteID: <%= svc.fliip_user.remote_id %>
       </div>
     <% else %>
       <span class="text-muted">—</span>
@@ -30,7 +30,7 @@
                   data: { turbo_frame: "_top" } %>
     </div>
     <div class="text-muted small">
-      Svc#: <%= svc.id %> • Purch#: <%= svc.remote_purchase_id || "—" %> Duration: <%= svc.duration.presence || "—" %>
+      Serv#: <%= svc.id %> • Achat#: <%= svc.remote_purchase_id || "—" %> • Durée : <%= svc.duration.presence || "—" %>
     </div>
   </td>
 
@@ -38,16 +38,13 @@
   <td class="text-nowrap align-middle" style="width:1%;">
     <div><%= svc.start_date&.strftime("%d/%m/%Y") || "—" %></div>
     <% if svc.purchase_date.present? %>
-      <div class="text-muted small">Purchased: <%= svc.purchase_date.strftime("%d/%m/%Y") %></div>
+      <div class="text-muted small">Acheté le : <%= svc.purchase_date.strftime("%d/%m/%Y") %></div>
     <% end %>
   </td>
 
-  <%# 4) Expire (with Stopped underneath if present) %>
+  <%# 4) Expire %>
   <td class="text-nowrap align-middle" style="width:1%;">
     <div><%= svc.expire_date&.strftime("%d/%m/%Y") || "—" %></div>
-    <% if svc.stop_date.present? %>
-      <div class="text-muted small">Stopped: <%= svc.stop_date.strftime("%d/%m/%Y") %></div>
-    <% end %>
   </td>
 
   <%# 5) Progress (stacked bars) %>

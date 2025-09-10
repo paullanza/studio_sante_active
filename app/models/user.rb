@@ -36,6 +36,18 @@ class User < ApplicationRecord
   # Possible roles: employee (0), manager (1), admin (2), super_admin (3)
   enum role: [:employee, :manager, :admin, :super_admin]
 
+  ROLE_LABELS_FR = {
+    "employee"    => "Employé·e",
+    "manager"     => "Gestionnaire",
+    "admin"       => "Admin",
+    "super_admin" => "Admin"
+  }.freeze
+
+  # Human-readable role in FR-CA for display
+  def translated_role
+    ROLE_LABELS_FR[role.to_s] || role.to_s.humanize
+  end
+
   # Only allow login when active == true
   def active_for_authentication?
     super && active?
@@ -57,7 +69,8 @@ class User < ApplicationRecord
   # Validations
   # -----------------------------------------
   # Require these fields for all users
-  validates :first_name, :last_name, :phone, :address, :birthday, presence: true
+  validates :first_name, :last_name, :phone, :address, :birthday,
+            presence: { message: "ne peut pas être vide" }
 
   # Ensure the provided signup code is valid when creating a user
   validate  :validate_signup_code, on: :create
@@ -85,7 +98,7 @@ class User < ApplicationRecord
   # Activates the user if the actor has permission
   def activate_by!(actor)
     unless active_status_change_allowed?(actor)
-      errors.add(:base, 'You do not have permission to activate this user')
+      errors.add(:base, "Vous n’avez pas l’autorisation d’activer cet·te utilisateur·trice")
       return false
     end
 
@@ -95,7 +108,7 @@ class User < ApplicationRecord
   # Deactivates the user if the actor has permission
   def deactivate_by!(actor)
     unless active_status_change_allowed?(actor)
-      errors.add(:base, 'You do not have permission to deactivate this user')
+      errors.add(:base, "Vous n’avez pas l’autorisation de désactiver cet·te utilisateur·trice")
       return false
     end
 
@@ -122,19 +135,19 @@ class User < ApplicationRecord
   # This runs only during user creation
   def validate_signup_code
     if signup_code_token.blank?
-      errors.add(:signup_code_token, "cannot be blank")
+      errors.add(:signup_code_token, "ne peut pas être vide")
       return
     end
 
     code = SignupCode.find_by(code: signup_code_token)
     if code.nil?
-      errors.add(:signup_code_token, "is invalid")
+      errors.add(:signup_code_token, "est invalide")
     elsif code.deactivated?
-      errors.add(:signup_code_token, "has been deactivated")
+      errors.add(:signup_code_token, "a été désactivé")
     elsif code.used?
-      errors.add(:signup_code_token, "has already been used")
+      errors.add(:signup_code_token, "a déjà été utilisé")
     elsif code.expired? || code.respond_to?(:expired_by_time?) && code.expired_by_time?
-      errors.add(:signup_code_token, "has expired")
+      errors.add(:signup_code_token, "a expiré")
     end
   end
 

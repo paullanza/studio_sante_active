@@ -13,7 +13,7 @@
     <h1 class="mb-0">
       <%= full_name.presence || "—" %>
       <small class="text-muted d-block d-md-inline mt-1 mt-md-0">
-        ID: <%= @fliip_user.id %> &middot; Remote: <%= @fliip_user.remote_id || "—" %>
+        ID: <%= @fliip_user.id %> &middot; RemoteID: <%= @fliip_user.remote_id || "—" %>
       </small>
     </h1>
   </div>
@@ -34,47 +34,47 @@
 
           <div class="fw-semibold"><%= full_name.presence || "—" %></div>
           <div class="small text-muted">ID: <%= @fliip_user.id %></div>
-          <div class="small text-muted">Remote: <%= @fliip_user.remote_id || "—" %></div>
+          <div class="small text-muted">RemoteID: <%= @fliip_user.remote_id || "—" %></div>
         </div>
 
         <!-- Right: info grid + actions toolbar -->
         <div class="col-md-9">
           <!-- Actions (sit within the data block, top-right on md+) -->
           <div class="d-flex justify-content-start justify-content-md-end mb-2 gap-2">
-            <%= button_to "⟳ Refresh from API",
+            <%= button_to "⟳ Rafraîchir depuis l’API",
                           refresh_fliip_user_path(@fliip_user.remote_id),
                           method: :post,
                           form_class: "d-inline",
                           class: "btn btn-sm btn-outline-secondary",
                           data: { turbo: false } %>
-            <%= link_to "← Back to list", fliip_users_path, class: "btn btn-sm btn-secondary" %>
+            <%= link_to "← Retour à la liste", fliip_users_path, class: "btn btn-sm btn-secondary" %>
           </div>
 
           <div class="row g-2">
             <div class="col-sm-4">
-              <div class="text-muted small">Gender</div>
+              <div class="text-muted small">Genre</div>
               <div><%= gender || "–" %></div>
             </div>
             <div class="col-sm-4">
-              <div class="text-muted small">Status</div>
+              <div class="text-muted small">Statut</div>
               <div>
                 <span class="badge bg-light text-dark"><%= status || "–" %></span>
               </div>
             </div>
             <div class="col-sm-4">
-              <div class="text-muted small">Member since</div>
+              <div class="text-muted small">Membre depuis</div>
               <div><%= member_since || "–" %></div>
             </div>
             <div class="col-sm-6">
-              <div class="text-muted small">Email</div>
+              <div class="text-muted small">Courriel</div>
               <div><%= email ? mail_to(email) : "–" %></div>
             </div>
             <div class="col-sm-6">
-              <div class="text-muted small">Phone</div>
+              <div class="text-muted small">Téléphone</div>
               <div><%= primary_phone ? link_to(primary_phone, "tel:#{primary_phone}") : "–" %></div>
             </div>
             <div class="col-12">
-              <div class="text-muted small">Address</div>
+              <div class="text-muted small">Adresse</div>
               <div><%= full_address.presence || "–" %></div>
             </div>
           </div>
@@ -87,29 +87,29 @@
   <% fmt_date = ->(d) { d.present? ? d.strftime("%d/%m/%Y") : "—" } %>
   <% status_badge = ->(code) do
       case code.to_s.strip.upcase
-      when "A" then ["Active",   "bg-success"]            # green
-      when "I" then ["Inactive", "bg-secondary"]          # grey
-      when "C" then ["Cancelled","bg-danger"]             # red
-      when "S" then ["Stopped",  "bg-warning text-dark"]  # yellow
-      when "P" then ["Planned",  "bg-info text-dark"]     # blue
-      else            ["—",      "bg-secondary"]
+      when "A" then ["Actif",   "bg-success"]            # green
+      when "I" then ["Inactif", "bg-secondary"]          # grey
+      when "C" then ["Annulé",     "bg-danger"]             # red
+      when "S" then ["Suspendu",   "bg-warning text-dark"]  # yellow
+      when "P" then ["Plannifé",      "bg-info text-dark"]     # blue
+      else            ["—",        "bg-secondary"]
       end
     end %>
 
   <div class="mb-4">
-    <h2 class="h5 mb-3">Contracts</h2>
+    <h2 class="h5 mb-3">Abonnements</h2>
 
     <% if @fliip_user.fliip_contracts.any? %>
       <div class="table-responsive">
         <table class="table table-hover align-middle">
           <thead class="table-light">
             <tr>
-              <th class="text-nowrap">Contract #</th>
-              <th class="text-nowrap">Status</th>
-              <th class="text-nowrap">Start</th>
-              <th class="text-nowrap">End</th>
-              <th class="text-nowrap">Membership</th>
-              <th class="text-nowrap">Duration</th>
+              <th class="text-nowrap">Abonnement #</th>
+              <th class="text-nowrap">Statut</th>
+              <th class="text-nowrap">Début</th>
+              <th class="text-nowrap">Fin</th>
+              <th class="text-nowrap">Abonnement</th>
+              <th class="text-nowrap">Durée</th>
             </tr>
           </thead>
 
@@ -127,7 +127,7 @@
                 <td class="text-nowrap">
                   <div><%= fmt_date.call(c.start_date) %></div>
                   <% if c.stop_date.present? %>
-                    <div class="text-muted small">Stopped: <%= fmt_date.call(c.stop_date) %></div>
+                    <div class="text-muted small">Suspendu le : <%= fmt_date.call(c.stop_date) %></div>
                   <% end %>
                 </td>
 
@@ -135,7 +135,7 @@
                 <td class="text-nowrap">
                   <div><%= fmt_date.call(c.end_date) %></div>
                   <% if c.cancel_date.present? %>
-                    <div class="text-muted small">Cancelled: <%= fmt_date.call(c.cancel_date) %></div>
+                    <div class="text-muted small">Annulé le : <%= fmt_date.call(c.cancel_date) %></div>
                   <% end %>
                 </td>
 
@@ -147,7 +147,7 @@
         </table>
       </div>
     <% else %>
-      <p class="text-muted">No contracts found for this user.</p>
+      <p class="text-muted">Aucun abonnement trouvé pour cet·te utilisateur·trice.</p>
     <% end %>
   </div>
 
@@ -159,7 +159,7 @@
         <%= render "shared/services_table", services: @fliip_user.fliip_services.order(expire_date: :desc) %>
       </div>
     <% else %>
-      <p class="text-muted">No services found for this user.</p>
+      <p class="text-muted">Aucun service trouvé pour cet·te utilisateur·trice.</p>
     <% end %>
   </div>
 </div>

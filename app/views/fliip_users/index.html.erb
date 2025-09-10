@@ -1,11 +1,11 @@
 <div class="container mt-4">
-  <h1>Fliip Users</h1>
+  <h1>Client·e·s Fliip</h1>
 
   <!-- Inline toolbar -->
   <div class="d-flex align-items-center justify-content-between gap-2 mb-2 flex-wrap">
     <!-- Left: page info -->
     <div class="text-muted small flex-shrink-0">
-      Page <%= @pagy.page %> of <%= @pagy.pages %> — <%= @pagy.count %> clients
+      Page <%= @pagy.page %> sur <%= @pagy.pages %> — <%= @pagy.count %> client·e·s
     </div>
 
     <!-- Center: search (stays centered between left/right) -->
@@ -13,11 +13,11 @@
       <%= form_with url: fliip_users_path, method: :get, class: "d-flex gap-2 w-100", local: true do %>
         <div class="flex-grow-1" style="max-width: 520px;">
           <%= text_field_tag :query, params[:query], class: "form-control",
-                             placeholder: "Search by name, email, or ID…" %>
+                             placeholder: "Rechercher par nom, courriel ou ID…" %>
         </div>
-        <%= submit_tag "Search", name: "", class: "btn btn-primary" %>
+        <%= submit_tag "Rechercher", name: "", class: "btn btn-primary" %>
         <% if params[:query].present? %>
-          <%= link_to "Clear", fliip_users_path, class: "btn btn-outline-secondary" %>
+          <%= link_to "Réinitialiser", fliip_users_path, class: "btn btn-outline-secondary" %>
         <% end %>
       <% end %>
     </div>

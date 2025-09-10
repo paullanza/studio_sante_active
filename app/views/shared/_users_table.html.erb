@@ -3,10 +3,10 @@
 <table class="table table-hover align-middle">
   <thead class="table-light">
     <tr>
-      <th>Name</th>
-      <th>Role</th>
-      <th>Status</th>
-      <th class="text-center">Unconf.</th>
+      <th>Nom</th>
+      <th>Rôle</th>
+      <th>Statut</th>
+      <th class="text-center">Non conf.</th>
       <th class="text-center">Services</th>
       <% if show_actions %><th class="text-end">Actions</th><% end %>
     </tr>
@@ -24,12 +24,12 @@
                when user.manager?     then "bg-info text-dark"
                else                        "bg-secondary"
                end %>
-          <span class="badge <%= role_badge_class %>"><%= user.role.titleize %></span>
+          <span class="badge <%= role_badge_class %>"><%= user.translated_role %></span>
         </td>
 
         <td>
           <span class="badge <%= user.active? ? 'bg-success' : 'bg-secondary' %>">
-            <%= user.active? ? 'Active' : 'Inactive' %>
+            <%= user.active? ? 'Actif·ve' : 'Inactif·ve' %>
           </span>
         </td>
 
@@ -47,19 +47,19 @@
         <% if show_actions %>
           <td class="text-end">
             <% if user.super_admin? %>
-              <em>Super Admin</em>
+              <em>Super admin</em>
 
             <% elsif current_user.super_admin? %>
               <div class="d-flex justify-content-end gap-2">
                 <% if user.admin? %>
-                  <%= button_to "Make Manager", make_manager_user_path(user), method: :patch, class: "btn btn-sm btn-outline-primary" %>
+                  <%= button_to "Nommer gestionnaire", make_manager_user_path(user), method: :patch, class: "btn btn-sm btn-outline-primary" %>
                 <% elsif user.manager? %>
-                  <%= button_to "Make Employee", make_employee_user_path(user), method: :patch, class: "btn btn-sm btn-outline-secondary" %>
-                  <%= button_to "Make Admin",    make_admin_user_path(user),    method: :patch, class: "btn btn-sm btn-outline-dark" %>
+                  <%= button_to "Nommer employé·e", make_employee_user_path(user), method: :patch, class: "btn btn-sm btn-outline-secondary" %>
+                  <%= button_to "Nommer admin",    make_admin_user_path(user),    method: :patch, class: "btn btn-sm btn-outline-dark" %>
                 <% else %>
-                  <%= button_to "Make Manager",  make_manager_user_path(user),  method: :patch, class: "btn btn-sm btn-outline-primary" %>
+                  <%= button_to "Nommer gestionnaire",  make_manager_user_path(user),  method: :patch, class: "btn btn-sm btn-outline-primary" %>
                 <% end %>
-                <%= button_to(user.active? ? 'Deactivate' : 'Reactivate',
+                <%= button_to(user.active? ? 'Désactiver' : 'Réactiver',
                               user.active? ? deactivate_user_path(user) : activate_user_path(user),
                               method: :patch,
                               class: "btn btn-sm #{user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
@@ -70,16 +70,16 @@
                 <em>Admin</em>
               <% elsif user.manager? %>
                 <div class="d-flex justify-content-end gap-2">
-                  <%= button_to "Make Employee", make_employee_user_path(user), method: :patch, class: "btn btn-sm btn-outline-secondary" %>
-                  <%= button_to(user.active? ? 'Deactivate' : 'Reactivate',
+                  <%= button_to "Nommer employé·e", make_employee_user_path(user), method: :patch, class: "btn btn-sm btn-outline-secondary" %>
+                  <%= button_to(user.active? ? 'Désactiver' : 'Réactiver',
                                 user.active? ? deactivate_user_path(user) : activate_user_path(user),
                                 method: :patch,
                                 class: "btn btn-sm #{user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
                 </div>
               <% else %>
                 <div class="d-flex justify-content-end gap-2">
-                  <%= button_to "Make Manager",  make_manager_user_path(user),  method: :patch, class: "btn btn-sm btn-outline-primary" %>
-                  <%= button_to(user.active? ? 'Deactivate' : 'Reactivate',
+                  <%= button_to "Nommer gestionnaire",  make_manager_user_path(user),  method: :patch, class: "btn btn-sm btn-outline-primary" %>
+                  <%= button_to(user.active? ? 'Désactiver' : 'Réactiver',
                                 user.active? ? deactivate_user_path(user) : activate_user_path(user),
                                 method: :patch,
                                 class: "btn btn-sm #{user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>

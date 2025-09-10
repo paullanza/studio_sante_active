@@ -49,11 +49,11 @@ class FliipService < ApplicationRecord
   # Status mapping (code → readable label)
   # -----------------------------------------
   STATUS_MAP = {
-    "A" => "Active",
-    "I" => "Inactive",
-    "P" => "Planned",
-    "C" => "Cancelled",
-    "S" => "Stopped"
+    "A" => "Actif",
+    "I" => "Inactif",
+    "P" => "Plannifé",
+    "C" => "Annulé",
+    "S" => "Suspendu"
   }
 
   # Returns the readable status name for this service.
