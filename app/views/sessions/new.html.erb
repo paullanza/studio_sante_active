@@ -1,182 +1,219 @@
-<div class="container mt-4" data-controller="client-search">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="mb-0">Nouvelle séance</h1>
-    <%= button_to "Rafraîchir la liste des client·e·s",
-                  refresh_clients_path,
-                  method: :post,
-                  class: "btn btn-outline-secondary btn-sm",
-                  form: { data: { turbo_confirm: "Ceci va rafraîchir la liste des clients depuis Fliip. Continuer?" } } %>
+<div class="container my-4 session-new" data-controller="client-search">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0 fw-bold">Nouvelle séance</h1>
+    <!-- Refresh link is placed next to Client label below -->
   </div>
 
-  <%= simple_form_for @session,
-      html: {
-        class: "mb-4",
-        data: {
-          controller: "session-form",
-          action:     "turbo:frame-load@document->session-form#recheck"
-        }
-      } do |f| %>
-    <%= f.error_notification %>
+  <div class="row g-4">
+    <!-- LEFT: FORM (25%) -->
+    <div class="col-12 col-lg-3">
+      <div class="card shadow-sm stretch-card form-card">
+        <div class="card-body p-3">
+          <%= simple_form_for @session,
+              html: {
+                class: "session-form",
+                data: {
+                  controller: "session-form",
+                  action:     "turbo:frame-load@document->session-form#recheck"
+                }
+              } do |f| %>
 
+            <%= f.error_notification %>
 
-    <!-- Row 1: Client / Service / Created by (always 3 columns on md+) -->
-    <div class="row g-3 align-items-end mb-3">
-      <!-- Client -->
-      <div class="col-md-4 position-relative">
-        <label class="form-label" for="client_search_input">Client·e</label>
-        <input
-          id="client_search_input"
-          type="text"
-          class="form-control"
-          placeholder="Rechercher un·e client·e par nom ou courriel…"
-          value="<%= @session.fliip_user&.full_name %>"
-          data-client-search-target="input"
-          data-action="
-            input->client-search#onInput
-            focus->client-search#onFocus
-            blur->client-search#onBlur
-            keydown.enter->client-search#preventSubmit
-          ">
+            <!-- Row 1: Client / Service / Created by -->
+            <div class="row g-3 align-items-end mb-2">
+              <!-- Client -->
+              <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                  <label class="form-label mb-0" for="client_search_input">Client·e</label>
+                  <%= link_to "Rafraîchir",
+                        refresh_clients_path,
+                        class: "small link-secondary text-decoration-underline",
+                        data: { turbo_method: :post,
+                                turbo_confirm: "Ceci va rafraîchir la liste des clients depuis Fliip. Continuer?" } %>
+                </div>
 
-        <%= hidden_field_tag "session[fliip_user_id]", nil,
-                data: { client_search_target: "hiddenId", session_form_target: "userId" } %>
+                <input
+                  id="client_search_input"
+                  type="text"
+                  class="form-control"
+                  placeholder="Rechercher un·e client·e par nom ou courriel…"
+                  value="<%= @session.fliip_user&.full_name %>"
+                  data-client-search-target="input"
+                  data-action="
+                    input->client-search#onInput
+                    focus->client-search#onFocus
+                    blur->client-search#onBlur
+                    keydown.enter->client-search#preventSubmit
+                  ">
+                <%= hidden_field_tag "session[fliip_user_id]", nil,
+                        data: { client_search_target: "hiddenId", session_form_target: "userId" } %>
+                <div class="position-relative">
+                  <div class="position-absolute start-0 end-0 mt-1" style="z-index:20;">
+                    <%= turbo_frame_tag "client_suggestions" %>
+                  </div>
+                </div>
+              </div>
 
-        <div class="position-absolute start-0 end-0 mt-1" style="z-index:20;">
-          <%= turbo_frame_tag "client_suggestions" %>
-        </div>
-      </div>
+              <!-- Service -->
+              <div class="col-12">
+                <% if @session.fliip_user_id.present? %>
+                  <%= turbo_frame_tag "service_select",
+                        src: service_select_sessions_path(
+                          fliip_user_id: @session.fliip_user_id,
+                          selected_id:   @session.fliip_service_id
+                        ) %>
+                <% else %>
+                  <%= turbo_frame_tag "service_select" do %>
+                    <label class="form-label">Service</label>
+                    <select class="form-select" disabled>
+                      <option>Sélectionne un·e client·e d’abord</option>
+                    </select>
+                  <% end %>
+                <% end %>
+              </div>
 
-      <!-- Service (Frame lives INSIDE the column) -->
-      <div class="col-md-4">
-        <% if @session.fliip_user_id.present? %>
-          <%= turbo_frame_tag "service_select",
-                src: service_select_sessions_path(
-                  fliip_user_id: @session.fliip_user_id,
-                  selected_id:   @session.fliip_service_id
-                ) %>
-        <% else %>
-          <%= turbo_frame_tag "service_select" do %>
-            <label class="form-label">Service</label>
-            <select class="form-select" disabled>
-              <option>Sélectionne un·e client·e d’abord</option>
-            </select>
+              <!-- Created by (admins only) -->
+              <% if current_user.admin? || current_user.super_admin? %>
+                <div class="col-12">
+                  <label for="session_user_id" class="form-label">Créé par</label>
+                  <select name="session[user_id]" id="session_user_id" class="form-select">
+                    <option value="">Moi (<%= current_user.full_name %>)</option>
+                    <% @staff.each do |u| %>
+                      <option value="<%= u.id %>"><%= u.full_name %></option>
+                    <% end %>
+                  </select>
+                </div>
+              <% end %>
+            </div>
+
+            <hr class="my-3">
+
+            <!-- Row 2: Date / Time -->
+            <div class="row g-3 align-items-end mb-2" data-controller="flatpickr">
+              <div class="col-md-6">
+                <%= f.input :date, label: "Date", as: :string,
+                      input_html: {
+                        type: "text",
+                        value: (@session.occurred_at&.to_date || Date.today),
+                        class: "form-control",
+                        data: { flatpickr_target: "date" }
+                      } %>
+              </div>
+
+              <div class="col-md-6">
+                <%= f.input :time, label: "Heure", as: :string,
+                      input_html: {
+                        type: "text",
+                        step: 900,
+                        inputmode: "numeric",
+                        value: (@session.occurred_at&.strftime("%H:%M") || default_time_slot_str),
+                        class: "form-control",
+                        data: { flatpickr_target: "time" }
+                      } %>
+              </div>
+            </div>
+
+            <!-- Note UNDER date/time (rows: 1) -->
+            <div class="mb-3">
+              <%= f.input :note, as: :text, label: "Note",
+                    input_html: { rows: 1, class: "form-control" } %>
+            </div>
+
+            <!-- Row 3: Checkboxes ABOVE the button -->
+            <div class="row g-3 align-items-center">
+              <div class="col-12 col-sm-auto">
+                <div class="form-check">
+                  <%= f.check_box :present,
+                        class: "form-check-input",
+                        id: "session_present",
+                        data: { session_form_target: "present", action: "change->session-form#recheck" } %>
+                  <%= f.label :present, "Présent·e", class: "form-check-label", for: "session_present" %>
+                </div>
+              </div>
+
+              <div class="col-12 col-sm-auto">
+                <div class="form-check">
+                  <%= check_box_tag :half_hour, "1", (@session.duration.to_f == 0.5),
+                        class: "form-check-input",
+                        id: "half_hour",
+                        data: { session_form_target: "halfHour", action: "change->session-form#recheck" } %>
+                  <%= label_tag :half_hour, "Demi-heure (30 min)", class: "form-check-label" %>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <button type="submit"
+                        class="btn btn-primary rounded-pill shadow-sm w-100"
+                        data-session-form-target="submit"
+                        data-action="click->session-form#maybeConfirm"
+                        disabled>
+                  Créer la séance
+                </button>
+              </div>
+            </div>
+
+            <!-- Confirmation Modal -->
+            <div class="modal fade" tabindex="-1" data-session-form-target="modal">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" data-session-form-target="modalTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                  </div>
+                  <div class="modal-body">
+                    <p data-session-form-target="modalBody"></p>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" data-session-form-target="modalConfirm">Continuer</button>
+                  </div>
+                </div>
+              </div>
+            </div>
           <% end %>
-        <% end %>
+        </div>
       </div>
+    </div>
 
-      <!-- Created by -->
-      <% if current_user.admin? || current_user.super_admin? %>
-        <div class="col-md-4">
-          <label for="session_user_id" class="form-label">Créé par</label>
-          <select name="session[user_id]" id="session_user_id" class="form-select">
-            <option value="">Moi (<%= current_user.full_name %>)</option>
-            <% @staff.each do |u| %>
-              <option value="<%= u.id %>"><%= u.full_name %></option>
+    <!-- RIGHT: TABLES (75%) -->
+    <div class="col-12 col-lg-9">
+      <div class="card shadow-sm stretch-card">
+        <div class="card-body p-3 d-flex flex-column tables-split">
+          <!-- SERVICES (inside turbo-frame; empty frame when no client) -->
+          <div class="pane pane-services">
+            <% if @session.fliip_user_id.present? && @services&.any? %>
+              <%= turbo_frame_tag "services_table" do %>
+                <div class="pane-inner">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h2 class="h6 mb-0">Services du client</h2>
+                  </div>
+                  <div class="table-scroll">
+                    <%= render "shared/services_table", services: @services %>
+                  </div>
+                </div>
+              <% end %>
+            <% else %>
+              <%= turbo_frame_tag "services_table" %>
             <% end %>
-          </select>
-        </div>
-      <% else %>
-        <div class="col-md-4"></div>
-      <% end %>
-    </div>
-
-    <!-- Row 2: Date / Time / Note -->
-    <div class="row g-3 align-items-end mb-3" data-controller="flatpickr">
-      <div class="col-md-3">
-        <%= f.input :date, label: "Date", as: :string,
-              input_html: {
-                type: "text",
-                value: (@session.occurred_at&.to_date || Date.today),
-                class: "form-control",
-                data: { flatpickr_target: "date" }
-              } %>
-      </div>
-
-      <div class="col-md-3">
-        <%= f.input :time, label: "Heure", as: :string,
-              input_html: {
-                type: "text",
-                step: 900,
-                inputmode: "numeric",
-                value: (@session.occurred_at&.strftime("%H:%M") || default_time_slot_str),
-                class: "form-control",
-                data: { flatpickr_target: "time" }
-              } %>
-      </div>
-
-      <div class="col-md-6">
-        <%= f.input :note, as: :text, label: "Note",
-              input_html: { rows: 2, class: "form-control" } %>
-      </div>
-    </div>
-
-    <!-- Row 3: Checkboxes + Submit -->
-    <div class="row g-3 align-items-center">
-      <div class="col-auto">
-        <div class="form-check">
-          <%= f.check_box :present,
-                class: "form-check-input",
-                id: "session_present",
-                data: { session_form_target: "present", action: "change->session-form#recheck" } %>
-          <%= f.label :present, "Présent·e", class: "form-check-label", for: "session_present" %>
-        </div>
-      </div>
-
-      <div class="col-auto">
-        <div class="form-check">
-          <%= check_box_tag :half_hour, "1", (@session.duration.to_f == 0.5),
-                class: "form-check-input",
-                id: "half_hour",
-                data: { session_form_target: "halfHour", action: "change->session-form#recheck" } %>
-          <%= label_tag :half_hour, "Demi-heure (30 min)", class: "form-check-label" %>
-        </div>
-      </div>
-
-      <div class="col-auto ms-auto">
-        <button type="submit"
-                class="btn btn-primary"
-                data-session-form-target="submit"
-                data-action="click->session-form#maybeConfirm"
-                disabled>
-          Créer la séance
-        </button>
-      </div>
-    </div>
-    <div class="modal fade" tabindex="-1" data-session-form-target="modal">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" data-session-form-target="modalTitle"></h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
           </div>
-          <div class="modal-body">
-            <p data-session-form-target="modalBody"></p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-            <button type="button" class="btn btn-primary" data-session-form-target="modalConfirm">Continuer</button>
+
+          <!-- SESSIONS (always present) -->
+          <div class="pane pane-sessions">
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <h2 class="h6 mb-0">Séances récentes</h2>
+            </div>
+            <p class="text-muted small mb-2">25 dernières séances créées par vous.</p>
+            <div class="table-scroll">
+              <%= render "shared/sessions_table",
+                    sessions: @sessions,
+                    show_bulk_checkbox: false,
+                    scope_name: :new_session %>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  <% end %>
-
-  <hr>
-
-  <h2 class="mb-3">Services du client</h2>
-  <%= turbo_frame_tag "services_table" do %>
-    <% if @session.fliip_user_id.present? %>
-      <%= render "shared/services_table", services: @services %>
-    <% end %>
-  <% end %>
-
-  <hr>
-
-  <h2 class="mb-0">Séances récentes</h2>
-  <p class="text-muted small mb-2">25 dernières séances créées par vous.</p>
-  <%= render "shared/sessions_table",
-        sessions: @sessions,
-        show_bulk_checkbox: false,
-        scope_name: :new_session %>
-
+  </div>
 </div>
