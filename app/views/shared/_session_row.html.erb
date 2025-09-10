@@ -32,7 +32,7 @@
       </div>
       <div class="text-muted"><small><%= s.created_at_label %></small>
             <% if s.confirmed? && s.confirmed_at.present? %>
-              <small>| Confirmé : <%= s.confirmed_at.strftime('%d/%m/%Y %H:%M') %></small>
+              <small>| Confirmé·e : <%= s.confirmed_at.strftime('%d/%m/%Y %H:%M') %></small>
             <% end %>
       </div>
     </div>
@@ -61,7 +61,7 @@
                     class: "text-decoration-none" %>
       </div>
       <div class="text-muted small text-truncate">
-        Svc#: <%= svc.id %> • Purch#: <%= svc.remote_purchase_id %> • DefID: <%= (svc.service_definition&.service_id || svc.service_id) %>
+        Serv#: <%= svc.id %> • Achat#: <%= svc.remote_purchase_id %> • DefID: <%= (svc.service_definition&.service_id || svc.service_id) %>
       </div>
     <% else %>
       <span class="text-muted">—</span>
@@ -73,7 +73,7 @@
     <% if s.user %>
       <%= link_to s.user.full_name, user_path(s.user), class: "text-decoration-none" %>
       <% if s.created_by_id.present? && s.created_by_id != s.user_id %>
-        <div class="small text-muted">créé par <%= s.created_by&.full_name || "—" %></div>
+        <div class="small text-muted">créé·e par <%= s.created_by&.full_name || "—" %></div>
       <% end %>
     <% else %>
       <span class="text-muted">—</span>
@@ -83,10 +83,10 @@
   <%# 7) Actions (right-aligned) %>
   <td class="text-end align-middle text-nowrap">
     <% if s.modifiable_by?(current_user) %>
-      <a href="<%= edit_session_path(s) %>" class="btn btn-sm btn-outline-secondary me-1" data-action="session-row#edit">Edit</a>
-      <%= link_to "Delete",
+      <a href="<%= edit_session_path(s) %>" class="btn btn-sm btn-outline-secondary me-1" data-action="session-row#edit">Modifier</a>
+      <%= link_to "Supprimer",
                   session_path(s),
-                  data: { turbo_method: :delete, turbo_confirm: "Delete this session?" },
+                  data: { turbo_method: :delete, turbo_confirm: "Supprimer cette séance?" },
                   class: "btn btn-sm btn-outline-danger" %>
     <% end %>
   </td>

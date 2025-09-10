@@ -1,9 +1,9 @@
 <div class="container mt-4">
-  <h1 class="mb-4">Dashboard</h1>
+  <h1 class="mb-4">Tableau de bord</h1>
 
   <!-- Users Section -->
   <section class="mb-5">
-    <h2>Users</h2>
+    <h2>Utilisateur·trice·s</h2>
 
     <%= render "shared/users_table",
               users: @users,
@@ -14,8 +14,8 @@
 
   <!-- Signup Codes Section -->
   <section class="mb-5">
-    <h2>Signup Codes</h2>
-    <%= button_to "Generate New Code", admin_signup_codes_path, method: :post, class: "btn btn-primary mb-3" %>
+    <h2>Codes d’accès</h2>
+    <%= button_to "Générer un nouveau code", admin_signup_codes_path, method: :post, class: "btn btn-primary mb-3" %>
 
     <%= render "shared/signup_codes_table",
               signup_codes: @signup_codes %>
@@ -23,7 +23,7 @@
 
   <!-- Services ending soon -->
   <section class="mb-5">
-    <h2>Services Ending in Next 30 Days</h2>
+    <h2>Services se terminant dans les 30 prochains jours</h2>
     <div class="table-responsive">
       <%= render "shared/services_table", services: @services_ending_soon %>
     </div>
@@ -31,7 +31,7 @@
 
   <!-- Services ended recently -->
   <section class="mb-5">
-    <h2>Services Ended in Last 30 Days</h2>
+    <h2>Services terminés dans les 30 derniers jours</h2>
     <div class="table-responsive">
       <%= render "shared/services_table", services: @services_ended_recent %>
     </div>

@@ -1,11 +1,11 @@
 <div class="container mt-4" data-controller="client-search">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="mb-0">New Session</h1>
-    <%= button_to "Refresh Clients",
+    <h1 class="mb-0">Nouvelle séance</h1>
+    <%= button_to "Rafraîchir la liste des client·e·s",
                   refresh_clients_path,
                   method: :post,
                   class: "btn btn-outline-secondary btn-sm",
-                  form: { data: { turbo_confirm: "This will refresh the client list from Fliip. Continue?" } } %>
+                  form: { data: { turbo_confirm: "Ceci va rafraîchir la liste des clients depuis Fliip. Continuer?" } } %>
   </div>
 
   <%= simple_form_for @session,
@@ -15,7 +15,7 @@
           controller: "session-form",
           action:     "turbo:frame-load@document->session-form#recheck"
         }
-      } do |f| %>`
+      } do |f| %>
     <%= f.error_notification %>
 
 
@@ -23,12 +23,12 @@
     <div class="row g-3 align-items-end mb-3">
       <!-- Client -->
       <div class="col-md-4 position-relative">
-        <label class="form-label" for="client_search_input">Client</label>
+        <label class="form-label" for="client_search_input">Client·e</label>
         <input
           id="client_search_input"
           type="text"
           class="form-control"
-          placeholder="Search client by name or email…"
+          placeholder="Rechercher un·e client·e par nom ou courriel…"
           value="<%= @session.fliip_user&.full_name %>"
           data-client-search-target="input"
           data-action="
@@ -58,7 +58,7 @@
           <%= turbo_frame_tag "service_select" do %>
             <label class="form-label">Service</label>
             <select class="form-select" disabled>
-              <option>Select a client first</option>
+              <option>Sélectionne un·e client·e d’abord</option>
             </select>
           <% end %>
         <% end %>
@@ -67,9 +67,9 @@
       <!-- Created by -->
       <% if current_user.admin? || current_user.super_admin? %>
         <div class="col-md-4">
-          <label for="session_user_id" class="form-label">Created by</label>
+          <label for="session_user_id" class="form-label">Créé par</label>
           <select name="session[user_id]" id="session_user_id" class="form-select">
-            <option value="">Me (<%= current_user.full_name %>)</option>
+            <option value="">Moi (<%= current_user.full_name %>)</option>
             <% @staff.each do |u| %>
               <option value="<%= u.id %>"><%= u.full_name %></option>
             <% end %>
@@ -118,7 +118,7 @@
                 class: "form-check-input",
                 id: "session_present",
                 data: { session_form_target: "present", action: "change->session-form#recheck" } %>
-          <%= f.label :present, "Présent", class: "form-check-label", for: "session_present" %>
+          <%= f.label :present, "Présent·e", class: "form-check-label", for: "session_present" %>
         </div>
       </div>
 
@@ -128,7 +128,7 @@
                 class: "form-check-input",
                 id: "half_hour",
                 data: { session_form_target: "halfHour", action: "change->session-form#recheck" } %>
-          <%= label_tag :half_hour, "Half Hour (30 min)", class: "form-check-label" %>
+          <%= label_tag :half_hour, "Demi-heure (30 min)", class: "form-check-label" %>
         </div>
       </div>
 
@@ -138,7 +138,7 @@
                 data-session-form-target="submit"
                 data-action="click->session-form#maybeConfirm"
                 disabled>
-          Create Session
+          Créer la séance
         </button>
       </div>
     </div>
@@ -147,14 +147,14 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" data-session-form-target="modalTitle"></h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
           </div>
           <div class="modal-body">
             <p data-session-form-target="modalBody"></p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" data-session-form-target="modalConfirm">Continue</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button type="button" class="btn btn-primary" data-session-form-target="modalConfirm">Continuer</button>
           </div>
         </div>
       </div>
@@ -163,7 +163,7 @@
 
   <hr>
 
-  <h2 class="mb-3">Client Services</h2>
+  <h2 class="mb-3">Services du client</h2>
   <%= turbo_frame_tag "services_table" do %>
     <% if @session.fliip_user_id.present? %>
       <%= render "shared/services_table", services: @services %>
@@ -172,8 +172,8 @@
 
   <hr>
 
-  <h2 class="mb-0">Recent sessions</h2>
-  <p class="text-muted small mb-2">Last 25 sessions created by you.</p>
+  <h2 class="mb-0">Séances récentes</h2>
+  <p class="text-muted small mb-2">25 dernières séances créées par vous.</p>
   <%= render "shared/sessions_table",
         sessions: @sessions,
         show_bulk_checkbox: false,

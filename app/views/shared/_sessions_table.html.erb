@@ -19,13 +19,13 @@
         <% end %>
 
         <!-- Session number first (after checkbox) -->
-        <th class="text-center text-nowrap">Session #</th>
+        <th class="text-center text-nowrap">Séance #</th>
 
         <!-- Wider date/presence column -->
         <th class="text-nowrap w-50">Date · Présence</th>
 
         <!-- Thinner client/service columns -->
-        <th class="text-nowrap w-25">Client</th>
+        <th class="text-nowrap w-25">Client·e</th>
         <th class="text-nowrap w-25">Service</th>
 
         <th class="text-nowrap text-center">Employé·e</th>
@@ -42,7 +42,7 @@
         <% end %>
       <% else %>
         <tr>
-          <td colspan="<%= local_assigns[:show_bulk_checkbox] ? 7 : 6 %>" class="text-muted">No sessions to display.</td>
+          <td colspan="<%= local_assigns[:show_bulk_checkbox] ? 7 : 6 %>" class="text-muted">Aucune séance à afficher.</td>
         </tr>
       <% end %>
 
@@ -59,14 +59,14 @@
                 <div>
                   <strong>Ajustements</strong> —
                   <span>
-                    <%= format('%.1f', free_from_adjustments) %> séance(s) gratuites
-                    et <%= format('%.1f', paid_from_adjustments) %> séance(s) payantes
-                    ont été comptabilisées via des ajustements.
+                    <%= format('%.1f', free_from_adjustments) %> séance(s) gratuite(s)
+                    et <%= format('%.1f', paid_from_adjustments) %> séance(s) payante(s)
+                    ont été comptabilisées par des ajustements.
                   </span>
                 </div>
                 <% if bonus_from_adjustments.nonzero? %>
                   <div class="text-muted small">
-                    Bonus accordés : <%= format('%.1f', bonus_from_adjustments) %>
+                    Bonus accordé(s) : <%= format('%.1f', bonus_from_adjustments) %>
                   </div>
                 <% end %>
               </div>

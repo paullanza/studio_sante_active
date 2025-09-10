@@ -4,7 +4,7 @@
       <%= @service.service_name.presence || "Service ##{@service.id}" %>
       <small class="text-muted">(#<%= @service.remote_purchase_id %>)</small>
     </h1>
-    <%= link_to "← Back to Client",
+    <%= link_to "← Retour à la fiche client·e",
                 fliip_user_path(@service.fliip_user),
                 class: "btn btn-outline-secondary" %>
   </div>
@@ -24,7 +24,7 @@
                else           "bg-secondary"
                end %>
 
-          <div class="text-muted small mb-1">Client</div>
+          <div class="text-muted small mb-1">Client·e</div>
           <div class="fw-bold">
             <%= link_to @service.fliip_user.full_name,
                         fliip_user_path(@service.fliip_user),
@@ -34,24 +34,24 @@
           <div class="text-muted small mt-2">Service</div>
           <div class="d-flex flex-column">
             <div>
-              <span class="me-2"><strong>Svc#:</strong> <%= @service.id %></span>
-              <span class="me-2"><strong>Purch#:</strong> <%= @service.remote_purchase_id || "—" %></span>
-              <span><strong>DefID:</strong> <%= @service.service_definition&.service_id || @service.service_id || "—" %></span>
+              <span class="me-2"><strong>Service # :</strong> <%= @service.id %></span>
+              <span class="me-2"><strong>Achat # :</strong> <%= @service.remote_purchase_id || "—" %></span>
+              <span><strong>ID déf. :</strong> <%= @service.service_definition&.service_id || @service.service_id || "—" %></span>
             </div>
           </div>
 
-          <div class="text-muted small mt-2">Status</div>
+          <div class="text-muted small mt-2">Statut</div>
           <div>
             <span class="badge <%= badge_class %>"><%= @service.status_name %></span>
           </div>
 
           <hr class="my-3">
 
-          <div class="small text-muted">Included sessions</div>
+          <div class="small text-muted">Séances incluses</div>
           <div>
-            Paid: <strong><%= @service.service_definition&.paid_sessions || "—" %></strong>
+            Chargées : <strong><%= @service.service_definition&.paid_sessions || "—" %></strong>
             &nbsp;•&nbsp;
-            Free: <strong><%= @service.service_definition&.free_sessions || "—" %></strong>
+            Absences : <strong><%= @service.service_definition&.free_sessions || "—" %></strong>
           </div>
         </div>
       </div>
@@ -66,19 +66,19 @@
           <% time_pct = @service.time_progress_percent || 0 %>
           <% paid_pct = @service.paid_progress_percent || 0 %>
 
-          <div class="text-muted small">Timeline</div>
+          <div class="text-muted small">Période</div>
           <div>
-            Début: <strong><%= start_d %></strong>
+            Début : <strong><%= start_d %></strong>
             &nbsp;•&nbsp;
-            Fin: <strong><%= end_d %></strong>
+            Fin : <strong><%= end_d %></strong>
           </div>
 
           <div class="small text-muted mt-1">
-            <span>Acheté: <strong><%= @service.purchase_date&.strftime("%d/%m/%Y") || "—" %></strong></span>
+            <span>Acheté : <strong><%= @service.purchase_date&.strftime("%d/%m/%Y") || "—" %></strong></span>
             &nbsp;•&nbsp;
-            <span>Arrêt: <strong><%= @service.stop_date&.strftime("%d/%m/%Y") || "—" %></strong></span>
+            <span>Arrêt : <strong><%= @service.stop_date&.strftime("%d/%m/%Y") || "—" %></strong></span>
             &nbsp;•&nbsp;
-            <span>Annulé: <strong><%= @service.cancel_date&.strftime("%d/%m/%Y") || "—" %></strong></span>
+            <span>Annulé : <strong><%= @service.cancel_date&.strftime("%d/%m/%Y") || "—" %></strong></span>
           </div>
 
           <!-- Time bar -->
@@ -101,10 +101,10 @@
 
             <div class="d-flex justify-content-between small">
               <span>
-                <%= "#{fmt1(paid_used)}/#{total_allowed.to_f.positive? ? fmt1(total_allowed) : '—'} sessions" %>
+                <%= "#{fmt1(paid_used)}/#{total_allowed.to_f.positive? ? fmt1(total_allowed) : '—'} séances" %>
                 <span class="text-muted">
-                  (base: <%= paid_base.nil? ? "—" : paid_base %><% if bonus_total.to_f.nonzero? %>
-                    , bonus: <%= fmt1(bonus_total) %>
+                  (base : <%= paid_base.nil? ? "—" : paid_base %><% if bonus_total.to_f.nonzero? %>
+                    , bonus : <%= fmt1(bonus_total) %>
                   <% end %>)
                 </span>
               </span>
@@ -129,20 +129,20 @@
   <div class="card mb-4">
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <h5 class="mb-0">Adjustments</h5>
+        <h5 class="mb-0">Ajustements</h5>
       </div>
 
       <div class="row g-3 mb-2">
         <div class="col-md-4">
-          <div class="small text-muted">Bonus sessions total</div>
+          <div class="small text-muted">Total des séances bonus</div>
           <div class="fw-semibold"><%= fmt1(@service.bonus_sessions_total) %></div>
         </div>
         <div class="col-md-4">
-          <div class="small text-muted">Paid used (adjustments only)</div>
+          <div class="small text-muted">Chargées utilisées (ajustements seulement)</div>
           <div class="fw-semibold"><%= fmt1(@service.paid_used_adjustment) %></div>
         </div>
         <div class="col-md-4">
-          <div class="small text-muted">Free used (adjustments only)</div>
+          <div class="small text-muted">Absences utilisées (ajustements seulement)</div>
           <div class="fw-semibold"><%= fmt1(@service.free_used_adjustment) %></div>
         </div>
       </div>
@@ -153,10 +153,10 @@
             <thead class="table-light">
               <tr>
                 <th style="min-width: 140px;">Date</th>
-                <th>Employee</th>
-                <th class="text-end">Paid Used Δ</th>
-                <th class="text-end">Free Used Δ</th>
-                <th class="text-end">Bonus Sessions Δ</th>
+                <th>Employé·e</th>
+                <th class="text-end">Chargées utilisées Δ</th>
+                <th class="text-end">Absences utilisées Δ</th>
+                <th class="text-end">Séances bonus Δ</th>
                 <% if current_user.admin? || current_user.super_admin? %>
                   <th class="text-end" style="width:1%;">Actions</th>
                 <% end %>
@@ -172,11 +172,11 @@
                   <td class="text-end"><%= adj.bonus_sessions.to_f.zero? ? "—" : fmt1(adj.bonus_sessions) %></td>
                   <% if current_user.admin? || current_user.super_admin? %>
                     <td class="text-end">
-                      <%= link_to "Edit", edit_fliip_service_service_usage_adjustment_path(@service, adj), class: "btn btn-sm btn-outline-primary" %>
-                      <%= button_to "Delete",
+                      <%= link_to "Modifier", edit_fliip_service_service_usage_adjustment_path(@service, adj), class: "btn btn-sm btn-outline-primary" %>
+                      <%= button_to "Supprimer",
                             fliip_service_service_usage_adjustment_path(@service, adj),
                             method: :delete,
-                            data: { turbo_confirm: "Delete this adjustment?" },
+                            data: { turbo_confirm: "Supprimer cet ajustement ?" },
                             class: "btn btn-sm btn-outline-danger" %>
                     </td>
                   <% end %>
@@ -186,12 +186,12 @@
           </table>
         </div>
       <% else %>
-        <p class="text-muted mb-0">No adjustments recorded for this service.</p>
+        <p class="text-muted mb-0">Aucun ajustement enregistré pour ce service.</p>
       <% end %>
 
       <div class="card mt-3">
         <div class="card-body">
-          <h5 class="card-title mb-2">Add Adjustment</h5>
+          <h5 class="card-title mb-2">Ajouter un ajustement</h5>
           <% @adjustment = @service.service_usage_adjustments.new(user: current_user) %>
           <%= render "service_usage_adjustments/form", cancel_path: fliip_service_path(@service) %>
         </div>

@@ -25,7 +25,7 @@ class SessionsController < ApplicationController
     @session.duration    = params[:half_hour] == "1" ? 0.5 : 1.0
 
     if @session.save
-      redirect_to new_session_path, notice: "Session created successfully."
+      redirect_to new_session_path, notice: "Séance créée avec succès."
     else
       # Rehydrate everything the :new template needs
       load_fliip_users
@@ -49,7 +49,7 @@ class SessionsController < ApplicationController
 
       # Let the page render inline errors (422 is fine)
       flash.now[:alert] = @session.errors.full_messages.to_sentence.presence ||
-                          "There was a problem creating the session."
+                          "Un problème est survenu lors de la création de la séance."
       render :new, status: :unprocessable_entity
     end
   end
@@ -101,14 +101,14 @@ class SessionsController < ApplicationController
     unless can_modify?(@session, action: :destroy)
       return respond_to do |format|
         format.json { head :forbidden }
-        format.html { redirect_back fallback_location: admin_unconfirmed_sessions_path, alert: "Not authorized." }
+        format.html { redirect_back fallback_location: admin_unconfirmed_sessions_path, alert: "Non autorisé·e." }
       end
     end
 
     @session.destroy
     respond_to do |format|
       format.json { head :no_content }
-      format.html { redirect_back fallback_location: admin_unconfirmed_sessions_path, notice: "Session deleted." }
+      format.html { redirect_back fallback_location: admin_unconfirmed_sessions_path, notice: "Séance supprimée." }
     end
   end
 
@@ -121,7 +121,7 @@ class SessionsController < ApplicationController
             .includes(:service_definition, :service_usage_adjustments, :sessions)
             .find_by(id: fliip_service_id)
 
-    return render json: { error: "Service not found" }, status: :not_found unless svc
+    return render json: { error: "Service introuvable" }, status: :not_found unless svc
 
     s = Session.new(fliip_service: svc, present: present, duration: duration)
     # Important: reuse your model’s classification logic
@@ -135,7 +135,7 @@ class SessionsController < ApplicationController
     @services = FliipService
                   .where(fliip_user_id: fliip_user_id)
                   .includes(:fliip_user, :service_definition, :service_usage_adjustments)
-                  .order(:expire_date, :service_name)
+                  .order(expire_date: :desc, service_name: :asc)
 
     render :services_table, layout: false
   end
@@ -147,7 +147,7 @@ class SessionsController < ApplicationController
     @services = FliipService
                   .where(fliip_user_id: fliip_user_id)
                   .includes(:fliip_user, :service_definition, :service_usage_adjustments)
-                  .order(:service_name, :expire_date)
+                  .order(expire_date: :desc, service_name: :asc)
 
     render :service_select, layout: false
   end
@@ -156,7 +156,7 @@ class SessionsController < ApplicationController
     msg = FliipApi::UserSync::NewUserImporter.call
     redirect_to new_session_path, notice: msg
   rescue => e
-    redirect_to new_session_path, alert: "Could not refresh clients: #{e.message}"
+    redirect_to new_session_path, alert: "Impossible de rafraîchir les client·e·s : #{e.message}"
   end
 
   private
@@ -172,7 +172,7 @@ class SessionsController < ApplicationController
   def forbid
     respond_to do |format|
       format.json { head :forbidden }
-      format.html { redirect_back fallback_location: admin_unconfirmed_sessions_path, alert: "Not authorized." }
+      format.html { redirect_back fallback_location: admin_unconfirmed_sessions_path, alert: "Non autorisé·e." }
     end
   end
 
@@ -198,13 +198,10 @@ class SessionsController < ApplicationController
   end
 
   def session_params
-    params.require(:session).permit(
-      :fliip_user_id,
-      :fliip_service_id,
-      :present,
-      :note,
-      :occurred_at
-    )
+    allowed = [:fliip_user_id, :fliip_service_id, :present, :note]
+    # if you let admins pick the creator:
+    allowed << :user_id if admin_like?
+    params.require(:session).permit(*allowed)
   end
 
   def parsed_occurred_at_from_params

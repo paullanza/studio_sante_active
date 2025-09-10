@@ -1,4 +1,3 @@
-<%# app/views/shared/_services_table.html.erb %>
 <% fmt_date = ->(d) { d.present? ? d.strftime("%d/%m/%Y") : "—" } %>
 <% fmt_num  = ->(n) { ('%.1f' % n.to_f) } %>
 
@@ -6,11 +5,11 @@
   <table class="table table-hover align-middle compact-bars">
     <thead class="table-light">
       <tr>
-        <th class="text-nowrap">Client</th>
+        <th class="text-nowrap">Client·e</th>
         <th class="text-nowrap">Service</th>
-        <th class="text-nowrap" style="width:1%;">Start</th>
-        <th class="text-nowrap" style="width:1%;">Expire</th>
-        <th class="text-nowrap">Progress</th>
+        <th class="text-nowrap" style="width:1%;">Début</th>
+        <th class="text-nowrap" style="width:1%;">Fin</th>
+        <th class="text-nowrap">Progression</th>
       </tr>
     </thead>
 
@@ -21,7 +20,7 @@
         <% end %>
       <% else %>
         <tr>
-          <td colspan="5" class="text-muted">No services to display.</td>
+          <td colspan="5" class="text-muted">Aucun service à afficher.</td>
         </tr>
       <% end %>
     </tbody>

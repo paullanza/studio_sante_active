@@ -8,7 +8,7 @@
             required
             data-session-form-target="service"
             data-action="change->session-form#recheck">
-      <option value="">Select a service</option>
+      <option value="">Sélectionne un service</option>
 
       <% today        = Date.current
          future_limit = today + 1.month
@@ -24,17 +24,18 @@
 
            reason =
              if cancelled
-               "Cancelled"
+               "Annulé"
              elsif starts_too_late
-               "Starts more than a month from now"
+               "Commence dans plus d’un mois"
              elsif ended_too_long
-               "Ended more than a month ago"
+               "Terminé il y a plus d’un mois"
              elsif used_up
-               "All sessions used"
+               "Toutes les séances utilisées"
              end
 
-           label = svc.service_name.presence || "Service ##{svc.id}"
-           label += " (ends #{svc.expire_date.strftime('%d/%m/%Y')})" if svc.expire_date.present?
+           prefix = svc.remote_purchase_id.present? ? "##{svc.remote_purchase_id} " : ""
+           label  = prefix + (svc.service_name.presence || "Service ##{svc.id}")
+           label += " (se termine le #{svc.expire_date.strftime('%d/%m/%Y')})" if svc.expire_date.present?
         %>
 
         <option
@@ -50,7 +51,7 @@
     </select>
   <% else %>
     <select class="form-select" disabled>
-      <option>Select a client first</option>
+      <option>Sélectionne un·e client·e d’abord</option>
     </select>
   <% end %>
 <% end %>

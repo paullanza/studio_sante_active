@@ -15,11 +15,11 @@ class FliipContract < ApplicationRecord
   #   "C" → Cancelled
   #   "S" → Stopped
   STATUS_MAP = {
-    "A" => "Active",
-    "I" => "Inactive",
-    "C" => "Cancelled",
-    "S" => "Stopped"
-  }.freeze
+    "A" => "Actif",
+    "I" => "Inactif",
+    "C" => "Annulé",
+    "S" => "Suspendu"
+  }
 
   # -----------------------------------------
   # Scopes

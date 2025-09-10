@@ -1,5 +1,5 @@
 <div class="container mt-4">
-  <h1 class="mb-3">Unconfirmed Sessions</h1>
+  <h1 class="mb-3">Séances non confirmées</h1>
 
   <%# --- Inline filters (single-row, Flatpickr range-enabled) --- %>
   <%= form_with url: admin_unconfirmed_sessions_path, method: :get, local: true,
@@ -8,9 +8,9 @@
 
     <%# Client: flex item, grows equally with others %>
     <div class="d-flex flex-column" style="flex:1 1 280px;">
-      <%= label_tag :q, "Recherche (client)", class: "form-label" %>
+      <%= label_tag :q, "Recherche (client·e)", class: "form-label" %>
       <%= text_field_tag :q, @filter_params[:q],
-            class: "form-control", placeholder: "Nom du client" %>
+            class: "form-control", placeholder: "Nom du·de la client·e" %>
     </div>
 
     <%# Employee: same width behavior as client %>
@@ -70,12 +70,12 @@
       <div class="form-check form-check-inline">
         <%= check_box_tag "session_type[]", "paid", Array(@filter_params[:session_type]).include?("paid"),
               id: "type_paid", class: "form-check-input" %>
-        <%= label_tag "type_paid", "Payée", class: "form-check-label" %>
+        <%= label_tag "type_paid", "Chargée", class: "form-check-label" %>
       </div>
       <div class="form-check form-check-inline">
         <%= check_box_tag "session_type[]", "free", Array(@filter_params[:session_type]).include?("free"),
               id: "type_free", class: "form-check-input" %>
-        <%= label_tag "type_free", "Gratuite", class: "form-check-label" %>
+        <%= label_tag "type_free", "Absence", class: "form-check-label" %>
       </div>
     </div>
 
@@ -89,7 +89,7 @@
   <%# --- Confirm-selected form & table --- %>
   <%= form_with url: admin_confirm_sessions_path, method: :patch, local: true do %>
     <div class="mb-3 d-flex gap-2">
-      <%= submit_tag "Confirm Selected", class: "btn btn-success" %>
+      <%= submit_tag "Confirmer la sélection", class: "btn btn-success" %>
     </div>
 
     <%= render "shared/sessions_table",

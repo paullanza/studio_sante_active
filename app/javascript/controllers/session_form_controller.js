@@ -141,15 +141,15 @@ export default class extends Controller {
     const isFree = this._willCountAsFree()
     if (isFree) {
       return {
-        title: "Confirm Absent (FREE session)",
-        body:  "This will create an ABSENT session that will count as FREE (free balance covers the duration). Do you want to continue?",
-        fallback: "This will create an ABSENT session that counts as FREE. Continue?"
+        title: "Confirmer l’absence",
+        body:  "Procéder à l’utilisation d’une absence sans frais?",
+        fallback: "Cette ABSENCE sera comptée comme GRATUITE. Continuer?"
       }
     } else {
       return {
-        title: "Confirm Absent (PAID session)",
-        body:  "This will create an ABSENT session that will count as PAID (insufficient free balance). Do you want to continue?",
-        fallback: "This will create an ABSENT session that counts as PAID. Continue?"
+        title: "Confirmer l’absence",
+        body:  "Solde d’absences sans frais épuisé. Procéder à la déduction d’une séance de son forfait?",
+        fallback: "Cette ABSENCE sera CHARGÉE. Continuer?"
       }
     }
   }

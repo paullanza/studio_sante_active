@@ -1,18 +1,18 @@
 <%= simple_form_for([@service, @adjustment]) do |f| %>
   <div class="row g-2 align-items-end">
     <div class="col-md-3">
-      <%= f.input :paid_used_delta, label: "Paid used Δ", as: :decimal, input_html: { step: "0.1" } %>
+      <%= f.input :paid_used_delta, label: "Chargées utilisées Δ", as: :decimal, input_html: { step: "0.1" } %>
     </div>
     <div class="col-md-3">
-      <%= f.input :free_used_delta, label: "Free used Δ", as: :decimal, input_html: { step: "0.1" } %>
+      <%= f.input :free_used_delta, label: "Absences utilisées Δ", as: :decimal, input_html: { step: "0.1" } %>
     </div>
     <div class="col-md-3">
-      <%= f.input :bonus_sessions, label: "Bonus sessions Δ", as: :decimal, input_html: { step: "0.1" } %>
+      <%= f.input :bonus_sessions, label: "Séances bonus Δ", as: :decimal, input_html: { step: "0.1" } %>
     </div>
 
     <% if current_user.admin? || current_user.super_admin? %>
       <div class="col-md-3">
-        <%= f.input :user_id, label: "Employee",
+        <%= f.input :user_id, label: "Employé·e",
               as: :select,
               collection: User.active.order(:last_name, :first_name),
               label_method: :full_name, value_method: :id,
@@ -23,7 +23,7 @@
     <div class="col-md-12">
       <%= f.button :submit, class: "btn btn-primary" %>
       <% if local_assigns[:cancel_path] %>
-        <%= link_to "Cancel", cancel_path, class: "btn btn-outline-secondary ms-2" %>
+        <%= link_to "Annuler", cancel_path, class: "btn btn-outline-secondary ms-2" %>
       <% end %>
     </div>
   </div>

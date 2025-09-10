@@ -1,8 +1,8 @@
 <%# Locals: filter_params:, staff: %>
 <%= form_with url: admin_unconfirmed_sessions_path, method: :get, local: true, class: "row g-2 mb-3" do %>
   <div class="col-md-3">
-    <%= label_tag :q, "Recherche (client)", class: "form-label" %>
-    <%= text_field_tag :q, filter_params[:q], class: "form-control", placeholder: "Nom du client" %>
+    <%= label_tag :q, "Recherche (client·e)", class: "form-label" %>
+    <%= text_field_tag :q, filter_params[:q], class: "form-control", placeholder: "Nom du·de la client·e" %>
   </div>
 
   <div class="col-md-3">
@@ -13,12 +13,12 @@
   </div>
 
   <div class="col-md-3">
-    <%= label_tag :session_date_from, "Date séance (de)", class: "form-label" %>
+    <%= label_tag :session_date_from, "Date de séance (de)", class: "form-label" %>
     <%= date_field_tag :session_date_from, filter_params[:session_date_from], class: "form-control" %>
   </div>
 
   <div class="col-md-3">
-    <%= label_tag :session_date_to, "Date séance (à)", class: "form-label" %>
+    <%= label_tag :session_date_to, "Date de séance (à)", class: "form-label" %>
     <%= date_field_tag :session_date_to, filter_params[:session_date_to], class: "form-control" %>
   </div>
 
@@ -40,7 +40,7 @@
 
   <div class="col-md-3">
     <%= label_tag :session_type, "Type", class: "form-label" %>
-    <%= select_tag :session_type, options_for_select([["—", nil], ["Payée", "paid"], ["Gratuite", "free"]], filter_params[:session_type]),
+    <%= select_tag :session_type, options_for_select([["—", nil], ["Chargée", "paid"], ["Absence", "free"]], filter_params[:session_type]),
                    class: "form-select" %>
   </div>
 
