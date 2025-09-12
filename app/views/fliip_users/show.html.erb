@@ -156,7 +156,7 @@
     <h2 class="h5 mb-3">Services</h2>
     <% if @fliip_user.fliip_services.any? %>
       <div class="table-responsive">
-        <%= render "shared/services_table", services: @fliip_user.fliip_services.order(expire_date: :desc) %>
+        <%= render "fliip_services/shared/services_table", services: @fliip_user.fliip_services.order(expire_date: :desc) %>
       </div>
     <% else %>
       <p class="text-muted">Aucun service trouvé pour cet·te utilisateur·trice.</p>

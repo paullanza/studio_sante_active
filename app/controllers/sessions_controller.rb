@@ -60,13 +60,13 @@ class SessionsController < ApplicationController
 
   def edit
     return forbid unless can_modify?(@session, action: :edit)
-    render partial: "shared/row_edit",
+    render partial: "sessions/shared/row_edit",
           locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
           layout: false
   end
 
   def row
-    render partial: "shared/session_row",
+    render partial: "sessions/shared/session_row",
           locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
           layout: false
   end
@@ -86,11 +86,11 @@ class SessionsController < ApplicationController
     @session.send(:set_session_type_and_duration)
 
     if @session.save
-      render partial: "shared/session_row",
+      render partial: "sessions/shared/session_row",
             locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
             layout: false
     else
-      render partial: "shared/row_edit",
+      render partial: "sessions/shared/row_edit",
             locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
             status: :unprocessable_entity,
             layout: false

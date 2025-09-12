@@ -5,7 +5,7 @@
   <section class="mb-5">
     <h2>Utilisateur·trice·s</h2>
 
-    <%= render "shared/users_table",
+    <%= render "users/shared/users_table",
               users: @users,
               unconfirmed_counts: @unconfirmed_counts,
               services_touched_counts: @services_touched_counts,
@@ -25,7 +25,7 @@
   <section class="mb-5">
     <h2>Services se terminant dans les 30 prochains jours</h2>
     <div class="table-responsive">
-      <%= render "shared/services_table", services: @services_ending_soon %>
+      <%= render "fliip_services/shared/services_table", services: @services_ending_soon %>
     </div>
   </section>
 
@@ -33,7 +33,7 @@
   <section class="mb-5">
     <h2>Services terminés dans les 30 derniers jours</h2>
     <div class="table-responsive">
-      <%= render "shared/services_table", services: @services_ended_recent %>
+      <%= render "fliip_services/shared/services_table", services: @services_ended_recent %>
     </div>
   </section>
 </div>

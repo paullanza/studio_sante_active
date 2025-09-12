@@ -16,7 +16,7 @@
     <tbody>
       <% if services.any? %>
         <% services.each do |svc| %>
-          <%= render partial: "shared/service_row", locals: { svc: svc } %>
+          <%= render partial: "fliip_services/shared/service_row", locals: { svc: svc } %>
         <% end %>
       <% else %>
         <tr>
