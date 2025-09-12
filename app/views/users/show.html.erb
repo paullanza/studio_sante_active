@@ -103,7 +103,7 @@
   <!-- Services this user touched -->
   <div class="mt-4">
     <h2 class="h5 mb-2">Service auquel l’utilisateur·rice participe</h2>
-    <%= render "shared/services_table", services: @services_for_user %>
+    <%= render "fliip_services/shared/services_table", services: @services_for_user %>
   </div>
 
   <!-- Unconfirmed sessions (same look as admin page, no checkboxes/actions) -->
@@ -112,7 +112,7 @@
 
     <% if @unconfirmed_sessions.any? %>
       <!-- Sessions Table -->
-    <%= render "shared/sessions_table",
+    <%= render "sessions/shared/sessions_table",
         sessions: @unconfirmed_sessions,
         show_bulk_checkbox: false,
         scope_name: :new_session %>

@@ -1,98 +1,157 @@
 import { Controller } from "@hotwired/stimulus"
 
+// Ultra-lean: swap row partials via fetch; delete via modal.
+// No copy here — all text comes from data-* set by Rails helpers.
 export default class extends Controller {
-  static values = { id: Number, showBulk: Boolean }
-
-  edit(event) {
-    event.preventDefault()
-    this._fetchReplace(this._url("edit"))
+  static values = {
+    id: Number,
+    editUrl: String,
+    rowUrl: String,
+    updateUrl: String,
+    showBulk: Boolean
   }
 
-  cancel(event) {
+  // Load the edit form row
+  async edit(event) {
     event.preventDefault()
-    this._fetchReplace(this._url("row"), { cache: "no-store" })
+    const url = this._urlWithShowBulk(this.editUrlValue || event.currentTarget.href)
+    await this._replace(url)
   }
 
+  // Restore the read-only row
+  async cancel(event) {
+    event.preventDefault()
+    const url = this._urlWithShowBulk(this.rowUrlValue || event.currentTarget.href)
+    await this._replace(url)
+  }
+
+  // Save changes and replace row
   async save(event) {
     event.preventDefault()
-
-    const main    = this.element
-    const noteRow = this._adjacentNoteRow(main)
-
-    const fd = new FormData()
-    // date/time
-    fd.append("session[date]", main.querySelector('input[name="session[date]"]')?.value || "")
-    fd.append("session[time]", main.querySelector('input[name="session[time]"]')?.value || "")
-
-    // present / half_hour
-    if (main.querySelector('input[name="session[present]"]')?.checked) fd.append("session[present]", "1")
-    if (main.querySelector('input[name="half_hour"]')?.checked)        fd.append("half_hour", "1")
-
-    // admin: employee reassignment
-    const userSelect = main.querySelector('select[name="session[user_id]"]')
-    if (userSelect) fd.append("session[user_id]", userSelect.value)
-
-    // note (in the adjacent note row, if present)
-    fd.append("session[note]", noteRow?.querySelector('textarea[name="session[note]"]')?.value || "")
-
-    const token = document.querySelector('meta[name="csrf-token"]')?.content
-    const resp  = await fetch(this._updateUrl(), {
-      method: "PATCH",
-      headers: { "Accept": "text/html", "X-CSRF-Token": token || "" },
-      body: fd
-    })
-
-    const html = await resp.text()
-    this._replacePair(html)
+    const body = this._collectFormData()
+    if (this.showBulkValue) body.append("show_bulk", "1")
+    await this._replace(this.updateUrlValue, body, "PATCH")
   }
 
-  // --- helpers ---
+  // Open global modal and DELETE on confirm (no text literals here)
+  confirmDelete(event) {
+    event.preventDefault()
+    const link = event.currentTarget
+    const href = link.getAttribute("href")
+    if (!href) return
 
-  _url(action) {
-    const base = `/sessions/${this.idValue}/${action}`
-    return this.showBulkValue ? `${base}?show_bulk=1` : base
-  }
+    const { modalTitle, modalBody, modalPrimaryLabel, modalSecondaryLabel } = link.dataset
 
-  _updateUrl() {
-    const base = `/sessions/${this.idValue}`
-    return this.showBulkValue ? `${base}?show_bulk=1` : base
-  }
-
-  _fetchReplace(url, opts = {}) {
-    fetch(url, { headers: { "Accept": "text/html" }, ...opts })
-      .then(r => r.text())
-      .then(html => this._replacePair(html))
-  }
-
-  // Replace the main <tr> and keep the adjacent note row in sync
-  _replacePair(html) {
-    const frag = document.createElement("tbody")
-    frag.innerHTML = html.trim()
-
-    // main row from server (prefer the one with our controller)
-    const newMain = frag.querySelector('tr[data-controller~="session-row"]') || frag.querySelector("tr")
-    if (!newMain) return
-
-    const currentMain = this.element
-    const existingNote = this._adjacentNoteRow(currentMain)
-    const newNote      = frag.querySelector("tr.note-row")
-
-    // swap main
-    currentMain.replaceWith(newMain)
-
-    // sync note directly under the new main
-    if (newNote && existingNote) {
-      existingNote.replaceWith(newNote)
-    } else if (newNote && !existingNote) {
-      newMain.insertAdjacentElement("afterend", newNote)
-    } else if (!newNote && existingNote) {
-      existingNote.remove()
+    const modalEl = document.getElementById("app-modal")
+    if (modalEl) {
+      modalEl.dispatchEvent(new CustomEvent("modal:open", {
+        detail: {
+          title: modalTitle,
+          body: modalBody,
+          primaryLabel: modalPrimaryLabel,
+          secondaryLabel: modalSecondaryLabel,
+          onConfirm: () => this._delete(href)
+        }
+      }))
+    } else {
+      // Fallback sans texte en dur: on utilise ce que la vue a fourni
+      if (!modalBody || window.confirm(modalBody)) this._delete(href)
     }
   }
 
-  // Finds the note row that belongs to this main row (next sibling with .note-row)
-  _adjacentNoteRow(row = this.element) {
-    const sib = row.nextElementSibling
-    return (sib && sib.classList.contains("note-row")) ? sib : null
+  // ----- private helpers -----
+  async _replace(url, body = null, method = "GET") {
+    const options = {
+      method,
+      headers: {
+        "Accept": "text/html",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+    }
+    if (body) {
+      options.body = body
+      options.headers["X-CSRF-Token"] =
+        document.querySelector('meta[name="csrf-token"]')?.content || ""
+    }
+
+    const resp = await fetch(url, options)
+    // Accept normal success AND 422 (validation error returns edit partial)
+    if (!(resp.status === 200 || resp.status === 422)) return
+
+    const html = await resp.text()
+    const tpl = document.createElement("template")
+    tpl.innerHTML = html.trim()
+    const rows = Array.from(tpl.content.children)
+
+    const mainRow = this.element
+    const noteRow = document.getElementById(`${mainRow.id}_note`) || document.getElementById(`note_${mainRow.id}`)
+
+    // Insert new main row then remove old
+    if (rows[0]) {
+      mainRow.insertAdjacentElement("afterend", rows[0])
+      mainRow.remove()
+    }
+
+    // Replace note row if present
+    if (noteRow) noteRow.remove()
+    if (rows[1]) {
+      const newMain = document.getElementById(rows[0].id) || rows[0]
+      newMain.insertAdjacentElement("afterend", rows[1])
+    }
+  }
+
+  async _delete(url) {
+    const resp = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        "Accept": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+        "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content || ""
+      }
+    })
+    if (resp.ok) {
+      const mainRow = this.element
+      const noteRow = document.getElementById(`${mainRow.id}_note`) || document.getElementById(`note_${mainRow.id}`)
+      if (noteRow) noteRow.remove()
+      mainRow.remove()
+    }
+  }
+
+  _urlWithShowBulk(url) {
+    if (!this.showBulkValue) return url
+    try {
+      const u = new URL(url, window.location.origin)
+      u.searchParams.set("show_bulk", "1")
+      return u.toString()
+    } catch {
+      // Fallback if url is relative string without base
+      const sep = url.includes("?") ? "&" : "?"
+      return `${url}${sep}show_bulk=1`
+    }
+  }
+
+  _collectFormData() {
+    const fd = new FormData()
+    fd.append("_method", "patch")
+
+    const row = this.element
+    const getVal = (sel) => row.querySelector(sel)?.value || ""
+
+    fd.append("session[date]", getVal('input[name="session[date]"]'))
+    fd.append("session[time]", getVal('input[name="session[time]"]'))
+
+    const present = row.querySelector('input[name="session[present]"]')
+    if (present) fd.append("session[present]", present.checked ? "1" : "0")
+
+    const half = row.querySelector('input[name="half_hour"]')
+    if (half) fd.append("half_hour", half.checked ? "1" : "0")
+
+    const userSel = row.querySelector('select[name="session[user_id]"]')
+    if (userSel) fd.append("session[user_id]", userSel.value)
+
+    const noteArea = document.querySelector(`#${row.id}_note textarea[name="session[note]"]`)
+    if (noteArea) fd.append("session[note]", noteArea.value)
+
+    return fd
   }
 }

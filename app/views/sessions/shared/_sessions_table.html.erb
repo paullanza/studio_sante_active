@@ -36,7 +36,7 @@
     <tbody>
       <% if sessions.any? %>
         <% sessions.each do |s| %>
-          <%= render "shared/session_row",
+          <%= render "sessions/shared/session_row",
                      session: s,
                      show_bulk_checkbox: local_assigns[:show_bulk_checkbox] %>
         <% end %>

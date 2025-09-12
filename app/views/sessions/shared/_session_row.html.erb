@@ -1,9 +1,13 @@
 <% s   = session %>
 <% svc = s.fliip_service %>
 
-<tr data-controller="session-row"
+<tr id="<%= dom_id(s) %>"
+    data-controller="session-row"
     data-session-row-id-value="<%= s.id %>"
-    data-session-row-show-bulk-value="<%= local_assigns[:show_bulk_checkbox] %>">
+    data-session-row-show-bulk-value="<%= local_assigns[:show_bulk_checkbox] %>"
+    data-session-row-edit-url-value="<%= edit_session_path(s) %>"
+    data-session-row-row-url-value="<%= row_session_path(s) %>"
+    data-session-row-update-url-value="<%= session_path(s) %>">
 
   <%# 1) Optional bulk checkbox %>
   <% if local_assigns[:show_bulk_checkbox] %>
@@ -23,22 +27,23 @@
     <% end %>
   </td>
 
-  <%# 3) Date · Presence (wider via table header w-50) %>
+  <%# 3) Date · Presence %>
   <td class="small align-middle">
     <div class="d-flex flex-column">
       <div class="d-flex align-items-center gap-2">
         <strong><%= s.date_time_label %></strong>
         <span class="badge <%= s.presence_badge_variant %>"><%= s.presence_with_duration_label %></span>
       </div>
-      <div class="text-muted"><small><%= s.created_at_label %></small>
-            <% if s.confirmed? && s.confirmed_at.present? %>
-              <small>| Confirmé·e : <%= s.confirmed_at.strftime('%d/%m/%Y %H:%M') %></small>
-            <% end %>
+      <div class="text-muted">
+        <small><%= s.created_at_label %></small>
+        <% if s.confirmed? && s.confirmed_at.present? %>
+          <small>| Confirmé·e : <%= s.confirmed_at.strftime('%d/%m/%Y %H:%M') %></small>
+        <% end %>
       </div>
     </div>
   </td>
 
-  <%# 4) Client (thinner; truncated) %>
+  <%# 4) Client %>
   <td class="align-middle">
     <% if s.fliip_user %>
       <div class="text-truncate">
@@ -52,7 +57,7 @@
     <% end %>
   </td>
 
-  <%# 5) Service (thinner; truncated) %>
+  <%# 5) Service %>
   <td class="align-middle">
     <% if svc %>
       <div class="text-truncate">
@@ -68,26 +73,38 @@
     <% end %>
   </td>
 
-  <%# 6) Employee (linked); show "created by" if different) %>
+  <%# 6) Employee %>
   <td class="text-nowrap align-middle text-center">
     <% if s.user %>
       <%= link_to s.user.full_name, user_path(s.user), class: "text-decoration-none" %>
       <% if s.created_by_id.present? && s.created_by_id != s.user_id %>
-        <div class="small text-muted">créé·e par <%= s.created_by&.full_name || "—" %></div>
+        <div class="small text-muted">créé·e par <%= s.created_by&.full_name %></div>
       <% end %>
     <% else %>
       <span class="text-muted">—</span>
     <% end %>
   </td>
 
-  <%# 7) Actions (right-aligned) %>
+  <%# 7) Actions — icons %>
   <td class="text-end align-middle text-nowrap">
     <% if s.modifiable_by?(current_user) %>
-      <a href="<%= edit_session_path(s) %>" class="btn btn-sm btn-outline-secondary me-1" data-action="session-row#edit">Modifier</a>
-      <%= link_to "Supprimer",
-                  session_path(s),
-                  data: { turbo_method: :delete, turbo_confirm: "Supprimer cette séance?" },
-                  class: "btn btn-sm btn-outline-danger" %>
+      <a href="<%= edit_session_path(s) %>"
+         class="btn btn-sm btn-outline-secondary me-1"
+         title="Modifier"
+         data-action="session-row#edit">
+        <i class="fa-solid fa-pencil"></i>
+      </a>
+
+      <a href="<%= session_path(s) %>"
+         class="btn btn-sm btn-outline-danger"
+         title="Supprimer"
+         data-action="session-row#confirmDelete"
+         data-modal-title="<%= sessions_modal_delete_title(s) %>"
+         data-modal-body="<%= sessions_modal_delete_body(s) %>"
+         data-modal-primary-label="<%= sessions_modal_delete_primary_label %>"
+         data-modal-secondary-label="<%= sessions_modal_delete_secondary_label %>">
+        <i class="fa-solid fa-trash-can"></i>
+      </a>
     <% end %>
   </td>
 </tr>

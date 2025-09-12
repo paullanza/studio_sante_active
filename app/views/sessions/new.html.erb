@@ -1,12 +1,9 @@
 <div class="container my-4 session-new" data-controller="client-search">
-  <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="mb-0 fw-bold">Nouvelle séance</h1>
-    <!-- Refresh link is placed next to Client label below -->
   </div>
 
   <div class="row g-4">
-    <!-- LEFT: FORM (25%) -->
     <div class="col-12 col-lg-3">
       <div class="card shadow-sm stretch-card form-card">
         <div class="card-body p-3">
@@ -19,9 +16,7 @@
                 }
               } do |f| %>
 
-            <!-- Row 1: Client / Service / Created by -->
             <div class="row g-3 align-items-end mb-2">
-              <!-- Client -->
               <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center">
                   <label class="form-label mb-0" for="client_search_input">Client·e</label>
@@ -54,7 +49,6 @@
                 </div>
               </div>
 
-              <!-- Service -->
               <div class="col-12">
                 <% if @session.fliip_user_id.present? %>
                   <%= turbo_frame_tag "service_select",
@@ -72,7 +66,6 @@
                 <% end %>
               </div>
 
-              <!-- Created by (admins only) -->
               <% if current_user.admin? || current_user.super_admin? %>
                 <div class="col-12">
                   <label for="session_user_id" class="form-label">Créé par</label>
@@ -88,7 +81,6 @@
 
             <hr class="my-3">
 
-            <!-- Row 2: Date / Time -->
             <div class="row g-3 align-items-end mb-2" data-controller="flatpickr">
               <div class="col-md-6">
                 <%= f.input :date, label: "Date", as: :string,
@@ -113,13 +105,11 @@
               </div>
             </div>
 
-            <!-- Note UNDER date/time (rows: 1) -->
             <div class="mb-3">
               <%= f.input :note, as: :text, label: "Note",
                     input_html: { rows: 1, class: "form-control" } %>
             </div>
 
-            <!-- Row 3: Checkboxes ABOVE the button -->
             <div class="row g-3 align-items-center">
               <div class="col-12 col-sm-auto">
                 <div class="form-check">
@@ -146,40 +136,27 @@
                         class="btn btn-primary rounded-pill shadow-sm w-100"
                         data-session-form-target="submit"
                         data-action="click->session-form#maybeConfirm"
-                        disabled>
+                        disabled
+                        data-modal-primary-label="<%= sessions_modal_primary_label %>"
+                        data-modal-secondary-label="<%= sessions_modal_secondary_label %>"
+                        data-modal-free-title="<%= sessions_modal_absence_free_title %>"
+                        data-modal-free-body="<%= sessions_modal_absence_free_body %>"
+                        data-modal-paid-title="<%= sessions_modal_absence_paid_title %>"
+                        data-modal-paid-body="<%= sessions_modal_absence_paid_body %>">
                   Créer la séance
                 </button>
               </div>
             </div>
 
-            <!-- Confirmation Modal -->
-            <div class="modal fade" tabindex="-1" data-session-form-target="modal">
-              <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" data-session-form-target="modalTitle"></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
-                  </div>
-                  <div class="modal-body">
-                    <p data-session-form-target="modalBody"></p>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" class="btn btn-primary" data-session-form-target="modalConfirm">Continuer</button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <%= render "shared/modal" %>
           <% end %>
         </div>
       </div>
     </div>
 
-    <!-- RIGHT: TABLES (75%) -->
     <div class="col-12 col-lg-9">
       <div class="card shadow-sm stretch-card">
         <div class="card-body p-3 d-flex flex-column tables-split">
-          <!-- SERVICES (inside turbo-frame; empty frame when no client) -->
           <div class="pane pane-services">
             <% if @session.fliip_user_id.present? && @services&.any? %>
               <%= turbo_frame_tag "services_table" do %>
@@ -188,7 +165,7 @@
                     <h2 class="h6 mb-0">Services du client</h2>
                   </div>
                   <div class="table-scroll">
-                    <%= render "shared/services_table", services: @services %>
+                    <%= render "fliip_services/shared/services_table", services: @services %>
                   </div>
                 </div>
               <% end %>
@@ -197,14 +174,13 @@
             <% end %>
           </div>
 
-          <!-- SESSIONS (always present) -->
           <div class="pane pane-sessions">
             <div class="d-flex align-items-center justify-content-between mb-1">
               <h2 class="h6 mb-0">Séances récentes</h2>
             </div>
             <p class="text-muted small mb-2">25 dernières séances créées par vous.</p>
             <div class="table-scroll">
-              <%= render "shared/sessions_table",
+              <%= render "sessions/shared/sessions_table",
                     sessions: @sessions,
                     show_bulk_checkbox: false,
                     scope_name: :new_session %>
