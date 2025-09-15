@@ -1,11 +1,9 @@
 <%# Expects: svc %>
-
-<%# --- precompute (model does the heavy lifting) --- %>
 <% time_pct = svc.time_progress_percent || 0 %>
 <% paid_pct = svc.paid_progress_percent || 0 %>
 
 <tr>
-  <%# 1) Client (name + IDs) %>
+  <!-- Client -->
   <td class="align-middle">
     <% if svc.fliip_user %>
       <%= link_to svc.fliip_user.full_name,
@@ -20,7 +18,7 @@
     <% end %>
   </td>
 
-  <%# 2) Service (name + status badge + duration + compact IDs) %>
+  <!-- Service (name + status + purchased date + compact IDs) -->
   <td class="align-middle">
     <div class="d-flex flex-wrap align-items-center gap-2">
       <span class="badge <%= purchase_status_badge_class(svc.purchase_status) %>"><%= svc.status_name %></span>
@@ -29,25 +27,17 @@
                   class: "text-decoration-none",
                   data: { turbo_frame: "_top" } %>
     </div>
+
+    <% if svc.purchase_date.present? %>
+      <div class="text-muted small">Acheté le : <%= svc.purchase_date.strftime("%d/%m/%Y") %></div>
+    <% end %>
+
     <div class="text-muted small">
       Serv#: <%= svc.id %> • Achat#: <%= svc.remote_purchase_id || "—" %> • Durée : <%= svc.duration.presence || "—" %>
     </div>
   </td>
 
-  <%# 3) Start (with Purchased underneath if present) %>
-  <td class="text-nowrap align-middle" style="width:1%;">
-    <div><%= svc.start_date&.strftime("%d/%m/%Y") || "—" %></div>
-    <% if svc.purchase_date.present? %>
-      <div class="text-muted small">Acheté le : <%= svc.purchase_date.strftime("%d/%m/%Y") %></div>
-    <% end %>
-  </td>
-
-  <%# 4) Expire %>
-  <td class="text-nowrap align-middle" style="width:1%;">
-    <div><%= svc.expire_date&.strftime("%d/%m/%Y") || "—" %></div>
-  </td>
-
-  <%# 5) Progress (stacked bars) %>
+  <!-- Progress (stacked bars) -->
   <td class="align-middle" style="min-width:220px;">
     <%= bar_with_label(
           percent: time_pct,
