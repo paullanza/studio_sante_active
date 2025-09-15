@@ -100,7 +100,7 @@ Rails.application.routes.draw do
   # Show/update the user profile, plus role/activation toggles gated by
   # authorization. Role setters promote/demote a user to the given role.
   # =====================================================================
-  resources :users, only: [:show, :update] do
+  resources :users, only: [:show, :edit, :update] do
     member do
       patch :make_employee
       patch :make_manager
