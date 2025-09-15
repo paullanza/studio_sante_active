@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <div class="container mt-4" data-controller="toggle">
   <div class="d-flex justify-content-between align-items-center">
     <h1 class="mb-0"><%= @user.full_name %></h1>
@@ -7,122 +8,146 @@
       <% else %>
         <%= link_to "Modifier le profil", edit_user_path(@user), class: "btn btn-outline-primary" %>
       <% end %>
+=======
+<div class="container my-4 user-show" data-controller="toggle">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0 fw-bold"><%= @user.full_name %></h1>
+    <% if current_user.admin? || current_user.super_admin? %>
+      <%= link_to "Modifier mon profil", edit_user_registration_path, class: "btn btn-outline-primary" %>
+>>>>>>> f7e9502920f0fe1611eec20334d3b52daf731f39
     <% end %>
   </div>
 
-  <div class="card my-3">
-    <div class="table-responsive">
-      <table class="table table-sm align-middle mb-0">
-        <thead class="table-light">
-          <tr>
-            <th>Courriel</th>
-            <th>Téléphone</th>
-            <th>Date de naissance</th>
-            <th>Rôle</th>
-            <th>Statut</th>
-            <th style="min-width:260px;">Adresse</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><%= @user.email.present? ? mail_to(@user.email) : "—" %></td>
-            <td><%= @user.phone.presence || "—" %></td>
-            <td><%= @user.birthday&.strftime("%d/%m/%Y") || "—" %></td>
-            <td>
-              <span class="badge <%= @user.super_admin? ? 'bg-dark' : @user.admin? ? 'bg-primary' : @user.manager? ? 'bg-info text-dark' : 'bg-secondary' %>">
-                <%= @user.translated_role %>
-              </span>
-            </td>
-            <td>
-              <span class="badge <%= @user.active? ? 'bg-success' : 'bg-secondary' %>">
-                <%= @user.active? ? "Actif·ve" : "Inactif·ve" %>
-              </span>
-            </td>
-            <td class="text-truncate" style="max-width: 380px;" title="<%= @user.address.to_s %>">
+  <div class="row g-4">
+    <!-- LEFT: Profile / badges / actions -->
+    <div class="col-12 col-lg-3">
+      <div class="card shadow-sm stretch-card">
+        <div class="card-body p-3">
+          <div class="mb-3">
+            <div class="text-muted small">Courriel</div>
+            <div><%= @user.email.present? ? mail_to(@user.email) : "—" %></div>
+          </div>
+
+          <div class="mb-3">
+            <div class="text-muted small">Téléphone</div>
+            <div><%= @user.phone.presence || "—" %></div>
+          </div>
+
+          <div class="mb-3">
+            <div class="text-muted small">Date de naissance</div>
+            <div><%= @user.birthday&.strftime("%d/%m/%Y") || "—" %></div>
+          </div>
+
+          <div class="mb-3 d-flex flex-wrap gap-2">
+            <span class="badge <%= @user.super_admin? ? 'bg-dark' : @user.admin? ? 'bg-primary' : @user.manager? ? 'bg-info text-dark' : 'bg-secondary' %>">
+              <%= @user.translated_role %>
+            </span>
+            <span class="badge <%= @user.active? ? 'bg-success' : 'bg-secondary' %>">
+              <%= @user.active? ? "Actif·ve" : "Inactif·ve" %>
+            </span>
+          </div>
+
+          <div class="mb-3">
+            <div class="text-muted small">Adresse</div>
+            <div class="text-truncate" title="<%= @user.address.to_s %>">
               <%= @user.address.presence || "—" %>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+            </div>
+          </div>
 
-  <!-- Role / Activation controls (same rules you use on dashboard) -->
-  <div class="my-3">
-    <% if @user.super_admin? %>
-      <span class="text-muted">Super admin</span>
-    <% elsif current_user.super_admin? %>
-      <div class="d-flex flex-wrap gap-2">
-        <% if @user.admin? %>
-          <%= button_to "Nommer gestionnaire", make_manager_user_path(@user), method: :patch, class: "btn btn-outline-primary btn-sm" %>
-        <% elsif @user.manager? %>
-          <%= button_to "Nommer employé·e", make_employee_user_path(@user), method: :patch, class: "btn btn-outline-secondary btn-sm" %>
-          <%= button_to "Nommer admin",    make_admin_user_path(@user),    method: :patch, class: "btn btn-outline-dark btn-sm" %>
-        <% else %>
-          <%= button_to "Nommer gestionnaire",  make_manager_user_path(@user),  method: :patch, class: "btn btn-outline-primary btn-sm" %>
-        <% end %>
+          <!-- Role / Activation controls -->
+          <div class="mt-3">
+            <% if @user.super_admin? %>
+              <span class="text-muted small">Super admin</span>
+            <% elsif current_user.super_admin? %>
+              <div class="d-flex flex-wrap gap-2">
+                <% if @user.admin? %>
+                  <%= button_to "Nommer gestionnaire", make_manager_user_path(@user), method: :patch, class: "btn btn-outline-primary btn-sm" %>
+                <% elsif @user.manager? %>
+                  <%= button_to "Nommer employé·e", make_employee_user_path(@user), method: :patch, class: "btn btn-outline-secondary btn-sm" %>
+                  <%= button_to "Nommer admin",    make_admin_user_path(@user),    method: :patch, class: "btn btn-outline-dark btn-sm" %>
+                <% else %>
+                  <%= button_to "Nommer gestionnaire",  make_manager_user_path(@user),  method: :patch, class: "btn btn-outline-primary btn-sm" %>
+                <% end %>
 
-        <%= button_to(
-              @user.active? ? "Désactiver" : "Réactiver",
-              @user.active? ? deactivate_user_path(@user) : activate_user_path(@user),
-              method: :patch,
-              class: "btn btn-sm #{ @user.active? ? 'btn-outline-danger' : 'btn-outline-success' }"
-        ) %>
+                <%= button_to(
+                      @user.active? ? "Désactiver" : "Réactiver",
+                      @user.active? ? deactivate_user_path(@user) : activate_user_path(@user),
+                      method: :patch,
+                      class: "btn btn-sm #{ @user.active? ? 'btn-outline-danger' : 'btn-outline-success' }"
+                ) %>
+              </div>
+
+            <% elsif current_user.admin? %>
+              <% if @user.admin? %>
+                <span class="text-muted small">Admin</span>
+              <% elsif @user.manager? %>
+                <div class="d-flex flex-wrap gap-2">
+                  <%= button_to "Nommer employé·e", make_employee_user_path(@user), method: :patch, class: "btn btn-outline-secondary btn-sm" %>
+                  <%= button_to(
+                        @user.active? ? "Désactiver" : "Réactiver",
+                        @user.active? ? deactivate_user_path(@user) : activate_user_path(@user),
+                        method: :patch,
+                        class: "btn btn-sm #{ @user.active? ? 'btn-outline-danger' : 'btn-outline-success' }"
+                  ) %>
+                </div>
+              <% else %>
+                <div class="d-flex flex-wrap gap-2">
+                  <%= button_to "Nommer gestionnaire",  make_manager_user_path(@user),  method: :patch, class: "btn btn-outline-primary btn-sm" %>
+                  <%= button_to(
+                        @user.active? ? "Désactiver" : "Réactiver",
+                        @user.active? ? deactivate_user_path(@user) : activate_user_path(@user),
+                        method: :patch,
+                        class: "btn btn-sm #{ @user.active? ? 'btn-outline-danger' : 'btn-outline-success' }"
+                  ) %>
+                </div>
+              <% end %>
+            <% elsif current_user.manager? && @user.employee? %>
+              <%= button_to(
+                    @user.active? ? "Désactiver" : "Réactiver",
+                    @user.active? ? deactivate_user_path(@user) : activate_user_path(@user),
+                    method: :patch,
+                    class: "btn btn-sm #{ @user.active? ? 'btn-outline-danger' : 'btn-outline-success' }"
+              ) %>
+            <% end %>
+          </div>
+        </div>
       </div>
+    </div>
 
-    <% elsif current_user.admin? %>
-      <% if @user.admin? %>
-        <span class="text-muted">Admin</span>
-      <% elsif @user.manager? %>
-        <div class="d-flex flex-wrap gap-2">
-          <%= button_to "Nommer employé·e", make_employee_user_path(@user), method: :patch, class: "btn btn-outline-secondary btn-sm" %>
-        <%= button_to(
-              @user.active? ? "Désactiver" : "Réactiver",
-              @user.active? ? deactivate_user_path(@user) : activate_user_path(@user),
-              method: :patch,
-              class: "btn btn-sm #{ @user.active? ? 'btn-outline-danger' : 'btn-outline-success' }"
-        ) %>
+    <!-- RIGHT: Panes (Services, Sessions) -->
+    <div class="col-12 col-lg-9">
+      <div class="card shadow-sm stretch-card">
+        <div class="card-body p-3 d-flex flex-column tables-split">
+          <!-- Services pane -->
+          <div class="pane pane-services">
+            <div class="pane-inner">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <h2 class="h6 mb-0">Services auxquels l’utilisateur·rice participe</h2>
+              </div>
+              <div class="table-scroll">
+                <%= render "fliip_services/shared/services_table", services: @services_for_user %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Unconfirmed sessions pane -->
+          <div class="pane pane-sessions">
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <h2 class="h6 mb-0">Séances non confirmées</h2>
+            </div>
+            <% if @unconfirmed_sessions.any? %>
+              <div class="table-scroll">
+                <%= render "sessions/shared/sessions_table",
+                      sessions: @unconfirmed_sessions,
+                      show_bulk_checkbox: false,
+                      scope_name: :new_session %>
+              </div>
+            <% else %>
+              <p class="text-muted small mb-2">Aucune séance non confirmée.</p>
+            <% end %>
+          </div>
         </div>
-      <% else %>
-        <div class="d-flex flex-wrap gap-2">
-          <%= button_to "Nommer gestionnaire",  make_manager_user_path(@user),  method: :patch, class: "btn btn-outline-primary btn-sm" %>
-          <%= button_to(
-                @user.active? ? "Désactiver" : "Réactiver",
-                @user.active? ? deactivate_user_path(@user) : activate_user_path(@user),
-                method: :patch,
-                class: "btn btn-sm #{ @user.active? ? 'btn-outline-danger' : 'btn-outline-success' }"
-          ) %>
-        </div>
-      <% end %>
-    <% elsif current_user.manager? && @user.employee? %>
-      <%= button_to(
-            @user.active? ? "Désactiver" : "Réactiver",
-            @user.active? ? deactivate_user_path(@user) : activate_user_path(@user),
-            method: :patch,
-            class: "btn btn-sm #{ @user.active? ? 'btn-outline-danger' : 'btn-outline-success' }"
-      ) %>
-    <% end %>
-  </div>
-
-  <!-- Services this user touched -->
-  <div class="mt-4">
-    <h2 class="h5 mb-2">Service auquel l’utilisateur·rice participe</h2>
-    <%= render "fliip_services/shared/services_table", services: @services_for_user %>
-  </div>
-
-  <!-- Unconfirmed sessions (same look as admin page, no checkboxes/actions) -->
-  <div class="mt-4">
-    <h2 class="h5 mb-2">Séances non confirmées</h2>
-
-    <% if @unconfirmed_sessions.any? %>
-      <!-- Sessions Table -->
-    <%= render "sessions/shared/sessions_table",
-        sessions: @unconfirmed_sessions,
-        show_bulk_checkbox: false,
-        scope_name: :new_session %>
-
-    <% else %>
-      <p class="text-muted">Aucune séance non confirmée.</p>
-    <% end %>
+      </div>
+    </div>
   </div>
 </div>

@@ -25,6 +25,9 @@
         </ul>
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">
+            <%= link_to current_user.full_name, user_path(current_user), class: "nav-link" %>
+          </li>
+          <li class="nav-item">
             <%= link_to "Déconnexion",
                         destroy_user_session_path,
                         data: { turbo_method: :delete },
