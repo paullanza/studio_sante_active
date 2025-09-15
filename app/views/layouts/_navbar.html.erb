@@ -22,6 +22,11 @@
           <li class="nav-item">
             <%= link_to "Client·e·s", fliip_users_path, class: "nav-link" %>
           </li>
+          <% if current_user.admin? || current_user.super_admin? %>
+            <li class="nav-item">
+              <%= link_to "Confirmations", admin_unconfirmed_sessions_path, class: "nav-link" %>
+            </li>
+          <% end %>
         </ul>
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">
