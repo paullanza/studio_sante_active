@@ -1,13 +1,6 @@
 <div class="container mt-4" data-controller="toggle">
-  <div class="d-flex justify-content-between align-items-center">
+  <div class="mb-2 d-flex justify-content-between align-items-center">
     <h1 class="mb-0"><%= @user.full_name %></h1>
-    <% if @user.editable_by?(current_user) %>
-      <% if @user == current_user %>
-        <%= link_to "Modifier mon profil", edit_user_registration_path, class: "btn btn-outline-primary" %>
-      <% else %>
-        <%= link_to "Modifier le profil", edit_user_path(@user), class: "btn btn-outline-primary" %>
-      <% end %>
-    <% end %>
   </div>
 
   <div class="row g-4">
@@ -15,6 +8,15 @@
     <div class="col-12 col-lg-3">
       <div class="card shadow-sm stretch-card">
         <div class="card-body p-3">
+          <div class="mb-3 d-flex flex-wrap gap-2">
+            <span class="badge <%= @user.super_admin? ? 'bg-dark' : @user.admin? ? 'bg-primary' : @user.manager? ? 'bg-info text-dark' : 'bg-secondary' %>">
+              <%= @user.translated_role %>
+            </span>
+            <span class="badge <%= @user.active? ? 'bg-success' : 'bg-secondary' %>">
+              <%= @user.active? ? "Actif·ve" : "Inactif·ve" %>
+            </span>
+          </div>
+
           <div class="mb-3">
             <div class="text-muted small">Courriel</div>
             <div><%= @user.email.present? ? mail_to(@user.email) : "—" %></div>
@@ -28,15 +30,6 @@
           <div class="mb-3">
             <div class="text-muted small">Date de naissance</div>
             <div><%= @user.birthday&.strftime("%d/%m/%Y") || "—" %></div>
-          </div>
-
-          <div class="mb-3 d-flex flex-wrap gap-2">
-            <span class="badge <%= @user.super_admin? ? 'bg-dark' : @user.admin? ? 'bg-primary' : @user.manager? ? 'bg-info text-dark' : 'bg-secondary' %>">
-              <%= @user.translated_role %>
-            </span>
-            <span class="badge <%= @user.active? ? 'bg-success' : 'bg-secondary' %>">
-              <%= @user.active? ? "Actif·ve" : "Inactif·ve" %>
-            </span>
           </div>
 
           <div class="mb-3">
@@ -100,6 +93,19 @@
                     method: :patch,
                     class: "btn btn-sm #{ @user.active? ? 'btn-outline-danger' : 'btn-outline-success' }"
               ) %>
+            <% end %>
+          </div>
+
+          <!-- Edit button at bottom of card -->
+          <div class="mt-3">
+            <% if @user.editable_by?(current_user) %>
+              <div class="d-grid">
+                <% if @user == current_user %>
+                  <%= link_to "Modifier mon profil", edit_user_registration_path, class: "btn btn-outline-primary" %>
+                <% else %>
+                  <%= link_to "Modifier le profil", edit_user_path(@user), class: "btn btn-outline-primary" %>
+                <% end %>
+              </div>
             <% end %>
           </div>
         </div>
