@@ -274,7 +274,7 @@ class Session < ApplicationRecord
   def sequence_label
     n = sequence_number_in_service
     return nil unless n
-    type = paid? ? "Paid" : "Free"
+    type = paid? ? "Séance" : "Absence"
     formatted = (n % 1 == 0) ? n.to_i : n.round(2)
     "#{type} ##{formatted}"
   end
