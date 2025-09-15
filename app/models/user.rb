@@ -95,6 +95,10 @@ class User < ApplicationRecord
     actor.super_admin? || actor.admin? || (actor.manager? && employee?)
   end
 
+  def editable_by?(actor)
+    actor.present? && (actor == self || actor.admin? || actor.super_admin?)
+  end
+
   # Activates the user if the actor has permission
   def activate_by!(actor)
     unless active_status_change_allowed?(actor)

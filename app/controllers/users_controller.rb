@@ -1,8 +1,8 @@
 class UsersController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_user, only: [:show, :update, :make_employee, :make_manager, :make_admin, :activate, :deactivate]
+  before_action :set_user, only: [:show, :edit, :update, :make_employee, :make_manager, :make_admin, :activate, :deactivate]
   before_action :authorize_role_changes!, only: [:make_employee, :make_manager, :make_admin]
-  before_action :authorize_profile_update!, only: [:update]
+  before_action :authorize_profile_edit!, only: [:edit, :update]
 
   # GET /users/:id
   def show
@@ -20,6 +20,10 @@ class UsersController < ApplicationController
       .where(user_id: @user.id, confirmed: [false, nil])
       .includes(:fliip_user, :fliip_service)
       .order_by_occurred_at_desc
+  end
+
+  def edit
+    authorize_profile_edit! # same logic as update
   end
 
   # PATCH /users/:id
@@ -91,8 +95,8 @@ class UsersController < ApplicationController
   end
 
   # Admins/super_admins can edit profile fields (not role/active/password)
-  def authorize_profile_update!
-    unless current_user.admin? || current_user.super_admin?
+  def authorize_profile_edit!
+    unless @user.editable_by?(current_user)
       redirect_to user_path(@user), alert: "Not authorized."
     end
   end
