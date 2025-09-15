@@ -1,21 +1,10 @@
 <div class="container mt-4">
   <h1 class="mb-4">Tableau de bord d’administration</h1>
 
-  <div class="mb-4 d-flex flex-wrap gap-3">
-    <%= button_to "Importer tous les client·e·s",
-                  import_clients_path,
-                  method: :post,
-                  class: "btn btn-danger",
-                  form: { data: { turbo_confirm: "Ceci va importer tous les client·e·s depuis Fliip. Continuer?" } } %>
-
-    <%= link_to "Gérer les limites de séances des services", admin_services_path, class: "btn btn-outline-dark" %>
-    <%= link_to "Passer en revue les séances non confirmées", admin_unconfirmed_sessions_path, class: "btn btn-outline-primary" %>
-    <%= link_to "Exporter les client·e·s et les services (CSV)",
-                admin_client_services_path(format: :csv),
-                class: "btn btn-outline-success",
-                data: { turbo: false } %>
-    <%= link_to "Téléverser des ajustements de service", admin_adjustments_new_path, class: "btn btn-outline-warning" %>
-  </div>
+  <!-- Actions -->
+  <section class="mb-5">
+    <%= render "admin/actions" %>
+  </section>
 
   <!-- Users Section -->
   <section class="mb-5">
@@ -30,8 +19,17 @@
 
   <!-- Signup Codes Section -->
   <section class="mb-5">
-    <h2>Codes d’accès</h2>
-    <%= button_to "Générer un nouveau code", admin_signup_codes_path, method: :post, class: "btn btn-primary mb-3" %>
+    <div class="d-flex align-items-center mb-2">
+      <h2 class="mb-0 me-2">Codes d’accès</h2>
+      <%= button_to "Générer un nouveau code",
+                    admin_signup_codes_path,
+                    method: :post,
+                    class: "btn btn-primary btn-sm" %>
+    </div>
+
+    <%= render "shared/signup_codes_table",
+              signup_codes: @signup_codes %>
+  </section>
 
     <%= render "shared/signup_codes_table",
               signup_codes: @signup_codes %>
@@ -52,5 +50,4 @@
       <%= render "fliip_services/shared/services_table", services: @services_ended_recent %>
     </div>
   </section>
-
 </div>
