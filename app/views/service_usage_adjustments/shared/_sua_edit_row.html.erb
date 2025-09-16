@@ -1,0 +1,37 @@
+<% adj = adjustment %>
+<tr id="<%= dom_id(adj) %>" data-controller="sua-row"
+    data-sua-row-id-value="<%= adj.id %>"
+    data-sua-row-edit-url-value="<%= edit_fliip_service_service_usage_adjustment_path(service, adj) %>"
+    data-sua-row-update-url-value="<%= fliip_service_service_usage_adjustment_path(service, adj) %>"
+    data-sua-row-index-url-value="<%= fliip_service_path(service) %>">
+  <td colspan="<%= can_manage ? 6 : 5 %>">
+    <%= simple_form_for([service, adj]) do |f| %>
+      <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+          <%= f.input :paid_used_delta, label: "Chargées utilisées Δ", as: :decimal, input_html: { step: "0.1" } %>
+        </div>
+        <div class="col-md-3">
+          <%= f.input :free_used_delta, label: "Absences utilisées Δ", as: :decimal, input_html: { step: "0.1" } %>
+        </div>
+        <div class="col-md-3">
+          <%= f.input :bonus_sessions, label: "Séances bonus Δ", as: :decimal, input_html: { step: "0.1" } %>
+        </div>
+
+        <% if current_user.manager? || current_user.admin? || current_user.super_admin? %>
+          <div class="col-md-3">
+            <%= f.input :user_id, label: "Employé·e",
+                  as: :select,
+                  collection: User.active.order(:last_name, :first_name),
+                  label_method: :full_name, value_method: :id,
+                  include_blank: false, input_html: { class: "form-select" } %>
+          </div>
+        <% end %>
+
+        <div class="col-12 d-flex">
+          <button class="btn btn-primary me-2" data-action="sua-row#save">Enregistrer</button>
+          <button class="btn btn-outline-secondary" data-action="sua-row#cancel">Annuler</button>
+        </div>
+      </div>
+    <% end %>
+  </td>
+</tr>

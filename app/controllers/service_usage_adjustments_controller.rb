@@ -16,9 +16,6 @@ class ServiceUsageAdjustmentsController < ApplicationController
     end
   end
 
-  def edit
-  end
-
   def update
     attrs = adjustment_params_for_update
     if @adjustment.update(attrs)

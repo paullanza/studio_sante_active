@@ -1,0 +1,30 @@
+<div class="table-responsive mt-3">
+  <table class="table table-sm table-bordered align-middle mb-0">
+    <thead class="table-light">
+      <tr>
+        <th style="min-width: 140px;">Date</th>
+        <th>Employé·e</th>
+        <th class="text-end">Chargées utilisées Δ</th>
+        <th class="text-end">Absences utilisées Δ</th>
+        <th class="text-end">Séances bonus Δ</th>
+        <% if can_manage %>
+          <th class="text-end" style="width:1%;">Actions</th>
+        <% end %>
+      </tr>
+    </thead>
+    <tbody>
+      <% if adjustments.any? %>
+        <% adjustments.each do |adj| %>
+          <%= render "service_usage_adjustments/shared/sua_row",
+                service: service,
+                adjustment: adj,
+                can_manage: can_manage %>
+        <% end %>
+      <% else %>
+        <tr>
+          <td colspan="<%= can_manage ? 6 : 5 %>" class="text-muted">Aucun ajustement enregistré pour ce service.</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

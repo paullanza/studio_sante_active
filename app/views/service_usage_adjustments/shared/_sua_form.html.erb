@@ -1,4 +1,4 @@
-<%= simple_form_for([@service, @adjustment]) do |f| %>
+<%= simple_form_for([service, adjustment]) do |f| %>
   <div class="row g-2 align-items-end">
     <div class="col-md-3">
       <%= f.input :paid_used_delta, label: "Chargées utilisées Δ", as: :decimal, input_html: { step: "0.1" } %>
@@ -10,7 +10,7 @@
       <%= f.input :bonus_sessions, label: "Séances bonus Δ", as: :decimal, input_html: { step: "0.1" } %>
     </div>
 
-    <% if current_user.admin? || current_user.super_admin? %>
+    <% if current_user.manager? || current_user.admin? || current_user.super_admin? %>
       <div class="col-md-3">
         <%= f.input :user_id, label: "Employé·e",
               as: :select,
