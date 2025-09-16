@@ -89,6 +89,23 @@
                end
              end %>
 
+          <!-- Services -->
+          <div class="pane pane-services">
+            <div class="pane-inner">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <h2 class="h6 mb-0">Services</h2>
+              </div>
+              <% if @fliip_user.fliip_services.any? %>
+                <div class="table-scroll">
+                  <%= render "fliip_services/shared/services_table",
+                        services: @fliip_user.fliip_services.order(expire_date: :desc) %>
+                </div>
+              <% else %>
+                <p class="text-muted small mb-2">Aucun service trouvé pour cet·te utilisateur·trice.</p>
+              <% end %>
+            </div>
+          </div>
+
           <!-- Abonnements -->
           <div class="pane pane-contracts">
             <div class="pane-inner">
@@ -138,23 +155,6 @@
                 </div>
               <% else %>
                 <p class="text-muted small mb-2">Aucun abonnement trouvé pour cet·te utilisateur·trice.</p>
-              <% end %>
-            </div>
-          </div>
-
-          <!-- Services -->
-          <div class="pane pane-services">
-            <div class="pane-inner">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <h2 class="h6 mb-0">Services</h2>
-              </div>
-              <% if @fliip_user.fliip_services.any? %>
-                <div class="table-scroll">
-                  <%= render "fliip_services/shared/services_table",
-                        services: @fliip_user.fliip_services.order(expire_date: :desc) %>
-                </div>
-              <% else %>
-                <p class="text-muted small mb-2">Aucun service trouvé pour cet·te utilisateur·trice.</p>
               <% end %>
             </div>
           </div>
