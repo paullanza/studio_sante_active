@@ -1,23 +1,39 @@
-<%= simple_form_for([service, adjustment]) do |f| %>
+<%= simple_form_for([@service, @adjustment]) do |f| %>
   <div class="row g-2 align-items-end">
     <div class="col-md-3">
-      <%= f.input :paid_used_delta, label: "Chargées utilisées Δ", as: :decimal, input_html: { step: "0.1" } %>
+      <%= f.input :paid_used_delta,
+                  label: "Chargées utilisées Δ",
+                  as: :decimal,
+                  input_html: { step: "0.5" } %>
     </div>
+
     <div class="col-md-3">
-      <%= f.input :free_used_delta, label: "Absences utilisées Δ", as: :decimal, input_html: { step: "0.1" } %>
+      <%= f.input :free_used_delta,
+                  label: "Absences utilisées Δ",
+                  as: :decimal,
+                  input_html: { step: "0.5" } %>
     </div>
+
     <div class="col-md-3">
-      <%= f.input :bonus_sessions, label: "Séances bonus Δ", as: :decimal, input_html: { step: "0.1" } %>
+      <%= f.input :bonus_sessions,
+                  label: "Séances bonus Δ",
+                  as: :decimal,
+                  input_html: { step: "0.5" } %>
     </div>
 
     <% if current_user.manager? || current_user.admin? || current_user.super_admin? %>
       <div class="col-md-3">
-        <%= f.input :user_id, label: "Employé·e",
-              as: :select,
-              collection: User.active.order(:last_name, :first_name),
-              label_method: :full_name, value_method: :id,
-              include_blank: false, input_html: { class: "form-select" } %>
+        <%= f.input :user_id,
+                    label: "Employé·e",
+                    as: :select,
+                    collection: User.active.order(:last_name, :first_name),
+                    label_method: :full_name,
+                    value_method: :id,
+                    include_blank: false,
+                    input_html: { class: "form-select" } %>
       </div>
+    <% else %>
+      <%= f.hidden_field :user_id, value: current_user.id %>
     <% end %>
 
     <div class="col-md-12">

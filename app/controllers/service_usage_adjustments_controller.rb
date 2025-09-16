@@ -5,7 +5,7 @@ class ServiceUsageAdjustmentsController < ApplicationController
   before_action :ensure_admin!, only: [:edit, :update, :destroy] # edit/update/destroy admin only
 
   def create
-    adj = @service.service_usage_adjustments.new(adjustment_params_for_create)
+    adj = @service.service_usage_adjustments.new(adjustment_params)
     # Non-admins cannot set user_id; force to current_user
     adj.user_id = current_user.id unless current_user.admin? || current_user.super_admin?
 
@@ -20,7 +20,7 @@ class ServiceUsageAdjustmentsController < ApplicationController
   end
 
   def update
-    attrs = adjustment_params_for_update
+    attrs = adjustment_params
     if @adjustment.update(attrs)
       redirect_to fliip_service_path(@service), notice: "Adjustment updated."
     else
@@ -49,13 +49,7 @@ class ServiceUsageAdjustmentsController < ApplicationController
     end
   end
 
-  def adjustment_params_for_create
-    permitted = [:paid_used_delta, :free_used_delta, :bonus_sessions]
-    permitted << :user_id if current_user.admin? || current_user.super_admin?
-    params.require(:service_usage_adjustment).permit(*permitted)
-  end
-
-  def adjustment_params_for_update
+  def adjustment_params
     permitted = [:paid_used_delta, :free_used_delta, :bonus_sessions]
     permitted << :user_id if current_user.admin? || current_user.super_admin?
     params.require(:service_usage_adjustment).permit(*permitted)

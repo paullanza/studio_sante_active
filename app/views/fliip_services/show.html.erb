@@ -179,11 +179,11 @@
                           <i class="fa-solid fa-pencil"></i>
                         <% end %>
 
-                        <%= link_to fliip_service_service_usage_adjustment_path(@service, adj),
+                        <%= button_to fliip_service_service_usage_adjustment_path(@service, adj),
                               method: :delete,
                               data: { turbo_confirm: "Supprimer cet ajustement ?" },
-                              class: "btn btn-sm btn-outline-danger",
-                              title: "Supprimer" do %>
+                              class: "btn btn-sm btn-outline-danger d-inline-flex align-items-center",
+                              form: { class: "d-inline" } do %>
                           <i class="fa-solid fa-trash-can"></i>
                         <% end %>
                       </td>
@@ -201,7 +201,10 @@
           <div class="card-body">
             <h5 class="card-title mb-2">Ajouter un ajustement</h5>
             <% @adjustment = @service.service_usage_adjustments.new(user: current_user) %>
-            <%= render "service_usage_adjustments/form", cancel_path: fliip_service_path(@service) %>
+            <%= render "service_usage_adjustments/form",
+                  service: @service,
+                  adjustment: @adjustment,
+                  cancel_path: fliip_service_path(@service) %>
           </div>
         </div>
       </div>
