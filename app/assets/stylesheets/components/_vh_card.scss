@@ -1,0 +1,33 @@
+// A card that fills the viewport height and scrolls internally.
+// Usage: add class "vh-card" to a .card element.
+// Optional: override the offset using the CSS variable --vh-card-offset.
+
+.vh-card {
+  // Default offset accounts for page header/nav + top margin. Tweak as needed.
+  --vh-card-offset: 140px;
+
+  // Reserve space so the card fits under the header, not past the fold.
+  max-height: calc(100vh - var(--vh-card-offset));
+  height: calc(100vh - var(--vh-card-offset));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; // contain inner scroll
+
+  .card-body {
+    overflow: auto;       // internal scrollbar lives here
+    min-height: 0;        // allow flex child to shrink for overflow
+  }
+}
+
+// Helpful when tab content has tables.
+.table-scroll {
+  overflow: auto;
+  max-width: 100%;
+}
+
+// Small screens often have taller browser UI; give a bit more offset.
+@media (max-width: 576px) {
+  .vh-card {
+    --vh-card-offset: 180px;
+  }
+}

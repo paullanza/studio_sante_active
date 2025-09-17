@@ -1,4 +1,4 @@
-<div class="container mt-4" data-controller="toggle">
+<div class="container mt-4">
   <div class="mb-2 d-flex justify-content-between align-items-center">
     <h1 class="mb-0"><%= @user.full_name %></h1>
   </div>
@@ -112,13 +112,55 @@
       </div>
     </div>
 
-    <!-- RIGHT: Panes (Services, Sessions) -->
+    <!-- RIGHT: Tabs + Scrollable card -->
     <div class="col-12 col-lg-9">
-      <div class="card shadow-sm stretch-card">
-        <div class="card-body p-3 d-flex flex-column tables-split">
-          <!-- Services pane -->
-          <div class="pane pane-services">
-            <div class="pane-inner">
+      <!-- Tabs -->
+      <div
+        class="mb-2 overflow-auto"
+        data-controller="tabs"
+        data-tabs-remember-value="true"
+        data-tabs-active-class-value="active"
+        data-tabs-hidden-class-value="d-none"
+      >
+        <ul class="nav nav-tabs flex-nowrap" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button
+              type="button"
+              class="nav-link active"
+              data-tabs-target="tab"
+              data-key="services"
+              data-action="tabs#select"
+              role="tab"
+              aria-selected="true"
+              aria-controls="panel-services">
+              Services
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button
+              type="button"
+              class="nav-link"
+              data-tabs-target="tab"
+              data-key="sessions"
+              data-action="tabs#select"
+              role="tab"
+              aria-selected="false"
+              aria-controls="panel-sessions">
+              Séances non confirmées
+            </button>
+          </li>
+        </ul>
+
+        <!-- Scrollable card -->
+        <div class="card shadow-sm vh-card mt-2">
+          <div class="card-body p-3 d-flex flex-column">
+            <!-- Panel: Services -->
+            <div
+              id="panel-services"
+              role="tabpanel"
+              data-tabs-target="panel"
+              data-key="services"
+            >
               <div class="d-flex align-items-center justify-content-between mb-2">
                 <h2 class="h6 mb-0">Services auxquels l’utilisateur·rice participe</h2>
               </div>
@@ -126,26 +168,33 @@
                 <%= render "fliip_services/shared/services_table", services: @services_for_user %>
               </div>
             </div>
-          </div>
 
-          <!-- Unconfirmed sessions pane -->
-          <div class="pane pane-sessions">
-            <div class="d-flex align-items-center justify-content-between mb-1">
-              <h2 class="h6 mb-0">Séances non confirmées</h2>
-            </div>
-            <% if @unconfirmed_sessions.any? %>
-              <div class="table-scroll">
-                <%= render "sessions/shared/sessions_table",
-                      sessions: @unconfirmed_sessions,
-                      show_bulk_checkbox: false,
-                      scope_name: :new_session %>
+            <!-- Panel: Unconfirmed Sessions -->
+            <div
+              id="panel-sessions"
+              role="tabpanel"
+              class="d-none"
+              data-tabs-target="panel"
+              data-key="sessions"
+            >
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <h2 class="h6 mb-0">Séances non confirmées</h2>
               </div>
-            <% else %>
-              <p class="text-muted small mb-2">Aucune séance non confirmée.</p>
-            <% end %>
+              <% if @unconfirmed_sessions.any? %>
+                <div class="table-scroll">
+                  <%= render "sessions/shared/sessions_table",
+                        sessions: @unconfirmed_sessions,
+                        show_bulk_checkbox: false,
+                        scope_name: :new_session %>
+                </div>
+              <% else %>
+                <p class="text-muted small mb-2">Aucune séance non confirmée.</p>
+              <% end %>
+            </div>
           </div>
         </div>
       </div>
+      <!-- /Tabs container -->
     </div>
   </div>
 </div>
