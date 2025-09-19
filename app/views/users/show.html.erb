@@ -1,11 +1,11 @@
 <div class="container mt-4">
-  <div class="mb-2 d-flex justify-content-between align-items-center">
-    <h1 class="mb-0"><%= @user.full_name %></h1>
-  </div>
-
   <div class="row g-4">
-    <!-- LEFT: Profile / badges / actions -->
+    <!-- LEFT: Header + Profile -->
     <div class="col-12 col-lg-3">
+      <div class="mb-2 d-flex justify-content-between align-items-center">
+        <h1 class="mb-0"><%= @user.full_name %></h1>
+      </div>
+
       <div class="card shadow-sm stretch-card">
         <div class="card-body p-3">
           <div class="mb-3 d-flex flex-wrap gap-2">
@@ -96,7 +96,7 @@
             <% end %>
           </div>
 
-          <!-- Edit button at bottom of card -->
+          <!-- Edit button -->
           <div class="mt-3">
             <% if @user.editable_by?(current_user) %>
               <div class="d-grid">
@@ -112,89 +112,72 @@
       </div>
     </div>
 
-    <!-- RIGHT: Tabs + Scrollable card -->
+    <!-- RIGHT: Tabs (header) + Card (content) -->
     <div class="col-12 col-lg-9">
-      <!-- Tabs -->
-      <div
-        class="mb-2 overflow-auto"
-        data-controller="tabs"
-        data-tabs-remember-value="true"
-        data-tabs-active-class-value="active"
-        data-tabs-hidden-class-value="d-none"
-      >
-        <ul class="nav nav-tabs flex-nowrap" role="tablist">
-          <li class="nav-item" role="presentation">
+      <!-- Tabs header ABOVE the card -->
+      <div class="tab-header" data-controller="tabs">
+        <nav>
+          <div class="nav nav-tabs" id="user-tablist" role="tablist">
             <button
-              type="button"
               class="nav-link active"
-              data-tabs-target="tab"
-              data-key="services"
-              data-action="tabs#select"
+              id="tab-services"
+              type="button"
               role="tab"
+              aria-controls="pane-services"
               aria-selected="true"
-              aria-controls="panel-services">
+              data-bs-target="#pane-services"
+              data-action="click->tabs#activate">
               Services
             </button>
-          </li>
-          <li class="nav-item" role="presentation">
+
             <button
-              type="button"
               class="nav-link"
-              data-tabs-target="tab"
-              data-key="sessions"
-              data-action="tabs#select"
+              id="tab-sessions"
+              type="button"
               role="tab"
+              aria-controls="pane-sessions"
               aria-selected="false"
-              aria-controls="panel-sessions">
+              data-bs-target="#pane-sessions"
+              data-action="click->tabs#activate">
               Séances non confirmées
             </button>
-          </li>
-        </ul>
+          </div>
+        </nav>
 
-        <!-- Scrollable card -->
-        <div class="card shadow-sm vh-card mt-2">
-          <div class="card-body p-3 d-flex flex-column">
-            <!-- Panel: Services -->
-            <div
-              id="panel-services"
-              role="tabpanel"
-              data-tabs-target="panel"
-              data-key="services"
-            >
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <h2 class="h6 mb-0">Services auxquels l’utilisateur·rice participe</h2>
-              </div>
-              <div class="table-scroll">
-                <%= render "fliip_services/shared/services_table", services: @services_for_user %>
-              </div>
-            </div>
-
-            <!-- Panel: Unconfirmed Sessions -->
-            <div
-              id="panel-sessions"
-              role="tabpanel"
-              class="d-none"
-              data-tabs-target="panel"
-              data-key="sessions"
-            >
-              <div class="d-flex align-items-center justify-content-between mb-1">
-                <h2 class="h6 mb-0">Séances non confirmées</h2>
-              </div>
-              <% if @unconfirmed_sessions.any? %>
-                <div class="table-scroll">
-                  <%= render "sessions/shared/sessions_table",
-                        sessions: @unconfirmed_sessions,
-                        show_bulk_checkbox: false,
-                        scope_name: :new_session %>
+        <!-- Card with the tab content -->
+        <div class="card shadow-sm stretch-card">
+          <div class="card-body p-3 scrollable-card-body">
+            <div id="user-tabcontent">
+              <!-- Services (visible by default) -->
+              <section id="pane-services" role="tabpanel" aria-labelledby="tab-services">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h2 class="h6 mb-0">Services auxquels l’utilisateur·rice participe</h2>
                 </div>
-              <% else %>
-                <p class="text-muted small mb-2">Aucune séance non confirmée.</p>
-              <% end %>
+                <div class="table-scroll">
+                  <%= render "fliip_services/shared/services_table", services: @services_for_user %>
+                </div>
+              </section>
+
+              <!-- Unconfirmed sessions -->
+              <section class="d-none" id="pane-sessions" role="tabpanel" aria-labelledby="tab-sessions">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h2 class="h6 mb-0">Séances non confirmées</h2>
+                </div>
+                <% if @unconfirmed_sessions.any? %>
+                  <div class="table-scroll">
+                    <%= render "sessions/shared/sessions_table",
+                          sessions: @unconfirmed_sessions,
+                          show_bulk_checkbox: false,
+                          scope_name: :new_session %>
+                  </div>
+                <% else %>
+                  <p class="text-muted small mb-0">Aucune séance non confirmée.</p>
+                <% end %>
+              </section>
             </div>
           </div>
         </div>
-      </div>
-      <!-- /Tabs container -->
+      </div><!-- /tabs controller scope -->
     </div>
   </div>
 </div>

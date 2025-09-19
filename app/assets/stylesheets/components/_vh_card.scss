@@ -1,33 +1,44 @@
-// A card that fills the viewport height and scrolls internally.
-// Usage: add class "vh-card" to a .card element.
-// Optional: override the offset using the CSS variable --vh-card-offset.
+/* Tabs should visually attach to the card beneath */
+.tab-header {
+  margin-bottom: 0;
+}
 
-.vh-card {
-  // Default offset accounts for page header/nav + top margin. Tweak as needed.
-  --vh-card-offset: 140px;
+.tab-header .nav-tabs {
+  border-bottom: 0;                /* kill the underline under the whole tab bar */
+}
 
-  // Reserve space so the card fits under the header, not past the fold.
-  max-height: calc(100vh - var(--vh-card-offset));
-  height: calc(100vh - var(--vh-card-offset));
-  display: flex;
-  flex-direction: column;
-  overflow: hidden; // contain inner scroll
+.tab-header .nav-tabs .nav-link {
+  border: 1px solid var(--bs-border-color);
+  border-bottom: 0;                /* no bottom border for any tab */
+  margin-bottom: -1px;             /* overlap the card's top border by 1px */
+  background-color: var(--bs-body-bg);
+}
 
-  .card-body {
-    overflow: auto;       // internal scrollbar lives here
-    min-height: 0;        // allow flex child to shrink for overflow
+.tab-header .nav-tabs .nav-link.active {
+  background-color: var(--bs-card-bg); /* match the card */
+  color: inherit;
+}
+
+/* Ensure the card is flush with the tabs (no extra gap) */
+.tab-header + .card {
+  margin-top: 0;
+}
+
+/* Scrollable body for tab content card */
+.scrollable-card-body {
+  max-height: 60vh;               /* mobile-friendly height */
+  overflow-y: auto;               /* vertical scroll inside the card */
+  -webkit-overflow-scrolling: touch; /* smooth scroll on iOS */
+}
+
+/* Slightly taller on larger screens */
+@media (min-width: 992px) {       /* lg breakpoint */
+  .scrollable-card-body {
+    max-height: 70vh;
   }
 }
 
-// Helpful when tab content has tables.
+/* Ensure wide tables don't blow layout */
 .table-scroll {
-  overflow: auto;
-  max-width: 100%;
-}
-
-// Small screens often have taller browser UI; give a bit more offset.
-@media (max-width: 576px) {
-  .vh-card {
-    --vh-card-offset: 180px;
-  }
+  overflow-x: auto;
 }
