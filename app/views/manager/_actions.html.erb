@@ -11,21 +11,8 @@
 </div>
 
 <div class="d-flex flex-wrap gap-3">
-  <%= link_to "Gérer les limites de séances des services",
-              admin_services_path,
-              class: "btn btn-outline-dark btn-sm" %>
-
-  <%= link_to "Exporter client·e·s et services (CSV)",
-              admin_client_services_path(format: :csv),
-              class: "btn btn-outline-success btn-sm",
-              data: { turbo: false } %>
-
-  <%= link_to "Téléverser des ajustements de service",
-              admin_adjustments_new_path,
-              class: "btn btn-outline-warning btn-sm" %>
-
   <%= button_to "Générer un nouveau code d’accès",
-                admin_signup_codes_path,
+                manager_signup_codes_path,
                 method: :post,
                 class: "btn btn-primary btn-sm" %>
 </div>
