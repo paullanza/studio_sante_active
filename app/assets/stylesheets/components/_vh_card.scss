@@ -1,0 +1,44 @@
+/* Tabs should visually attach to the card beneath */
+.tab-header {
+  margin-bottom: 0;
+}
+
+.tab-header .nav-tabs {
+  border-bottom: 0;                /* kill the underline under the whole tab bar */
+}
+
+.tab-header .nav-tabs .nav-link {
+  border: 1px solid var(--bs-border-color);
+  border-bottom: 0;                /* no bottom border for any tab */
+  margin-bottom: -1px;             /* overlap the card's top border by 1px */
+  background-color: var(--bs-body-bg);
+}
+
+.tab-header .nav-tabs .nav-link.active {
+  background-color: var(--bs-card-bg); /* match the card */
+  color: inherit;
+}
+
+/* Ensure the card is flush with the tabs (no extra gap) */
+.tab-header + .card {
+  margin-top: 0;
+}
+
+/* Scrollable body for tab content card */
+.scrollable-card-body {
+  max-height: 60vh;               /* mobile-friendly height */
+  overflow-y: auto;               /* vertical scroll inside the card */
+  -webkit-overflow-scrolling: touch; /* smooth scroll on iOS */
+}
+
+/* Slightly taller on larger screens */
+@media (min-width: 992px) {       /* lg breakpoint */
+  .scrollable-card-body {
+    max-height: 70vh;
+  }
+}
+
+/* Ensure wide tables don't blow layout */
+.table-scroll {
+  overflow-x: auto;
+}
