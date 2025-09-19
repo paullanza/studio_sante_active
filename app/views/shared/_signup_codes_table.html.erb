@@ -22,7 +22,7 @@
           <% end %>
         </td>
         <td class="text-end">
-          <% if code.usable? %>
+          <% if code.usable? && (current_user.admin? || current_user.super_admin?) %>
             <%= button_to "Deactivate", deactivate_admin_signup_code_path(code), method: :patch, class: "btn btn-sm btn-outline-danger" %>
           <% else %>
             <em>—</em>

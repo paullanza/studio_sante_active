@@ -54,6 +54,11 @@ class ManagerController < ApplicationController
     @sessions = @service.sessions.includes(:fliip_user, :created_by).order(date: :desc, time: :desc)
   end
 
+  def create_signup_code
+    SignupCode.create!
+    redirect_to manager_dashboard_path, notice: "Signup code generated."
+  end
+
   private
 
   def require_manager_only!

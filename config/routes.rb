@@ -93,6 +93,7 @@ Rails.application.routes.draw do
   get "manager/dashboard",    to: "manager#dashboard",   as: :manager_dashboard
   get "manager/services",     to: "manager#services",    as: :manager_services
   get "manager/services/:id", to: "manager#service_show",as: :manager_service
+  post "manager/signup_codes", to: "manager#create_signup_code", as: :manager_signup_codes
 
   # =====================================================================
   # USERS — PROFILE & ROLE MANAGEMENT

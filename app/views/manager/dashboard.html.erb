@@ -1,39 +1,121 @@
 <div class="container mt-4">
-  <h1 class="mb-4">Tableau de bord</h1>
-
-  <!-- Users Section -->
-  <section class="mb-5">
-    <h2>Utilisateur·trice·s</h2>
-
-    <%= render "users/shared/users_table",
-              users: @users,
-              unconfirmed_counts: @unconfirmed_counts,
-              services_touched_counts: @services_touched_counts,
-              show_actions: false %>
-  </section>
-
-  <!-- Signup Codes Section -->
-  <section class="mb-5">
-    <h2>Codes d’accès</h2>
-    <%= button_to "Générer un nouveau code", admin_signup_codes_path, method: :post, class: "btn btn-primary mb-3" %>
-
-    <%= render "shared/signup_codes_table",
-              signup_codes: @signup_codes %>
-  </section>
-
-  <!-- Services ending soon -->
-  <section class="mb-5">
-    <h2>Services se terminant dans les 30 prochains jours</h2>
-    <div class="table-responsive">
-      <%= render "fliip_services/shared/services_table", services: @services_ending_soon %>
+  <div class="row g-4">
+    <!-- LEFT: Code generator card -->
+    <div class="col-12 col-lg-3">
+      <h1 class="mb-2">Tableau de bord</h1>
+      <div class="card shadow-sm stretch-card">
+        <div class="card-body p-3">
+          <h2 class="h6 mb-3">Actions</h2>
+          <%= render "manager/actions" %>
+        </div>
+      </div>
     </div>
-  </section>
 
-  <!-- Services ended recently -->
-  <section class="mb-5">
-    <h2>Services terminés dans les 30 derniers jours</h2>
-    <div class="table-responsive">
-      <%= render "fliip_services/shared/services_table", services: @services_ended_recent %>
+    <!-- RIGHT: Tabs header + Card with tab content -->
+    <div class="col-12 col-lg-9">
+      <div class="tab-header" data-controller="tabs">
+        <nav>
+          <div class="nav nav-tabs" id="dashboard-tablist" role="tablist">
+            <button
+              class="nav-link active"
+              id="tab-dashboard-users"
+              type="button"
+              role="tab"
+              aria-controls="pane-dashboard-users"
+              aria-selected="true"
+              data-bs-target="#pane-dashboard-users"
+              data-action="click->tabs#activate">
+              Utilisateur·trice·s
+            </button>
+
+            <button
+              class="nav-link"
+              id="tab-dashboard-codes"
+              type="button"
+              role="tab"
+              aria-controls="pane-dashboard-codes"
+              aria-selected="false"
+              data-bs-target="#pane-dashboard-codes"
+              data-action="click->tabs#activate">
+              Codes d’accès
+            </button>
+
+            <button
+              class="nav-link"
+              id="tab-dashboard-ending"
+              type="button"
+              role="tab"
+              aria-controls="pane-dashboard-ending"
+              aria-selected="false"
+              data-bs-target="#pane-dashboard-ending"
+              data-action="click->tabs#activate">
+              Services (30 prochains jours)
+            </button>
+
+            <button
+              class="nav-link"
+              id="tab-dashboard-ended"
+              type="button"
+              role="tab"
+              aria-controls="pane-dashboard-ended"
+              aria-selected="false"
+              data-bs-target="#pane-dashboard-ended"
+              data-action="click->tabs#activate">
+              Services (30 derniers jours)
+            </button>
+          </div>
+        </nav>
+
+        <div class="card shadow-sm stretch-card">
+          <div class="card-body p-3 scrollable-card-body">
+            <div id="dashboard-tabcontent">
+              <!-- Users (default) -->
+              <section id="pane-dashboard-users" role="tabpanel" aria-labelledby="tab-dashboard-users">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h2 class="h6 mb-0">Utilisateur·trice·s</h2>
+                </div>
+                <div class="table-scroll">
+                  <%= render "users/shared/users_table",
+                            users: @users,
+                            unconfirmed_counts: @unconfirmed_counts,
+                            services_touched_counts: @services_touched_counts,
+                            show_actions: false %>
+                </div>
+              </section>
+
+              <!-- Signup Codes -->
+              <section class="d-none" id="pane-dashboard-codes" role="tabpanel" aria-labelledby="tab-dashboard-codes">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h2 class="h6 mb-0">Codes d’accès</h2>
+                </div>
+                <div class="table-scroll">
+                  <%= render "shared/signup_codes_table", signup_codes: @signup_codes %>
+                </div>
+              </section>
+
+              <!-- Services ending soon -->
+              <section class="d-none" id="pane-dashboard-ending" role="tabpanel" aria-labelledby="tab-dashboard-ending">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h2 class="h6 mb-0">Services se terminant dans les 30 prochains jours</h2>
+                </div>
+                <div class="table-scroll">
+                  <%= render "fliip_services/shared/services_table", services: @services_ending_soon %>
+                </div>
+              </section>
+
+              <!-- Services ended recently -->
+              <section class="d-none" id="pane-dashboard-ended" role="tabpanel" aria-labelledby="tab-dashboard-ended">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h2 class="h6 mb-0">Services terminés dans les 30 derniers jours</h2>
+                </div>
+                <div class="table-scroll">
+                  <%= render "fliip_services/shared/services_table", services: @services_ended_recent %>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div><!-- /tabs controller scope -->
     </div>
-  </section>
+  </div>
 </div>
