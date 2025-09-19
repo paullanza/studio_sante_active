@@ -11,13 +11,23 @@ class UsersController < ApplicationController
     svc_ids_from_adjusts  = ServiceUsageAdjustment.where(user_id: @user.id).distinct.pluck(:fliip_service_id)
     svc_ids               = (svc_ids_from_sessions + svc_ids_from_adjusts).compact.uniq
 
+    # Build visible statuses from params (defaults: A, P, S)
+    statuses = %w[A P S]
+    statuses << "I" if params[:show_inactive]  == "1"
+    statuses << "C" if params[:show_cancelled] == "1"
+    statuses -= ["S"] if params[:hide_stopped] == "1"
+    statuses.uniq!
+
     @services_for_user = FliipService
       .where(id: svc_ids)
+      .by_statuses(statuses)
       .includes(:fliip_user, :service_definition, :service_usage_adjustments)
       .order(expire_date: :asc)
 
     @unconfirmed_sessions = Session
       .where(user_id: @user.id, confirmed: [false, nil])
+      .present_value(params[:present])       # accepts "yes"/"no" or arrays like ["yes","no"]
+      .of_type(params[:session_type])        # accepts "paid"/"free" or arrays
       .includes(:fliip_user, :fliip_service)
       .order_by_occurred_at_desc
   end

@@ -153,9 +153,43 @@
                 <div class="d-flex align-items-center justify-content-between mb-2">
                   <h2 class="h6 mb-0">Services auxquels l’utilisateur·rice participe</h2>
                 </div>
-                <div class="table-scroll">
-                  <%= render "fliip_services/shared/services_table", services: @services_for_user %>
-                </div>
+
+                <!-- Turbo Frame: filters + table update together -->
+                <%= turbo_frame_tag "services_frame" do %>
+                  <!-- Filters -->
+                  <div class="mb-2">
+                    <%= form_with url: user_path(@user), method: :get, local: true,
+                          html: {
+                            "data-controller" => "autosubmit",
+                            "data-action" => "change->autosubmit#submit",
+                            "data-turbo-frame" => "services_frame"
+                          } do |f| %>
+                      <div class="d-flex flex-wrap align-items-center gap-3">
+                        <div class="form-check">
+                          <%= check_box_tag :show_inactive, "1", params[:show_inactive] == "1",
+                                class: "form-check-input", id: "filter_show_inactive" %>
+                          <%= label_tag :show_inactive, "Afficher Inactifs", class: "form-check-label" %>
+                        </div>
+
+                        <div class="form-check">
+                          <%= check_box_tag :show_cancelled, "1", params[:show_cancelled] == "1",
+                                class: "form-check-input", id: "filter_show_cancelled" %>
+                          <%= label_tag :show_cancelled, "Afficher Annulés", class: "form-check-label" %>
+                        </div>
+
+                        <div class="form-check">
+                          <%= check_box_tag :hide_stopped, "1", params[:hide_stopped] == "1",
+                                class: "form-check-input", id: "filter_hide_stopped" %>
+                          <%= label_tag :hide_stopped, "Masquer Suspendus", class: "form-check-label" %>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+
+                  <div class="table-scroll">
+                    <%= render "fliip_services/shared/services_table", services: @services_for_user %>
+                  </div>
+                <% end %>
               </section>
 
               <!-- Unconfirmed sessions -->
@@ -163,15 +197,65 @@
                 <div class="d-flex align-items-center justify-content-between mb-2">
                   <h2 class="h6 mb-0">Séances non confirmées</h2>
                 </div>
-                <% if @unconfirmed_sessions.any? %>
-                  <div class="table-scroll">
-                    <%= render "sessions/shared/sessions_table",
-                          sessions: @unconfirmed_sessions,
-                          show_bulk_checkbox: false,
-                          scope_name: :new_session %>
+
+                <%= turbo_frame_tag "user_sessions_frame" do %>
+                  <!-- Filters -->
+                  <div class="mb-2">
+                    <%= form_with url: user_path(@user), method: :get, local: true,
+                          html: {
+                            "data-controller" => "autosubmit",
+                            "data-action" => "change->autosubmit#submit",
+                            "data-turbo-frame" => "user_sessions_frame"
+                          } do %>
+
+                      <div class="d-flex flex-wrap align-items-center gap-3">
+                        <!-- Présence -->
+                        <div>
+                          <label class="form-label d-block mb-1 small">Présence</label>
+                          <div class="form-check form-check-inline">
+                            <%= check_box_tag "present[]", "yes",
+                                  Array(params[:present]).include?("yes"),
+                                  id: "present_yes", class: "form-check-input" %>
+                            <%= label_tag "present_yes", "Oui", class: "form-check-label" %>
+                          </div>
+                          <div class="form-check form-check-inline">
+                            <%= check_box_tag "present[]", "no",
+                                  Array(params[:present]).include?("no"),
+                                  id: "present_no", class: "form-check-input" %>
+                            <%= label_tag "present_no", "Non", class: "form-check-label" %>
+                          </div>
+                        </div>
+
+                        <!-- Type -->
+                        <div>
+                          <label class="form-label d-block mb-1 small">Type</label>
+                          <div class="form-check form-check-inline">
+                            <%= check_box_tag "session_type[]", "paid",
+                                  Array(params[:session_type]).include?("paid"),
+                                  id: "type_paid", class: "form-check-input" %>
+                            <%= label_tag "type_paid", "Chargée", class: "form-check-label" %>
+                          </div>
+                          <div class="form-check form-check-inline">
+                            <%= check_box_tag "session_type[]", "free",
+                                  Array(params[:session_type]).include?("free"),
+                                  id: "type_free", class: "form-check-input" %>
+                            <%= label_tag "type_free", "Absence", class: "form-check-label" %>
+                          </div>
+                        </div>
+                      </div>
+                    <% end %>
                   </div>
-                <% else %>
-                  <p class="text-muted small mb-0">Aucune séance non confirmée.</p>
+
+                  <% if @unconfirmed_sessions.any? %>
+                    <div class="table-scroll">
+                      <%= render "sessions/shared/sessions_table",
+                            sessions: @unconfirmed_sessions,
+                            show_bulk_checkbox: false,
+                            scope_name: :new_session %>
+                    </div>
+                  <% else %>
+                    <p class="text-muted small mb-0">Aucune séance non confirmée.</p>
+                  <% end %>
                 <% end %>
               </section>
             </div>
