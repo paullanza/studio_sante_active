@@ -22,7 +22,7 @@
   </div>
 
   <div class="row g-4">
-    <!-- LEFT: Compact profile -->
+    <!-- LEFT: Compact profile (unchanged) -->
     <div class="col-12 col-lg-3">
       <div class="card shadow-sm stretch-card">
         <div class="card-body p-3 text-center">
@@ -73,93 +73,120 @@
       </div>
     </div>
 
-    <!-- RIGHT: Panes (Abonnements, Services, Sessions) -->
+    <!-- RIGHT: Tabs header + Card with tab content -->
     <div class="col-12 col-lg-9">
-      <div class="card shadow-sm stretch-card">
-        <div class="card-body p-3 d-flex flex-column tables-split">
-          <% fmt_date = ->(d) { d.present? ? d.strftime("%d/%m/%Y") : "—" } %>
-          <% status_badge = ->(code) do
-               case code.to_s.strip.upcase
-               when "A" then ["Actif",     "bg-success"]
-               when "I" then ["Inactif",   "bg-secondary"]
-               when "C" then ["Annulé",    "bg-danger"]
-               when "S" then ["Suspendu",  "bg-warning text-dark"]
-               when "P" then ["Planifié",  "bg-info text-dark"]
-               else           ["—",        "bg-secondary"]
-               end
-             end %>
+      <div class="tab-header" data-controller="tabs">
+        <nav>
+          <div class="nav nav-tabs" id="client-tablist" role="tablist">
+            <button
+              class="nav-link active"
+              id="tab-client-services"
+              type="button"
+              role="tab"
+              aria-controls="pane-client-services"
+              aria-selected="true"
+              data-bs-target="#pane-client-services"
+              data-action="click->tabs#activate">
+              Services
+            </button>
 
-          <!-- Services -->
-          <div class="pane pane-services">
-            <div class="pane-inner">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <h2 class="h6 mb-0">Services</h2>
-              </div>
-              <% if @fliip_user.fliip_services.any? %>
-                <div class="table-scroll">
-                  <%= render "fliip_services/shared/services_table",
-                        services: @fliip_user.fliip_services.order(expire_date: :desc) %>
-                </div>
-              <% else %>
-                <p class="text-muted small mb-2">Aucun service trouvé pour cet·te utilisateur·trice.</p>
-              <% end %>
-            </div>
+            <button
+              class="nav-link"
+              id="tab-client-contracts"
+              type="button"
+              role="tab"
+              aria-controls="pane-client-contracts"
+              aria-selected="false"
+              data-bs-target="#pane-client-contracts"
+              data-action="click->tabs#activate">
+              Abonnements
+            </button>
           </div>
+        </nav>
 
-          <!-- Abonnements -->
-          <div class="pane pane-contracts">
-            <div class="pane-inner">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <h2 class="h6 mb-0">Abonnements</h2>
-              </div>
-
-              <% if @fliip_user.fliip_contracts.any? %>
-                <div class="table-scroll">
-                  <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                      <tr>
-                        <th class="text-nowrap">Abonnement #</th>
-                        <th class="text-nowrap">Statut</th>
-                        <th class="text-nowrap">Début</th>
-                        <th class="text-nowrap">Fin</th>
-                        <th class="text-nowrap">Abonnement</th>
-                        <th class="text-nowrap">Durée</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <% @fliip_user.fliip_contracts.order(end_date: :desc).each do |c| %>
-                        <% label, color = status_badge.call(c.status) %>
-                        <tr>
-                          <td class="text-nowrap"><%= c.remote_contract_id || "—" %></td>
-                          <td class="text-nowrap"><span class="badge <%= color %>"><%= label %></span></td>
-                          <td class="text-nowrap">
-                            <div><%= fmt_date.call(c.start_date) %></div>
-                            <% if c.stop_date.present? %>
-                              <div class="text-muted small">Suspendu le : <%= fmt_date.call(c.stop_date) %></div>
-                            <% end %>
-                          </td>
-                          <td class="text-nowrap">
-                            <div><%= fmt_date.call(c.end_date) %></div>
-                            <% if c.cancel_date.present? %>
-                              <div class="text-muted small">Annulé le : <%= fmt_date.call(c.cancel_date) %></div>
-                            <% end %>
-                          </td>
-                          <td class="text-wrap">
-                            <%= c.membership_name.presence || "—" %>
-                          </td>
-                          <td class="text-nowrap"><%= c.duration.presence || "—" %></td>
-                        </tr>
-                      <% end %>
-                    </tbody>
-                  </table>
+        <div class="card shadow-sm stretch-card">
+          <div class="card-body p-3 scrollable-card-body">
+            <div id="client-tabcontent">
+              <!-- Services (default) -->
+              <section id="pane-client-services" role="tabpanel" aria-labelledby="tab-client-services">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h2 class="h6 mb-0">Services</h2>
                 </div>
-              <% else %>
-                <p class="text-muted small mb-2">Aucun abonnement trouvé pour cet·te utilisateur·trice.</p>
-              <% end %>
+                <% if @fliip_user.fliip_services.any? %>
+                  <div class="table-scroll">
+                    <%= render "fliip_services/shared/services_table",
+                          services: @fliip_user.fliip_services.order(expire_date: :desc) %>
+                  </div>
+                <% else %>
+                  <p class="text-muted small mb-2">Aucun service trouvé pour cet·te utilisateur·trice.</p>
+                <% end %>
+              </section>
+
+              <!-- Abonnements -->
+              <section class="d-none" id="pane-client-contracts" role="tabpanel" aria-labelledby="tab-client-contracts">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h2 class="h6 mb-0">Abonnements</h2>
+                </div>
+
+                <% if @fliip_user.fliip_contracts.any? %>
+                  <div class="table-scroll">
+                    <% fmt_date = ->(d) { d.present? ? d.strftime("%d/%m/%Y") : "—" } %>
+                    <% status_badge = ->(code) do
+                         case code.to_s.strip.upcase
+                         when "A" then ["Actif",     "bg-success"]
+                         when "I" then ["Inactif",   "bg-secondary"]
+                         when "C" then ["Annulé",    "bg-danger"]
+                         when "S" then ["Suspendu",  "bg-warning text-dark"]
+                         when "P" then ["Planifié",  "bg-info text-dark"]
+                         else           ["—",        "bg-secondary"]
+                         end
+                       end %>
+                    <table class="table table-hover align-middle">
+                      <thead class="table-light">
+                        <tr>
+                          <th class="text-nowrap">Abonnement #</th>
+                          <th class="text-nowrap">Statut</th>
+                          <th class="text-nowrap">Début</th>
+                          <th class="text-nowrap">Fin</th>
+                          <th class="text-nowrap">Abonnement</th>
+                          <th class="text-nowrap">Durée</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% @fliip_user.fliip_contracts.order(end_date: :desc).each do |c| %>
+                          <% label, color = status_badge.call(c.status) %>
+                          <tr>
+                            <td class="text-nowrap"><%= c.remote_contract_id || "—" %></td>
+                            <td class="text-nowrap"><span class="badge <%= color %>"><%= label %></span></td>
+                            <td class="text-nowrap">
+                              <div><%= fmt_date.call(c.start_date) %></div>
+                              <% if c.stop_date.present? %>
+                                <div class="text-muted small">Suspendu le : <%= fmt_date.call(c.stop_date) %></div>
+                              <% end %>
+                            </td>
+                            <td class="text-nowrap">
+                              <div><%= fmt_date.call(c.end_date) %></div>
+                              <% if c.cancel_date.present? %>
+                                <div class="text-muted small">Annulé le : <%= fmt_date.call(c.cancel_date) %></div>
+                              <% end %>
+                            </td>
+                            <td class="text-wrap">
+                              <%= c.membership_name.presence || "—" %>
+                            </td>
+                            <td class="text-nowrap"><%= c.duration.presence || "—" %></td>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
+                  </div>
+                <% else %>
+                  <p class="text-muted small mb-2">Aucun abonnement trouvé pour cet·te utilisateur·trice.</p>
+                <% end %>
+              </section>
             </div>
           </div>
         </div>
-      </div>
+      </div><!-- /tabs controller scope -->
     </div>
   </div>
 </div>
