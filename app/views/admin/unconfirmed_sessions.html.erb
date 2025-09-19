@@ -1,101 +1,124 @@
 <div class="container mt-4">
-  <h1 class="mb-3">Séances non confirmées</h1>
+  <!-- Page header row -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Séances non confirmées</h1>
+    <%= button_tag "Confirmer la sélection",
+                   type: "submit",
+                   form: "confirm-form",
+                   class: "btn btn-success" %>
+  </div>
 
-  <%# --- Inline filters (single-row, Flatpickr range-enabled) --- %>
-  <%= form_with url: admin_unconfirmed_sessions_path, method: :get, local: true,
-                class: "d-flex flex-wrap align-items-end gap-2 mb-3",
-                data: { controller: "flatpickr" } do %>
+  <div class="row g-4 align-items-stretch">
+    <!-- LEFT: Filters -->
+    <div class="col-12 col-lg-3 d-flex">
+      <div class="card shadow-sm stretch-card h-100 w-100">
+        <div class="card-body p-3">
+          <!-- Filters -->
+          <%= form_with url: admin_unconfirmed_sessions_path, method: :get, local: true,
+                        class: "d-flex flex-wrap align-items-end gap-2",
+                        data: { controller: "flatpickr" } do %>
 
-    <%# Client: flex item, grows equally with others %>
-    <div class="d-flex flex-column" style="flex:1 1 280px;">
-      <%= label_tag :q, "Recherche (client·e)", class: "form-label" %>
-      <%= text_field_tag :q, @filter_params[:q],
-            class: "form-control", placeholder: "Nom du·de la client·e" %>
-    </div>
+            <!-- Client -->
+            <div class="d-flex flex-column" style="flex:1 1 280px;">
+              <%= label_tag :q, "Recherche (client·e)", class: "form-label" %>
+              <%= text_field_tag :q, @filter_params[:q],
+                    class: "form-control", placeholder: "Nom du·de la client·e" %>
+            </div>
 
-    <%# Employee: same width behavior as client %>
-    <div class="d-flex flex-column" style="flex:1 1 280px;">
-      <%= label_tag :employee_id, "Employé·e", class: "form-label" %>
-      <%= select_tag :employee_id,
-            options_for_select([["—", nil]] + @staff.map { |u| ["#{u.last_name}, #{u.first_name}", u.id] }, @filter_params[:employee_id]),
-            class: "form-select" %>
-    </div>
+            <!-- Employee -->
+            <div class="d-flex flex-column" style="flex:1 1 280px;">
+              <%= label_tag :employee_id, "Employé·e", class: "form-label" %>
+              <%= select_tag :employee_id,
+                    options_for_select([["—", nil]] + @staff.map { |u| ["#{u.first_name} #{u.last_name}", u.id] }, @filter_params[:employee_id]),
+                    class: "form-select" %>
+            </div>
 
-    <%# Session range: single visible input, hidden from/to fields submitted to Rails %>
-    <div class="d-flex flex-column" style="flex:1 1 280px;">
-      <%= label_tag :session_date_range, "Dates de séance", class: "form-label" %>
-      <%= text_field_tag :session_date_range, nil,
-            name: nil,
-            class: "form-control",
-            placeholder: "Sélectionner une période",
-            data: { flatpickr_target: "sessionRange" } %>
-      <%= hidden_field_tag :session_date_from, @filter_params[:session_date_from],
-            data: { flatpickr_target: "sessionFromHidden" } %>
-      <%= hidden_field_tag :session_date_to, @filter_params[:session_date_to],
-            data: { flatpickr_target: "sessionToHidden" } %>
-    </div>
+            <!-- Session range -->
+            <div class="d-flex flex-column" style="flex:1 1 280px;">
+              <%= label_tag :session_date_range, "Dates de séance", class: "form-label" %>
+              <%= text_field_tag :session_date_range, nil,
+                    name: nil,
+                    class: "form-control",
+                    placeholder: "Sélectionner une période",
+                    data: { flatpickr_target: "sessionRange" } %>
+              <%= hidden_field_tag :session_date_from, @filter_params[:session_date_from],
+                    data: { flatpickr_target: "sessionFromHidden" } %>
+              <%= hidden_field_tag :session_date_to, @filter_params[:session_date_to],
+                    data: { flatpickr_target: "sessionToHidden" } %>
+            </div>
 
-    <%# Created range %>
-    <div class="d-flex flex-column" style="flex:1 1 280px;">
-      <%= label_tag :created_range, "Créé (période)", class: "form-label" %>
-      <%= text_field_tag :created_range, nil,
-            name: nil,
-            class: "form-control",
-            placeholder: "Sélectionner une période",
-            data: { flatpickr_target: "createdRange" } %>
-      <%= hidden_field_tag :created_from, @filter_params[:created_from],
-            data: { flatpickr_target: "createdFromHidden" } %>
-      <%= hidden_field_tag :created_to, @filter_params[:created_to],
-            data: { flatpickr_target: "createdToHidden" } %>
-    </div>
+            <!-- Created range -->
+            <div class="d-flex flex-column" style="flex:1 1 280px;">
+              <%= label_tag :created_range, "Créé (période)", class: "form-label" %>
+              <%= text_field_tag :created_range, nil,
+                    name: nil,
+                    class: "form-control",
+                    placeholder: "Sélectionner une période",
+                    data: { flatpickr_target: "createdRange" } %>
+              <%= hidden_field_tag :created_from, @filter_params[:created_from],
+                    data: { flatpickr_target: "createdFromHidden" } %>
+              <%= hidden_field_tag :created_to, @filter_params[:created_to],
+                    data: { flatpickr_target: "createdToHidden" } %>
+            </div>
 
-    <%# Presence checkboxes (compact) %>
-    <div class="d-flex flex-column" style="flex:0 0 auto; min-width: 220px;">
-      <label class="form-label d-block mb-1 small">Présence</label>
-      <div class="form-check form-check-inline">
-        <%= check_box_tag "present[]", "yes", Array(@filter_params[:present]).include?("yes"),
-              id: "present_yes", class: "form-check-input" %>
-        <%= label_tag "present_yes", "Oui", class: "form-check-label" %>
+            <!-- Présence + Type (side-by-side in a grid row) -->
+            <div class="row w-100 gx-3">
+              <!-- Présence -->
+              <div class="col-12 col-md-6">
+                <label class="form-label d-block mb-1 small">Présence</label>
+                <div class="form-check form-check-inline">
+                  <%= check_box_tag "present[]", "yes", Array(@filter_params[:present]).include?("yes"),
+                        id: "present_yes", class: "form-check-input" %>
+                  <%= label_tag "present_yes", "Oui", class: "form-check-label" %>
+                </div>
+                <div class="form-check form-check-inline">
+                  <%= check_box_tag "present[]", "no", Array(@filter_params[:present]).include?("no"),
+                        id: "present_no", class: "form-check-input" %>
+                  <%= label_tag "present_no", "Non", class: "form-check-label" %>
+                </div>
+              </div>
+
+              <!-- Type -->
+              <div class="col-12 col-md-6">
+                <label class="form-label d-block mb-1 small">Type</label>
+                <div class="form-check form-check-inline">
+                  <%= check_box_tag "session_type[]", "paid", Array(@filter_params[:session_type]).include?("paid"),
+                        id: "type_paid", class: "form-check-input" %>
+                  <%= label_tag "type_paid", "Chargée", class: "form-check-label" %>
+                </div>
+                <div class="form-check form-check-inline">
+                  <%= check_box_tag "session_type[]", "free", Array(@filter_params[:session_type]).include?("free"),
+                        id: "type_free", class: "form-check-input" %>
+                  <%= label_tag "type_free", "Absence", class: "form-check-label" %>
+                </div>
+              </div>
+            </div>
+
+            <!-- Filter actions -->
+            <div class="d-flex gap-2" style="flex:0 0 auto;">
+              <%= submit_tag "Filtrer", class: "btn btn-primary" %>
+              <%= link_to "Réinitialiser", admin_unconfirmed_sessions_path, class: "btn btn-outline-secondary" %>
+            </div>
+          <% end %>
+        </div>
       </div>
-      <div class="form-check form-check-inline">
-        <%= check_box_tag "present[]", "no", Array(@filter_params[:present]).include?("no"),
-              id: "present_no", class: "form-check-input" %>
-        <%= label_tag "present_no", "Non", class: "form-check-label" %>
+    </div>
+
+    <!-- RIGHT: Data table -->
+    <div class="col-12 col-lg-9 d-flex">
+      <div class="card shadow-sm stretch-card h-100 w-100">
+        <div class="card-body p-3 scrollable-card-body">
+          <div class="table-scroll">
+            <%= form_with url: admin_confirm_sessions_path, method: :patch, local: true, html: { id: "confirm-form" } do %>
+              <%= render "sessions/shared/sessions_table",
+                         sessions: @sessions,
+                         show_bulk_checkbox: true,
+                         inline_edit: true,
+                         scope_name: :unconfirmed %>
+            <% end %>
+          </div>
+        </div>
       </div>
     </div>
-
-    <%# Type checkboxes (compact) %>
-    <div class="d-flex flex-column" style="flex:0 0 auto; min-width: 220px;">
-      <label class="form-label d-block mb-1 small">Type</label>
-      <div class="form-check form-check-inline">
-        <%= check_box_tag "session_type[]", "paid", Array(@filter_params[:session_type]).include?("paid"),
-              id: "type_paid", class: "form-check-input" %>
-        <%= label_tag "type_paid", "Chargée", class: "form-check-label" %>
-      </div>
-      <div class="form-check form-check-inline">
-        <%= check_box_tag "session_type[]", "free", Array(@filter_params[:session_type]).include?("free"),
-              id: "type_free", class: "form-check-input" %>
-        <%= label_tag "type_free", "Absence", class: "form-check-label" %>
-      </div>
-    </div>
-
-    <%# Actions %>
-    <div class="d-flex gap-2" style="flex:0 0 auto;">
-      <%= submit_tag "Filtrer", class: "btn btn-primary" %>
-      <%= link_to "Réinitialiser", admin_unconfirmed_sessions_path, class: "btn btn-outline-secondary" %>
-    </div>
-  <% end %>
-
-  <%# --- Confirm-selected form & table --- %>
-  <%= form_with url: admin_confirm_sessions_path, method: :patch, local: true do %>
-    <div class="mb-3 d-flex gap-2">
-      <%= submit_tag "Confirmer la sélection", class: "btn btn-success" %>
-    </div>
-
-    <%= render "sessions/shared/sessions_table",
-               sessions: @sessions,
-               show_bulk_checkbox: true,
-               inline_edit: true,
-               scope_name: :unconfirmed %>
-  <% end %>
+  </div>
 </div>
