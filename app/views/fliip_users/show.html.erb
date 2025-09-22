@@ -109,9 +109,6 @@
             <div id="client-tabcontent">
               <!-- Services (default) -->
               <section id="pane-client-services" role="tabpanel" aria-labelledby="tab-client-services">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                  <h2 class="h6 mb-0">Services</h2>
-                </div>
                 <% if @fliip_user.fliip_services.any? %>
                   <div class="table-scroll">
                     <%= render "fliip_services/shared/services_table",
@@ -124,10 +121,6 @@
 
               <!-- Abonnements -->
               <section class="d-none" id="pane-client-contracts" role="tabpanel" aria-labelledby="tab-client-contracts">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                  <h2 class="h6 mb-0">Abonnements</h2>
-                </div>
-
                 <% if @fliip_user.fliip_contracts.any? %>
                   <div class="table-scroll">
                     <% fmt_date = ->(d) { d.present? ? d.strftime("%d/%m/%Y") : "—" } %>
