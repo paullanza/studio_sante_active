@@ -27,7 +27,7 @@
 /* Scrollable body for tab content card */
 .scrollable-card-body {
   max-height: 60vh;               /* mobile-friendly height */
-  overflow-y: auto;               /* vertical scroll inside the card */
+  overflow-y: scroll;               /* vertical scroll inside the card */
   -webkit-overflow-scrolling: touch; /* smooth scroll on iOS */
 }
 

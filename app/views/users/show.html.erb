@@ -150,12 +150,8 @@
             <div id="user-tabcontent">
               <!-- Services (visible by default) -->
               <section id="pane-services" role="tabpanel" aria-labelledby="tab-services">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                  <h2 class="h6 mb-0">Services auxquels l’utilisateur·rice participe</h2>
-                </div>
-
                 <!-- Turbo Frame: filters + table update together -->
-                <%= turbo_frame_tag "services_frame" do %>
+                <%= turbo_frame_tag "services_frame", target: "_top" do %>
                   <!-- Filters -->
                   <div class="mb-2">
                     <%= form_with url: user_path(@user), method: :get, local: true,
@@ -194,11 +190,7 @@
 
               <!-- Unconfirmed sessions -->
               <section class="d-none" id="pane-sessions" role="tabpanel" aria-labelledby="tab-sessions">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                  <h2 class="h6 mb-0">Séances non confirmées</h2>
-                </div>
-
-                <%= turbo_frame_tag "user_sessions_frame" do %>
+                <%= turbo_frame_tag "user_sessions_frame", target: "_top" do %>
                   <!-- Filters -->
                   <div class="mb-2">
                     <%= form_with url: user_path(@user), method: :get, local: true,
