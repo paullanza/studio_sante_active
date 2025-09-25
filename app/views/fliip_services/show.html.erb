@@ -116,7 +116,7 @@
             <div id="service-tabcontent">
               <!-- Sessions (default) -->
               <section id="pane-sessions" role="tabpanel" aria-labelledby="tab-sessions">
-                <%= turbo_frame_tag "service_sessions_frame" do %>
+                <%= turbo_frame_tag "service_sessions_frame", target: "_top" do %>
                   <% time_pct = @service.time_progress_percent || 0 %>
                   <% paid_pct = @service.paid_progress_percent || 0 %>
                   <% paid_used     = @service.paid_used_total %>
@@ -172,7 +172,7 @@
               <!-- Adjustments (role-gated) -->
               <% if current_user.manager? || current_user.admin? || current_user.super_admin? %>
                 <section class="d-none" id="pane-adjustments" role="tabpanel" aria-labelledby="tab-adjustments">
-                  <%= turbo_frame_tag "service_adjustments_frame" do %>
+                  <%= turbo_frame_tag "service_adjustments_frame", target: "_top" do %>
                     <div class="row g-3 mb-2">
                       <div class="col-md-4">
                         <div class="small text-muted">Total des séances bonus</div>
