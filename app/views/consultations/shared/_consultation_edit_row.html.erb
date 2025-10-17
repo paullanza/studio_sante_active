@@ -1,0 +1,104 @@
+<% c = consultation %>
+
+<tr id="<%= dom_id(c) %>"
+    data-controller="consultation-row"
+    data-consultation-row-id-value="<%= c.id %>"
+    data-consultation-row-edit-url-value="<%= edit_consultation_path(c) %>"
+    data-consultation-row-row-url-value="<%= row_consultation_path(c) %>"
+    data-consultation-row-update-url-value="<%= consultation_path(c) %>">
+
+  <%# 1) Nom (lecture seule) %>
+  <td class="align-middle">
+    <div class="text-truncate fw-semibold">
+      <%= [c.first_name, c.last_name].compact_blank.join(' ') %>
+    </div>
+  </td>
+
+  <%# 2) Contact (lecture seule, email + téléphone) %>
+  <td class="align-middle">
+    <div class="text-truncate">
+      <% if c.email.present? %>
+        <%= mail_to c.email, c.email, class: "text-decoration-none" %>
+      <% else %>
+        —
+      <% end %>
+    </div>
+    <div class="small text-muted lh-1 text-truncate">
+      <% if c.phone_number.present? %>
+        <%= link_to c.phone_number, "tel:#{c.phone_number}", class: "text-decoration-none text-muted" %>
+      <% else %>
+        —
+      <% end %>
+    </div>
+  </td>
+
+  <%# 3-4) FORMULAIRE d'édition fusionné en une seule cellule %>
+  <td class="small align-middle" colspan="2">
+    <div class="row g-2 align-items-center" data-controller="flatpickr">
+      <div class="col-auto">
+        <%= label_tag :consultation_date, "Date", class: "form-label small mb-0" %>
+        <%= text_field_tag "consultation[date]",
+              (c.occurred_at&.to_date&.strftime("%Y-%m-%d") || Date.current.strftime("%Y-%m-%d")),
+              class: "form-control form-control-sm",
+              placeholder: "YYYY-MM-DD",
+              data: { flatpickr_target: "date" } %>
+      </div>
+
+      <div class="col-auto">
+        <%= label_tag :consultation_time, "Heure", class: "form-label small mb-0" %>
+        <%= text_field_tag "consultation[time]",
+              (c.occurred_at&.strftime("%H:%M") || "09:00"),
+              class: "form-control form-control-sm",
+              step: 900,
+              inputmode: "numeric",
+              placeholder: "HH:MM",
+              data: { flatpickr_target: "time" } %>
+      </div>
+
+      <div class="col-auto">
+        <%= label_tag :consultation_present, "Présence", class: "form-label small mb-0 d-block" %>
+        <div class="form-check mt-1">
+          <%= check_box_tag "consultation[present]", "1", c.present?, class: "form-check-input", id: "consultation_present_#{c.id}" %>
+          <%= label_tag "consultation_present_#{c.id}", "Oui", class: "form-check-label small" %>
+        </div>
+      </div>
+
+      <% if current_user.admin? || (current_user.respond_to?(:super_admin?) && current_user.super_admin?) %>
+        <div class="col-auto">
+          <label class="form-label small mb-0 d-block">Employé·e</label>
+          <select name="consultation[user_id]" class="form-select form-select-sm">
+            <% @staff.each do |u| %>
+              <option value="<%= u.id %>" <%= "selected" if u.id == c.user_id %>><%= u.full_name %></option>
+            <% end %>
+          </select>
+          <% if c.created_by_id.present? && c.created_by_id != c.user_id %>
+            <div class="small text-muted mt-1">créée par <%= c.created_by&.full_name %></div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </td>
+
+  <%# 5) Actions %>
+  <td class="text-end align-middle text-nowrap">
+    <a  href="<%= row_consultation_path(c) %>"
+        class="btn btn-sm btn-outline-secondary me-1"
+        data-action="consultation-row#cancel">
+      Annuler
+    </a>
+    <button type="button"
+            class="btn btn-sm btn-primary"
+            data-action="consultation-row#save">
+      Enregistrer
+    </button>
+  </td>
+</tr>
+
+<tr class="note-row" id="<%= dom_id(c, :note) %>">
+  <td colspan="5" class="py-1">
+    <div class="small">
+      <strong>Note :</strong>
+      <textarea name="consultation[note]" rows="1" class="form-control form-control-sm d-inline-block mt-1"><%= c.note %></textarea>
+    </div>
+  </td>
+</tr>

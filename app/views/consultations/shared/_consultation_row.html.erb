@@ -1,0 +1,90 @@
+<% c = consultation %>
+
+<tr id="<%= dom_id(c) %>"
+    data-controller="consultation-row"
+    data-consultation-row-id-value="<%= c.id %>"
+    data-consultation-row-edit-url-value="<%= edit_consultation_path(c) %>"
+    data-consultation-row-row-url-value="<%= row_consultation_path(c) %>"
+    data-consultation-row-update-url-value="<%= consultation_path(c) %>">
+  <%# 1) Nom %>
+  <td class="align-middle">
+    <div class="text-truncate fw-semibold">
+      <%= [c.first_name, c.last_name].compact_blank.join(' ') %>
+    </div>
+  </td>
+
+  <%# 2) Contact (email + phone stacked like FliipUser row) %>
+  <td class="align-middle">
+    <div class="text-truncate">
+      <% if c.email.present? %>
+        <%= mail_to c.email, c.email, class: "text-decoration-none" %>
+      <% else %>
+        —
+      <% end %>
+    </div>
+    <div class="small text-muted lh-1 text-truncate">
+      <% if c.phone_number.present? %>
+        <%= link_to c.phone_number, "tel:#{c.phone_number}", class: "text-decoration-none text-muted" %>
+      <% else %>
+        —
+      <% end %>
+    </div>
+  </td>
+
+  <%# 3) Date et heure %>
+  <td class="small align-middle">
+    <div class="d-flex flex-column">
+      <div><strong><%= (c.occurred_at || c.created_at).strftime('%d/%m/%Y %H:%M') %></strong></div>
+      <div class="text-muted">
+        <small>Créée : <%= c.created_at.strftime('%d/%m/%Y %H:%M') %></small>
+        <% if c.confirmed? && c.confirmed_at.present? %>
+          <small> | Confirmée : <%= c.confirmed_at.strftime('%d/%m/%Y %H:%M') %></small>
+        <% end %>
+      </div>
+    </div>
+  </td>
+
+  <%# 4) Employé·e %>
+  <td class="text-nowrap align-middle text-center">
+    <% if c.user %>
+      <%= link_to c.user.full_name, user_path(c.user), class: "text-decoration-none" %>
+      <% if c.created_by_id.present? && c.created_by_id != c.user_id %>
+        <div class="small text-muted">créée par <%= c.created_by&.full_name %></div>
+      <% end %>
+    <% else %>
+      <span class="text-muted">—</span>
+    <% end %>
+  </td>
+
+  <%# 5) Actions %>
+  <td class="text-center align-middle text-nowrap">
+    <a href="<%= edit_consultation_path(c) %>"
+       class="btn btn-sm btn-outline-secondary me-1"
+       title="Modifier"
+       data-action="consultation-row#edit">
+      <i class="fa-solid fa-pencil"></i>
+    </a>
+
+    <a href="<%= consultation_path(c) %>"
+       class="btn btn-sm btn-outline-danger"
+       title="Supprimer"
+       data-action="consultation-row#confirmDelete"
+       data-modal-title="Supprimer la consultation"
+       data-modal-body="Voulez-vous vraiment supprimer cette consultation ?"
+       data-modal-primary-label="Supprimer"
+       data-modal-secondary-label="Annuler">
+      <i class="fa-solid fa-trash-can"></i>
+    </a>
+  </td>
+</tr>
+
+<% if c.note.present? %>
+  <tr class="note-row" id="<%= dom_id(c, :note) %>">
+    <td colspan="5" class="py-1">
+      <div class="small text-muted">
+        <strong>Note :</strong>
+        <span><%= c.note %></span>
+      </div>
+    </td>
+  </tr>
+<% end %>

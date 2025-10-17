@@ -26,10 +26,21 @@ class UsersController < ApplicationController
 
     @unconfirmed_sessions = Session
       .where(user_id: @user.id, confirmed: [false, nil])
-      .present_value(params[:present])       # accepts "yes"/"no" or arrays like ["yes","no"]
-      .of_type(params[:session_type])        # accepts "paid"/"free" or arrays
+      .present_value(params[:present])
+      .of_type(params[:session_type])
       .includes(:fliip_user, :fliip_service)
       .order_by_occurred_at_desc
+
+    @consultations_for_user = Consultation
+      .where(user_id: @user.id)
+      .with_associations
+      .order_by_occurred_at_desc
+
+    if params[:show_confirmed] == "1"
+      @consultations_for_user = @consultations_for_user.confirmed
+    else
+      @consultations_for_user = @consultations_for_user.unconfirmed
+    end
   end
 
   def edit

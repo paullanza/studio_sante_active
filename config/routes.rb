@@ -131,6 +131,12 @@ Rails.application.routes.draw do
 
   get "sessions/preview_type", to: "sessions#preview_type"
 
+  resources :consultations, only: [:new, :create, :destroy, :edit, :update] do
+    member do
+      get :row
+    end
+  end
+
   # Async helpers for booking/import flows:
   # - refresh_clients: refresh client list for the booking form
   # - import_clients: one‑off import invoked from admin
