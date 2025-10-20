@@ -1,86 +1,100 @@
 <% c = consultation %>
 
-<tr id="<%= dom_id(c) %>"
-    data-controller="consultation-row"
-    data-consultation-row-id-value="<%= c.id %>"
-    data-consultation-row-edit-url-value="<%= edit_consultation_path(c) %>"
-    data-consultation-row-row-url-value="<%= row_consultation_path(c) %>"
-    data-consultation-row-update-url-value="<%= consultation_path(c) %>">
-  <%# 1) Nom %>
-  <td class="align-middle">
-    <div class="text-truncate fw-semibold">
-      <%= [c.first_name, c.last_name].compact_blank.join(' ') %>
-    </div>
-  </td>
+<tr id="<%= dom_id(c) %>">
+  <%# 1) Optional bulk checkbox %>
+  <% if local_assigns[:show_bulk_checkbox] %>
+    <td class="text-center align-middle">
+      <%= check_box_tag "consultation_ids[]", c.id, false,
+            class: "form-check-input m-0",
+            data: { select_all_target: "checkboxItem" } %>
+    </td>
+  <% end %>
 
-  <%# 2) Contact (email + phone stacked like FliipUser row) %>
-  <td class="align-middle">
-    <div class="text-truncate">
-      <% if c.email.present? %>
-        <%= mail_to c.email, c.email, class: "text-decoration-none" %>
-      <% else %>
-        —
-      <% end %>
-    </div>
-    <div class="small text-muted lh-1 text-truncate">
-      <% if c.phone_number.present? %>
-        <%= link_to c.phone_number, "tel:#{c.phone_number}", class: "text-decoration-none text-muted" %>
-      <% else %>
-        —
-      <% end %>
-    </div>
-  </td>
-
-  <%# 3) Date et heure %>
+  <%# 2) Date · Presence %>
   <td class="small align-middle">
     <div class="d-flex flex-column">
-      <div><strong><%= (c.occurred_at || c.created_at).strftime('%d/%m/%Y %H:%M') %></strong></div>
+      <div class="d-flex align-items-center gap-2">
+        <strong><%= c.occurred_at&.strftime('%d/%m/%Y %H:%M') || "" %></strong>
+        <% if c.present == true %>
+          <span class="badge bg-success">Présent</span>
+        <% elsif c.present == false %>
+          <span class="badge bg-warning">Absent</span>
+        <% else %>
+          <span class="badge bg-secondary">—</span>
+        <% end %>
+      </div>
       <div class="text-muted">
-        <small>Créée : <%= c.created_at.strftime('%d/%m/%Y %H:%M') %></small>
+        <small>créé : <%= c.created_at.strftime('%d/%m/%Y %H:%M') %></small>
         <% if c.confirmed? && c.confirmed_at.present? %>
-          <small> | Confirmée : <%= c.confirmed_at.strftime('%d/%m/%Y %H:%M') %></small>
+          <small>| Confirmé·e : <%= c.confirmed_at.strftime('%d/%m/%Y %H:%M') %></small>
         <% end %>
       </div>
     </div>
   </td>
 
-  <%# 4) Employé·e %>
+  <%# 3) Client name %>
+  <td class="align-middle">
+    <div class="text-truncate">
+      <%= [c.first_name, c.last_name].compact.join(" ") %>
+    </div>
+  </td>
+
+  <%# 4) Contact info %>
+  <td class="align-middle">
+    <div class="text-truncate small">
+      <% if c.email.present? %>
+        <i class="fa-solid fa-envelope me-1"></i><%= c.email %>
+      <% else %>
+        <span class="text-muted">—</span>
+      <% end %>
+    </div>
+    <div class="text-truncate small">
+      <% if c.phone_number.present? %>
+        <i class="fa-solid fa-phone me-1"></i><%= c.phone_number %>
+      <% end %>
+    </div>
+  </td>
+
+  <%# 5) Employee %>
   <td class="text-nowrap align-middle text-center">
     <% if c.user %>
       <%= link_to c.user.full_name, user_path(c.user), class: "text-decoration-none" %>
       <% if c.created_by_id.present? && c.created_by_id != c.user_id %>
-        <div class="small text-muted">créée par <%= c.created_by&.full_name %></div>
+        <div class="small text-muted">créé·e par <%= c.created_by&.full_name %></div>
       <% end %>
     <% else %>
       <span class="text-muted">—</span>
     <% end %>
   </td>
 
-  <%# 5) Actions %>
-  <td class="text-center align-middle text-nowrap">
-    <a href="<%= edit_consultation_path(c) %>"
-       class="btn btn-sm btn-outline-secondary me-1"
-       title="Modifier"
-       data-action="consultation-row#edit">
-      <i class="fa-solid fa-pencil"></i>
-    </a>
+  <%# 6) Actions — icons %>
+  <td class="text-end align-middle text-nowrap">
+    <% if c.modifiable_by?(current_user) %>
+      <%= link_to edit_consultation_path(c),
+                  class: "btn btn-sm btn-outline-secondary me-1",
+                  title: "Modifier" do %>
+        <i class="fa-solid fa-pencil"></i>
+      <% end %>
 
-    <a href="<%= consultation_path(c) %>"
-       class="btn btn-sm btn-outline-danger"
-       title="Supprimer"
-       data-action="consultation-row#confirmDelete"
-       data-modal-title="Supprimer la consultation"
-       data-modal-body="Voulez-vous vraiment supprimer cette consultation ?"
-       data-modal-primary-label="Supprimer"
-       data-modal-secondary-label="Annuler">
-      <i class="fa-solid fa-trash-can"></i>
-    </a>
+      <%= link_to consultation_path(c),
+                  class: "btn btn-sm btn-outline-danger",
+                  title: "Supprimer",
+                  data: {
+                    turbo: false, # keep it simple; no Turbo confirm
+                    confirm: "Supprimer cette consultation ?"
+                  },
+                  method: :delete do %>
+        <i class="fa-solid fa-trash-can"></i>
+      <% end %>
+    <% else %>
+      <span class="text-muted small">—</span>
+    <% end %>
   </td>
 </tr>
 
 <% if c.note.present? %>
   <tr class="note-row" id="<%= dom_id(c, :note) %>">
-    <td colspan="5" class="py-1">
+    <td colspan="<%= (local_assigns[:show_bulk_checkbox] ? 6 : 5) %>" class="py-1">
       <div class="small text-muted">
         <strong>Note :</strong>
         <span><%= c.note %></span>

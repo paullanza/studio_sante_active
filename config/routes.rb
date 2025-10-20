@@ -74,6 +74,15 @@ Rails.application.routes.draw do
   patch "admin/confirm_sessions",     to: "admin#confirm_sessions",     as: :admin_confirm_sessions
 
   # =====================================================================
+  # ADMIN — CONSULTATION CONFIRMATION WORKFLOW
+  # ---------------------------------------------------------------------
+  # Used during payroll cycles: list unconfirmed sessions and perform a
+  # bulk confirmation action across selected records.
+  # =====================================================================
+  get   "admin/unconfirmed_consultations", to: "admin#unconfirmed_consultations", as: :admin_unconfirmed_consultations
+  patch "admin/confirm_consultations",     to: "admin#confirm_consultations",     as: :admin_confirm_consultations
+
+  # =====================================================================
   # ADMIN — SERVICE USAGE ADJUSTMENTS (BULK TOOLS)
   # ---------------------------------------------------------------------
   # 1) `adjustments_new`: start a new adjustment run

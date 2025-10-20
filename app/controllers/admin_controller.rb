@@ -4,20 +4,17 @@ class AdminController < ApplicationController
   before_action :ensure_admin!
 
   def dashboard
-    # Staff list (order by role then name)
     if current_user.super_admin?
       @users = User.order(role: :desc, last_name: :asc, first_name: :asc)
     else
       @users = User.where.not(role: :super_admin).order(role: :desc, last_name: :asc, first_name: :asc)
     end
-    # Per-user unconfirmed session counts (include nil as unconfirmed)
+
     @unconfirmed_counts = Session
       .where(confirmed: [false, nil])
       .group(:user_id)
       .count
 
-    # Distinct services touched per user (sessions or adjustments)
-    # (kept simple & readable; can optimize with a SQL UNION later if needed)
     sessions_pairs = Session.distinct.pluck(:user_id, :fliip_service_id)
     adjust_pairs   = ServiceUsageAdjustment.distinct.pluck(:user_id, :fliip_service_id)
 
@@ -27,10 +24,8 @@ class AdminController < ApplicationController
 
     @services_touched_counts = tmp.transform_values { |arr| arr.uniq.size }
 
-    # Signup codes (small slice to keep dashboard light)
     @signup_codes = SignupCode.order(created_at: :desc).limit(20)
 
-    # Services ending soon (next 30 days) and ended recently (last 30 days)
     today = Date.current
     @services_ending_soon = FliipService
       .active
@@ -85,6 +80,7 @@ class AdminController < ApplicationController
     @total_count  = @services.size
   end
 
+  # Unconfirmed Sessions
   def unconfirmed_sessions
     @filter_params = permitted_session_filters
     @sessions = Session.unconfirmed
@@ -92,13 +88,11 @@ class AdminController < ApplicationController
                        .with_associations
                        .order_by_occurred_at_desc
 
-    # For the employee dropdown in filters
     @staff = User.where(active: true).order(:first_name, :last_name)
   end
 
   def confirm_sessions
     ids = Array(params[:session_ids]).map(&:to_i).uniq
-
     if ids.empty?
       redirect_to admin_unconfirmed_sessions_path, alert: "No sessions selected." and return
     end
@@ -113,11 +107,38 @@ class AdminController < ApplicationController
     end
   end
 
+  # Unconfirmed Consultations
+  def unconfirmed_consultations
+    @filter_params = permitted_consultation_filters
+    @consultations = Consultation.unconfirmed
+                                 .apply_filters(@filter_params)
+                                 .with_associations
+                                 .order_by_occurred_at_desc
+
+    @staff = User.where(active: true).order(:first_name, :last_name)
+  end
+
+  def confirm_consultations
+    ids = Array(params[:consultation_ids]).map(&:to_i).uniq
+    if ids.empty?
+      redirect_to admin_unconfirmed_consultations_path, alert: "No consultations selected." and return
+    end
+
+    updated = Consultation.confirm(ids)
+
+    if updated.zero?
+      redirect_to admin_unconfirmed_consultations_path, alert: "Nothing to confirm (already confirmed?)."
+    else
+      redirect_to admin_unconfirmed_consultations_path,
+                  notice: "#{updated} #{'consultation'.pluralize(updated)} confirmed."
+    end
+  end
+
   def import_clients
     msg = FliipApi::UserSync::UserImporter.call
     redirect_to admin_dashboard_path, notice: msg
   rescue => e
-      redirect_to admin_dashboard_path, alert: "Could not refresh clients: #{e.message}"
+    redirect_to admin_dashboard_path, alert: "Could not refresh clients: #{e.message}"
   end
 
   def client_services
@@ -143,12 +164,8 @@ class AdminController < ApplicationController
       @rows << row
     end
 
-    # used by the commit action
     @payload_json = { rows: @rows.map(&:to_h) }.to_json
-
-    # dropdown options
     @users_for_select = User.order(:first_name, :last_name)
-
   rescue => e
     redirect_to admin_adjustments_new_path, alert: "Could not read CSV: #{e.message}"
   end
@@ -189,6 +206,15 @@ class AdminController < ApplicationController
     )
   end
 
+  def permitted_consultation_filters
+    params.permit(
+      :q,
+      :employee_id,
+      :consultation_date_from, :consultation_date_to,
+      :created_from, :created_to,
+      present: []
+    )
+  end
 
   def fmt_date(d)
     d.present? ? d.strftime("%d/%m/%Y") : nil

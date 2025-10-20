@@ -27,7 +27,12 @@
           </li>
           <% if current_user.admin? || current_user.super_admin? %>
             <li class="nav-item">
-              <%= link_to "Confirmations", admin_unconfirmed_sessions_path, class: "nav-link" %>
+              <%= link_to "Séances", admin_unconfirmed_sessions_path, class: "nav-link" %>
+            </li>
+          <% end %>
+          <% if current_user.admin? || current_user.super_admin? %>
+            <li class="nav-item">
+              <%= link_to "Consultations", admin_unconfirmed_consultations_path, class: "nav-link" %>
             </li>
           <% end %>
         </ul>
