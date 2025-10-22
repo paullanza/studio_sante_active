@@ -7,6 +7,7 @@
       <th>Rôle</th>
       <th>Statut</th>
       <th class="text-center">Non conf.</th>
+      <th class="text-center">Cons. non conf.</th>
       <th class="text-center">Services</th>
       <% if show_actions %><th class="text-end">Actions</th><% end %>
     </tr>
@@ -38,6 +39,13 @@
             <%= unconfirmed_counts[user.id].to_i %>
           </span>
         </td>
+
+        <td class="text-center">
+          <span class="badge bg-warning text-dark">
+            <%= unconfirmed_consultation_counts[user.id].to_i %>
+          </span>
+        </td>
+
         <td class="text-center">
           <span class="badge bg-secondary">
             <%= services_touched_counts[user.id].to_i %>

@@ -17,9 +17,9 @@ class ConsultationsController < ApplicationController
     @consultation = Consultation.new(consultation_params)
 
     # Defaults/attribution
-    @consultation.user_id       ||= current_user.id
-    @consultation.created_by_id  = current_user.id
-    @consultation.confirmed  = false
+    @consultation.user_id ||= current_user.id
+    @consultation.created_by_id = current_user.id
+    @consultation.confirmed = false
     assign_occurred_at(@consultation, params[:consultation][:date], params[:consultation][:time])
 
     if @consultation.save

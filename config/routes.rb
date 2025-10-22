@@ -146,6 +146,8 @@ Rails.application.routes.draw do
     end
   end
 
+  get "seances/new", to: "bookings#new", as: :new_seance
+
   # Async helpers for booking/import flows:
   # - refresh_clients: refresh client list for the booking form
   # - import_clients: one‑off import invoked from admin

@@ -15,6 +15,11 @@ class AdminController < ApplicationController
       .group(:user_id)
       .count
 
+    @unconfirmed_consultation_counts = Consultation
+      .where(confirmed: [false, nil])
+      .group(:user_id)
+      .count
+
     sessions_pairs = Session.distinct.pluck(:user_id, :fliip_service_id)
     adjust_pairs   = ServiceUsageAdjustment.distinct.pluck(:user_id, :fliip_service_id)
 

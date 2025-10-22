@@ -5,11 +5,16 @@ class ManagerController < ApplicationController
   before_action :require_manager_only!
 
   def dashboard
-# Staff list (order by role then name)
+    # Staff list (order by role then name)
     @users = User.where.not(role: :super_admin).order(role: :desc, last_name: :asc, first_name: :asc)
 
     # Per-user unconfirmed session counts (include nil as unconfirmed)
     @unconfirmed_counts = Session
+      .where(confirmed: [false, nil])
+      .group(:user_id)
+      .count
+
+    @unconfirmed_consultation_counts = Consultation
       .where(confirmed: [false, nil])
       .group(:user_id)
       .count
