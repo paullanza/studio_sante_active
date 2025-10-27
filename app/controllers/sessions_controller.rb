@@ -25,7 +25,7 @@ class SessionsController < ApplicationController
     @session.duration    = params[:half_hour] == "1" ? 0.5 : 1.0
 
     if @session.save
-      redirect_to new_session_path, notice: "Séance créée avec succès."
+      redirect_to new_seance_path, notice: "Séance créée avec succès."
     else
       # Rehydrate everything the :new template needs
       load_fliip_users

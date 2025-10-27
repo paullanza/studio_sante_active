@@ -1,6 +1,13 @@
 <% c = consultation %>
 
-<tr id="<%= dom_id(c) %>">
+<tr id="<%= dom_id(c) %>"
+    data-controller="consultation-row"
+    data-consultation-row-id-value="<%= c.id %>"
+    data-consultation-row-edit-url-value="<%= edit_consultation_path(c) %>"
+    data-consultation-row-row-url-value="<%= row_consultation_path(c) %>"
+    data-consultation-row-update-url-value="<%= consultation_path(c) %>"
+    data-consultation-row-show-bulk-value="<%= local_assigns[:show_bulk_checkbox].present? %>">
+
   <%# 1) Optional bulk checkbox %>
   <% if local_assigns[:show_bulk_checkbox] %>
     <td class="text-center align-middle">
@@ -72,20 +79,21 @@
     <% if c.modifiable_by?(current_user) %>
       <%= link_to edit_consultation_path(c),
                   class: "btn btn-sm btn-outline-secondary me-1",
-                  title: "Modifier" do %>
+                  title: "Modifier",
+                  data: { action: "consultation-row#edit" } do %>
         <i class="fa-solid fa-pencil"></i>
       <% end %>
 
-      <%= link_to consultation_path(c),
-                  class: "btn btn-sm btn-outline-danger",
-                  title: "Supprimer",
-                  data: {
-                    turbo: false, # keep it simple; no Turbo confirm
-                    confirm: "Supprimer cette consultation ?"
-                  },
-                  method: :delete do %>
+      <a href="<%= consultation_path(c) %>"
+         class="btn btn-sm btn-outline-danger"
+         title="Supprimer"
+         data-action="consultation-row#confirmDelete"
+         data-modal-title="Supprimer la consultation"
+         data-modal-body="Supprimer cette consultation ?"
+         data-modal-primary-label="Supprimer"
+         data-modal-secondary-label="Annuler">
         <i class="fa-solid fa-trash-can"></i>
-      <% end %>
+      </a>
     <% else %>
       <span class="text-muted small">—</span>
     <% end %>

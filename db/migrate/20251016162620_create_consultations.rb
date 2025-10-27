@@ -3,6 +3,7 @@ class CreateConsultations < ActiveRecord::Migration[7.1]
     create_table :consultations do |t|
       t.references :user, null: false, foreign_key: true
       t.references :created_by, null: false, foreign_key: { to_table: :users }
+      t.references :fliip_user, foreign_key: true
       t.string :first_name
       t.string :last_name
       t.string :email

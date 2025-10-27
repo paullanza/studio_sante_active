@@ -1,6 +1,6 @@
 <div class="container my-4 booking-new" data-controller="client-search">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="mb-0 fw-bold">Réservation</h1>
+    <h1 class="mb-2">Nouvelle séance</h1>
   </div>
 
   <!-- One segmented-tabs controller drives both columns -->
@@ -17,7 +17,7 @@
           <div class="position-relative mb-3">
             <div class="d-flex border rounded-pill p-1 position-relative" style="--seg-height:32px;">
               <button type="button"
-                      class="btn btn-sm flex-fill rounded-pill"
+                      class="btn btn-sm flex-fill rounded-pill position-relative z-1"
                       data-segmented-tabs-target="tab"
                       data-value="session"
                       data-action="segmented-tabs#activate"
@@ -25,15 +25,17 @@
                 Séance
               </button>
               <button type="button"
-                      class="btn btn-sm flex-fill rounded-pill"
+                      class="btn btn-sm flex-fill rounded-pill position-relative z-1"
                       data-segmented-tabs-target="tab"
                       data-value="consultation"
                       data-action="segmented-tabs#activate"
                       style="height: var(--seg-height);">
                 Consultation
               </button>
-              <div class="position-absolute bg-primary rounded-pill" data-segmented-tabs-target="slider"
-                   style="top:4px; bottom:4px; left:4px; width:calc(50% - 4px); transition: all .18s ease;"></div>
+              <!-- Slider behind buttons -->
+              <div class="position-absolute bg-primary rounded-pill"
+                  data-segmented-tabs-target="slider"
+                  style="top:4px; bottom:4px; transition: all .18s ease; z-index:0; pointer-events:none;"></div>
             </div>
           </div>
 
@@ -181,8 +183,6 @@
                   </button>
                 </div>
               </div>
-
-              <%= render "shared/modal" %>
             <% end %>
           </div>
 
@@ -296,9 +296,8 @@
             <!-- Bottom: Sessions (half height) -->
             <div class="pane pane-sessions d-flex flex-column" style="flex:1 1 0; min-height:0;">
               <div class="d-flex align-items-center justify-content-between mb-1">
-                <h2 class="h6 mb-0">Séances récentes</h2>
+                <h2 class="h6 mb-0">Séances récentes<span class="text-muted small mb-2"> 25 dernières séances non confirmées créées par vous.</span></h2>
               </div>
-              <p class="text-muted small mb-2">25 dernières séances non confirmées créées par vous.</p>
 
               <div class="flex-grow-1" style="min-height:0; overflow:auto;">
                 <div class="table-scroll">
@@ -333,3 +332,5 @@
     </div>
   </div> <!-- /row -->
 </div>
+
+<%= render "shared/modal" %>

@@ -143,6 +143,7 @@ Rails.application.routes.draw do
   resources :consultations, only: [:new, :create, :destroy, :edit, :update] do
     member do
       get :row
+      patch :associate
     end
   end
 

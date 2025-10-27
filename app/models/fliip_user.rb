@@ -27,6 +27,16 @@ class FliipUser < ApplicationRecord
   # Restrict deletion if there are existing sessions (adds validation error instead of deleting).
   has_many :sessions,        dependent: :restrict_with_error, inverse_of: :fliip_user
 
+  has_many :consultations, dependent: :nullify, inverse_of: :fliip_user
+
+  # Scopes (add this)
+  scope :with_service_after, ->(date) {
+    return none if date.blank?
+    joins(:fliip_services)
+      .where("COALESCE(fliip_services.start_date, fliip_services.purchase_date) > ?", date)
+      .distinct
+  }
+
   # -----------------------------------------
   # Search Scope
   # -----------------------------------------

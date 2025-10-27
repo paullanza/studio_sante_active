@@ -45,7 +45,10 @@ class ManagerController < ApplicationController
       .where(expire_date: (today - 30.days)..(today - 1.day))
       .includes(:fliip_user, :service_definition, :service_usage_adjustments)
       .order(expire_date: :desc)
-    # Anything admin-specific is omitted (no unconfirmed summary here)
+
+    @consultations_last_30 = Consultation
+      .where(occurred_at: (today - 30.days)..today)
+      .order(occurred_at: :desc)
   end
 
   def services

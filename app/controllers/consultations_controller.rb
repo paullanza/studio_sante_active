@@ -23,7 +23,7 @@ class ConsultationsController < ApplicationController
     assign_occurred_at(@consultation, params[:consultation][:date], params[:consultation][:time])
 
     if @consultation.save
-      redirect_to new_consultation_path, notice: "Consultation créée."
+      redirect_to new_seance_path, notice: "Consultation créée."
     else
       @consultations = Consultation
         .where(confirmed: [false, nil])

@@ -44,6 +44,10 @@ class AdminController < ApplicationController
       .order(expire_date: :desc)
 
     @exportable_services_count = FliipService.count
+
+    @consultations_last_30 = Consultation
+      .where(occurred_at: (today - 30.days)..today)
+      .order(occurred_at: :desc)
   end
 
   def create_signup_code
