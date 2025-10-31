@@ -16,14 +16,17 @@ class Consultation < ApplicationRecord
   # -----------------------------------------
   belongs_to :user
   belongs_to :created_by, class_name: "User"
-  belongs_to :fliip_user, optional: true
+  belongs_to :fliip_service, optional: true
 
   # -----------------------------------------
   # Validations
   # -----------------------------------------
   validates :user_id, :first_name, :last_name, :email, :occurred_at, presence: true
   validates :note, length: { maximum: 10_000 }, allow_blank: true
-  validate  :fliip_user_linkable_if_present
+
+  validates :fliip_service_id,
+  uniqueness: { message: "has already been associated to another consultation" },
+  allow_nil: true
 
   # -----------------------------------------
   # Callbacks
@@ -39,7 +42,7 @@ class Consultation < ApplicationRecord
   # -----------------------------------------
   # Eager loading & ordering
   # -----------------------------------------
-  scope :with_associations, -> { includes(:user, :created_by, :fliip_user) }
+  scope :with_associations, -> { includes(:user, :created_by, fliip_service: :fliip_user) }
   scope :order_by_occurred_at_desc, -> {
     order(Arel.sql("occurred_at DESC NULLS LAST"), created_at: :desc)
   }
@@ -131,17 +134,5 @@ class Consultation < ApplicationRecord
 
   def default_created_by
     self.created_by_id = user_id if created_by_id.blank?
-  end
-
-  def fliip_user_linkable_if_present
-    return if fliip_user_id.blank?
-
-    date = after_date
-    eligible = FliipService
-      .where(fliip_user_id: fliip_user_id)
-      .where("start_date > ? OR purchase_date > ?", date, date)
-      .exists?
-
-    errors.add(:fliip_user_id, "must have a service created after the consultation date") unless eligible
   end
 end

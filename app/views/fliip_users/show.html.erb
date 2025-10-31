@@ -1,3 +1,4 @@
+<!-- app/views/fliip_users/show.html.erb -->
 <div class="container my-4 fliip-user-show">
   <%# local helpers %>
   <% full_name     = [@fliip_user.user_firstname, @fliip_user.user_lastname].compact_blank.join(" ") %>
@@ -101,6 +102,19 @@
               data-action="click->tabs#activate">
               Abonnements
             </button>
+
+            <!-- NEW: Consultations tab -->
+            <button
+              class="nav-link"
+              id="tab-client-consultations"
+              type="button"
+              role="tab"
+              aria-controls="pane-client-consultations"
+              aria-selected="false"
+              data-bs-target="#pane-client-consultations"
+              data-action="click->tabs#activate">
+              Consultations
+            </button>
           </div>
         </nav>
 
@@ -174,6 +188,16 @@
                   </div>
                 <% else %>
                   <p class="text-muted small mb-2">Aucun abonnement trouvé pour cet·te utilisateur·trice.</p>
+                <% end %>
+              </section>
+
+              <section class="d-none" id="pane-client-consultations" role="tabpanel" aria-labelledby="tab-client-consultations">
+                <% if @fliip_user.consultations.any? %>
+                  <div class="table-scroll">
+                    <%= render "consultations/shared/consultations_table", consultations: @fliip_user.consultations %>
+                  </div>
+                <% else %>
+                  <p class="text-muted small mb-2">Aucune consultation trouvée pour cet·te utilisateur·trice.</p>
                 <% end %>
               </section>
             </div>

@@ -18,20 +18,20 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_16_162620) do
   create_table "consultations", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "created_by_id", null: false
-    t.bigint "fliip_user_id"
+    t.bigint "fliip_service_id"
     t.string "first_name"
     t.string "last_name"
     t.string "email"
     t.string "phone_number"
     t.datetime "confirmed_at"
-    t.text "note"
     t.boolean "confirmed"
     t.boolean "present"
     t.datetime "occurred_at"
+    t.text "note"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_consultations_on_created_by_id"
-    t.index ["fliip_user_id"], name: "index_consultations_on_fliip_user_id"
+    t.index ["fliip_service_id"], name: "index_consultations_on_fliip_service_id"
     t.index ["user_id"], name: "index_consultations_on_user_id"
   end
 
@@ -190,7 +190,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_16_162620) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
-  add_foreign_key "consultations", "fliip_users"
+  add_foreign_key "consultations", "fliip_services", on_delete: :nullify
   add_foreign_key "consultations", "users"
   add_foreign_key "consultations", "users", column: "created_by_id"
   add_foreign_key "fliip_contracts", "fliip_users"

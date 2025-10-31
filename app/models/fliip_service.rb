@@ -9,6 +9,7 @@ class FliipService < ApplicationRecord
               foreign_key: :service_id,
               optional: true
   has_many   :service_usage_adjustments, dependent: :destroy, inverse_of: :fliip_service
+  has_many   :consultations, dependent: :restrict_with_error, inverse_of: :fliip_service
 
   # -----------------------------------------
   # Scopes: by purchase status

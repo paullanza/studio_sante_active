@@ -25,13 +25,17 @@ class FliipUsersController < ApplicationController
   end
 
   def show
-    @fliip_user = FliipUser.includes(
-      fliip_services: [
-        :service_definition,
-        :service_usage_adjustments,
-        :sessions
-      ]
-    ).find(params[:id])
+    @fliip_user = FliipUser
+      .includes(
+        :fliip_contracts,
+        fliip_services: [
+          :service_definition,
+          :service_usage_adjustments,
+          :sessions,
+          :consultations
+        ]
+      )
+      .find(params[:id])
   end
 
   def refresh

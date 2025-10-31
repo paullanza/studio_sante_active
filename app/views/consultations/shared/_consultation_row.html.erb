@@ -1,12 +1,21 @@
 <% c = consultation %>
+<% svc = c.try(:fliip_service) %>
+<% client = svc&.fliip_user %>
 
 <tr id="<%= dom_id(c) %>"
-    data-controller="consultation-row"
+    data-controller="consultation-row association"
     data-consultation-row-id-value="<%= c.id %>"
     data-consultation-row-edit-url-value="<%= edit_consultation_path(c) %>"
     data-consultation-row-row-url-value="<%= row_consultation_path(c) %>"
     data-consultation-row-update-url-value="<%= consultation_path(c) %>"
-    data-consultation-row-show-bulk-value="<%= local_assigns[:show_bulk_checkbox].present? %>">
+    data-consultation-row-show-bulk-value="<%= local_assigns[:show_bulk_checkbox].present? %>"
+
+    data-association-id-value="<%= c.id %>"
+    data-association-edit-url-value="<%= association_consultation_path(c) %>"
+    data-association-row-url-value="<%= row_consultation_path(c) %>"
+    data-association-update-url-value="<%= associate_consultation_path(c) %>"
+    data-association-service-select-url-value="<%= service_select_consultation_path(c) %>"
+    data-association-show-bulk-value="<%= local_assigns[:show_bulk_checkbox].present? %>">
 
   <%# 1) Optional bulk checkbox %>
   <% if local_assigns[:show_bulk_checkbox] %>
@@ -39,25 +48,36 @@
     </div>
   </td>
 
-  <%# 3) Client name %>
+  <%# 3) Client %>
   <td class="align-middle">
-    <div class="text-truncate">
-      <%= [c.first_name, c.last_name].compact.join(" ") %>
-    </div>
+    <% if client.present? %>
+      <div class="text-truncate">
+        <%= link_to("#{client.user_firstname} #{client.user_lastname}".strip, fliip_user_path(client), class: "text-decoration-none") %>
+      </div>
+      <% if svc.present? %>
+        <div class="text-muted small text-truncate">
+          <%= link_to (svc.service_name.presence || "Service ##{svc.id}"), fliip_service_path(svc), class: "text-decoration-none" %>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="text-truncate">
+        <%= [c.first_name, c.last_name].compact.join(" ") %>
+      </div>
+    <% end %>
   </td>
 
   <%# 4) Contact info %>
   <td class="align-middle">
     <div class="text-truncate small">
       <% if c.email.present? %>
-        <i class="fa-solid fa-envelope me-1"></i><%= c.email %>
+        <i class="fa-solid fa-envelope me-1"></i><%= mail_to c.email, c.email, class: "text-decoration-none" %>
       <% else %>
         <span class="text-muted">—</span>
       <% end %>
     </div>
     <div class="text-truncate small">
       <% if c.phone_number.present? %>
-        <i class="fa-solid fa-phone me-1"></i><%= c.phone_number %>
+        <i class="fa-solid fa-phone me-1"></i><%= link_to c.phone_number, "tel:#{c.phone_number}", class: "text-decoration-none" %>
       <% end %>
     </div>
   </td>
@@ -77,6 +97,32 @@
   <%# 6) Actions — icons %>
   <td class="text-end align-middle text-nowrap">
     <% if c.modifiable_by?(current_user) %>
+      <% if c.fliip_service.present? %>
+        <%# Linked: show ONLY the disassociate (broken chain) with confirm modal %>
+        <%= button_to disassociate_consultation_path(c),
+                      method: :patch,
+                      form: { class: "d-inline" },
+                      class: "btn btn-sm btn-outline-danger me-1",
+                      title: "Retirer l’association",
+                      data: {
+                        action: "consultation-row#confirmDisassociate",
+                        modal_title: consultations_modal_disassociate_title(c),
+                        modal_body: consultations_modal_disassociate_body(c),
+                        modal_primary_label: consultations_modal_disassociate_primary_label,
+                        modal_secondary_label: consultations_modal_disassociate_secondary_label
+                      } do %>
+          <i class="fa-solid fa-link-slash"></i>
+        <% end %>
+      <% else %>
+        <%# Not linked: show the link button to start association flow %>
+        <%= link_to association_consultation_path(c),
+                    class: "btn btn-sm btn-outline-primary me-1",
+                    title: "Associer un service",
+                    data: { action: "association#edit" } do %>
+          <i class="fa-solid fa-link"></i>
+        <% end %>
+      <% end %>
+
       <%= link_to edit_consultation_path(c),
                   class: "btn btn-sm btn-outline-secondary me-1",
                   title: "Modifier",
@@ -85,13 +131,13 @@
       <% end %>
 
       <a href="<%= consultation_path(c) %>"
-         class="btn btn-sm btn-outline-danger"
-         title="Supprimer"
-         data-action="consultation-row#confirmDelete"
-         data-modal-title="Supprimer la consultation"
-         data-modal-body="Supprimer cette consultation ?"
-         data-modal-primary-label="Supprimer"
-         data-modal-secondary-label="Annuler">
+        class="btn btn-sm btn-outline-danger"
+        title="Supprimer"
+        data-action="consultation-row#confirmDelete"
+        data-modal-title="<%= consultations_modal_delete_title(c) %>"
+        data-modal-body="<%= consultations_modal_delete_body(c) %>"
+        data-modal-primary-label="<%= consultations_modal_delete_primary_label %>"
+        data-modal-secondary-label="<%= consultations_modal_delete_secondary_label %>">
         <i class="fa-solid fa-trash-can"></i>
       </a>
     <% else %>

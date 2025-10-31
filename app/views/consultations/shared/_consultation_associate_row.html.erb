@@ -1,0 +1,85 @@
+<% c = consultation %>
+
+<tr id="<%= dom_id(c) %>"
+    data-controller="association"
+    data-association-id-value="<%= c.id %>"
+    data-association-edit-url-value="<%= association_consultation_path(c) %>"
+    data-association-row-url-value="<%= row_consultation_path(c) %>"
+    data-association-update-url-value="<%= associate_consultation_path(c) %>"
+    data-association-service-select-url-value="<%= service_select_consultation_path(c) %>"
+    data-association-show-bulk-value="<%= local_assigns[:show_bulk_checkbox].present? %>"
+    data-association-already-linked-value="<%= c.fliip_service_id.present? %>">
+
+  <%# 1) Optional bulk checkbox placeholder %>
+  <% if local_assigns[:show_bulk_checkbox] %>
+    <td></td>
+  <% end %>
+
+  <%# 2) Date · Présence (read-only context) %>
+  <td class="small align-middle">
+    <div class="d-flex flex-column">
+      <div class="d-flex align-items-center gap-2">
+        <strong><%= c.occurred_at&.strftime('%d/%m/%Y %H:%M') || "" %></strong>
+        <% if c.present == true %>
+          <span class="badge bg-success">Présent</span>
+        <% elsif c.present == false %>
+          <span class="badge bg-warning">Absent</span>
+        <% else %>
+          <span class="badge bg-secondary">—</span>
+        <% end %>
+      </div>
+      <div class="text-muted">
+        <small>créé : <%= c.created_at.strftime('%d/%m/%Y %H:%M') %></small>
+      </div>
+    </div>
+  </td>
+
+  <%# 3) Client select %>
+  <td class="align-middle">
+    <label class="form-label small mb-1 d-block">Client·e (Fliip)</label>
+    <select name="fliip_user_id"
+            class="form-select form-select-sm"
+            data-action="change->association#loadServices">
+      <% @fliip_users.each do |u| %>
+        <% label = "#{u.user_firstname} #{u.user_lastname}".strip.presence || "Client·e ##{u.id}" %>
+        <option value="<%= u.id %>" <%= "selected" if u.id == @selected_fliip_user_id %>><%= label %></option>
+      <% end %>
+    </select>
+  </td>
+
+  <%# 4) Service select (depends on client), filtered by consultation date %>
+  <td class="align-middle" id="service-select-frame-<%= c.id %>">
+    <%= render partial: "consultations/service_select",
+               locals: { services: @services, selected_id: nil } %>
+  </td>
+
+  <%# 5) Employee column (read-only) %>
+  <td class="text-nowrap align-middle text-center">
+    <% if c.user %>
+      <%= link_to c.user.full_name, user_path(c.user), class: "text-decoration-none" %>
+      <% if c.created_by_id.present? && c.created_by_id != c.user_id %>
+        <div class="small text-muted">créée par <%= c.created_by&.full_name %></div>
+      <% end %>
+    <% else %>
+      <span class="text-muted">—</span>
+    <% end %>
+  </td>
+
+  <%# 6) Actions %>
+  <td class="text-end align-middle text-nowrap">
+    <a  href="<%= row_consultation_path(c) %>"
+        class="btn btn-sm btn-outline-secondary me-1"
+        data-action="association#cancel">
+      Annuler
+    </a>
+    <button type="button"
+            class="btn btn-sm btn-primary"
+            data-action="association#save"
+            data-modal-title="<%= consultations_modal_already_associated_title(c) %>"
+            data-modal-body="<%= consultations_modal_already_associated_body(c) %>"
+            data-modal-primary-label="<%= consultations_modal_already_associated_primary_label %>"
+            data-modal-secondary-label="<%= consultations_modal_already_associated_secondary_label %>">
+      Associer
+    </button>
+  </td>
+</tr>

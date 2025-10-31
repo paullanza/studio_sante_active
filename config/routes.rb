@@ -45,7 +45,7 @@ Rails.application.routes.draw do
   # =====================================================================
   # ADMIN — DASHBOARD, SERVICE OVERSIGHT & EXPORTS
   # ---------------------------------------------------------------------
-  # High‑level admin views over services plus a CSV export for auditing
+  # High-level admin views over services plus a CSV export for auditing
   # or payroll. `service_show` is an admin lens over a service; PATCH
   # allows inline updates by admins.
   # =====================================================================
@@ -59,7 +59,7 @@ Rails.application.routes.draw do
   # ADMIN — SIGNUP CODES (ACCESS CONTROL FOR NEW EMPLOYEES)
   # ---------------------------------------------------------------------
   # Create new codes and deactivate existing ones. Codes gate employee
-  # self‑sign‑ups and typically expire after a set time.
+  # self-sign-ups and typically expire after a set time.
   # =====================================================================
   post  "admin/signup_codes",                 to: "admin#create_signup_code",     as: :admin_signup_codes
   patch "admin/signup_codes/:id/deactivate",  to: "admin#deactivate_signup_code", as: :deactivate_admin_signup_code
@@ -76,8 +76,8 @@ Rails.application.routes.draw do
   # =====================================================================
   # ADMIN — CONSULTATION CONFIRMATION WORKFLOW
   # ---------------------------------------------------------------------
-  # Used during payroll cycles: list unconfirmed sessions and perform a
-  # bulk confirmation action across selected records.
+  # Used during payroll cycles: list unconfirmed consultations and
+  # perform a bulk confirmation action across selected records.
   # =====================================================================
   get   "admin/unconfirmed_consultations", to: "admin#unconfirmed_consultations", as: :admin_unconfirmed_consultations
   patch "admin/confirm_consultations",     to: "admin#confirm_consultations",     as: :admin_confirm_consultations
@@ -86,7 +86,7 @@ Rails.application.routes.draw do
   # ADMIN — SERVICE USAGE ADJUSTMENTS (BULK TOOLS)
   # ---------------------------------------------------------------------
   # 1) `adjustments_new`: start a new adjustment run
-  # 2) `adjustments_preview`: dry‑run to review computed changes
+  # 2) `adjustments_preview`: dry-run to review computed changes
   # 3) `adjustments_commit`: apply adjustments to usage counters
   # =====================================================================
   get  "admin/adjustments/new",     to: "admin#adjustments_new",     as: :admin_adjustments_new
@@ -94,15 +94,15 @@ Rails.application.routes.draw do
   post "admin/adjustments/commit",  to: "admin#adjustments_commit",  as: :admin_adjustments_commit
 
   # =====================================================================
-  # MANAGER VIEWS (READ‑ONLY/REDUCED POWERS VS. ADMIN)
+  # MANAGER VIEWS (READ-ONLY/REDUCED POWERS VS. ADMIN)
   # ---------------------------------------------------------------------
-  # Manager dashboard and service views for day‑to‑day oversight without
-  # admin‑level mutation rights.
+  # Manager dashboard and service views for day-to-day oversight without
+  # admin-level mutation rights. Managers can also create signup codes.
   # =====================================================================
-  get "manager/dashboard",    to: "manager#dashboard",   as: :manager_dashboard
-  get "manager/services",     to: "manager#services",    as: :manager_services
-  get "manager/services/:id", to: "manager#service_show",as: :manager_service
-  post "manager/signup_codes", to: "manager#create_signup_code", as: :manager_signup_codes
+  get  "manager/dashboard",     to: "manager#dashboard",    as: :manager_dashboard
+  get  "manager/services",      to: "manager#services",     as: :manager_services
+  get  "manager/services/:id",  to: "manager#service_show", as: :manager_service
+  post "manager/signup_codes",  to: "manager#create_signup_code", as: :manager_signup_codes
 
   # =====================================================================
   # USERS — PROFILE & ROLE MANAGEMENT
@@ -123,9 +123,11 @@ Rails.application.routes.draw do
   # =====================================================================
   # SESSIONS — BOOKING / CREATION FLOW
   # ---------------------------------------------------------------------
-  # New/Create/Destroy for session records. Collection helpers support
+  # New/Create/Destroy/Edit/Update for session records. Member `row`
+  # renders a partial for dynamic table updates. Collection helpers power
   # the booking UI: `services_table` renders a table partial; `service_select`
-  # provides a step to choose a client service before creating a session.
+  # is the step to choose a client service before creating a session.
+  # `preview_type` supports client-side previews of session types.
   # =====================================================================
   resources :sessions, only: [:new, :create, :destroy, :edit, :update] do
     member do
@@ -140,23 +142,43 @@ Rails.application.routes.draw do
 
   get "sessions/preview_type", to: "sessions#preview_type"
 
+  # =====================================================================
+  # CONSULTATIONS — CREATION & ASSOCIATION FLOW
+  # ---------------------------------------------------------------------
+  # New/Create/Destroy/Edit/Update for consultation records. Member
+  # routes support table row rendering (`row`), association UI (`association`),
+  # and persisting the selected association (`associate`). `service_select`
+  # offers a picker for linking to a client service.
+  # =====================================================================
   resources :consultations, only: [:new, :create, :destroy, :edit, :update] do
     member do
-      get :row
+      get  :row
+      get  :association
       patch :associate
+      patch :disassociate
+      get  :service_select
     end
   end
 
+  # =====================================================================
+  # BOOKINGS — ALIAS FOR SÉANCES ENTRY POINT
+  # ---------------------------------------------------------------------
+  # Public-facing path used in the app to open the booking form for a
+  # new "séance" (maps to Bookings controller).
+  # =====================================================================
   get "seances/new", to: "bookings#new", as: :new_seance
 
-  # Async helpers for booking/import flows:
+  # =====================================================================
+  # ASYNC HELPERS — BOOKING/IMPORT FLOWS
+  # ---------------------------------------------------------------------
   # - refresh_clients: refresh client list for the booking form
-  # - import_clients: one‑off import invoked from admin
+  # - import_clients: one-off import invoked from admin
+  # =====================================================================
   post "refresh_clients", to: "sessions#refresh_clients", as: :refresh_clients
   post "import_clients",  to: "admin#import_clients",     as: :import_clients
 
   # =====================================================================
-  # FLIIP SERVICES — DETAIL VIEW & AD‑HOC ADJUSTMENTS
+  # FLIIP SERVICES — DETAIL VIEW & AD-HOC ADJUSTMENTS
   # ---------------------------------------------------------------------
   # Show a single Fliip service. Nested routes manage adjustments that
   # tweak usage counts for that specific service.
