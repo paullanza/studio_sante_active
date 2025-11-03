@@ -38,6 +38,7 @@ class Consultation < ApplicationRecord
   # -----------------------------------------
   scope :unconfirmed, -> { where(confirmed: [false, nil]) }
   scope :confirmed,   -> { where(confirmed: true) }
+  scope :unassociated, -> { where(fliip_service_id: nil) }
 
   # -----------------------------------------
   # Eager loading & ordering

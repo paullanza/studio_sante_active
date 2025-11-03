@@ -32,7 +32,7 @@ class FliipUsersController < ApplicationController
           :service_definition,
           :service_usage_adjustments,
           :sessions,
-          :consultations
+          :consultation
         ]
       )
       .find(params[:id])

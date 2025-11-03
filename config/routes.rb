@@ -156,9 +156,15 @@ Rails.application.routes.draw do
       get  :association
       patch :associate
       patch :disassociate
-      get  :service_select
+      get :service_select
+    end
+
+    collection do
+      get :associations
     end
   end
+
+  get "consultations/associations", to: "consultations#associations", as: :consultations_associations
 
   # =====================================================================
   # BOOKINGS — ALIAS FOR SÉANCES ENTRY POINT

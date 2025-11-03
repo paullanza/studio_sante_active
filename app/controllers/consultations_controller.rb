@@ -2,6 +2,7 @@ class ConsultationsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_consultation, only: [:edit, :update, :destroy, :row, :association, :associate, :service_select]
   before_action :load_staff,       only: [:new, :create, :edit, :update]
+  before_action :ensure_management!, only: [:associations]
 
   def new
     @consultation = Consultation.new
@@ -16,9 +17,9 @@ class ConsultationsController < ApplicationController
   def create
     @consultation = Consultation.new(consultation_params)
 
-    @consultation.user_id       ||= current_user.id
-    @consultation.created_by_id   = current_user.id
-    @consultation.confirmed       = false
+    @consultation.user_id        ||= current_user.id
+    @consultation.created_by_id    = current_user.id
+    @consultation.confirmed        = false
     assign_occurred_at(@consultation, params[:consultation][:date], params[:consultation][:time])
 
     if @consultation.save
@@ -100,16 +101,16 @@ class ConsultationsController < ApplicationController
     selected_user_id    = params[:fliip_user_id].presence
     selected_service_id = params[:fliip_service_id].presence
 
-    service = find_valid_service(
-      service_id:     selected_service_id,
-      fliip_user_id:  selected_user_id,
-      cutoff_date:    consultation_cutoff_date(@consultation)
+    service = find_available_service_for_association(
+      service_id:    selected_service_id,
+      fliip_user_id: selected_user_id,
+      cutoff_date:   consultation_cutoff_date(@consultation)
     )
 
     @consultation.fliip_service_id = service&.id
 
     if service.nil? && selected_service_id.present?
-      @consultation.errors.add(:fliip_service_id, "est invalide pour ce client ou cette date")
+      @consultation.errors.add(:fliip_service_id, "n’est pas disponible pour association (client/date/association existante).")
     end
 
     if @consultation.errors.empty? && @consultation.save
@@ -117,7 +118,6 @@ class ConsultationsController < ApplicationController
              locals:  { consultation: @consultation, show_bulk_checkbox: params[:show_bulk].present? },
              layout:  false
     else
-      # Rehydrate lists for the form
       load_fliip_users_for_association(@consultation)
       @selected_fliip_user_id = selected_user_id if selected_user_id.present?
       load_services_for(@selected_fliip_user_id, cutoff_date: consultation_cutoff_date(@consultation))
@@ -132,7 +132,6 @@ class ConsultationsController < ApplicationController
   def disassociate
     @consultation = Consultation.find(params[:id])
 
-    # Allow removal only if user owns it or is admin-level
     if current_user&.admin? || @consultation.user_id == current_user&.id
       @consultation.update(fliip_service_id: nil)
       respond_to do |format|
@@ -144,7 +143,6 @@ class ConsultationsController < ApplicationController
     end
   end
 
-  # ---- Dynamic service <select> reload ----
   def service_select
     return head :forbidden unless can_modify?(@consultation, action: :edit)
 
@@ -170,7 +168,34 @@ class ConsultationsController < ApplicationController
     end
   end
 
+  def associations
+    @filter_params = {
+      q:                      params[:q].presence,
+      employee_id:            params[:employee_id].presence,
+      consultation_date_from: params[:consultation_date_from].presence,
+      consultation_date_to:   params[:consultation_date_to].presence,
+      created_from:           params[:created_from].presence,
+      created_to:             params[:created_to].presence,
+      present:                Array(params[:present]).presence
+    }
+
+    @staff = User.where(active: true).order(:first_name, :last_name) if management_user?
+
+    base = Consultation.unassociated.with_associations
+    @consultations = base.apply_filters(@filter_params).order_by_occurred_at_desc
+    @consultations = @consultations.limit(100) unless @consultations.respond_to?(:page)
+  end
+
   private
+
+  def ensure_management!
+    return if management_user?
+    forbid
+  end
+
+  def management_user?
+    admin_like? || (current_user.respond_to?(:manager?) && current_user.manager?)
+  end
 
   def set_consultation
     @consultation = Consultation.find(params[:id])
@@ -219,14 +244,10 @@ class ConsultationsController < ApplicationController
     end
   end
 
-  # Central cutoff date for eligibility comparisons
   def consultation_cutoff_date(consultation)
     (consultation.occurred_at&.to_date) || Date.current
   end
 
-  # ----- Association helpers (pg_search + date cutoff) -----
-
-  # Build best-guess user list and default selection
   def load_fliip_users_for_association(consultation)
     service_user_ids = FliipService.distinct.pluck(:fliip_user_id)
 
@@ -258,25 +279,18 @@ class ConsultationsController < ApplicationController
     return @services = [] if fliip_user_id.blank?
     cutoff = cutoff_date || Date.current
 
-    @services = FliipService
-      .where(fliip_user_id: fliip_user_id)
-      .where("COALESCE(start_date, purchase_date) >= ?", cutoff)
-      .includes(:fliip_user, :service_definition, :service_usage_adjustments)
-      .order(expire_date: :desc, service_name: :asc)
+    @services = FliipService.available_for_association(
+      fliip_user_id: fliip_user_id,
+      cutoff_date:   cutoff
+    )
   end
 
-  # Ensure the chosen service is valid for the chosen user and date cutoff
-  def find_valid_service(service_id:, fliip_user_id:, cutoff_date:)
-    return nil if service_id.blank?
-
-    svc = FliipService.find_by(id: service_id)
-    return nil unless svc
-    return nil if fliip_user_id.present? && svc.fliip_user_id.to_s != fliip_user_id.to_s
-
-    cutoff = cutoff_date || Date.current
-    start_or_purchase = svc.start_date || svc.purchase_date
-    return nil if start_or_purchase.present? && start_or_purchase < cutoff
-
-    svc
+  # Enforce the same constraints as the list when resolving a posted choice
+  def find_available_service_for_association(service_id:, fliip_user_id:, cutoff_date:)
+    FliipService.find_available_for_association(
+      service_id:    service_id,
+      fliip_user_id: fliip_user_id,
+      cutoff_date:   cutoff_date
+    )
   end
 end

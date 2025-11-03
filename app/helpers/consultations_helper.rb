@@ -18,29 +18,6 @@ module ConsultationsHelper
     "Annuler"
   end
 
-
-  # ==========================================================
-  # ALREADY ASSOCIATED (INFO MODAL)
-  # ==========================================================
-  def consultations_modal_already_associated_title(_consultation)
-    "Association déjà présente"
-  end
-
-  def consultations_modal_already_associated_body(consultation)
-    service = consultation.fliip_service
-    name = service&.service_name.presence || "Service ##{service&.id}"
-    "Cette consultation est déjà associée à « #{name} ». Pour changer, retire d’abord l’association."
-  end
-
-  def consultations_modal_already_associated_primary_label
-    "OK"
-  end
-
-  def consultations_modal_already_associated_secondary_label
-    "Fermer"
-  end
-
-
   # ==========================================================
   # DISASSOCIATE (CONFIRM MODAL)
   # ==========================================================

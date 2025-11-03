@@ -8,7 +8,7 @@ export default class extends Controller {
     updateUrl: String,
     serviceSelectUrl: String,
     showBulk: Boolean,
-    alreadyLinked: Boolean   // 👈 new: provided by data-association-already-linked-value
+    alreadyLinked: Boolean
   }
 
   connect() {

@@ -9,7 +9,9 @@ class FliipService < ApplicationRecord
               foreign_key: :service_id,
               optional: true
   has_many   :service_usage_adjustments, dependent: :destroy, inverse_of: :fliip_service
-  has_many   :consultations, dependent: :restrict_with_error, inverse_of: :fliip_service
+
+  # A service can be linked to at most one consultation at a time.
+  has_one    :consultation, dependent: :restrict_with_error, inverse_of: :fliip_service
 
   # -----------------------------------------
   # Scopes: by purchase status
@@ -20,7 +22,6 @@ class FliipService < ApplicationRecord
   scope :cancelled, -> { where(purchase_status: "C") }
   scope :stopped,   -> { where(purchase_status: "S") }
 
-  # NEW: filter by a set of status codes (expects an Array of "A"/"I"/"P"/"C"/"S")
   scope :by_statuses, ->(statuses) {
     statuses.present? ? where(purchase_status: statuses) : all
   }
@@ -44,6 +45,39 @@ class FliipService < ApplicationRecord
 
   def status_name
     STATUS_MAP[purchase_status]
+  end
+
+  # -----------------------------------------
+  # Association-selection helpers
+  # -----------------------------------------
+  scope :for_fliip_user, ->(fliip_user_id) {
+    where(fliip_user_id: fliip_user_id)
+  }
+
+  scope :starting_on_or_after, ->(cutoff_date) {
+    cutoff = cutoff_date.presence || Date.current
+    where("COALESCE(start_date, purchase_date::date) >= ?", cutoff)
+  }
+
+  scope :unassociated_with_consultation, -> {
+    where.not(id: Consultation.where.not(fliip_service_id: nil).select(:fliip_service_id))
+  }
+
+  scope :available_for_association, ->(fliip_user_id:, cutoff_date:) {
+    for_fliip_user(fliip_user_id)
+      .starting_on_or_after(cutoff_date)
+      .unassociated_with_consultation
+      .includes(:fliip_user, :service_definition, :service_usage_adjustments)
+      .order(expire_date: :desc, service_name: :asc)
+  }
+
+  def self.find_available_for_association(service_id:, fliip_user_id:, cutoff_date:)
+    return nil if service_id.blank? || fliip_user_id.blank?
+    available_for_association(fliip_user_id: fliip_user_id, cutoff_date: cutoff_date).find_by(id: service_id)
+  end
+
+  def start_or_purchase_date
+    start_date || purchase_date&.to_date
   end
 
   # -----------------------------------------
