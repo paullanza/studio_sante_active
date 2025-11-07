@@ -6,7 +6,7 @@ class FliipUser < ApplicationRecord
   has_many :fliip_contracts, dependent: :destroy, inverse_of: :fliip_user
   has_many :fliip_services,  dependent: :destroy, inverse_of: :fliip_user
   has_many :sessions,        dependent: :restrict_with_error, inverse_of: :fliip_user
-  has_many :consultations, through: :fliip_services, source: :consultation
+  has_many :consultations,  dependent: :destroy, inverse_of: :fliip_user
 
   # Users that have at least one service (any date)
   scope :with_any_services, -> {

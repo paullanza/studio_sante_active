@@ -17,9 +17,9 @@ class ConsultationsController < ApplicationController
   def create
     @consultation = Consultation.new(consultation_params)
 
-    @consultation.user_id        ||= current_user.id
-    @consultation.created_by_id    = current_user.id
-    @consultation.confirmed        = false
+    @consultation.user_id      ||= current_user.id
+    @consultation.created_by_id = current_user.id
+    @consultation.confirmed     = false
     assign_occurred_at(@consultation, params[:consultation][:date], params[:consultation][:time])
 
     if @consultation.save
@@ -101,17 +101,23 @@ class ConsultationsController < ApplicationController
     selected_user_id    = params[:fliip_user_id].presence
     selected_service_id = params[:fliip_service_id].presence
 
-    service = find_available_service_for_association(
-      service_id:    selected_service_id,
-      fliip_user_id: selected_user_id,
-      cutoff_date:   consultation_cutoff_date(@consultation)
-    )
+    # Always set the selected client (even if no service chosen)
+    @consultation.fliip_user_id = selected_user_id
 
-    @consultation.fliip_service_id = service&.id
-
-    if service.nil? && selected_service_id.present?
-      @consultation.errors.add(:fliip_service_id, "n’est pas disponible pour association (client/date/association existante).")
+    service = nil
+    if selected_service_id.present?
+      service = find_available_service_for_association(
+        service_id:    selected_service_id,
+        fliip_user_id: selected_user_id,
+        cutoff_date:   consultation_cutoff_date(@consultation)
+      )
+      if service.nil?
+        @consultation.errors.add(:fliip_service_id, "n’est pas disponible pour association (client/date/association existante).")
+      end
     end
+
+    # Set service id only if valid; allow nil (no purchase)
+    @consultation.fliip_service_id = service&.id if @consultation.errors.empty?
 
     if @consultation.errors.empty? && @consultation.save
       render partial: "consultations/shared/consultation_row",
@@ -285,7 +291,6 @@ class ConsultationsController < ApplicationController
     )
   end
 
-  # Enforce the same constraints as the list when resolving a posted choice
   def find_available_service_for_association(service_id:, fliip_user_id:, cutoff_date:)
     FliipService.find_available_for_association(
       service_id:    service_id,

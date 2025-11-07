@@ -38,7 +38,7 @@ class FliipService < ApplicationRecord
   STATUS_MAP = {
     "A" => "Actif",
     "I" => "Inactif",
-    "P" => "Plannifé",
+    "P" => "Planifié",
     "C" => "Annulé",
     "S" => "Suspendu"
   }
@@ -54,26 +54,39 @@ class FliipService < ApplicationRecord
     where(fliip_user_id: fliip_user_id)
   }
 
-  scope :starting_on_or_after, ->(cutoff_date) {
-    cutoff = cutoff_date.presence || Date.current
-    where("COALESCE(start_date, purchase_date::date) >= ?", cutoff)
+  # Start date must be within [-14 days, +3 months] of the given base date.
+  # Uses COALESCE(start_date, purchase_date::date) to handle missing start_date.
+  scope :start_within_window, ->(base_date) {
+    base = (base_date.presence || Date.current).to_date
+    from = base - 14.days
+    to   = base + 3.months
+    where("COALESCE(start_date, purchase_date::date) BETWEEN ? AND ?", from, to)
   }
 
   scope :unassociated_with_consultation, -> {
     where.not(id: Consultation.where.not(fliip_service_id: nil).select(:fliip_service_id))
   }
 
-  scope :available_for_association, ->(fliip_user_id:, cutoff_date:) {
+  # Backward compatible: accepts cutoff_date: (treated as base_date) or base_date:
+  scope :available_for_association, ->(fliip_user_id:, cutoff_date: nil, base_date: nil) {
+    base = (base_date.presence || cutoff_date.presence || Date.current).to_date
+
     for_fliip_user(fliip_user_id)
-      .starting_on_or_after(cutoff_date)
+      .start_within_window(base)
       .unassociated_with_consultation
       .includes(:fliip_user, :service_definition, :service_usage_adjustments)
       .order(expire_date: :desc, service_name: :asc)
   }
 
-  def self.find_available_for_association(service_id:, fliip_user_id:, cutoff_date:)
+  def self.find_available_for_association(service_id:, fliip_user_id:, cutoff_date:, base_date: nil)
     return nil if service_id.blank? || fliip_user_id.blank?
-    available_for_association(fliip_user_id: fliip_user_id, cutoff_date: cutoff_date).find_by(id: service_id)
+
+    base = (base_date.presence || cutoff_date.presence || Date.current).to_date
+
+    available_for_association(
+      fliip_user_id: fliip_user_id,
+      base_date:     base
+    ).find_by(id: service_id)
   end
 
   def start_or_purchase_date

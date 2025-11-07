@@ -7,6 +7,9 @@
     data-association-row-url-value="<%= row_consultation_path(c) %>"
     data-association-update-url-value="<%= associate_consultation_path(c) %>"
     data-association-service-select-url-value="<%= service_select_consultation_path(c) %>"
+    data-association-suggest-url-value="/fliip_users/suggest"
+    data-association-suggestions-frame-id-value="client-suggestions-<%= c.id %>"
+    data-association-service-frame-id-value="service-select-frame-<%= c.id %>"
     data-association-show-bulk-value="<%= local_assigns[:show_bulk_checkbox].present? %>"
     data-association-already-linked-value="<%= c.fliip_service_id.present? %>">
 
@@ -34,17 +37,27 @@
     </div>
   </td>
 
-  <%# 3) Client select %>
-  <td class="align-middle">
+  <%# 3) Client name (prefilled) + hidden id + suggestions %>
+  <td class="align-middle position-relative">
     <label class="form-label small mb-1 d-block">Client·e (Fliip)</label>
-    <select name="fliip_user_id"
-            class="form-select form-select-sm"
-            data-action="change->association#loadServices">
-      <% @fliip_users.each do |u| %>
-        <% label = "#{u.user_firstname} #{u.user_lastname}".strip.presence || "Client·e ##{u.id}" %>
-        <option value="<%= u.id %>" <%= "selected" if u.id == @selected_fliip_user_id %>><%= label %></option>
-      <% end %>
-    </select>
+
+    <input type="text"
+           class="form-control form-control-sm"
+           value="<%= c.full_name %>"
+           placeholder="Nom et prénom"
+           autocomplete="off"
+           data-action="input->association#onNameInput focus->association#onNameFocus blur->association#onNameBlur"
+           data-association-target="nameInput">
+
+    <input type="hidden"
+           name="fliip_user_id"
+           value="<%= @selected_fliip_user_id %>"
+           data-association-target="hiddenClientId">
+
+    <!-- Suggestions dropdown container (filled by Stimulus) -->
+    <div id="client-suggestions-<%= c.id %>"
+         class="list-group position-absolute w-100 shadow-sm"
+         style="z-index: 10; max-height: 220px; overflow:auto;"></div>
   </td>
 
   <%# 4) Service select (depends on client), filtered by consultation date %>

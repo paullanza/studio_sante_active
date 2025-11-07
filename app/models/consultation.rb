@@ -6,9 +6,7 @@ class Consultation < ApplicationRecord
   # -----------------------------------------
   pg_search_scope :search_identity,
     against: [:first_name, :last_name, :email, :phone_number],
-    using: {
-      tsearch: { prefix: true, normalization: 2 }
-    },
+    using: { tsearch: { prefix: true, normalization: 2 } },
     ignoring: :accents
 
   # -----------------------------------------
@@ -16,6 +14,7 @@ class Consultation < ApplicationRecord
   # -----------------------------------------
   belongs_to :user
   belongs_to :created_by, class_name: "User"
+  belongs_to :fliip_user, optional: true
   belongs_to :fliip_service, optional: true
 
   # -----------------------------------------
@@ -25,19 +24,21 @@ class Consultation < ApplicationRecord
   validates :note, length: { maximum: 10_000 }, allow_blank: true
 
   validates :fliip_service_id,
-  uniqueness: { message: "has already been associated to another consultation" },
-  allow_nil: true
+            uniqueness: { message: "has already been associated to another consultation" },
+            allow_nil: true
 
   # -----------------------------------------
   # Callbacks
   # -----------------------------------------
   before_validation :default_created_by, on: :create
+  after_save :sync_names_from_service, if: :saved_change_to_fliip_service_id?
+  after_save :sync_names_from_client,  if: :saved_change_to_fliip_user_id?
 
   # -----------------------------------------
   # Status scopes
   # -----------------------------------------
-  scope :unconfirmed, -> { where(confirmed: [false, nil]) }
-  scope :confirmed,   -> { where(confirmed: true) }
+  scope :unconfirmed,  -> { where(confirmed: [false, nil]) }
+  scope :confirmed,    -> { where(confirmed: true) }
   scope :unassociated, -> { where(fliip_service_id: nil) }
 
   # -----------------------------------------
@@ -119,21 +120,41 @@ class Consultation < ApplicationRecord
   # -----------------------------------------
   # UI helpers
   # -----------------------------------------
-  def after_date
-    (occurred_at || created_at).to_date
-  end
-
-  def guessed_full_name
+  def full_name
     [first_name, last_name].compact.join(" ").strip
   end
 
-  def prefill_query
-    email.presence || phone_number.presence || guessed_full_name
+  # Association window (−14 days, +3 months from occurred_at)
+  def association_start_window
+    base = occurred_at.to_date
+    (base - 14.days)..(base + 3.months)
   end
 
   private
 
   def default_created_by
     self.created_by_id = user_id if created_by_id.blank?
+  end
+
+  # When a service is associated/changed, mirror the client’s names into the consultation.
+  def sync_names_from_service
+    return unless fliip_service&.fliip_user
+    client = fliip_service.fliip_user
+    update_columns(
+      first_name: client.user_firstname.to_s,
+      last_name:  client.user_lastname.to_s,
+      updated_at: Time.current
+    )
+  end
+
+  # When only the client changes (no service), also mirror names.
+  def sync_names_from_client
+    return if fliip_service_id.present? # service hook above will handle it
+    return unless fliip_user
+    update_columns(
+      first_name: fliip_user.user_firstname.to_s,
+      last_name:  fliip_user.user_lastname.to_s,
+      updated_at: Time.current
+    )
   end
 end

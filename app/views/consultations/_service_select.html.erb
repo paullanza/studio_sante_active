@@ -1,21 +1,16 @@
-<% list = local_assigns[:services] || @services || [] %>
-<% selected = local_assigns[:selected_id] || @selected_id %>
+<%# locals: services:, selected_id: %>
+<select name="fliip_service_id" class="form-select form-select-sm">
+  <option value=""><%= "Aucun achat — associer seulement le client" %></option>
 
-<label class="form-label">Service</label>
+  <% Array(services).each do |s| %>
+    <% label = [
+      s.service_name.presence || "Service ##{s.id}",
+      (s.start_date || s.purchase_date&.to_date)&.strftime("%d/%m/%Y"),
+      s.status_name
+    ].compact.join(" · ") %>
 
-<% if list.any? %>
-  <select name="fliip_service_id" class="form-select form-select-sm">
-    <% list.each do |svc| %>
-      <% title = svc.service_name.presence || "Service ##{svc.id}" %>
-      <% start_str = svc.start_date || svc.purchase_date %>
-      <% start_txt = start_str.present? ? I18n.l(start_str.to_date) : "—" rescue (start_str || "—") %>
-      <% end_txt = svc.expire_date.present? ? I18n.l(svc.expire_date) : "—" rescue (svc.expire_date || "—") %>
-      <% label = "#{title} — #{start_txt} → #{end_txt}" %>
-      <option value="<%= svc.id %>" <%= "selected" if selected.to_s == svc.id.to_s %>><%= label %></option>
-    <% end %>
-  </select>
-<% else %>
-  <select class="form-select form-select-sm" disabled>
-    <option>Aucun service admissible</option>
-  </select>
-<% end %>
+    <option value="<%= s.id %>" <%= "selected" if s.id.to_s == selected_id.to_s %>>
+      <%= label %>
+    </option>
+  <% end %>
+</select>

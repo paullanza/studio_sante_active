@@ -1,6 +1,6 @@
 <% c = consultation %>
 <% svc = c.try(:fliip_service) %>
-<% client = svc&.fliip_user %>
+<% client = c&.fliip_user %>
 
 <tr id="<%= dom_id(c) %>"
     data-controller="consultation-row association"
