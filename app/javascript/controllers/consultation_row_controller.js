@@ -5,8 +5,7 @@ import { Controller } from "@hotwired/stimulus"
 // - cancel back to read-only row
 // - save edits (date, time, presence, identity fields, note)
 // - delete row via modal
-// - disassociate via modal confirm
-// - info modal when already associated
+// - disassociate via modal confirm (PATCH) mirroring delete flow
 export default class extends Controller {
   static values = {
     id: Number,
@@ -38,7 +37,7 @@ export default class extends Controller {
     await this._replace(this.updateUrlValue, body, "PATCH")
   }
 
-  // --- delete with confirmation modal ---
+  // --- delete with confirmation modal (existing pattern) ---
   confirmDelete(event) {
     event.preventDefault()
     const link = event.currentTarget
@@ -54,17 +53,19 @@ export default class extends Controller {
     })
   }
 
+  // --- DISASSOCIATE now mirrors delete flow (link + modal + PATCH) ---
   confirmDisassociate(event) {
     event.preventDefault()
-    const btn  = event.currentTarget
-    const form = btn.closest("form")
+    const link = event.currentTarget
+    const href = link.getAttribute("href")
+    if (!href) return
 
     this._openModal({
-      title: btn.dataset.modalTitle || "Retirer l’association",
-      body: btn.dataset.modalBody || "Retirer l’association ?",
-      primaryLabel: btn.dataset.modalPrimaryLabel || "Retirer",
-      secondaryLabel: btn.dataset.modalSecondaryLabel || "Annuler",
-      onConfirm: () => this._disassociateViaAjax(form)   // 👈 AJAX instead of form.submit()
+      title: link.dataset.modalTitle,
+      body: link.dataset.modalBody,
+      primaryLabel: link.dataset.modalPrimaryLabel,
+      secondaryLabel: link.dataset.modalSecondaryLabel,
+      onConfirm: () => this._patch(href) // PATCH then re-render this row
     })
   }
 
@@ -85,7 +86,6 @@ export default class extends Controller {
   _openModal({ title, body, primaryLabel, secondaryLabel, onConfirm }) {
     const modalEl = document.getElementById("app-modal")
     if (!modalEl) {
-      // Fallback to window.confirm if no modal is present
       if (!body || window.confirm(body)) onConfirm?.()
       return
     }
@@ -115,7 +115,7 @@ export default class extends Controller {
         document.querySelector('meta[name="csrf-token"]')?.content || ""
     }
 
-    const resp = await fetch(url, options)
+    const resp = await fetch(this._urlWithShowBulk(url), options)
     if (!(resp.status === 200 || resp.status === 422)) return
 
     const html = await resp.text()
@@ -143,7 +143,7 @@ export default class extends Controller {
   }
 
   async _delete(url) {
-    const resp = await fetch(url, {
+    const resp = await fetch(this._urlWithShowBulk(url), {
       method: "DELETE",
       headers: {
         "Accept": "application/json",
@@ -161,29 +161,22 @@ export default class extends Controller {
     }
   }
 
-  async _disassociateViaAjax(form) {
-    if (!form) return
-    const action = form.getAttribute("action")
-    const token  = document.querySelector('meta[name="csrf-token"]')?.content || ""
-
-    const body = new FormData()
-    body.append("_method", "patch")
-    // preserve bulk UI if needed
-    if (this.showBulkValue) body.append("show_bulk", "1")
-
-    const resp = await fetch(action, {
-      method: "POST",
+  // Generic PATCH helper (used for disassociate)
+  async _patch(url) {
+    const resp = await fetch(this._urlWithShowBulk(url), {
+      method: "PATCH",
       headers: {
-        "Accept": "text/html",                // ask for HTML
-        "X-Requested-With": "XMLHttpRequest", // hint server it's XHR
-        "X-CSRF-Token": token
+        "Accept": "text/html",
+        "X-Requested-With": "XMLHttpRequest",
+        "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content || "",
+        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
       },
-      body
+      body: this.showBulkValue ? new URLSearchParams({ show_bulk: "1" }).toString() : null
     })
 
-    // Regardless of redirect or partial, refresh only this row
     if (resp.ok) {
-      await this._replace(this.rowUrlValue)
+      const rowUrl = this._urlWithShowBulk(this.rowUrlValue)
+      await this._replace(rowUrl)
     }
   }
 

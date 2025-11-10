@@ -54,8 +54,7 @@ class FliipService < ApplicationRecord
     where(fliip_user_id: fliip_user_id)
   }
 
-  # Start date must be within [-14 days, +3 months] of the given base date.
-  # Uses COALESCE(start_date, purchase_date::date) to handle missing start_date.
+  # Historical window used for *session* browsing on the booking page (+3 months).
   scope :start_within_window, ->(base_date) {
     base = (base_date.presence || Date.current).to_date
     from = base - 14.days
@@ -67,12 +66,21 @@ class FliipService < ApplicationRecord
     where.not(id: Consultation.where.not(fliip_service_id: nil).select(:fliip_service_id))
   }
 
-  # Backward compatible: accepts cutoff_date: (treated as base_date) or base_date:
+  # Association-specific window:
+  # Prefer purchase_date; fallback to start_date; allowed = [-14 days, +30 days]
+  scope :purchase_within_association_window, ->(base_date) {
+    base = (base_date.presence || Date.current).to_date
+    from = base - 14.days
+    to   = base + 30.days
+    where("COALESCE(purchase_date::date, start_date) BETWEEN ? AND ?", from, to)
+  }
+
+  # Backward compatible entrypoint for consultations:
   scope :available_for_association, ->(fliip_user_id:, cutoff_date: nil, base_date: nil) {
     base = (base_date.presence || cutoff_date.presence || Date.current).to_date
 
     for_fliip_user(fliip_user_id)
-      .start_within_window(base)
+      .purchase_within_association_window(base)
       .unassociated_with_consultation
       .includes(:fliip_user, :service_definition, :service_usage_adjustments)
       .order(expire_date: :desc, service_name: :asc)

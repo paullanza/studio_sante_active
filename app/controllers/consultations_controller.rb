@@ -1,6 +1,6 @@
 class ConsultationsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_consultation, only: [:edit, :update, :destroy, :row, :association, :associate, :service_select]
+  before_action :set_consultation, only: [:edit, :update, :destroy, :row, :association, :associate, :service_select, :disassociate]
   before_action :load_staff,       only: [:new, :create, :edit, :update]
   before_action :ensure_management!, only: [:associations]
 
@@ -17,9 +17,9 @@ class ConsultationsController < ApplicationController
   def create
     @consultation = Consultation.new(consultation_params)
 
-    @consultation.user_id      ||= current_user.id
-    @consultation.created_by_id = current_user.id
-    @consultation.confirmed     = false
+    @consultation.user_id       ||= current_user.id
+    @consultation.created_by_id  = current_user.id
+    @consultation.confirmed      = false
     assign_occurred_at(@consultation, params[:consultation][:date], params[:consultation][:time])
 
     if @consultation.save
@@ -39,7 +39,6 @@ class ConsultationsController < ApplicationController
     consultation.modifiable_by?(current_user)
   end
 
-  # ---- Row swapping ----
   def edit
     return forbid unless can_modify?(@consultation, action: :edit)
 
@@ -54,7 +53,6 @@ class ConsultationsController < ApplicationController
            layout:  false
   end
 
-  # ---- Persist normal edits ----
   def update
     return forbid unless can_modify?(@consultation, action: :update)
 
@@ -101,7 +99,6 @@ class ConsultationsController < ApplicationController
     selected_user_id    = params[:fliip_user_id].presence
     selected_service_id = params[:fliip_service_id].presence
 
-    # Always set the selected client (even if no service chosen)
     @consultation.fliip_user_id = selected_user_id
 
     service = nil
@@ -116,7 +113,6 @@ class ConsultationsController < ApplicationController
       end
     end
 
-    # Set service id only if valid; allow nil (no purchase)
     @consultation.fliip_service_id = service&.id if @consultation.errors.empty?
 
     if @consultation.errors.empty? && @consultation.save
@@ -139,13 +135,22 @@ class ConsultationsController < ApplicationController
     @consultation = Consultation.find(params[:id])
 
     if current_user&.admin? || @consultation.user_id == current_user&.id
-      @consultation.update(fliip_service_id: nil)
-      respond_to do |format|
-        format.html { redirect_to request.referer || consultations_path, notice: "Association removed." }
-        format.turbo_stream if respond_to?(:turbo_stream)
+      # Clear BOTH associations per your rule
+      @consultation.update(fliip_service_id: nil, fliip_user_id: nil)
+
+      # If XHR, return the single row HTML; preserve bulk checkbox
+      if request.xhr?
+        render partial: "consultations/shared/consultation_row",
+               locals:  { consultation: @consultation, show_bulk_checkbox: params[:show_bulk].present? },
+               layout:  false
+      else
+        respond_to do |format|
+          format.html { redirect_to request.referer || consultations_path, notice: "Association retirée." }
+          format.turbo_stream if respond_to?(:turbo_stream)
+        end
       end
     else
-      redirect_to request.referer || consultations_path, alert: "Not authorized to modify this consultation."
+      redirect_to request.referer || consultations_path, alert: "Non autorisé·e."
     end
   end
 
@@ -156,7 +161,10 @@ class ConsultationsController < ApplicationController
     @selected_id  = params[:selected_id]
 
     load_services_for(fliip_user_id, cutoff_date: consultation_cutoff_date(@consultation))
-    render partial: "consultations/service_select", layout: false
+
+    render partial: "consultations/service_select",
+          locals:  { services: (@services || []), selected_id: @selected_id },
+          layout:  false
   end
 
   def destroy
@@ -261,22 +269,11 @@ class ConsultationsController < ApplicationController
       I18n.transliterate("#{u.user_lastname.to_s.strip} #{u.user_firstname.to_s.strip}").downcase
     end
 
-    query =
-      if consultation.email.present?
-        consultation.email
-      elsif consultation.phone_number.present?
-        matched = FliipUser.where(id: service_user_ids)
-                           .where("user_phone1 ILIKE :q OR user_phone2 ILIKE :q", q: "%#{consultation.phone_number.strip}%")
-                           .limit(1)
-                           .pluck(:id)
-        @selected_fliip_user_id = matched.first if matched.present?
-        nil
-      else
-        [consultation.first_name, consultation.last_name].compact_blank.join(" ")
-      end
+    query = [consultation.first_name, consultation.last_name].compact_blank.join(" ")
+    @selected_fliip_user_id = nil
 
-    if @selected_fliip_user_id.blank? && query.present?
-      best = FliipUser.search_clients(query).where(id: service_user_ids).limit(1).pluck(:id).first
+    if query.present?
+      best = FliipUser.search_clients(query).limit(1).pluck(:id).first
       @selected_fliip_user_id = best if best.present?
     end
   end

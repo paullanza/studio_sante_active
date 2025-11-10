@@ -31,8 +31,10 @@ class Consultation < ApplicationRecord
   # Callbacks
   # -----------------------------------------
   before_validation :default_created_by, on: :create
-  after_save :sync_names_from_service, if: :saved_change_to_fliip_service_id?
-  after_save :sync_names_from_client,  if: :saved_change_to_fliip_user_id?
+
+  # ⛔️ Removed name-mirroring callbacks so we keep the user-typed name
+  # after_save :sync_names_from_service, if: :saved_change_to_fliip_service_id?
+  # after_save :sync_names_from_client,  if: :saved_change_to_fliip_user_id?
 
   # -----------------------------------------
   # Status scopes
@@ -133,28 +135,6 @@ class Consultation < ApplicationRecord
   private
 
   def default_created_by
-    self.created_by_id = user_id if created_by_id.blank?
-  end
-
-  # When a service is associated/changed, mirror the client’s names into the consultation.
-  def sync_names_from_service
-    return unless fliip_service&.fliip_user
-    client = fliip_service.fliip_user
-    update_columns(
-      first_name: client.user_firstname.to_s,
-      last_name:  client.user_lastname.to_s,
-      updated_at: Time.current
-    )
-  end
-
-  # When only the client changes (no service), also mirror names.
-  def sync_names_from_client
-    return if fliip_service_id.present? # service hook above will handle it
-    return unless fliip_user
-    update_columns(
-      first_name: fliip_user.user_firstname.to_s,
-      last_name:  fliip_user.user_lastname.to_s,
-      updated_at: Time.current
-    )
+    self.created_by_id = user_id if self.created_by_id.blank?
   end
 end

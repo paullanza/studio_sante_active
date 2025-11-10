@@ -1,7 +1,9 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Drives the "associate consultation → client + service" row.
-// Client via text input + autocomplete; service optional ("no purchase").
+// Drives the "associate consultation → client + (optional) service" row.
+// - Name input with autocomplete suggestions
+// - Click suggestion => sets hidden client id, fills name, loads services
+// - Service is optional (supports "no purchase")
 export default class extends Controller {
   static values = {
     id: Number,
@@ -10,8 +12,8 @@ export default class extends Controller {
     updateUrl: String,
     serviceSelectUrl: String,
     suggestUrl: { type: String, default: "/fliip_users/suggest" },
-    suggestionsFrameId: String,
-    serviceFrameId: String,
+    suggestionsFrameId: String, // optional override
+    serviceFrameId: String,     // optional override
     showBulk: Boolean,
     alreadyLinked: Boolean
   }
@@ -24,6 +26,7 @@ export default class extends Controller {
     this._updateSaveDisabled()
   }
 
+  // --- row swap ---
   edit(event) {
     if (event) event.preventDefault()
     this._fetchAndSwap(this._withShowBulk(this.editUrlValue))
@@ -34,9 +37,9 @@ export default class extends Controller {
     this._fetchAndSwap(this._withShowBulk(this.rowUrlValue))
   }
 
-  // --- Autocomplete ---
+  // --- Autocomplete (typed name) ---
   onNameInput() {
-    const q = (this.nameInputTarget.value || "").trim()
+    const q = (this.nameInputTarget?.value || "").trim()
     if (q === this._lastQuery) return
     this._lastQuery = q
 
@@ -47,38 +50,43 @@ export default class extends Controller {
     }
 
     this._debounceTimer = setTimeout(() => {
-      const url = new URL(this.suggestUrlValue || "/fliip_users/suggest", window.location.origin)
+      const base = this.suggestUrlValue || "/fliip_users/suggest"
+      const url = new URL(base, window.location.origin)
       url.searchParams.set("query", q)
       this._fetchSuggestions(url.toString())
     }, 250)
   }
 
   onNameFocus() {
-    const q = (this.nameInputTarget.value || "").trim()
+    const q = (this.nameInputTarget?.value || "").trim()
     if (q.length >= 2 && !this._suggestionsHasContent()) {
-      const url = new URL(this.suggestUrlValue || "/fliip_users/suggest", window.location.origin)
+      const base = this.suggestUrlValue || "/fliip_users/suggest"
+      const url = new URL(base, window.location.origin)
       url.searchParams.set("query", q)
       this._fetchSuggestions(url.toString())
     }
   }
 
   onNameBlur() {
+    // small delay to allow click on suggestion
     setTimeout(() => this._clearSuggestions(), 150)
   }
 
+  // Called by <li ... data-action="click->association#pickClient">
   pickClient(event) {
     const el = event.currentTarget
     const id = (el?.dataset?.id || "").trim()
     const name = (el?.dataset?.name || "").trim()
     if (!id) return
 
-    this.hiddenClientIdTarget.value = id
-    if (name) this.nameInputTarget.value = name
+    if (this.hasHiddenClientIdTarget) this.hiddenClientIdTarget.value = id
+    if (this.hasNameInputTarget && name) this.nameInputTarget.value = name
+
     this._clearSuggestions()
     this.loadServices()
   }
 
-  // --- Services ---
+  // --- Services (frame) ---
   loadServices() {
     const userId = this._clientId()
     if (!userId) {
@@ -99,7 +107,7 @@ export default class extends Controller {
       .catch(() => {})
   }
 
-  // --- Save ---
+  // --- Save (service optional) ---
   async save(event) {
     if (event) event.preventDefault()
 
@@ -145,9 +153,7 @@ export default class extends Controller {
         return
       }
 
-      if (r.ok) {
-        this._replaceRow(html)
-      }
+      if (r.ok) this._replaceRow(html)
     } catch {
       // no-op
     }
@@ -177,8 +183,9 @@ export default class extends Controller {
   }
 
   _serviceFrameEl() {
-    const id = this.serviceFrameIdValue || `service-select-frame-${this.idValue}`
-    return document.getElementById(id)
+    const explicit = this.serviceFrameIdValue
+    if (explicit) return document.getElementById(explicit)
+    return document.getElementById(`service-select-frame-${this.idValue}`)
   }
 
   _replaceServiceFrame(html) {
@@ -199,7 +206,6 @@ export default class extends Controller {
   _updateSaveDisabled() {
     const btn = this.element.querySelector('[data-action~="association#save"]')
     if (!btn) return
-    // Enable as soon as a client is selected; service is optional.
     btn.disabled = !this._clientId()
   }
 
@@ -234,8 +240,13 @@ export default class extends Controller {
   }
 
   _suggestionsFrame() {
-    const id = this.suggestionsFrameIdValue || `client-suggestions-${this.idValue}`
-    return document.getElementById(id)
+    if (this.suggestionsFrameIdValue) {
+      const el = document.getElementById(this.suggestionsFrameIdValue)
+      if (el) return el
+    }
+    const common = document.getElementById("client_suggestions")
+    if (common) return common
+    return document.getElementById(`client-suggestions-${this.idValue}`)
   }
 
   _openModal({ title, body, primaryLabel, secondaryLabel, onConfirm }) {

@@ -51,12 +51,27 @@
   <%# 3) Client %>
   <td class="align-middle">
     <% if client.present? %>
+      <% entered_name = [c.first_name, c.last_name].compact.join(" ").strip %>
+
       <div class="text-truncate">
         <%= link_to("#{client.user_firstname} #{client.user_lastname}".strip, fliip_user_path(client), class: "text-decoration-none") %>
+        <% if entered_name.present? %>
+          <span class="text-muted">(<%= entered_name %>)</span>
+        <% end %>
       </div>
+
       <% if svc.present? %>
         <div class="text-muted small text-truncate">
-          <%= link_to (svc.service_name.presence || "Service ##{svc.id}"), fliip_service_path(svc), class: "text-decoration-none" %>
+          <% svc_label = (svc.service_name.presence || "Service ##{svc.id}") %>
+          <% purchase_date = svc.try(:purchased_at)&.strftime('%d/%m/%Y') %>
+          <%= link_to svc_label, fliip_service_path(svc), class: "text-decoration-none" %>
+          <% if purchase_date.present? %>
+            <span> · Achat: <%= purchase_date %></span>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-muted small text-truncate">
+          Client associé (sans achat)
         </div>
       <% end %>
     <% else %>
@@ -97,8 +112,8 @@
   <%# 6) Actions — icons %>
   <td class="text-end align-middle text-nowrap">
     <% if c.modifiable_by?(current_user) %>
-      <% if c.fliip_service.present? %>
-        <%# Linked: show ONLY the disassociate (broken chain) with confirm modal %>
+      <% if c.fliip_user.present? %>
+        <%# If a FliipUser is associated, show disassociate (even if no service) %>
         <%= button_to disassociate_consultation_path(c),
                       method: :patch,
                       form: { class: "d-inline" },
@@ -114,7 +129,6 @@
           <i class="fa-solid fa-link-slash"></i>
         <% end %>
       <% else %>
-        <%# Not linked: show the link button to start association flow %>
         <%= link_to association_consultation_path(c),
                     class: "btn btn-sm btn-outline-primary me-1",
                     title: "Associer un service",

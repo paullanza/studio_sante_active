@@ -53,6 +53,10 @@ class FliipUsersController < ApplicationController
         FliipUser.none
       end
 
-    render :suggest, layout: false
+    if params[:list_only].present?
+      render partial: "fliip_users/suggest_list", layout: false
+    else
+      render :suggest, layout: false
+    end
   end
 end
