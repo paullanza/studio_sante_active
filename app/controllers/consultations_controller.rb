@@ -87,6 +87,7 @@ class ConsultationsController < ApplicationController
 
     load_fliip_users_for_association(@consultation)
     load_services_for(@selected_fliip_user_id, cutoff_date: consultation_cutoff_date(@consultation))
+    @prefill_name = prefill_name_for(@selected_fliip_user_id, @consultation)
 
     render partial: "consultations/shared/consultation_associate_row",
            locals:  { consultation: @consultation, show_bulk_checkbox: params[:show_bulk].present? },
@@ -123,6 +124,7 @@ class ConsultationsController < ApplicationController
       load_fliip_users_for_association(@consultation)
       @selected_fliip_user_id = selected_user_id if selected_user_id.present?
       load_services_for(@selected_fliip_user_id, cutoff_date: consultation_cutoff_date(@consultation))
+      @prefill_name = prefill_name_for(@selected_fliip_user_id, @consultation)
 
       render partial: "consultations/shared/consultation_associate_row",
              locals:  { consultation: @consultation, show_bulk_checkbox: params[:show_bulk].present? },
@@ -135,10 +137,8 @@ class ConsultationsController < ApplicationController
     @consultation = Consultation.find(params[:id])
 
     if current_user&.admin? || @consultation.user_id == current_user&.id
-      # Clear BOTH associations per your rule
       @consultation.update(fliip_service_id: nil, fliip_user_id: nil)
 
-      # If XHR, return the single row HTML; preserve bulk checkbox
       if request.xhr?
         render partial: "consultations/shared/consultation_row",
                locals:  { consultation: @consultation, show_bulk_checkbox: params[:show_bulk].present? },
@@ -294,5 +294,14 @@ class ConsultationsController < ApplicationController
       fliip_user_id: fliip_user_id,
       cutoff_date:   cutoff_date
     )
+  end
+
+  def prefill_name_for(selected_fliip_user_id, consultation)
+    if selected_fliip_user_id.present?
+      if (u = FliipUser.select(:id, :user_firstname, :user_lastname).find_by(id: selected_fliip_user_id))
+        return u.full_name
+      end
+    end
+    "Aucun client ne correspond à cette consultation."
   end
 end

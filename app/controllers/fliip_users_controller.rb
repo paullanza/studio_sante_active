@@ -36,6 +36,8 @@ class FliipUsersController < ApplicationController
         ]
       )
       .find(params[:id])
+
+    @consultations = @fliip_user.consultations.with_associations.order_by_occurred_at_desc
   end
 
   def refresh

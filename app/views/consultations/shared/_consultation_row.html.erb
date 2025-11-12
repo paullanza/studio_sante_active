@@ -113,35 +113,37 @@
   <td class="text-end align-middle text-nowrap">
     <% if c.modifiable_by?(current_user) %>
       <% if c.fliip_user.present? %>
-        <%# If a FliipUser is associated, show disassociate (even if no service) %>
-        <%= button_to disassociate_consultation_path(c),
-                      method: :patch,
-                      form: { class: "d-inline" },
-                      class: "btn btn-sm btn-outline-danger me-1",
-                      title: "Retirer l’association",
-                      data: {
-                        action: "consultation-row#confirmDisassociate",
-                        modal_title: consultations_modal_disassociate_title(c),
-                        modal_body: consultations_modal_disassociate_body(c),
-                        modal_primary_label: consultations_modal_disassociate_primary_label,
-                        modal_secondary_label: consultations_modal_disassociate_secondary_label
-                      } do %>
+        <%# Disassociate as a LINK (no nested form). Turbo disabled. %>
+        <%= link_to disassociate_consultation_path(c),
+                    class: "btn btn-sm btn-outline-danger me-1",
+                    title: "Retirer l’association",
+                    data: {
+                      action: "consultation-row#confirmDisassociate",
+                      turbo: false,
+                      modal_title: consultations_modal_disassociate_title(c),
+                      modal_body:  consultations_modal_disassociate_body(c),
+                      modal_primary_label:   consultations_modal_disassociate_primary_label,
+                      modal_secondary_label: consultations_modal_disassociate_secondary_label
+                    } do %>
           <i class="fa-solid fa-link-slash"></i>
         <% end %>
       <% else %>
         <%= link_to association_consultation_path(c),
                     class: "btn btn-sm btn-outline-primary me-1",
                     title: "Associer un service",
-                    data: { action: "association#edit" } do %>
+                    data: { action: "association#edit", turbo: false } do %>
           <i class="fa-solid fa-link"></i>
         <% end %>
       <% end %>
 
-      <%= link_to edit_consultation_path(c),
-                  class: "btn btn-sm btn-outline-secondary me-1",
-                  title: "Modifier",
-                  data: { action: "consultation-row#edit" } do %>
-        <i class="fa-solid fa-pencil"></i>
+      <%# Hide Edit when associated to a FliipUser %>
+      <% unless c.fliip_user.present? %>
+        <%= link_to edit_consultation_path(c),
+                    class: "btn btn-sm btn-outline-secondary me-1",
+                    title: "Modifier",
+                    data: { action: "consultation-row#edit", turbo: false } do %>
+          <i class="fa-solid fa-pencil"></i>
+        <% end %>
       <% end %>
 
       <a href="<%= consultation_path(c) %>"
@@ -151,7 +153,8 @@
         data-modal-title="<%= consultations_modal_delete_title(c) %>"
         data-modal-body="<%= consultations_modal_delete_body(c) %>"
         data-modal-primary-label="<%= consultations_modal_delete_primary_label %>"
-        data-modal-secondary-label="<%= consultations_modal_delete_secondary_label %>">
+        data-modal-secondary-label="<%= consultations_modal_delete_secondary_label %>"
+        data-turbo="false">
         <i class="fa-solid fa-trash-can"></i>
       </a>
     <% else %>

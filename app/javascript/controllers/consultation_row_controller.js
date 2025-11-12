@@ -5,7 +5,8 @@ import { Controller } from "@hotwired/stimulus"
 // - cancel back to read-only row
 // - save edits (date, time, presence, identity fields, note)
 // - delete row via modal
-// - disassociate via modal confirm (PATCH) mirroring delete flow
+// - disassociate via modal confirm (AJAX PATCH)
+// - info modal when already associated
 export default class extends Controller {
   static values = {
     id: Number,
@@ -37,7 +38,7 @@ export default class extends Controller {
     await this._replace(this.updateUrlValue, body, "PATCH")
   }
 
-  // --- delete with confirmation modal (existing pattern) ---
+  // --- delete with confirmation modal ---
   confirmDelete(event) {
     event.preventDefault()
     const link = event.currentTarget
@@ -53,19 +54,19 @@ export default class extends Controller {
     })
   }
 
-  // --- DISASSOCIATE now mirrors delete flow (link + modal + PATCH) ---
+  // --- disassociate with confirmation modal (AJAX PATCH) ---
   confirmDisassociate(event) {
     event.preventDefault()
-    const link = event.currentTarget
-    const href = link.getAttribute("href")
-    if (!href) return
+    const btn  = event.currentTarget
+    const url  = btn.getAttribute("href") // use the link's href as the endpoint
+    if (!url) return
 
     this._openModal({
-      title: link.dataset.modalTitle,
-      body: link.dataset.modalBody,
-      primaryLabel: link.dataset.modalPrimaryLabel,
-      secondaryLabel: link.dataset.modalSecondaryLabel,
-      onConfirm: () => this._patch(href) // PATCH then re-render this row
+      title: btn.dataset.modalTitle || "Retirer l’association",
+      body: btn.dataset.modalBody || "Retirer l’association ?",
+      primaryLabel: btn.dataset.modalPrimaryLabel || "Retirer",
+      secondaryLabel: btn.dataset.modalSecondaryLabel || "Annuler",
+      onConfirm: () => this._disassociateViaAjaxUrl(url)
     })
   }
 
@@ -143,7 +144,7 @@ export default class extends Controller {
   }
 
   async _delete(url) {
-    const resp = await fetch(this._urlWithShowBulk(url), {
+    const resp = await fetch(url, {
       method: "DELETE",
       headers: {
         "Accept": "application/json",
@@ -161,22 +162,26 @@ export default class extends Controller {
     }
   }
 
-  // Generic PATCH helper (used for disassociate)
-  async _patch(url) {
-    const resp = await fetch(this._urlWithShowBulk(url), {
-      method: "PATCH",
+  // PATCH disassociate via the link's URL
+  async _disassociateViaAjaxUrl(url) {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content || ""
+    const body  = new FormData()
+    body.append("_method", "patch")
+    if (this.showBulkValue) body.append("show_bulk", "1")
+
+    const resp = await fetch(url, {
+      method: "POST",
       headers: {
         "Accept": "text/html",
         "X-Requested-With": "XMLHttpRequest",
-        "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content || "",
-        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+        "X-CSRF-Token": token
       },
-      body: this.showBulkValue ? new URLSearchParams({ show_bulk: "1" }).toString() : null
+      body
     })
 
     if (resp.ok) {
-      const rowUrl = this._urlWithShowBulk(this.rowUrlValue)
-      await this._replace(rowUrl)
+      // Re-fetch only this row (preserving show_bulk)
+      await this._replace(this.rowUrlValue)
     }
   }
 
@@ -214,7 +219,7 @@ export default class extends Controller {
     const userSel = row.querySelector('select[name="consultation[user_id]"]')
     if (userSel) fd.append("consultation[user_id]", userSel.value)
 
-    // Note textarea can be rendered as a sibling row
+    // Note textarea may be rendered as a sibling row
     const noteArea =
       document.querySelector(`#${row.id}_note textarea[name="consultation[note]"]`) ||
       document.querySelector(`#note_${row.id} textarea[name="consultation[note]"]`) ||

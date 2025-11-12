@@ -45,7 +45,7 @@
       type="text"
       class="form-control form-control-sm"
       placeholder="Nom du client…"
-      value="<%= [c.first_name, c.last_name].compact_blank.join(' ') %>"
+      value="<%= @prefill_name %>"
       data-association-target="nameInput"
       data-action="
         input->association#onNameInput
