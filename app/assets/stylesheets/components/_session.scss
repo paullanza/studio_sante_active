@@ -1,10 +1,11 @@
-/* New Session page:
+/* New Session/Booking page:
    - Desktop: right card is two vertical panes.
    - If services turbo-frame has content => split 50/50.
    - If empty => services pane collapses; sessions fills.
    - Both tables scroll (scrollbars visible). */
 
-.session-new {
+.session-new,
+.booking-new {
   .card { border-radius: 1rem; }
   .session-form .form-label { font-weight: 600; }
   .card-body { padding: 1rem !important; }

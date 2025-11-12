@@ -1,0 +1,28 @@
+/* Scoped styles for the bookings new page */
+.booking-new {
+  /* Segmented tabs: container, buttons, and slider */
+  .segmented-tabs {
+    --seg-height: 32px; /* default size for compact UI */
+  }
+
+  .segmented-tabs__btn {
+    height: var(--seg-height);
+    /* Preserve comfortable tap target while staying compact */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .segmented-tabs__slider {
+    top: 4px;
+    bottom: 4px;
+    transition: all 0.18s ease;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Client suggestions dropdown stacked above surrounding content */
+  .suggestions-popover {
+    z-index: 20;
+  }
+}

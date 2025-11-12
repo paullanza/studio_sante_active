@@ -4,38 +4,34 @@
   </div>
 
   <!-- One segmented-tabs controller drives both columns -->
-  <div class="row g-4 align-items-stretch"
+  <div class="row g-4"
        data-controller="segmented-tabs"
        data-segmented-tabs-active-value="<%= @active_tab %>">
 
-    <!-- LEFT: Form card with small slider tabs -->
+    <!-- LEFT: Form card (grows naturally; no internal scrollbar) -->
     <div class="col-12 col-lg-3 d-flex">
-      <div class="card shadow-sm stretch-card h-100 w-100 form-card">
-        <!-- Scroll only inside the card body if needed; card itself does not exceed viewport -->
-        <div class="card-body p-3 scrollable-card-body" style="max-height: calc(100vh - 180px); overflow:auto;">
+      <div class="card shadow-sm w-100 form-card">
+        <div class="card-body p-3">
           <!-- Slider tabs -->
           <div class="position-relative mb-3">
-            <div class="d-flex border rounded-pill p-1 position-relative" style="--seg-height:32px;">
+            <div class="d-flex border rounded-pill p-1 position-relative segmented-tabs">
               <button type="button"
-                      class="btn btn-sm flex-fill rounded-pill position-relative z-1"
+                      class="btn btn-sm flex-fill rounded-pill position-relative z-1 segmented-tabs__btn"
                       data-segmented-tabs-target="tab"
                       data-value="session"
-                      data-action="segmented-tabs#activate"
-                      style="height: var(--seg-height);">
+                      data-action="segmented-tabs#activate">
                 Séance
               </button>
               <button type="button"
-                      class="btn btn-sm flex-fill rounded-pill position-relative z-1"
+                      class="btn btn-sm flex-fill rounded-pill position-relative z-1 segmented-tabs__btn"
                       data-segmented-tabs-target="tab"
                       data-value="consultation"
-                      data-action="segmented-tabs#activate"
-                      style="height: var(--seg-height);">
+                      data-action="segmented-tabs#activate">
                 Consultation
               </button>
               <!-- Slider behind buttons -->
-              <div class="position-absolute bg-primary rounded-pill"
-                  data-segmented-tabs-target="slider"
-                  style="top:4px; bottom:4px; transition: all .18s ease; z-index:0; pointer-events:none;"></div>
+              <div class="position-absolute bg-primary rounded-pill segmented-tabs__slider"
+                   data-segmented-tabs-target="slider"></div>
             </div>
           </div>
 
@@ -78,7 +74,7 @@
                   <%= hidden_field_tag "session[fliip_user_id]", @session.fliip_user_id,
                         data: { client_search_target: "hiddenId", session_form_target: "userId" } %>
                   <div class="position-relative">
-                    <div class="position-absolute start-0 end-0 mt-1" style="z-index:20;">
+                    <div class="position-absolute start-0 end-0 mt-1 suggestions-popover">
                       <%= turbo_frame_tag "client_suggestions" %>
                     </div>
                   </div>
@@ -265,67 +261,57 @@
       </div>
     </div>
 
-    <!-- RIGHT: Follows selected form; cards do not extend past viewport -->
+    <!-- RIGHT: No viewport cap; no internal vertical scroll on card body -->
     <div class="col-12 col-lg-9 d-flex">
-      <div class="card shadow-sm stretch-card h-100 w-100">
-        <!-- Constrain to viewport; internal panes scroll -->
-        <div class="card-body p-3 d-flex flex-column" style="max-height: calc(100vh - 180px);">
-          <!-- Right pane for SESSION: split vertically, each half scrolls -->
+      <div class="card shadow-sm w-100">
+        <div class="card-body p-3 d-flex flex-column">
+          <!-- SESSION PANE: Tables stacked, no per-table vertical scroll -->
           <div data-segmented-tabs-target="pane" data-value="session"
-               class="d-flex flex-column gap-3 <%= @active_tab == 'session' ? '' : 'd-none' %>"
-               style="min-height:0; height:100%;">
-            <!-- Top: Services (half height) -->
-            <div class="pane pane-services d-flex flex-column" style="flex:1 1 0; min-height:0;">
+               class="<%= @active_tab == 'session' ? '' : 'd-none' %>">
+            <div class="mb-3">
               <div class="d-flex align-items-center justify-content-between mb-2">
                 <h2 class="h6 mb-0">Services du client</h2>
               </div>
-
-              <div class="flex-grow-1" style="min-height:0; overflow:auto;">
-                <% if @session.fliip_user_id.present? && @services&.any? %>
-                  <%= turbo_frame_tag "services_table" do %>
-                    <div class="table-scroll">
-                      <%= render "fliip_services/shared/services_table", services: @services %>
-                    </div>
-                  <% end %>
-                <% else %>
-                  <%= turbo_frame_tag "services_table" %>
+              <% if @session.fliip_user_id.present? && @services&.any? %>
+                <%= turbo_frame_tag "services_table" do %>
+                  <div class="table-responsive">
+                    <%= render "fliip_services/shared/services_table", services: @services %>
+                  </div>
                 <% end %>
-              </div>
+              <% else %>
+                <%= turbo_frame_tag "services_table" %>
+              <% end %>
             </div>
 
-            <!-- Bottom: Sessions (half height) -->
-            <div class="pane pane-sessions d-flex flex-column" style="flex:1 1 0; min-height:0;">
-              <div class="d-flex align-items-center justify-content-between mb-1">
-                <h2 class="h6 mb-0">Séances récentes<span class="text-muted small mb-2"> 25 dernières séances non confirmées créées par vous.</span></h2>
+            <div class="mb-2">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <h2 class="h6 mb-0">
+                  Séances récentes
+                  <span class="text-muted small">25 dernières séances non confirmées créées par vous.</span>
+                </h2>
               </div>
-
-              <div class="flex-grow-1" style="min-height:0; overflow:auto;">
-                <div class="table-scroll">
-                  <%= render "sessions/shared/sessions_table",
-                        sessions: @sessions,
-                        show_bulk_checkbox: false,
-                        scope_name: :booking_page %>
-                </div>
+              <div class="table-responsive">
+                <%= render "sessions/shared/sessions_table",
+                      sessions: @sessions,
+                      show_bulk_checkbox: false,
+                      scope_name: :booking_page %>
               </div>
             </div>
           </div>
 
-          <!-- Right pane for CONSULTATION: full height table with internal scroll -->
+          <!-- CONSULTATION PANE: Single table -->
           <div data-segmented-tabs-target="pane" data-value="consultation"
-               class="<%= @active_tab == 'consultation' ? '' : 'd-none' %>"
-               style="min-height:0; height:100%; display:flex; flex-direction:column;">
-            <div class="d-flex align-items-center justify-content-between mb-1">
+               class="<%= @active_tab == 'consultation' ? '' : 'd-none' %>">
+            <div class="d-flex align-items-center justify-content-between mb-2">
               <h2 class="h6 mb-0">Consultations non confirmées</h2>
             </div>
-            <div class="flex-grow-1" style="min-height:0; overflow:auto;">
-              <% if @consultations&.any? %>
-                <div class="table-scroll">
-                  <%= render "consultations/shared/consultations_table", consultations: @consultations %>
-                </div>
-              <% else %>
-                <div class="text-muted small">Aucune consultation non confirmée.</div>
-              <% end %>
-            </div>
+            <% if @consultations&.any? %>
+              <div class="table-responsive">
+                <%= render "consultations/shared/consultations_table", consultations: @consultations %>
+              </div>
+            <% else %>
+              <div class="text-muted small">Aucune consultation non confirmée.</div>
+            <% end %>
           </div>
         </div> <!-- /card-body -->
       </div>
