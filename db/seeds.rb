@@ -72,48 +72,48 @@
 # puts "   → Users:        #{User.count}"
 # puts "   → SignupCodes:  #{SignupCode.count}"
 
-puts "Seeding consultations..."
+# puts "Seeding consultations..."
 
-users = User.limit(5)
-first_names = %w[Alexis Camille Maxime Chloé Philippe Élodie Julien Marie]
-last_names  = %w[Tremblay Gagnon Côté Bouchard Lavoie Morin Fortin Leblanc]
-notes       = [
-  "Première rencontre",
-  "Suivi de progression",
-  "Révision des objectifs",
-  "Bilan mensuel",
-  "Consultation de reprise",
-  "Séance d’évaluation",
-  nil
-]
+# users = User.limit(5)
+# first_names = %w[Alexis Camille Maxime Chloé Philippe Élodie Julien Marie]
+# last_names  = %w[Tremblay Gagnon Côté Bouchard Lavoie Morin Fortin Leblanc]
+# notes       = [
+#   "Première rencontre",
+#   "Suivi de progression",
+#   "Révision des objectifs",
+#   "Bilan mensuel",
+#   "Consultation de reprise",
+#   "Séance d’évaluation",
+#   nil
+# ]
 
-users.each do |user|
-  count = rand(10..15)
-  count.times do
-    fname = first_names.sample
-    lname = last_names.sample
+# users.each do |user|
+#   count = rand(10..15)
+#   count.times do
+#     fname = first_names.sample
+#     lname = last_names.sample
 
-    # Random date/time between 60 days ago and 15 days in the future
-    date  = Date.today - rand(0..75) + rand(0..15)
-    hour  = rand(8..20)
-    minute = [0, 15, 30, 45].sample
-    occurred_at = Time.zone.local(date.year, date.month, date.day, hour, minute)
+#     # Random date/time between 60 days ago and 15 days in the future
+#     date  = Date.today - rand(0..75) + rand(0..15)
+#     hour  = rand(8..20)
+#     minute = [0, 15, 30, 45].sample
+#     occurred_at = Time.zone.local(date.year, date.month, date.day, hour, minute)
 
-    Consultation.create!(
-      user_id: user.id,
-      created_by_id: user.id,
-      first_name: fname,
-      last_name: lname,
-      email: "#{fname.downcase}.#{lname.downcase}@exemple.com",
-      phone_number: "514-#{rand(100..999)}-#{rand(1000..9999)}",
-      occurred_at: occurred_at,
-      confirmed: [true, false].sample,
-      confirmed_at: (rand < 0.4 ? Time.zone.now - rand(1..10).days : nil),
-      present: [true, false].sample,
-      note: notes.sample
-    )
-  end
-  puts "→ Created #{count} consultations for #{user.full_name}"
-end
+#     Consultation.create!(
+#       user_id: user.id,
+#       created_by_id: user.id,
+#       first_name: fname,
+#       last_name: lname,
+#       email: "#{fname.downcase}.#{lname.downcase}@exemple.com",
+#       phone_number: "514-#{rand(100..999)}-#{rand(1000..9999)}",
+#       occurred_at: occurred_at,
+#       confirmed: [true, false].sample,
+#       confirmed_at: (rand < 0.4 ? Time.zone.now - rand(1..10).days : nil),
+#       present: [true, false].sample,
+#       note: notes.sample
+#     )
+#   end
+#   puts "→ Created #{count} consultations for #{user.full_name}"
+# end
 
-puts "✅ Consultations seeded successfully."
+# puts "✅ Consultations seeded successfully."
