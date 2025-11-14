@@ -117,7 +117,7 @@
                   <%= f.input :date, label: "Date", as: :string,
                         input_html: {
                           type: "text",
-                          value: (@session.occurred_at&.to_date || Date.today),
+                          value: (@session.occurred_at&.to_date || Time.zone.today),
                           class: "form-control form-control-sm",
                           data: { flatpickr_target: "date" }
                         } %>
@@ -214,7 +214,7 @@
                   <%= f.input :date, label: "Date", as: :string,
                         input_html: {
                           type: "text",
-                          value: (@consultation.occurred_at&.to_date || Date.today),
+                          value: (@consultation.occurred_at&.to_date || Time.zone.today),
                           class: "form-control form-control-sm",
                           data: { flatpickr_target: "date" }
                         } %>
@@ -318,5 +318,3 @@
     </div>
   </div> <!-- /row -->
 </div>
-
-<%= render "shared/modal" %>
