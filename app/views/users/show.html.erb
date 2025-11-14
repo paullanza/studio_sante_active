@@ -141,6 +141,19 @@
               data-action="click->tabs#activate">
               Séances non confirmées
             </button>
+
+            <!-- NEW TAB: Consultations -->
+            <button
+              class="nav-link"
+              id="tab-consultations"
+              type="button"
+              role="tab"
+              aria-controls="pane-consultations"
+              aria-selected="false"
+              data-bs-target="#pane-consultations"
+              data-action="click->tabs#activate">
+              Consultations
+            </button>
           </div>
         </nav>
 
@@ -150,7 +163,6 @@
             <div id="user-tabcontent">
               <!-- Services (visible by default) -->
               <section id="pane-services" role="tabpanel" aria-labelledby="tab-services">
-                <!-- Turbo Frame: filters + table update together -->
                 <%= turbo_frame_tag "services_frame", target: "_top" do %>
                   <!-- Filters -->
                   <div class="mb-2">
@@ -247,6 +259,35 @@
                     </div>
                   <% else %>
                     <p class="text-muted small mb-0">Aucune séance non confirmée.</p>
+                  <% end %>
+                <% end %>
+              </section>
+
+              <!-- Consultations -->
+              <section class="d-none" id="pane-consultations" role="tabpanel" aria-labelledby="tab-consultations">
+                <%= turbo_frame_tag "user_consultations_frame", target: "_top" do %>
+                  <div class="mb-2">
+                    <%= form_with url: user_path(@user), method: :get, local: true,
+                          html: {
+                            "data-controller" => "autosubmit",
+                            "data-action" => "change->autosubmit#submit",
+                            "data-turbo-frame" => "user_consultations_frame"
+                          } do %>
+                      <div class="form-check">
+                        <%= check_box_tag :show_confirmed, "1", params[:show_confirmed] == "1",
+                              class: "form-check-input", id: "filter_show_confirmed" %>
+                        <%= label_tag :show_confirmed, "Confirmées seulement", class: "form-check-label" %>
+                      </div>
+                    <% end %>
+                  </div>
+
+                  <% if @consultations_for_user&.any? %>
+                    <div class="table-scroll">
+                      <%= render "consultations/shared/consultations_table",
+                            consultations: @consultations_for_user %>
+                    </div>
+                  <% else %>
+                    <p class="text-muted small mb-0">Aucune consultation.</p>
                   <% end %>
                 <% end %>
               </section>

@@ -1,0 +1,54 @@
+<%# Locals:
+#   consultations: REQUIRED
+#   show_bulk_checkbox: default false
+#   scope_name: e.g., :unconfirmed (kept for compatibility)
+#   compact: default true
+%>
+
+<div class="table-responsive" data-controller="select-all">
+  <table class="table table-striped table-bordered align-middle compact-bars">
+    <thead class="table-light">
+      <tr>
+        <% if local_assigns[:show_bulk_checkbox] %>
+          <th class="text-center">
+            <input type="checkbox"
+                   class="form-check-input m-0"
+                   data-action="select-all#toggleAll"
+                   data-select-all-target="checkbox">
+          </th>
+        <% end %>
+
+        <!-- Date / Presence -->
+        <th class="text-nowrap w-40">Date</th>
+
+        <!-- Client name -->
+        <th class="text-nowrap w-25">Client·e</th>
+
+        <!-- Contact (email/phone) -->
+        <th class="text-nowrap w-25">Coordonnées</th>
+
+        <!-- Employee -->
+        <th class="text-nowrap text-center">Employé·e</th>
+
+        <!-- Actions -->
+        <th class="text-center text-nowrap">Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <% if consultations.any? %>
+        <% consultations.each do |c| %>
+          <%= render "consultations/shared/consultation_row",
+                     consultation: c,
+                     show_bulk_checkbox: local_assigns[:show_bulk_checkbox] %>
+        <% end %>
+      <% else %>
+        <tr>
+          <td colspan="<%= local_assigns[:show_bulk_checkbox] ? 6 : 5 %>" class="text-muted">
+            Aucune consultation à afficher.
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

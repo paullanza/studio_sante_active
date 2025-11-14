@@ -25,13 +25,19 @@ class FliipUsersController < ApplicationController
   end
 
   def show
-    @fliip_user = FliipUser.includes(
-      fliip_services: [
-        :service_definition,
-        :service_usage_adjustments,
-        :sessions
-      ]
-    ).find(params[:id])
+    @fliip_user = FliipUser
+      .includes(
+        :fliip_contracts,
+        fliip_services: [
+          :service_definition,
+          :service_usage_adjustments,
+          :sessions,
+          :consultation
+        ]
+      )
+      .find(params[:id])
+
+    @consultations = @fliip_user.consultations.with_associations.order_by_occurred_at_desc
   end
 
   def refresh
@@ -49,6 +55,10 @@ class FliipUsersController < ApplicationController
         FliipUser.none
       end
 
-    render :suggest, layout: false
+    if params[:list_only].present?
+      render partial: "fliip_users/suggest_list", layout: false
+    else
+      render :suggest, layout: false
+    end
   end
 end

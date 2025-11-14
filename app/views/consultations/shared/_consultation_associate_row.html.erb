@@ -1,0 +1,98 @@
+<% c = consultation %>
+
+<tr id="<%= dom_id(c) %>"
+    data-controller="association"
+    data-association-id-value="<%= c.id %>"
+    data-association-edit-url-value="<%= association_consultation_path(c) %>"
+    data-association-row-url-value="<%= row_consultation_path(c) %>"
+    data-association-update-url-value="<%= associate_consultation_path(c) %>"
+    data-association-service-select-url-value="<%= service_select_consultation_path(c) %>"
+    data-association-suggest-url-value="/fliip_users/suggest?list_only=1"
+    data-association-suggestions-frame-id-value="client-suggestions-<%= c.id %>"
+    data-association-service-frame-id-value="service-select-frame-<%= c.id %>"
+    data-association-show-bulk-value="<%= local_assigns[:show_bulk_checkbox].present? %>"
+    data-association-already-linked-value="<%= c.fliip_service_id.present? %>">
+
+  <%# 1) Optional bulk checkbox placeholder %>
+  <% if local_assigns[:show_bulk_checkbox] %>
+    <td></td>
+  <% end %>
+
+  <%# 2) Date · Présence (read-only context) %>
+  <td class="small align-middle">
+    <div class="d-flex flex-column">
+      <div class="d-flex align-items-center gap-2">
+        <strong><%= c.occurred_at&.strftime('%d/%m/%Y %H:%M') || "" %></strong>
+        <% if c.present == true %>
+          <span class="badge bg-success">Présent</span>
+        <% elsif c.present == false %>
+          <span class="badge bg-warning">Absent</span>
+        <% else %>
+          <span class="badge bg-secondary">—</span>
+        <% end %>
+      </div>
+      <div class="text-muted">
+        <small>créé : <%= c.created_at.strftime('%d/%m/%Y %H:%M') %></small>
+      </div>
+    </div>
+  </td>
+
+  <%# 3) Client search (prefilled) %>
+  <td class="align-middle">
+    <label class="form-label small mb-1 d-block">Client·e (Fliip)</label>
+
+    <input
+      type="text"
+      class="form-control form-control-sm"
+      placeholder="Nom du client…"
+      value="<%= @prefill_name %>"
+      data-association-target="nameInput"
+      data-action="
+        input->association#onNameInput
+        focus->association#onNameFocus
+        blur->association#onNameBlur
+        keydown.enter->association#preventSubmit
+      ">
+
+    <%= hidden_field_tag :fliip_user_id, @selected_fliip_user_id,
+          data: { association_target: "hiddenClientId" } %>
+
+    <div class="position-relative">
+      <div id="client-suggestions-<%= c.id %>"
+           class="position-absolute start-0 end-0 mt-1"
+           style="z-index:20;"></div>
+    </div>
+  </td>
+
+  <%# 4) Service select (depends on client), filtered by consultation date %>
+  <td class="align-middle" id="service-select-frame-<%= c.id %>">
+    <%= render partial: "consultations/service_select",
+               locals: { services: @services, selected_id: nil } %>
+  </td>
+
+  <%# 5) Employee column (read-only) %>
+  <td class="text-nowrap align-middle text-center">
+    <% if c.user %>
+      <%= link_to c.user.full_name, user_path(c.user), class: "text-decoration-none" %>
+      <% if c.created_by_id.present? && c.created_by_id != c.user_id %>
+        <div class="small text-muted">créée par <%= c.created_by&.full_name %></div>
+      <% end %>
+    <% else %>
+      <span class="text-muted">—</span>
+    <% end %>
+  </td>
+
+  <%# 6) Actions %>
+  <td class="text-end align-middle text-nowrap">
+    <a  href="<%= row_consultation_path(c) %>"
+        class="btn btn-sm btn-outline-secondary me-1"
+        data-action="association#cancel">
+      Annuler
+    </a>
+    <button type="button"
+            class="btn btn-sm btn-primary"
+            data-action="association#save">
+      Associer
+    </button>
+  </td>
+</tr>

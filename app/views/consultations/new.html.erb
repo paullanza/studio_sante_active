@@ -1,0 +1,127 @@
+<div class="container my-4 session-new">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0 fw-bold">Nouvelle consultation</h1>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-12 col-lg-3">
+      <div class="card shadow-sm stretch-card form-card">
+        <div class="card-body p-3">
+          <%= simple_form_for @consultation,
+              html: {
+                class: "session-form"
+              } do |f| %>
+
+          <div class="row g-3 align-items-end mb-2">
+            <div class="col-12">
+              <%= f.input :first_name, label: "Prénom",
+                    input_html: { class: "form-control form-control-sm" } %>
+            </div>
+
+            <div class="col-12">
+              <%= f.input :last_name, label: "Nom",
+                    input_html: { class: "form-control form-control-sm" } %>
+            </div>
+
+            <div class="col-12">
+              <%= f.input :email, label: "Courriel",
+                    input_html: { class: "form-control form-control-sm", inputmode: "email" } %>
+            </div>
+
+            <div class="col-12">
+              <%= f.input :phone_number, label: "Téléphone",
+                    input_html: { class: "form-control form-control-sm", inputmode: "tel" } %>
+            </div>
+
+            <% if current_user.admin? || current_user.super_admin? %>
+              <div class="col-12">
+                <label for="consultation_user_id" class="form-label">Créé par</label>
+                <select name="consultation[user_id]" id="consultation_user_id" class="form-select form-select-sm">
+                  <option value="">Moi (<%= current_user.full_name %>)</option>
+                  <% @staff.each do |u| %>
+                    <option value="<%= u.id %>"><%= u.full_name %></option>
+                  <% end %>
+                </select>
+              </div>
+            <% end %>
+          </div>
+
+          <hr class="my-3">
+
+          <div class="row g-3 align-items-end mb-2" data-controller="flatpickr">
+            <div class="col-md-6">
+              <%= f.input :date, label: "Date", as: :string,
+                    input_html: {
+                      type: "text",
+                      value: (@consultation.occurred_at&.to_date || Date.today),
+                      class: "form-control form-control-sm",
+                      data: { flatpickr_target: "date" }
+                    } %>
+            </div>
+
+            <div class="col-md-6">
+              <div class="d-flex justify-content-between align-items-center">
+                <%= f.label :time, "Heure", class: "form-label mb-0" %>
+              </div>
+
+              <%= f.input :time, label: false, as: :string,
+                    input_html: {
+                      type: "text",
+                      step: 900,
+                      inputmode: "numeric",
+                      value: (@consultation.occurred_at&.strftime("%H:%M") || "09:00"),
+                      class: "form-control form-control-sm",
+                      data: { flatpickr_target: "time" }
+                    } %>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <%= f.input :note, as: :text, label: "Note",
+                  input_html: { rows: 1, class: "form-control form-control-sm" } %>
+          </div>
+
+          <div class="row g-3 align-items-center">
+            <div class="col-12 col-sm-auto">
+              <div class="form-check">
+                <%= f.check_box :present,
+                      class: "form-check-input",
+                      id: "consultation_present" %>
+                <%= f.label :present, "Présent·e", class: "form-check-label fw-semibold fs-6", for: "consultation_present" %>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <button type="submit"
+                      class="btn btn-primary rounded-pill shadow-sm w-100">
+                Créer la consultation
+              </button>
+            </div>
+          </div>
+
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-9">
+      <div class="card shadow-sm stretch-card">
+        <div class="card-body p-3 d-flex flex-column tables-split">
+          <div class="pane pane-sessions">
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <h2 class="h6 mb-0">Consultations non confirmées</h2>
+            </div>
+            <div class="table-scroll">
+              <% if @consultations&.any? %>
+                <%= render "consultations/shared/consultations_table",
+                      consultations: @consultations %>
+              <% else %>
+                <div class="text-muted small">Aucune consultation non confirmée.</div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

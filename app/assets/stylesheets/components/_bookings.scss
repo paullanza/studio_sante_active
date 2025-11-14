@@ -1,0 +1,64 @@
+/* Scoped styles for the bookings new page */
+.booking-new {
+  /* Segmented tabs: container, buttons, and slider */
+  .segmented-tabs {
+    --seg-height: 32px; /* default size for compact UI */
+  }
+
+  .segmented-tabs__btn {
+    height: var(--seg-height);
+    /* Preserve comfortable tap target while staying compact */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .segmented-tabs__slider {
+    top: 4px;
+    bottom: 4px;
+    transition: all 0.18s ease;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Client suggestions dropdown stacked above surrounding content */
+  .suggestions-popover {
+    z-index: 20;
+  }
+
+  /* ----- Desktop layout constraints (lg and up) ----- */
+  @media (min-width: 992px) {
+    /* Controls how far from the top sticky cards sit and their max height */
+    --stick-top: 1rem;
+    --pane-max-h: calc(100vh - var(--stick-top) - 1rem);
+
+    /* Ensure nested flex children can shrink and allow inner scrollbars */
+    .row[data-controller="segmented-tabs"] { min-height: 0; }
+
+    .col-lg-3.d-flex,
+    .col-lg-9.d-flex { min-height: 0; }
+
+    /* Keep cards within viewport and enable sticky behavior */
+    .col-lg-3 > .card,
+    .col-lg-9 > .card {
+      position: sticky;
+      top: var(--stick-top);
+      max-height: var(--pane-max-h);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    /* Single, predictable scrollbar inside each card */
+    .col-lg-3 > .card .card-body,
+    .col-lg-9 > .card .card-body {
+      overflow: auto;
+      min-height: 0;
+    }
+
+    /* Let tables expand naturally; scrolling handled by the card body */
+    .card .table-responsive {
+      overflow: visible;
+    }
+  }
+}
