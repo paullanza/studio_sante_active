@@ -1,19 +1,7 @@
 class SessionsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_session, only: [:destroy, :edit, :update, :row]
-  before_action :load_staff,  only: [:new, :edit, :update]
-
-  def new
-    @session = Session.new
-    load_fliip_users
-
-    @sessions = Session
-                  .where(user_id: current_user.id)
-                  .unconfirmed
-                  .with_associations
-                  .order_by_occurred_at_desc
-                  .limit(25)
-  end
+  before_action :load_staff,  only: [:edit, :update]
 
   def create
     @session = Session.new(session_params)
@@ -50,7 +38,7 @@ class SessionsController < ApplicationController
       # Let the page render inline errors (422 is fine)
       flash.now[:alert] = @session.errors.full_messages.to_sentence.presence ||
                           "Un problème est survenu lors de la création de la séance."
-      render :new, status: :unprocessable_entity
+      render "bookings/new", status: :unprocessable_entity
     end
   end
 

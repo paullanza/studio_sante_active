@@ -10,28 +10,11 @@
             data-action="change->session-form#recheck">
       <option value="">Sélectionne un service</option>
 
-      <% today        = Date.current
-         future_limit = today + 1.month
-         past_limit   = today - 1.month %>
+      <% today = Date.current %>
 
       <% @services.each do |svc| %>
-        <% starts_too_late = svc.start_date.present?  && svc.start_date  > future_limit
-           ended_too_long  = svc.expire_date.present? && svc.expire_date < past_limit
-           cancelled       = (svc.purchase_status == "C")
-           used_up         = !svc.can_book_session?
-
-           disabled = (starts_too_late || ended_too_long || cancelled || used_up)
-
-           reason =
-             if cancelled
-               "Annulé"
-             elsif starts_too_late
-               "Commence dans plus d’un mois"
-             elsif ended_too_long
-               "Terminé il y a plus d’un mois"
-             elsif used_up
-               "Toutes les séances utilisées"
-             end
+        <% disabled = svc.booking_blocked?(today)
+           reason   = svc.booking_block_reason(today)
 
            prefix = svc.remote_purchase_id.present? ? "##{svc.remote_purchase_id} " : ""
            label  = prefix + (svc.service_name.presence || "Service ##{svc.id}")
@@ -42,9 +25,11 @@
           value="<%= svc.id %>"
           <%= "selected" if @selected_id.present? && svc.id == @selected_id.to_i %>
           <%= "disabled" if disabled %>
-          <%= %(title="#{reason}") if disabled %>
+          <%= %(title="#{reason}") if disabled && reason.present? %>
           data-has-def="<%= svc.service_definition.present? %>"
-          data-free-remaining="<%= svc.remaining_free_sessions.to_f %>">
+          data-free-remaining="<%= svc.remaining_free_sessions.to_f %>"
+          data-start-date="<%= svc.start_date&.to_s %>"
+          data-expire-date="<%= svc.expire_date&.to_s %>">
           <%= label %>
         </option>
       <% end %>
