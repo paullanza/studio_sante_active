@@ -71,14 +71,12 @@
 # puts "   → Users:        #{User.count}"
 # puts "   → SignupCodes:  #{SignupCode.count}"
 
+# frozen_string_literal: true
+
 # Seed demo data for Sessions, Consultations, and ServiceUsageAdjustments.
-# This file assumes:
-# - Users and SignupCodes already exist.
+# Assumptions:
+# - Users and SignupCodes are already present.
 # - FliipUsers / FliipServices / ServiceDefinitions are populated via the API sync.
-#
-# The seed is designed to be safely re-runnable:
-# - Only records tagged as seed data are removed on each run.
-# - Real data (non-seeded) is left intact.
 
 SEED_NOTE_PREFIX = "[SEED]".freeze
 ADJUSTMENT_SEED_ANCHOR = Time.zone.local(2000, 1, 1, 12, 0, 0)
@@ -86,16 +84,16 @@ ADJUSTMENT_SEED_ANCHOR = Time.zone.local(2000, 1, 1, 12, 0, 0)
 puts "== Seeding demo data (sessions, consultations, adjustments) =="
 
 # --------------------------------------------------------------------
-# Cleanup of previously seeded data
+# Full cleanup of seeded tables
 # --------------------------------------------------------------------
 
-puts "→ Cleaning up previously seeded sessions..."
+puts "→ Deleting all sessions..."
 Session.delete_all
 
-puts "→ Cleaning up previously seeded consultations..."
+puts "→ Deleting all consultations..."
 Consultation.delete_all
 
-puts "→ Cleaning up previously seeded service usage adjustments..."
+puts "→ Deleting all service usage adjustments..."
 ServiceUsageAdjustment.delete_all
 
 # --------------------------------------------------------------------
@@ -103,44 +101,40 @@ ServiceUsageAdjustment.delete_all
 # --------------------------------------------------------------------
 
 def remaining_total_capacity(service)
-  # Uses FliipService's own remaining_* helpers.
+  # Uses FliipService's own helpers; nil becomes 0 via to_f.
   service.remaining_paid_sessions.to_f + service.remaining_free_sessions.to_f
 end
 
 def service_date_range(service)
   # Builds a reasonable date window for seeding sessions.
-  start_date =
+  base_start =
     service.start_date ||
     service.purchase_date&.to_date ||
-    Date.current - 30.days
+    Date.current - 90.days
 
-  end_date =
+  base_end =
     service.expire_date ||
-    (service.start_date && service.start_date + 90.days) ||
-    Date.current + 30.days
+    (service.start_date && service.start_date + 180.days) ||
+    Date.current + 90.days
 
-  [start_date, end_date].tap do |from, to|
-    if to < from
-      # Swap if out of order; caller can still decide to skip if needed.
-      from, to = to, from
-    end
+  start_date = base_start
+  end_date   = base_end
+
+  if end_date < start_date
+    start_date, end_date = end_date, start_date
   end
+
+  [start_date, end_date]
 end
 
-def most_recent_service_by_client
-  # Finds the most recent FliipService per FliipUser based on:
-  # - expire_date
-  # - start_date
-  # - purchase_date
-  # Fallback: created_at as last tie-breaker.
+def associatable_services_by_client
+  # Services that can be reasonably associated:
+  # - Have a start_date
+  # - Grouped by client
   FliipService
-    .select("DISTINCT ON (fliip_user_id) *")
-    .order(
-      "fliip_user_id",
-      "COALESCE(expire_date, start_date, purchase_date::date, created_at::date) DESC",
-      "created_at DESC"
-    )
-    .index_by(&:fliip_user_id)
+    .where.not(start_date: nil)
+    .includes(:fliip_user)
+    .group_by(&:fliip_user_id)
 end
 
 seed_time = Time.zone.now
@@ -151,19 +145,33 @@ if active_users.empty?
   exit
 end
 
-# Restrict services to those that have a ServiceDefinition, because that is
-# where paid/free quotas are defined.
-services_with_defs = FliipService
-  .includes(:service_definition, :fliip_user, :service_usage_adjustments, :sessions)
-  .where.not(service_id: nil)
-  .to_a
-  .select { |svc| svc.service_definition.present? }
+# --------------------------------------------------------------------
+# Choose a limited set of services by status
+# --------------------------------------------------------------------
 
-if services_with_defs.empty?
-  puts "⚠️  No FliipServices with ServiceDefinitions found. Skipping session/adjustment seeding."
-else
-  puts "→ FliipServices with definitions: #{services_with_defs.size}"
-end
+all_services = FliipService
+  .includes(:service_definition, :fliip_user, :service_usage_adjustments, :sessions)
+  .to_a
+
+active_services    = all_services.select { |svc| svc.purchase_status == "A" }
+inactive_services  = all_services.select { |svc| svc.purchase_status == "I" }
+cancelled_services = all_services.select { |svc| svc.purchase_status == "C" }
+stopped_services   = all_services.select { |svc| svc.purchase_status == "S" }
+
+# Global caps for services we will seed against.
+selected_services = []
+selected_services.concat(active_services.sample([35, active_services.size].min))
+selected_services.concat(stopped_services.sample([3, stopped_services.size].min))
+selected_services.concat(inactive_services.sample([15, inactive_services.size].min))
+selected_services.concat(cancelled_services.sample([2, cancelled_services.size].min))
+
+selected_services.uniq!
+puts "→ Total FliipServices available: #{all_services.size}"
+puts "→ FliipServices selected for seeding: #{selected_services.size}"
+puts "   - Active:    #{selected_services.count { |s| s.purchase_status == 'A' }}"
+puts "   - Stopped:   #{selected_services.count { |s| s.purchase_status == 'S' }}"
+puts "   - Inactive:  #{selected_services.count { |s| s.purchase_status == 'I' }}"
+puts "   - Cancelled: #{selected_services.count { |s| s.purchase_status == 'C' }}"
 
 # --------------------------------------------------------------------
 # Seed Sessions
@@ -171,11 +179,10 @@ end
 
 created_sessions = 0
 
-services_with_defs.each_with_index do |service, idx|
+selected_services.each_with_index do |service, idx|
   total_remaining = remaining_total_capacity(service)
   next if total_remaining <= 0.0
 
-  # Decide how many sessions to create for this service.
   max_sessions_for_service = total_remaining.floor
   next if max_sessions_for_service <= 0
 
@@ -190,29 +197,29 @@ services_with_defs.each_with_index do |service, idx|
 
     coach = active_users[(idx + created_sessions) % active_users.size]
 
-    day = rand(start_date..end_date)
-    hour = rand(8..19)
+    day    = rand(start_date..end_date)
+    hour   = rand(8..19)
     minute = [0, 15, 30, 45].sample
     occurred_at = Time.zone.local(day.year, day.month, day.day, hour, minute)
 
     session = Session.new(
-      user:           coach,
-      created_by:     coach,
-      fliip_user:     service.fliip_user,
-      fliip_service:  service,
-      occurred_at:    occurred_at,
-      duration:       1.0,
-      present:        [true, true, true, false].sample, # ~75% present
-      confirmed:      [true, true, false].sample
+      user:          coach,
+      created_by:    coach,
+      fliip_user:    service.fliip_user,
+      fliip_service: service,
+      occurred_at:   occurred_at,
+      duration:      1.0,
+      present:       [true, true, true, false].sample, # ~75% present
+      confirmed:     false
     )
 
-    session.confirmed_at = occurred_at + 10.minutes if session.confirmed?
+    session.confirmed_at = nil
     session.note = "#{SEED_NOTE_PREFIX} Session seeded on #{seed_time.to_date} for demo."
 
     if session.save
       created_sessions += 1
     else
-      # Uncomment for debugging if needed:
+      # Uncomment for debugging:
       # puts "   Skipped session for service #{service.id}: #{session.errors.full_messages.join(', ')}"
     end
   end
@@ -221,14 +228,14 @@ end
 puts "✅ Sessions seeded: #{created_sessions}"
 
 # --------------------------------------------------------------------
-# Seed Consultations
+# Seed Consultations (no FliipUser/FliipService associations)
 # --------------------------------------------------------------------
 
 puts "→ Preparing consultation data..."
 
-latest_service_for_client = most_recent_service_by_client
-fliip_users_with_service = FliipUser
-  .where(id: latest_service_for_client.keys)
+services_by_client = associatable_services_by_client
+fliip_users_for_association = FliipUser
+  .where(id: services_by_client.keys)
   .order(:id)
   .to_a
 
@@ -247,86 +254,87 @@ generic_notes       = [
 created_consultations = 0
 
 active_users.each do |user|
-  total_for_user = rand(15..20)
-  associated_count = (total_for_user * 0.8).round
-  loose_count      = total_for_user - associated_count
+  total_for_user    = rand(15..20)
+  associated_count  = (total_for_user * 0.8).round
+  loose_count       = total_for_user - associated_count
 
-  # Associated consultations (with FliipUsers)
+  # Real-data consultations:
+  # - Name/email/phone from a real FliipUser
+  # - Date is 3–6 days BEFORE a real FliipService.start_date
+  # - No FliipUser/FliipService associations yet
   associated_count.times do
-    break if fliip_users_with_service.empty?
+    break if fliip_users_for_association.empty?
 
-    client = fliip_users_with_service.sample
-    svc    = latest_service_for_client[client.id]
-    next unless svc
+    client   = fliip_users_for_association.sample
+    services = services_by_client[client.id]
+    next if services.blank?
 
-    base_date =
-      svc.expire_date ||
-      svc.start_date ||
-      svc.purchase_date&.to_date ||
-      Date.current
+    svc = services.sample
+    next if svc.start_date.blank?
 
-    consult_date = base_date - rand(3..6).days
-    hour         = rand(8..19)
-    minute       = [0, 15, 30, 45].sample
-    occurred_at  = Time.zone.local(consult_date.year, consult_date.month, consult_date.day, hour, minute)
+    base_start  = svc.start_date
+    consult_day = base_start - rand(3..6).days
+    hour        = rand(8..19)
+    minute      = [0, 15, 30, 45].sample
+    occurred_at = Time.zone.local(consult_day.year, consult_day.month, consult_day.day, hour, minute)
 
     consultation = Consultation.new(
-      user_id:        user.id,
-      created_by_id:  user.id,
-      fliip_user_id:  client.id,
-      fliip_service_id: nil, # associations will be done later
-      first_name:     client.user_firstname,
-      last_name:      client.user_lastname,
-      email:          client.user_email,
-      phone_number:   client.user_phone1,
-      occurred_at:    occurred_at,
-      confirmed:      [true, false].sample,
-      present:        [true, false].sample,
-      note:           "#{SEED_NOTE_PREFIX} Consultation seeded on #{seed_time.to_date} for #{client.user_firstname} #{client.user_lastname}."
+      user_id:         user.id,
+      created_by_id:   user.id,
+      fliip_user_id:   nil,  # no association yet
+      fliip_service_id: nil, # no association yet
+      first_name:      client.user_firstname,
+      last_name:       client.user_lastname,
+      email:           client.user_email,
+      phone_number:    client.user_phone1,
+      occurred_at:     occurred_at,
+      confirmed:       false,
+      present:         [true, false].sample,
+      note:            "#{SEED_NOTE_PREFIX} Consultation seeded on #{seed_time.to_date} for #{client.user_firstname} #{client.user_lastname} (associatable, no association)."
     )
 
-    consultation.confirmed_at = occurred_at + 2.hours if consultation.confirmed?
+    consultation.confirmed_at = nil
 
     if consultation.save
       created_consultations += 1
     else
       # Uncomment for debugging:
-      # puts "   Skipped consultation (associated) for user #{user.id}: #{consultation.errors.full_messages.join(', ')}"
+      # puts "   Skipped consultation (real-data) for user #{user.id}: #{consultation.errors.full_messages.join(', ')}"
     end
   end
 
-  # Loose consultations (no FliipUser association)
+  # Loose consultations (no FliipUser association, generic names)
   loose_count.times do
     fname = generic_first_names.sample
     lname = generic_last_names.sample
 
-    date    = Date.current - rand(0..90)
-    hour    = rand(8..20)
-    minute  = [0, 15, 30, 45].sample
+    date       = Date.current - rand(0..90)
+    hour       = rand(8..20)
+    minute     = [0, 15, 30, 45].sample
     occurred_at = Time.zone.local(date.year, date.month, date.day, hour, minute)
 
     consultation = Consultation.new(
-      user_id:        user.id,
-      created_by_id:  user.id,
-      fliip_user_id:  nil,
+      user_id:         user.id,
+      created_by_id:   user.id,
+      fliip_user_id:   nil,
       fliip_service_id: nil,
-      first_name:     fname,
-      last_name:      lname,
-      email:          "#{fname.downcase}.#{lname.downcase}@exemple.com",
-      phone_number:   "514-#{rand(100..999)}-#{rand(1000..9999)}",
-      occurred_at:    occurred_at,
-      confirmed:      [true, false].sample,
-      present:        [true, false].sample,
-      note:           "#{SEED_NOTE_PREFIX} Consultation seeded on #{seed_time.to_date} (generic)."
+      first_name:      fname,
+      last_name:       lname,
+      email:           "#{fname.downcase}.#{lname.downcase}@exemple.com",
+      phone_number:    "514-#{rand(100..999)}-#{rand(1000..9999)}",
+      occurred_at:     occurred_at,
+      confirmed:       false,
+      present:         [true, false].sample,
+      note:            "#{SEED_NOTE_PREFIX} Consultation seeded on #{seed_time.to_date} (generic, no association)."
     )
 
-    consultation.confirmed_at = occurred_at + 3.hours if consultation.confirmed?
+    consultation.confirmed_at = nil
 
     if consultation.save
       created_consultations += 1
     else
       # Uncomment for debugging:
-      # puts "   Skipped consultation (loose) for user #{user.id}: #{consultation.errors.full_messages.join(', ')}"
+      # puts "   Skipped consultation (generic) for user #{user.id}: #{consultation.errors.full_messages.join(', ')}"
     end
   end
 end
@@ -341,7 +349,7 @@ puts "→ Seeding service usage adjustments..."
 
 created_adjustments = 0
 
-services_with_defs.each_with_index do |service, idx|
+selected_services.each_with_index do |service, idx|
   base_allowed_paid  = service.paid_allowed_total.to_f
   base_allowed_free  = service.free_allowed_total.to_f
   current_paid_used  = service.paid_used_total.to_f
@@ -354,12 +362,10 @@ services_with_defs.each_with_index do |service, idx|
 
   max_bonus_remaining = [4.0 - current_bonus, 0.0].max
 
-  # If nothing left to adjust (no remaining capacity and bonus already at 4+), skip.
   next if remaining_total <= 0.0 && max_bonus_remaining <= 0.0
 
-  # Create 0–2 adjustments per service.
   rand(0..2).times do
-    # Recompute with latest values (since we may have added adjustments for this service already).
+    # Recompute in case previous adjustments changed the totals.
     base_allowed_paid  = service.paid_allowed_total.to_f
     base_allowed_free  = service.free_allowed_total.to_f
     current_paid_used  = service.paid_used_total.to_f
@@ -388,7 +394,6 @@ services_with_defs.each_with_index do |service, idx|
       usage_step = [usage_step, remaining_total].min
 
       if paid_remaining.positive? && free_remaining.positive?
-        # Randomly choose whether this adjustment affects paid or free usage.
         if [true, false].sample
           paid_step = [usage_step, paid_remaining].min
         else
@@ -401,7 +406,6 @@ services_with_defs.each_with_index do |service, idx|
       end
     end
 
-    # Ensure there is at least one non-zero value to satisfy model validation.
     next if bonus_step.zero? && paid_step.zero? && free_step.zero?
 
     staff_user = active_users[(idx + created_adjustments) % active_users.size]
@@ -427,5 +431,4 @@ services_with_defs.each_with_index do |service, idx|
 end
 
 puts "✅ Service usage adjustments seeded: #{created_adjustments}"
-
 puts "🎉 Seeding complete."
