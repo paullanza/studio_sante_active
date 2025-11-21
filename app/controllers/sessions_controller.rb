@@ -1,19 +1,7 @@
 class SessionsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_session, only: [:destroy, :edit, :update, :row]
-  before_action :load_staff,  only: [:new, :edit, :update]
-
-  def new
-    @session = Session.new
-    load_fliip_users
-
-    @sessions = Session
-                  .where(user_id: current_user.id)
-                  .unconfirmed
-                  .with_associations
-                  .order_by_occurred_at_desc
-                  .limit(25)
-  end
+  before_action :load_staff,  only: [:edit, :update]
 
   def create
     @session = Session.new(session_params)
@@ -25,7 +13,7 @@ class SessionsController < ApplicationController
     @session.duration    = params[:half_hour] == "1" ? 0.5 : 1.0
 
     if @session.save
-      redirect_to new_session_path, notice: "Séance créée avec succès."
+      redirect_to new_seance_path, notice: "Séance créée avec succès."
     else
       # Rehydrate everything the :new template needs
       load_fliip_users
@@ -50,7 +38,7 @@ class SessionsController < ApplicationController
       # Let the page render inline errors (422 is fine)
       flash.now[:alert] = @session.errors.full_messages.to_sentence.presence ||
                           "Un problème est survenu lors de la création de la séance."
-      render :new, status: :unprocessable_entity
+      render "bookings/new", status: :unprocessable_entity
     end
   end
 
@@ -60,7 +48,7 @@ class SessionsController < ApplicationController
 
   def edit
     return forbid unless can_modify?(@session, action: :edit)
-    render partial: "sessions/shared/row_edit",
+    render partial: "sessions/shared/session_edit_row",
           locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
           layout: false
   end
@@ -90,7 +78,7 @@ class SessionsController < ApplicationController
             locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
             layout: false
     else
-      render partial: "sessions/shared/row_edit",
+      render partial: "sessions/shared/session_edit_row",
             locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
             status: :unprocessable_entity,
             layout: false

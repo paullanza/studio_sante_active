@@ -1,0 +1,175 @@
+<% c = consultation %>
+<% svc = c.try(:fliip_service) %>
+<% client = c&.fliip_user %>
+
+<tr id="<%= dom_id(c) %>"
+    data-controller="consultation-row association"
+    data-consultation-row-id-value="<%= c.id %>"
+    data-consultation-row-edit-url-value="<%= edit_consultation_path(c) %>"
+    data-consultation-row-row-url-value="<%= row_consultation_path(c) %>"
+    data-consultation-row-update-url-value="<%= consultation_path(c) %>"
+    data-consultation-row-show-bulk-value="<%= local_assigns[:show_bulk_checkbox].present? %>"
+
+    data-association-id-value="<%= c.id %>"
+    data-association-edit-url-value="<%= association_consultation_path(c) %>"
+    data-association-row-url-value="<%= row_consultation_path(c) %>"
+    data-association-update-url-value="<%= associate_consultation_path(c) %>"
+    data-association-service-select-url-value="<%= service_select_consultation_path(c) %>"
+    data-association-show-bulk-value="<%= local_assigns[:show_bulk_checkbox].present? %>">
+
+  <%# 1) Optional bulk checkbox %>
+  <% if local_assigns[:show_bulk_checkbox] %>
+    <td class="text-center align-middle">
+      <%= check_box_tag "consultation_ids[]", c.id, false,
+            class: "form-check-input m-0",
+            data: { select_all_target: "checkboxItem" } %>
+    </td>
+  <% end %>
+
+  <%# 2) Date · Presence %>
+  <td class="small align-middle">
+    <div class="d-flex flex-column">
+      <div class="d-flex align-items-center gap-2">
+        <strong><%= c.occurred_at&.strftime('%d/%m/%Y %H:%M') || "" %></strong>
+        <% if c.present == true %>
+          <span class="badge bg-success">Présent</span>
+        <% elsif c.present == false %>
+          <span class="badge bg-warning">Absent</span>
+        <% else %>
+          <span class="badge bg-secondary">—</span>
+        <% end %>
+      </div>
+      <div class="text-muted">
+        <small>créé : <%= c.created_at.strftime('%d/%m/%Y %H:%M') %></small>
+        <% if c.confirmed? && c.confirmed_at.present? %>
+          <small>| Confirmé·e : <%= c.confirmed_at.strftime('%d/%m/%Y %H:%M') %></small>
+        <% end %>
+      </div>
+    </div>
+  </td>
+
+  <%# 3) Client %>
+  <td class="align-middle">
+    <% if client.present? %>
+      <% entered_name = [c.first_name, c.last_name].compact.join(" ").strip %>
+
+      <div class="text-truncate">
+        <%= link_to("#{client.user_firstname} #{client.user_lastname}".strip, fliip_user_path(client), class: "text-decoration-none") %>
+        <% if entered_name.present? %>
+          <span class="text-muted">(<%= entered_name %>)</span>
+        <% end %>
+      </div>
+
+      <% if svc.present? %>
+        <div class="text-muted small text-truncate">
+          <% svc_label = (svc.service_name.presence || "Service ##{svc.id}") %>
+          <% purchase_date = svc.try(:purchased_at)&.strftime('%d/%m/%Y') %>
+          <%= link_to svc_label, fliip_service_path(svc), class: "text-decoration-none" %>
+          <% if purchase_date.present? %>
+            <span> · Achat: <%= purchase_date %></span>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-muted small text-truncate">
+          Client associé (sans achat)
+        </div>
+      <% end %>
+    <% else %>
+      <div class="text-truncate">
+        <%= [c.first_name, c.last_name].compact.join(" ") %>
+      </div>
+    <% end %>
+  </td>
+
+  <%# 4) Contact info %>
+  <td class="align-middle">
+    <div class="text-truncate small">
+      <% if c.email.present? %>
+        <i class="fa-solid fa-envelope me-1"></i><%= mail_to c.email, c.email, class: "text-decoration-none" %>
+      <% else %>
+        <span class="text-muted">—</span>
+      <% end %>
+    </div>
+    <div class="text-truncate small">
+      <% if c.phone_number.present? %>
+        <i class="fa-solid fa-phone me-1"></i><%= link_to c.phone_number, "tel:#{c.phone_number}", class: "text-decoration-none" %>
+      <% end %>
+    </div>
+  </td>
+
+  <%# 5) Employee %>
+  <td class="text-nowrap align-middle text-center">
+    <% if c.user %>
+      <%= link_to c.user.full_name, user_path(c.user), class: "text-decoration-none" %>
+      <% if c.created_by_id.present? && c.created_by_id != c.user_id %>
+        <div class="small text-muted">créé·e par <%= c.created_by&.full_name %></div>
+      <% end %>
+    <% else %>
+      <span class="text-muted">—</span>
+    <% end %>
+  </td>
+
+  <%# 6) Actions — icons %>
+  <td class="text-end align-middle text-nowrap">
+    <% if c.modifiable_by?(current_user) %>
+      <% if c.fliip_user.present? %>
+        <%# Disassociate as a LINK (no nested form). Turbo disabled. %>
+        <%= link_to disassociate_consultation_path(c),
+                    class: "btn btn-sm btn-outline-danger me-1",
+                    title: "Retirer l’association",
+                    data: {
+                      action: "consultation-row#confirmDisassociate",
+                      turbo: false,
+                      modal_title: consultations_modal_disassociate_title(c),
+                      modal_body:  consultations_modal_disassociate_body(c),
+                      modal_primary_label:   consultations_modal_disassociate_primary_label,
+                      modal_secondary_label: consultations_modal_disassociate_secondary_label
+                    } do %>
+          <i class="fa-solid fa-link-slash"></i>
+        <% end %>
+      <% else %>
+        <%= link_to association_consultation_path(c),
+                    class: "btn btn-sm btn-outline-primary me-1",
+                    title: "Associer un service",
+                    data: { action: "association#edit", turbo: false } do %>
+          <i class="fa-solid fa-link"></i>
+        <% end %>
+      <% end %>
+
+      <%# Hide Edit when associated to a FliipUser %>
+      <% unless c.fliip_user.present? %>
+        <%= link_to edit_consultation_path(c),
+                    class: "btn btn-sm btn-outline-secondary me-1",
+                    title: "Modifier",
+                    data: { action: "consultation-row#edit", turbo: false } do %>
+          <i class="fa-solid fa-pencil"></i>
+        <% end %>
+      <% end %>
+
+      <a href="<%= consultation_path(c) %>"
+        class="btn btn-sm btn-outline-danger"
+        title="Supprimer"
+        data-action="consultation-row#confirmDelete"
+        data-modal-title="<%= consultations_modal_delete_title(c) %>"
+        data-modal-body="<%= consultations_modal_delete_body(c) %>"
+        data-modal-primary-label="<%= consultations_modal_delete_primary_label %>"
+        data-modal-secondary-label="<%= consultations_modal_delete_secondary_label %>"
+        data-turbo="false">
+        <i class="fa-solid fa-trash-can"></i>
+      </a>
+    <% else %>
+      <span class="text-muted small">—</span>
+    <% end %>
+  </td>
+</tr>
+
+<% if c.note.present? %>
+  <tr class="note-row" id="<%= dom_id(c, :note) %>">
+    <td colspan="<%= (local_assigns[:show_bulk_checkbox] ? 6 : 5) %>" class="py-1">
+      <div class="small text-muted">
+        <strong>Note :</strong>
+        <span><%= c.note %></span>
+      </div>
+    </td>
+  </tr>
+<% end %>

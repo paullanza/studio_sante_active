@@ -3,6 +3,7 @@
 #   show_bulk_checkbox: default false
 #   scope_name: e.g., :unconfirmed (kept for compatibility)
 #   compact: default true
+#   fliip_service: REQUIRED when show_adjustment is true (used below)
 %>
 
 <div class="table-responsive" data-controller="select-all">
@@ -72,6 +73,24 @@
               </div>
             </td>
           </tr>
+
+          <%# --- Associated consultation (single) below the adjustments row --- %>
+          <% if service.consultation.present? %>
+            <tr>
+              <td colspan="<%= local_assigns[:show_bulk_checkbox] ? 7 : 6 %>" class="p-0">
+                <div class="p-2">
+                  <div class="fw-semibold mb-1">Consultation</div>
+                  <table class="table table-sm table-bordered mb-0">
+                    <tbody>
+                      <%= render "consultations/shared/consultation_row",
+                                 consultation: service.consultation,
+                                 show_bulk_checkbox: false %>
+                    </tbody>
+                  </table>
+                </div>
+              </td>
+            </tr>
+          <% end %>
         <% end %>
       <% end %>
     </tbody>

@@ -1,0 +1,12 @@
+<%# locals: services:, selected_id: %>
+<label class="form-label">Service</label>
+<select name="fliip_service_id"
+        class="form-select form-select-sm"
+        data-action="change->association#onServiceChange">
+  <option value="">Aucun achat — associer seulement le client</option>
+
+  <% Array(services).each do |svc| %>
+    <% lbl = "#{svc.service_name} (#{svc.time_range_label})" %>
+    <option value="<%= svc.id %>" <%= "selected" if svc.id.to_s == selected_id.to_s %>><%= lbl %></option>
+  <% end %>
+</select>

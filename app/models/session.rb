@@ -60,6 +60,9 @@ class Session < ApplicationRecord
   validate :service_is_active, on: :create
   # - Checks that booking the session does not exceed paid/free quotas
   validate :respect_quota_limits, on: :create
+  # - Checks that the service is not cancelled and is within the booking window (today-based)
+  validate :service_not_cancelled, on: :create
+  validate :service_within_booking_window, on: :create
 
   # Ensures that the chosen service actually belongs to the selected client.
   validate :service_matches_client
@@ -206,7 +209,7 @@ class Session < ApplicationRecord
   end
 
   def presence_with_duration_label
-    base = presence_label # from your model
+    base = presence_label
     "#{duration_display} #{base}"
   end
 
@@ -332,12 +335,12 @@ class Session < ApplicationRecord
     if session_type == "paid"
       remaining = fliip_service.remaining_paid_sessions.to_f
       if remaining < duration.to_f
-        errors.add(:base, "No paid sessions remaining for this service.")
+        errors.add(:base, "Aucune séance payante disponible pour ce service.")
       end
     elsif session_type == "free"
       remaining = fliip_service.remaining_free_sessions.to_f
       if remaining < duration.to_f
-        errors.add(:base, "No free sessions remaining for this service.")
+        errors.add(:base, "Aucune absence gratuite disponible pour ce service.")
       end
     end
   end
@@ -349,25 +352,47 @@ class Session < ApplicationRecord
 
     session_date = occurred_at.to_date
 
-    # Too far after expiry (beyond +30 days)
     if fliip_service.expire_date.present? &&
-      session_date > (fliip_service.expire_date + 30.days)
-      errors.add(:base, "The service has ended (past 30-day grace).")
+       session_date > (fliip_service.expire_date + 30.days)
+      errors.add(:base, "Le service est terminé depuis plus de 30 jours.")
     end
 
-    # Too far before start (earlier than -30 days)
     if fliip_service.start_date.present? &&
-      session_date < (fliip_service.start_date - 30.days)
-      errors.add(:base, "The start date for this service is more than 30 days away.")
+       session_date < (fliip_service.start_date - 30.days)
+      errors.add(:base, "La date de début de ce service est dans plus de 30 jours.")
     end
   end
-
 
   # Ensures the chosen service belongs to the selected client.
   def service_matches_client
     return if fliip_service.blank? || fliip_user_id.blank?
     if fliip_service.fliip_user_id != fliip_user_id
-      errors.add(:fliip_service_id, "does not belong to the selected client")
+      errors.add(:fliip_service_id, "ne correspond pas au client sélectionné.")
+    end
+  end
+
+  # Prevents booking on a cancelled service.
+  def service_not_cancelled
+    return if fliip_service.blank?
+    if fliip_service.cancelled?
+      errors.add(:base, "Ce service est annulé. Impossible de créer une séance.")
+    end
+  end
+
+  # Prevents booking when service is too far in the past or future relative to today.
+  def service_within_booking_window
+    return if fliip_service.blank?
+
+    today = Date.current
+
+    if fliip_service.start_date.present? &&
+       fliip_service.start_date > (today + 30.days)
+      errors.add(:base, "La date de début de ce service est dans plus de 30 jours. Impossible de créer une séance.")
+    end
+
+    if fliip_service.expire_date.present? &&
+       fliip_service.expire_date < (today - 30.days)
+      errors.add(:base, "Ce service est terminé depuis plus de 30 jours. Impossible de créer une séance.")
     end
   end
 end

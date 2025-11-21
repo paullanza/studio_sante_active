@@ -63,6 +63,18 @@
               data-action="click->tabs#activate">
               Services (30 derniers jours)
             </button>
+
+            <button
+              class="nav-link"
+              id="tab-admin-consultations"
+              type="button"
+              role="tab"
+              aria-controls="pane-admin-consultations"
+              aria-selected="false"
+              data-bs-target="#pane-admin-consultations"
+              data-action="click->tabs#activate">
+              Consultations (30 derniers jours)
+            </button>
           </div>
         </nav>
 
@@ -75,6 +87,7 @@
                   <%= render "users/shared/users_table",
                             users: @users,
                             unconfirmed_counts: @unconfirmed_counts,
+                            unconfirmed_consultation_counts: @unconfirmed_consultation_counts,
                             services_touched_counts: @services_touched_counts,
                             show_actions: true %>
                 </div>
@@ -106,10 +119,19 @@
                   <%= render "fliip_services/shared/services_table", services: @services_ended_recent %>
                 </div>
               </section>
+
+              <section class="d-none" id="pane-admin-consultations" role="tabpanel" aria-labelledby="tab-admin-consultations">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <h2 class="h6 mb-0">Consultations (confirmées ou non) — 30 derniers jours</h2>
+                </div>
+                <div class="table-scroll">
+                  <%= render "consultations/shared/consultations_table", consultations: @consultations_last_30 %>
+                </div>
+              </section>
             </div>
           </div>
         </div>
-      </div><!-- /tabs controller scope -->
+      </div>
     </div>
   </div>
 </div>

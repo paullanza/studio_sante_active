@@ -10,6 +10,9 @@ class FliipService < ApplicationRecord
               optional: true
   has_many   :service_usage_adjustments, dependent: :destroy, inverse_of: :fliip_service
 
+  # A service can be linked to at most one consultation at a time.
+  has_one    :consultation, dependent: :restrict_with_error, inverse_of: :fliip_service
+
   # -----------------------------------------
   # Scopes: by purchase status
   # -----------------------------------------
@@ -19,7 +22,6 @@ class FliipService < ApplicationRecord
   scope :cancelled, -> { where(purchase_status: "C") }
   scope :stopped,   -> { where(purchase_status: "S") }
 
-  # NEW: filter by a set of status codes (expects an Array of "A"/"I"/"P"/"C"/"S")
   scope :by_statuses, ->(statuses) {
     statuses.present? ? where(purchase_status: statuses) : all
   }
@@ -36,13 +38,67 @@ class FliipService < ApplicationRecord
   STATUS_MAP = {
     "A" => "Actif",
     "I" => "Inactif",
-    "P" => "Plannifé",
+    "P" => "Planifié",
     "C" => "Annulé",
     "S" => "Suspendu"
   }
 
   def status_name
     STATUS_MAP[purchase_status]
+  end
+
+  # -----------------------------------------
+  # Association-selection helpers
+  # -----------------------------------------
+  scope :for_fliip_user, ->(fliip_user_id) {
+    where(fliip_user_id: fliip_user_id)
+  }
+
+  # Historical window used for *session* browsing on the booking page (+3 months).
+  scope :start_within_window, ->(base_date) {
+    base = (base_date.presence || Date.current).to_date
+    from = base - 14.days
+    to   = base + 3.months
+    where("COALESCE(start_date, purchase_date::date) BETWEEN ? AND ?", from, to)
+  }
+
+  scope :unassociated_with_consultation, -> {
+    where.not(id: Consultation.where.not(fliip_service_id: nil).select(:fliip_service_id))
+  }
+
+  # Association-specific window:
+  # Prefer purchase_date; fallback to start_date; allowed = [-14 days, +30 days]
+  scope :purchase_within_association_window, ->(base_date) {
+    base = (base_date.presence || Date.current).to_date
+    from = base - 14.days
+    to   = base + 30.days
+    where("COALESCE(purchase_date::date, start_date) BETWEEN ? AND ?", from, to)
+  }
+
+  # Backward compatible entrypoint for consultations:
+  scope :available_for_association, ->(fliip_user_id:, cutoff_date: nil, base_date: nil) {
+    base = (base_date.presence || cutoff_date.presence || Date.current).to_date
+
+    for_fliip_user(fliip_user_id)
+      .purchase_within_association_window(base)
+      .unassociated_with_consultation
+      .includes(:fliip_user, :service_definition, :service_usage_adjustments)
+      .order(expire_date: :desc, service_name: :asc)
+  }
+
+  def self.find_available_for_association(service_id:, fliip_user_id:, cutoff_date:, base_date: nil)
+    return nil if service_id.blank? || fliip_user_id.blank?
+
+    base = (base_date.presence || cutoff_date.presence || Date.current).to_date
+
+    available_for_association(
+      fliip_user_id: fliip_user_id,
+      base_date:     base
+    ).find_by(id: service_id)
+  end
+
+  def start_or_purchase_date
+    start_date || purchase_date&.to_date
   end
 
   # -----------------------------------------
@@ -205,5 +261,38 @@ class FliipService < ApplicationRecord
 
   def absences_compact_str
     "[#{format('%.1f', free_used_total)}/#{free_allowed_total} absences]"
+  end
+
+  # -----------------------------------------
+  # Booking constraints helpers
+  # -----------------------------------------
+  def cancelled?
+    purchase_status == "C"
+  end
+
+  def starts_too_far_in_future?(reference_date = Date.current)
+    return false if start_date.blank?
+    start_date > (reference_date + 30.days)
+  end
+
+  def ended_too_long_ago?(reference_date = Date.current)
+    return false if expire_date.blank?
+    expire_date < (reference_date - 30.days)
+  end
+
+  def fully_used?
+    paid_used_total >= paid_allowed_total
+  end
+
+  def booking_block_reason(reference_date = Date.current)
+    return "Annulé" if cancelled?
+    return "Commence dans plus de 30 jours" if starts_too_far_in_future?(reference_date)
+    return "Terminé il y a plus de 30 jours" if ended_too_long_ago?(reference_date)
+    return "Toutes les séances utilisées" if fully_used?
+    nil
+  end
+
+  def booking_blocked?(reference_date = Date.current)
+    booking_block_reason(reference_date).present?
   end
 end

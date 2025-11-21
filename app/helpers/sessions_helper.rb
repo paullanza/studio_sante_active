@@ -37,13 +37,27 @@ module SessionsHelper
     "Solde d’absences sans frais épuisé. Procéder à la déduction d’une séance de son forfait?"
   end
 
+  def sessions_modal_before_start_title
+    "Séance avant le début du service"
+  end
+
+  def sessions_modal_before_start_body
+    "La date choisie est avant la date de début du service. Veux-tu vraiment continuer?"
+  end
+
+  def sessions_modal_after_end_title
+    "Séance après la fin du service"
+  end
+
+  def sessions_modal_after_end_body
+    "La date choisie est après la date de fin du service. Veux-tu vraiment continuer?"
+  end
+
   def sessions_modal_delete_title(session)
     "Supprimer la séance"
   end
 
   def sessions_modal_delete_body(session)
-    # Customize with labels if you like:
-    # "Supprimer la séance du #{session.occurred_at&.strftime('%d/%m/%Y %H:%M')} pour #{session.fliip_user&.full_name} ?"
     "Es-tu sûr·e de vouloir supprimer cette séance ? Cette action est irréversible."
   end
 
