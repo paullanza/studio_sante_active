@@ -262,4 +262,37 @@ class FliipService < ApplicationRecord
   def absences_compact_str
     "[#{format('%.1f', free_used_total)}/#{free_allowed_total} absences]"
   end
+
+  # -----------------------------------------
+  # Booking constraints helpers
+  # -----------------------------------------
+  def cancelled?
+    purchase_status == "C"
+  end
+
+  def starts_too_far_in_future?(reference_date = Date.current)
+    return false if start_date.blank?
+    start_date > (reference_date + 30.days)
+  end
+
+  def ended_too_long_ago?(reference_date = Date.current)
+    return false if expire_date.blank?
+    expire_date < (reference_date - 30.days)
+  end
+
+  def fully_used?
+    paid_used_total >= paid_allowed_total
+  end
+
+  def booking_block_reason(reference_date = Date.current)
+    return "Annulé" if cancelled?
+    return "Commence dans plus de 30 jours" if starts_too_far_in_future?(reference_date)
+    return "Terminé il y a plus de 30 jours" if ended_too_long_ago?(reference_date)
+    return "Toutes les séances utilisées" if fully_used?
+    nil
+  end
+
+  def booking_blocked?(reference_date = Date.current)
+    booking_block_reason(reference_date).present?
+  end
 end

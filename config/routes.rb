@@ -129,7 +129,7 @@ Rails.application.routes.draw do
   # is the step to choose a client service before creating a session.
   # `preview_type` supports client-side previews of session types.
   # =====================================================================
-  resources :sessions, only: [:new, :create, :destroy, :edit, :update] do
+  resources :sessions, only: [:create, :destroy, :edit, :update] do
     member do
       get :row
     end
