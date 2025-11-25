@@ -95,7 +95,7 @@ class AdminController < ApplicationController
     @sessions = Session.unconfirmed
                        .apply_filters(@filter_params)
                        .with_associations
-                       .order_by_occurred_at_desc
+                       .order_by_occurred_at_asc
 
     @staff = User.where(active: true).order(:first_name, :last_name)
   end
