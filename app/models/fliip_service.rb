@@ -256,7 +256,16 @@ class FliipService < ApplicationRecord
     used  = paid_used_total.to_f
     base  = service_definition&.paid_sessions.to_f
     bonus = bonus_sessions_total.to_f
-    "#{format('%.1f', used)}/(#{format('%.1f', base)} + #{format('%.1f', bonus)})"
+
+    used_str  = format('%.1f', used)
+    base_str  = format('%.1f', base)
+    bonus_str = format('%.1f', bonus)
+
+    if bonus.positive?
+      "#{used_str}/(#{base_str} + #{bonus_str})"
+    else
+      "#{used_str}/#{base_str}"
+    end
   end
 
   def absences_compact_str

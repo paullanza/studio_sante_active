@@ -32,12 +32,40 @@ module FliipServicesHelper
     case p
     when 0..49   then ["bg-success",  "text-white"]
     when 50..74  then ["bg-warning",  "text-dark"]
-    when 75..94  then ["bg-orange",   "text-dark"]  # custom orange (see CSS below)
+    when 75..94  then ["bg-orange",   "text-dark"]  # custom orange
     else              ["bg-danger",   "text-white"]
     end
   end
 
   def fmt1(n)
     ("%.1f" % n.to_f)
+  end
+
+  # -----------------------------------------
+  # Paid progress helpers for progress bars
+  # -----------------------------------------
+  # A service is considered "complete" for the paid bar when it has a
+  # positive allowed total and all paid sessions have been used.
+  def paid_progress_complete?(svc)
+    svc.paid_allowed_total.to_f.positive? && svc.fully_used?
+  end
+
+  # Builds the label for the paid usage progress bar.
+  # - If fully used → "Complet"
+  # - Otherwise     → compact usage + absences + percentage (legacy format)
+  def paid_progress_label(svc, percent)
+    return "Complet - 100%" if paid_progress_complete?(svc)
+
+    pct = percent.to_i
+    "#{svc.paid_usage_compact_str} #{svc.absences_compact_str} • #{pct}%"
+  end
+
+  # Selects the background class for the paid usage progress bar.
+  # - If fully used → green
+  # - Otherwise     → keep discrepancy-based color logic
+  def paid_progress_bg_class(svc, paid_pct, time_pct)
+    return "bg-success" if paid_progress_complete?(svc)
+
+    progress_usage_color(paid_pct, time_pct)
   end
 end

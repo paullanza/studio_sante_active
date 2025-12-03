@@ -153,8 +153,8 @@
 
                     <%= bar_with_label(
                           percent: paid_pct,
-                          label:   "#{@service.paid_usage_compact_str} #{@service.absences_compact_str} • #{paid_pct}%",
-                          bg_class: progress_usage_color(paid_pct, time_pct)
+                          label:   paid_progress_label(@service, paid_pct),
+                          bg_class: paid_progress_bg_class(@service, paid_pct, time_pct)
                         ) %>
                   </div>
 
