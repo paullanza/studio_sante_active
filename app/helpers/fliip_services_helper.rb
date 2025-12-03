@@ -41,12 +41,12 @@ module FliipServicesHelper
     ("%.1f" % n.to_f)
   end
 
-  # -----------------------------------------
-  # Paid progress helpers for progress bars
-  # -----------------------------------------
-  # A service is considered "complete" for the paid bar when it has a
-  # positive allowed total and all paid sessions have been used.
-  def paid_progress_complete?(svc)
+  # A service is considered "complete" for the paid bar when:
+  # - it has a positive allowed total AND all paid sessions are used, OR
+  # - the paid progress percent is at least 100% (safety net for rounding).
+  def paid_progress_complete?(svc, percent)
+    return true if percent.to_i >= 100
+
     svc.paid_allowed_total.to_f.positive? && svc.fully_used?
   end
 
@@ -54,7 +54,7 @@ module FliipServicesHelper
   # - If fully used → "Complet"
   # - Otherwise     → compact usage + absences + percentage (legacy format)
   def paid_progress_label(svc, percent)
-    return "Complet - 100%" if paid_progress_complete?(svc)
+    return "Complet - 100%" if paid_progress_complete?(svc, percent)
 
     pct = percent.to_i
     "#{svc.paid_usage_compact_str} #{svc.absences_compact_str} • #{pct}%"
@@ -64,7 +64,7 @@ module FliipServicesHelper
   # - If fully used → green
   # - Otherwise     → keep discrepancy-based color logic
   def paid_progress_bg_class(svc, paid_pct, time_pct)
-    return "bg-success" if paid_progress_complete?(svc)
+    return "bg-success" if paid_progress_complete?(svc, paid_pct)
 
     progress_usage_color(paid_pct, time_pct)
   end
