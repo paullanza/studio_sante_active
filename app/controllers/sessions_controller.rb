@@ -35,6 +35,8 @@ class SessionsController < ApplicationController
         @services = []
       end
 
+      @consultation = Consultation.new
+
       # Let the page render inline errors (422 is fine)
       flash.now[:alert] = @session.errors.full_messages.to_sentence.presence ||
                           "Un problème est survenu lors de la création de la séance."

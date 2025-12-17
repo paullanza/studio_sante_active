@@ -52,7 +52,7 @@ class Session < ApplicationRecord
   #   - Same occurred_at
   validates :fliip_user_id, uniqueness: {
     scope: [:fliip_service_id, :occurred_at],
-    message: "already has a session at this time with this service"
+    message: "a déjà une séance prévue à cette heure-là avec ce service."
   }
 
   # Custom validations (only on create):
