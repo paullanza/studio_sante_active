@@ -144,9 +144,9 @@ class SessionsController < ApplicationController
 
   def refresh_clients
     msg = FliipApi::UserSync::NewUserImporter.call
-    redirect_to new_session_path, notice: msg
+    redirect_to new_seance_path, notice: msg
   rescue => e
-    redirect_to new_session_path, alert: "Impossible de rafraîchir les client·e·s : #{e.message}"
+    redirect_to new_seance_path, alert: "Impossible de rafraîchir les client·e·s : #{e.message}"
   end
 
   private
