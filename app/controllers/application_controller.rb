@@ -1,5 +1,5 @@
 class ApplicationController < ActionController::Base
-  include Pagy::Backend
+  include Pagy::Method
 
   before_action :configure_permitted_parameters, if: :devise_controller?
   before_action :logout_if_inactive

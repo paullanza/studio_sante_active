@@ -24,7 +24,7 @@
 
     <!-- Right: pager -->
     <div class="flex-shrink-0">
-      <%== pagy_bootstrap_nav(@pagy) %>
+      <%== @pagy.series_nav(:bootstrap) %>
     </div>
   </div>
 
@@ -33,6 +33,6 @@
              recent_services_by_user_id: @recent_services_by_user_id %>
 
   <div class="d-flex justify-content-end">
-    <%== pagy_bootstrap_nav(@pagy) %>
+    <%== @pagy.series_nav(:bootstrap) %>
   </div>
 </div>
