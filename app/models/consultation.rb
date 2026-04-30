@@ -20,7 +20,7 @@ class Consultation < ApplicationRecord
   # -----------------------------------------
   # Validations
   # -----------------------------------------
-  validates :user_id, :first_name, :last_name, :email, :occurred_at, presence: true
+  validates :user_id, :first_name, :last_name, :phone_number, :occurred_at, presence: true
   validates :note, length: { maximum: 10_000 }, allow_blank: true
 
   validates :fliip_service_id,
