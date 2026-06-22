@@ -1,6 +1,5 @@
 # app/controllers/manager_controller.rb
 class ManagerController < ApplicationController
-  include Pagy::Backend
   before_action :authenticate_user!
   before_action :require_manager_only!
 
