@@ -50,7 +50,7 @@
         <%= link_to s.fliip_user.full_name, fliip_user_path(s.fliip_user), class: "text-decoration-none" %>
       </div>
       <div class="text-muted small text-truncate">
-        FliipUserID: <%= s.fliip_user.id %> • RemoteID: <%= s.fliip_user.remote_id %>
+        ID: <%= s.fliip_user.id %> • FliipUserID: <%= s.fliip_user.remote_id %>
       </div>
     <% else %>
       <span class="text-muted">—</span>
