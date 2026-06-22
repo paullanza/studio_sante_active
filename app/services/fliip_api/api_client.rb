@@ -14,16 +14,23 @@ module FliipApi
 
     # Fetches up to `limit` users in a single call, symbolizing keys and reversing order
     # as the data comes back newest first.
-    def fetch_all_users(limit = 10_000)
-      response = self.class.get("/users/get?limit=#{limit}", headers: @headers)
+    def fetch_all_users(limit = 100)
+      all_users = []
+      offset = 0
 
-      if response.success?
-        # Convert keys to symbols and reverse array so oldest records first
-        response.parsed_response.map(&:deep_symbolize_keys!).reverse!
-      else
-        Rails.logger.error "API Error: #{response.code} - #{response.message}"
-        []
+      loop do
+        response = self.class.get("/users/get?limit=#{limit}&offset=#{offset}", headers: @headers)
+        break unless response.success?
+
+        batch = response.parsed_response.map(&:deep_symbolize_keys!)
+        break if batch.empty?
+
+        all_users.concat(batch)
+        break if batch.size < limit
+        offset += limit
       end
+
+      all_users.reverse
     end
 
     # Fetches detailed data for a single user by ID
