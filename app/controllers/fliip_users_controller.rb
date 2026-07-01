@@ -2,7 +2,7 @@ class FliipUsersController < ApplicationController
   before_action :authenticate_user!
 
   def index
-    scope = FliipUser.order(:id)
+    scope = FliipUser.order(:remote_id)
     scope = scope.search_clients(params[:query]) if params[:query].present?
 
     scope = scope.includes(

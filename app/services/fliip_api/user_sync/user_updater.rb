@@ -11,11 +11,15 @@ module FliipApi
       end
 
       # Fetches the remote data for the given user and applies updates.
+      # Branches on user_role to hit the correct API endpoint for staff vs. clients.
       def update_local_user(remote_id)
         start_time = Time.now
-        # Retrieve the latest API data for this user by their remote ID
-        api_user = @api_client.fetch_single_user(remote_id)
-        # Assign attributes and save only if there are changes
+        local_user = FliipUser.find_by(remote_id: remote_id)
+        api_user = if local_user&.staff?
+                     @api_client.fetch_single_staff(remote_id)
+                   else
+                     @api_client.fetch_single_user(remote_id)
+                   end
         upsert_user(api_user)
 
         end_time = Time.now

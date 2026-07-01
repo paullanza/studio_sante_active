@@ -10,14 +10,13 @@
     <div class="d-flex align-items-center">
       <!-- Avatar -->
       <div class="me-2 flex-shrink-0">
-        <% if user.user_image.present? %>
+        <% if user.user_image.present? && !user.user_image.split("/images/user_image/").last.to_s.include?("/") %>
           <%= image_tag user.user_image,
                         alt: "#{user.user_firstname} #{user.user_lastname}",
                         class: "rounded-circle avatar-xs",
                         width: 24, height: 24,
                         loading: "lazy", referrerpolicy: "no-referrer" %>
         <% else %>
-          <!-- Minimal fallback circle with initials -->
           <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center avatar-xs text-muted fw-semibold" style="width:24px;height:24px;font-size:11px;line-height:1;">
             <%= "#{user.user_firstname.to_s.first}#{user.user_lastname.to_s.first}".upcase.presence || "?" %>
           </div>
