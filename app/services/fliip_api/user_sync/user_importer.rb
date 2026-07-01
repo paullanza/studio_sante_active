@@ -15,7 +15,7 @@ module FliipApi
         new_users = 0
         updated_users = 0
 
-        fetch_all_api_users.each do |data|
+        (fetch_all_api_users + fetch_all_api_staff).each do |data|
           case upsert_user(data)
           when "new" then new_users += 1
           when "updated" then updated_users += 1
@@ -23,15 +23,14 @@ module FliipApi
         end
         end_time = Time.now
 
-        {
-          new_users: new_users,
-          updated_users: updated_users,
-          start_time: start_time,
-          end_time: end_time
-        }
+        { new_users: new_users, updated_users: updated_users, start_time: start_time, end_time: end_time }
       end
 
       private
+
+      def fetch_all_api_staff
+        @api_client.fetch_all_staff
+      end
 
       # Delegates to the API client to fetch all users from Fliip's service
       # Abstracted here to keep external HTTP logic out of the sync loop

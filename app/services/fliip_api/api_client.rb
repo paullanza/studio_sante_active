@@ -45,6 +45,28 @@ module FliipApi
       end
     end
 
+    def fetch_all_staff
+      response = self.class.get("/staff/get", headers: @headers)
+
+      if response.success?
+        response.parsed_response.map(&:deep_symbolize_keys!)
+      else
+        Rails.logger.error "API Error: #{response.code} - #{response.message}"
+        []
+      end
+    end
+
+    def fetch_single_staff(user_id)
+      response = self.class.get("/staff/details/#{user_id}", headers: @headers)
+
+      if response.success?
+        response.parsed_response.deep_symbolize_keys!
+      else
+        Rails.logger.error "API Error: #{response.code} - #{response.message}"
+        []
+      end
+    end
+
     # Fetches contract data for a given user
     def fetch_user_contracts(user_id)
       response = self.class.get("/contracts/get/#{user_id}", headers: @headers)

@@ -13,7 +13,7 @@ module FliipApi
         new_users = 0
         updated_users = 0
 
-        fetch_new_api_users.each do |data|
+        fetch_new_api_users.concat(fetch_new_api_staff).each do |data|
           case upsert_user(data)
           when "new" then new_users += 1
           when "updated" then updated_users += 1
@@ -38,8 +38,15 @@ module FliipApi
         if @last_remote_id
           users.select { |user| user[:user_id].to_i > @last_remote_id }
         else
-          user
+          users
         end
+      end
+
+      # Retrieves all staff and filters to those not yet in the DB,
+      # since staff user_ids don't follow the same ordering as client ids.
+      def fetch_new_api_staff
+        known_ids = FliipUser.where.not(user_role: "user").pluck(:remote_id).to_set
+        @api_client.fetch_all_staff.reject { |s| known_ids.include?(s[:user_id].to_i) }
       end
     end
   end
