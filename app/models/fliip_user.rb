@@ -49,4 +49,8 @@ class FliipUser < ApplicationRecord
     return nil if active.empty?
     active.max_by { |c| [(c.end_date || Date.new(0)), (c.start_date || Date.new(0))] }
   end
+
+  def staff?
+    user_role.present? && user_role != "user"
+  end
 end
