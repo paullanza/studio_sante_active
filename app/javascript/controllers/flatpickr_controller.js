@@ -88,10 +88,15 @@ export default class extends Controller {
   // Hydrates a range picker’s visible input from hidden from/to values
   _hydrateRangeFromHidden(picker, from, to) {
     if (!picker || (!from && !to)) return
-    const start = from ? new Date(from) : null
-    const end   = to   ? new Date(to)   : null
+    const start = from ? this._parseYmd(from) : null
+    const end   = to   ? this._parseYmd(to)   : null
     const sel   = end ? [start, end] : (start ? [start] : [])
-    if (sel.length > 0) picker.setDate(sel, true) // true → sync altInput
+    if (sel.length > 0) picker.setDate(sel, false) // false: don't re-trigger onChange on hydration
+  }
+
+  _parseYmd(s) {
+    const [y, m, d] = s.split("-").map(Number)
+    return new Date(y, m - 1, d) // local midnight, not UTC
   }
 
   _fmtYmd(d) {
