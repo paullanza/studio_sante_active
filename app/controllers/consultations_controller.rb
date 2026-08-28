@@ -193,7 +193,7 @@ class ConsultationsController < ApplicationController
       present:                Array(params[:present]).presence
     }
 
-    @staff = User.where(active: true).order(:first_name, :last_name) if management_user?
+    @staff = management_user? ? User.where(active: true).order(:first_name, :last_name) : []
 
     base = Consultation.unassociated.with_associations
     @consultations = base.apply_filters(@filter_params).order_by_occurred_at_desc

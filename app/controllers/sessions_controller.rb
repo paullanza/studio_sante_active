@@ -17,7 +17,7 @@ class SessionsController < ApplicationController
     else
       # Rehydrate everything the :new template needs
       load_fliip_users
-      @staff = User.active.order(:last_name, :first_name) if admin_like?
+      load_staff
       @sessions = Session
                     .where(user_id: current_user.id)
                     .unconfirmed
@@ -156,7 +156,7 @@ class SessionsController < ApplicationController
   end
 
   def load_staff
-    @staff = User.active.order(:last_name, :first_name) if admin_like?
+    @staff = admin_like? ? User.active.order(:last_name, :first_name) : []
   end
 
   def forbid
