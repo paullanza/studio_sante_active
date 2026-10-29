@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Internal staff app for Studio Santé Active, a fitness/health studio. Employees log training sessions ("séances") and consultations against client services that are mirrored from the **Fliip** gym-management API. Admins confirm sessions and consultations for payroll and adjust service usage. UI copy and validation messages are in **French**. App time zone is `Eastern Time (US & Canada)`.
 
-Stack: Rails 7.1, Ruby 3.3.11, PostgreSQL (needs the `unaccent` extension), Devise, Hotwire (Turbo + Stimulus via importmap, so there is no Node build step), Bootstrap 5 compiled by `dartsass-rails` and served by Sprockets, simple_form, pg_search, Pagy, Solid Queue. Deployed on Render (`render.yaml`, `bin/render-build.sh`, which runs migrations and seeds on every build).
+Stack: Rails 7.2, Ruby 3.3.11, PostgreSQL (needs the `unaccent` extension), Devise, Hotwire (Turbo + Stimulus via importmap, so there is no Node build step), Bootstrap 5 compiled by `dartsass-rails` and served by Sprockets, simple_form, pg_search, Pagy, Solid Queue. Deployed on Render (`render.yaml`, `bin/render-build.sh`, which runs migrations and seeds on every build).
 
 ## Commands
 

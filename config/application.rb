@@ -9,7 +9,11 @@ Bundler.require(*Rails.groups)
 module StudioSanteActive
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 7.1
+    config.load_defaults 7.2
+
+    # 7.2 enables YJIT by default; it adds memory overhead and Render's free plan
+    # has 512 MB. Revisit when the instance size is known.
+    config.yjit = false
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
