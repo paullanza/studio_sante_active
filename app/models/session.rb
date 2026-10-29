@@ -6,7 +6,7 @@ class Session < ApplicationRecord
   # -----------------------------------------
   # Backed by an integer column in the DB (0, 1…)
   # We define the mapping explicitly so ordering stays stable.
-  enum session_type: [:paid, :free]
+  enum :session_type, [:paid, :free]
 
   # -----------------------------------------
   # PGSearch: search by client or employee names

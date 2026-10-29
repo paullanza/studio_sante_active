@@ -1,22 +1,9 @@
-/*
- * This is a manifest file that'll be compiled into application.css, which will include all the files
- * listed below.
- *
- * Any CSS (and SCSS, if configured) file within this directory, lib/assets/stylesheets, or any plugin's
- * vendor/assets/stylesheets directory can be referenced here using a relative path.
- *
- * You're free to add application-wide styles to this file and they'll appear at the bottom of the
- * compiled file so the styles you add here take precedence over styles defined in any other CSS
- * files in this directory. Styles in this file should be added after the last require_* statement.
- * It is generally better to create a new file per style scope.
- *
- *= require_tree .
- *= require_self
- */
-@import "bootstrap";
+@use "sass:color";
+@use "bootstrap";
+@use "components";
+
 @import url("https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css");
 @import url("https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css");
-@import "components/index";
 
 table {
   font-size: 0.75rem;
@@ -39,8 +26,8 @@ $brand: #49c5c1;
 
   &:hover,
   &:focus {
-    background-color: darken($brand, 5%);
-    border-color: darken($brand, 5%);
+    background-color: color.adjust($brand, $lightness: -5%);
+    border-color: color.adjust($brand, $lightness: -5%);
     color: #fff;
   }
 }

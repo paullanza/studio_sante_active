@@ -6,13 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Internal staff app for Studio Santé Active, a fitness/health studio. Employees log training sessions ("séances") and consultations against client services that are mirrored from the **Fliip** gym-management API. Admins confirm sessions and consultations for payroll and adjust service usage. UI copy and validation messages are in **French**. App time zone is `Eastern Time (US & Canada)`.
 
-Stack: Rails 7.1, Ruby 3.3.5, PostgreSQL (needs the `unaccent` extension), Devise, Hotwire (Turbo + Stimulus via importmap, so there is no Node build step), Bootstrap 5 via `sassc-rails`/Sprockets, simple_form, pg_search, Pagy, Solid Queue. Deployed on Render (`render.yaml`, `bin/render-build.sh`, which runs migrations and seeds on every build).
+Stack: Rails 7.1, Ruby 3.3.5, PostgreSQL (needs the `unaccent` extension), Devise, Hotwire (Turbo + Stimulus via importmap, so there is no Node build step), Bootstrap 5 compiled by `dartsass-rails` and served by Sprockets, simple_form, pg_search, Pagy, Solid Queue. Deployed on Render (`render.yaml`, `bin/render-build.sh`, which runs migrations and seeds on every build).
 
 ## Commands
 
 ```bash
 bin/setup                       # install gems, prepare DB
-bin/rails server                # dev server
+bin/dev                         # dev server + Sass watcher (Procfile.dev); plain `bin/rails server` won't recompile CSS
+bin/rails dartsass:build        # compile app/assets/stylesheets → app/assets/builds (gitignored; assets:precompile does this too)
 bin/rails db:migrate
 bundle exec rspec                                   # all specs
 bundle exec rspec spec/models/session_spec.rb       # one file
