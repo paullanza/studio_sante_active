@@ -14,8 +14,8 @@ gem "simple_form"
 # Bootstrap gem to enable Bootstrap styles and components
 gem "bootstrap", "~> 5.3.3"
 
-# SassC for CSS preprocessing
-gem "sassc-rails"
+# Dart Sass for CSS preprocessing
+gem "dartsass-rails"
 
 # Ostruct gem to remove error and allow use of OpenStruct
 gem "ostruct"
