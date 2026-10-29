@@ -40,7 +40,7 @@ class SessionsController < ApplicationController
       # Let the page render inline errors (422 is fine)
       flash.now[:alert] = @session.errors.full_messages.to_sentence.presence ||
                           "Un problème est survenu lors de la création de la séance."
-      render "bookings/new", status: :unprocessable_entity
+      render "bookings/new", status: :unprocessable_content
     end
   end
 
@@ -82,7 +82,7 @@ class SessionsController < ApplicationController
     else
       render partial: "sessions/shared/session_edit_row",
             locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
-            status: :unprocessable_entity,
+            status: :unprocessable_content,
             layout: false
     end
   end

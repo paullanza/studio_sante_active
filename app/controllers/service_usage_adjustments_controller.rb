@@ -24,7 +24,7 @@ class ServiceUsageAdjustmentsController < ApplicationController
     if @adjustment.update(attrs)
       redirect_to fliip_service_path(@service), notice: "Adjustment updated."
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

@@ -55,7 +55,7 @@ class UsersController < ApplicationController
       # Rebuild show data so the page re-renders fully with errors
       show
       flash.now[:alert] = @user.errors.full_messages.to_sentence
-      render :show, status: :unprocessable_entity
+      render :show, status: :unprocessable_content
     end
   end
 

@@ -57,7 +57,7 @@ RSpec.describe "Sessions", type: :request do
       sign_in employee
 
       expect { post sessions_path, params: session_params }.not_to change(Session, :count)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
