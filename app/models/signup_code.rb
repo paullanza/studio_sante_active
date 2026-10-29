@@ -13,7 +13,7 @@ class SignupCode < ApplicationRecord
   # :deactivated - Code was manually disabled before use/expiry.
   # :used        - Code has been redeemed by a user.
   # :expired     - Code expired due to time passing.
-  enum status: [:active, :deactivated, :used, :expired]
+  enum :status, [:active, :deactivated, :used, :expired]
 
   # -----------------------------------------
   # Validations

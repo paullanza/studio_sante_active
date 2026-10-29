@@ -34,7 +34,7 @@ class User < ApplicationRecord
   # -----------------------------------------
   # Defines role-based enum values for authorization and permissions
   # Possible roles: employee (0), manager (1), admin (2), super_admin (3)
-  enum role: [:employee, :manager, :admin, :super_admin]
+  enum :role, [:employee, :manager, :admin, :super_admin]
 
   ROLE_LABELS_FR = {
     "employee"    => "Employé·e",
