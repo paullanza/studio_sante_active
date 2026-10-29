@@ -45,6 +45,8 @@ RSpec.describe FliipApi::UserSync::UserImporter do
     expect(service.service_id).to eq(42)
     expect(service.start_date).to eq(Date.new(2026, 9, 1))
     expect(service.stop_payments).to be false
+    # Fliip sends a zoneless timestamp; it is stored as-is, read as UTC
+    expect(service.purchase_date).to eq(Time.utc(2026, 8, 30, 14, 0, 0))
 
     expect(client.fliip_contracts.sole.status).to eq("A")
     expect(message).to include("1 new user, 0 updated users")
