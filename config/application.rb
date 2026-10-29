@@ -9,11 +9,14 @@ Bundler.require(*Rails.groups)
 module StudioSanteActive
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 8.0
+    config.load_defaults 8.1
 
     # 7.2 enables YJIT by default; it adds memory overhead and Render's free plan
     # has 512 MB. Revisit when the instance size is known.
     config.yjit = false
+
+    # Active Storage isn't used; don't warn about the missing image_processing gem.
+    config.active_storage.variant_processor = :disabled
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
