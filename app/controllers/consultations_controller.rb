@@ -31,7 +31,7 @@ class ConsultationsController < ApplicationController
         .with_associations
         .order_by_occurred_at_desc
         .limit(25)
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -77,7 +77,7 @@ class ConsultationsController < ApplicationController
     else
       render partial: "consultations/shared/consultation_edit_row",
              locals:  { consultation: @consultation, show_bulk_checkbox: params[:show_bulk].present? },
-             status:  :unprocessable_entity,
+             status:  :unprocessable_content,
              layout:  false
     end
   end
@@ -128,7 +128,7 @@ class ConsultationsController < ApplicationController
 
       render partial: "consultations/shared/consultation_associate_row",
              locals:  { consultation: @consultation, show_bulk_checkbox: params[:show_bulk].present? },
-             status:  :unprocessable_entity,
+             status:  :unprocessable_content,
              layout:  false
     end
   end
