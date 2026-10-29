@@ -80,6 +80,27 @@ gem "bootsnap", require: false
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ]
+
+  # Audits gems for known security defects
+  gem "bundler-audit", require: false
+
+  # Static analysis for security vulnerabilities [https://brakemanscanner.org/]
+  gem "brakeman", require: false
+
+  # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
+  gem "rubocop-rails-omakase", require: false
+
+  # RSpec for testing
+  gem "rspec-rails"
+
+  # Factory Bot for test data
+  gem "factory_bot_rails"
+
+  # Faker for generating fake data in factories and seeds
+  gem "faker"
+
+  # Bullet for N+1 query detection
+  gem "bullet"
 end
 
 group :development do
@@ -97,4 +118,7 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+
+  # Shoulda Matchers for RSpec
+  gem "shoulda-matchers"
 end

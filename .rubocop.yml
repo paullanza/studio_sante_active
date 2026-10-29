@@ -1,0 +1,15 @@
+# Omakase Ruby styling for Rails
+inherit_gem:
+  rubocop-rails-omakase: rubocop.yml
+
+# Do not enforce spacing inside array brackets
+Layout/SpaceInsideArrayLiteralBrackets:
+  Enabled: false
+
+# Do not enforce spacing inside hash braces
+Layout/SpaceInsideHashLiteralBraces:
+  Enabled: false
+
+# Do not enforce single vs double quotes
+Style/StringLiterals:
+  Enabled: false
