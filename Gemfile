@@ -43,8 +43,8 @@ gem "rails", "~> 8.1.4"
 # assets are compiled. Keep json on 2.x; drop this pin when Sprockets goes (Propshaft move).
 gem "json", "~> 2.21"
 
-# The original asset pipeline for Rails [https://github.com/rails/sprockets-rails]
-gem "sprockets-rails"
+# The modern asset pipeline for Rails [https://github.com/rails/propshaft]
+gem "propshaft"
 
 # Use postgresql as the database for Active Record
 gem "pg", "~> 1.1"
