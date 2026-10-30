@@ -1,34 +1,51 @@
 import { Controller } from "@hotwired/stimulus"
-import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder"
+import "@mapbox/search-js-web"
 
 export default class extends Controller {
   static values = { apiKey: String }
   static targets = ["address"]   // hidden Rails input
 
-  connect() {
-    this.geocoder = new MapboxGeocoder({
-      accessToken: this.apiKeyValue,
-      placeholder: "Adresse",
-      language: "fr,en",
-      types: "country,region,place,postcode,locality,neighborhood,address",
-      countries: "ca",
-      // keep defaults; don't use setInput() here
-    })
+  async connect() {
+    // The module import registers <mapbox-search-box>; wait in case we got here first.
+    await customElements.whenDefined("mapbox-search-box")
 
-    this.geocoder.addTo(this.element)
+    this.searchBox = document.createElement("mapbox-search-box")
+    this.searchBox.accessToken = this.apiKeyValue
+    this.searchBox.options = {
+      language: "fr",
+      country: "ca",
+      types: ["country", "region", "place", "postcode", "locality", "neighborhood", "address"]
+    }
+    this.searchBox.placeholder = "Adresse"
+    this.searchBox.theme = { variables: { fontFamily: "inherit", borderRadius: "0.5rem" } }
 
     // sync hidden field on select/clear
-    this.geocoder.on("result", (e) => { this.addressTarget.value = e.result.place_name })
-    this.geocoder.on("clear", () => { this.addressTarget.value = "" })
+    this.handleRetrieve = this.handleRetrieve.bind(this)
+    this.handleClear = this.handleClear.bind(this)
+    this.searchBox.addEventListener("retrieve", this.handleRetrieve)
+    this.searchBox.addEventListener("clear", this.handleClear)
 
-    // ✅ Prefill visually without opening suggestions
+    this.element.appendChild(this.searchBox)
+
+    // Prefill visually with the saved address; setting value doesn't open suggestions
     const existing = (this.addressTarget.value || "").trim()
-    if (existing) {
-      // grab the actual text input the plugin creates
-      this.inputEl = this.element.querySelector(".mapboxgl-ctrl-geocoder--input")
-      if (this.inputEl) this.inputEl.value = existing // no 'input' event => no dropdown
-    }
+    if (existing) this.searchBox.value = existing
   }
 
-  disconnect() { this.geocoder?.onRemove() }
+  disconnect() {
+    this.searchBox?.removeEventListener("retrieve", this.handleRetrieve)
+    this.searchBox?.removeEventListener("clear", this.handleClear)
+    this.searchBox?.remove()
+  }
+
+  handleRetrieve(event) {
+    const feature = event.detail.features[0]
+    if (!feature) return
+
+    this.addressTarget.value = feature.properties.full_address || feature.properties.name
+  }
+
+  handleClear() {
+    this.addressTarget.value = ""
+  }
 }
