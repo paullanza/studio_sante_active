@@ -4,13 +4,19 @@ on:
   pull_request:
   push:
     branches: [ main ]
+  # Weekly run so a newly published advisory shows up without waiting for the next
+  # pull request. Only the dependency audits run on a schedule (see the `if` lines).
+  schedule:
+    - cron: "23 8 * * 1" # Mondays, 08:23 UTC
+  workflow_dispatch:
 
 permissions:
   contents: read
 
-# Cancel superseded runs of the same branch or pull request.
+# Cancel superseded runs of the same branch or pull request. The weekly audit gets its own
+# group so it can never cancel (or be cancelled by) a run for a push to main.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name == 'schedule' && 'schedule' || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -19,7 +25,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -27,6 +33,7 @@ jobs:
           bundler-cache: true
 
       - name: Scan for common Rails security vulnerabilities using static analysis
+        if: github.event_name != 'schedule'
         run: bin/brakeman --no-pager
 
       - name: Scan for known security vulnerabilities in gems used
@@ -37,7 +44,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -48,13 +55,14 @@ jobs:
         run: bin/importmap audit
 
   lint:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     env:
       RUBOCOP_CACHE_ROOT: tmp/rubocop
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -62,7 +70,7 @@ jobs:
           bundler-cache: true
 
       - name: Prepare RuboCop cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         env:
           DEPENDENCIES_HASH: ${{ hashFiles('.ruby-version', '**/.rubocop.yml', '**/.rubocop_todo.yml', 'Gemfile.lock') }}
         with:
@@ -75,11 +83,12 @@ jobs:
         run: bin/rubocop -f github
 
   test:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
 
     services:
       postgres:
-        image: postgres
+        image: postgres:16 # same major version as production
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -96,7 +105,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -116,6 +125,7 @@ jobs:
   # deploy's cache). Specs and a first build don't cover this: a json 3 / Sprockets
   # 4.2.2 incompatibility only crashed once a manifest already existed.
   production_boot:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     env:
       RAILS_ENV: production
@@ -125,7 +135,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1

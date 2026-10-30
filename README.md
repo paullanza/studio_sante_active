@@ -69,7 +69,7 @@ bin/bundler-audit        # known-vulnerable gems
 bin/importmap audit      # known-vulnerable JavaScript packages
 ```
 
-CI (`.github/workflows/ci.yml`) runs all of those on every pull request and on pushes to `main`, plus a production boot check: it installs production gems only, compiles assets twice (the second time on top of the existing manifest, like a cached deploy), then boots the app.
+CI (`.github/workflows/ci.yml`) runs all of those on every pull request and on pushes to `main`, with the specs running on Postgres 16 (the production major version). It also runs a production boot check: it installs production gems only, compiles assets twice (the second time on top of the existing manifest, like a cached deploy), then boots the app. The two dependency audits (bundler-audit and `bin/importmap audit`) also run every Monday, so a newly published advisory shows up without waiting for a pull request, and CI can be started by hand from the Actions tab.
 
 ## JavaScript packages
 
@@ -91,9 +91,12 @@ Packages are vendored into `vendor/javascript` and pinned in `config/importmap.r
 
 ## Deployment
 
-The app deploys to Render from `main` (`render.yaml`). `bin/render-build.sh` installs gems, compiles assets, runs migrations and runs `db:seed`, so seeds must stay idempotent. The start command is `bundle exec rails server`, and the app exposes `/up` as a health endpoint.
+The app runs on Render and deploys from `main`. The services are configured in the Render dashboard, not in the repository (there is no `render.yaml`).
 
-Set these on the service: `RAILS_MASTER_KEY`, `DATABASE_URL`, `WEB_CONCURRENCY`, `FLIIP_API_KEY` and `MAPBOX_API_KEY`. Any cron job that runs the sync needs `FLIIP_API_KEY` and the same `DATABASE_URL`.
+- **Web service** (Ruby runtime): build command `./bin/render-build.sh`, start command `bundle exec rails server`. The build installs gems, compiles assets, runs migrations and runs `db:seed`, so seeds must stay idempotent. The app exposes `/up` as a health endpoint.
+- **Cron job `fliip-user-sync`:** the same build command, running `bundle exec rake fliip:sync`.
+
+Set these on the web service: `RAILS_MASTER_KEY`, `DATABASE_URL`, `WEB_CONCURRENCY`, `FLIIP_API_KEY` and `MAPBOX_API_KEY`. The cron job boots the whole app in production, so it needs the same environment, in particular `DATABASE_URL`, `RAILS_MASTER_KEY` and `FLIIP_API_KEY`.
 
 ## License
 
