@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [ master ]
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -110,3 +110,34 @@ jobs:
         run: |
           bin/rails db:test:prepare
           bundle exec rspec
+
+  # Boots the app the way Render does: production groups only, assets compiled, then
+  # compiled again on top of the existing manifest (Render restores the previous
+  # deploy's cache). Specs and a first build don't cover this: a json 3 / Sprockets
+  # 4.2.2 incompatibility only crashed once a manifest already existed.
+  production_boot:
+    runs-on: ubuntu-latest
+    env:
+      RAILS_ENV: production
+      SECRET_KEY_BASE_DUMMY: "1"
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/unused # the app is booted, never queried
+      BUNDLE_WITHOUT: development:test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Compile assets
+        run: bin/rails assets:precompile
+
+      - name: Compile assets again on top of the existing manifest
+        run: bin/rails assets:precompile
+
+      - name: Boot the app in production
+        run: |
+          bin/rails runner 'puts "booted: Rails #{Rails.version}, Ruby #{RUBY_VERSION}"'

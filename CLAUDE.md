@@ -8,7 +8,7 @@ Internal staff app for Studio Santé Active, a fitness/health studio. Employees 
 
 Stack: Rails 8.1, Ruby 3.3.11, PostgreSQL (needs the `unaccent` extension), Devise, Hotwire (Turbo + Stimulus via importmap, so there is no Node build step), Bootstrap 5 compiled by `dartsass-rails` and served by Sprockets, simple_form, pg_search, Pagy, Solid Queue. Deployed on Render (`render.yaml`, `bin/render-build.sh`, which runs migrations and seeds on every build).
 
-Solo lead dev (Paul) owns all architecture and maintenance decisions. The app is in production with real staff using it for payroll, so production safety matters. Work happens in bursts after long quiet periods, so a snapshot of the code may be stale: read the current file before changing it.
+Solo lead dev (Paul) owns all architecture and maintenance decisions. The app is in production, so production safety matters. Work happens in bursts after long quiet periods, so a snapshot of the code may be stale: read the current file before changing it.
 
 ---
 
@@ -91,9 +91,9 @@ Interactivity uses Stimulus controllers in `app/javascript/controllers/` togethe
 - **Nil-guard pattern.** Never write `@ivar = value if condition` with no `else` in a controller. It leaves the variable `nil` on non-happy paths and crashes the view (this caused the `@staff` error in `bookings/new`). The reference implementations are `BookingsController#load_staff` and `ConsultationsController#load_staff`, which use a ternary that defaults to `[]`. When touching a controller, check for this pattern.
 - **Fliip API limit cap.** Very high `limit` values return `400 Bad Request` with an empty body. Use paginated requests (`limit=100` plus `offset`).
 - **Silent logger crashes.** Non-UTF-8 characters in API responses once crashed the Rails logger silently and masked the real error. If logs go missing, suspect encoding before suspecting the logger config.
-- **Render memory.** The web instance is 512 MB / 0.5 CPU. Background jobs run in a separate Render cron job service, not in the web process. Keep heavy work (full syncs, large exports) out of web requests. In October 2026 the app stopped loading with memory at 80–100% and Puma "Terminating timed out worker" loops; a redeploy fixed it and the root cause is unknown. Treat memory use as a design constraint.
+- **Render resources.** The web instance is small. Background jobs run in a separate Render cron job service, not in the web process. Keep heavy work (full syncs, large exports) out of web requests, and treat memory use as a design constraint.
 - **Build side effects.** `bin/render-build.sh` runs migrations and seeds on every deploy, so seeds must be idempotent.
-- **Vendored importmap pins can be silently broken.** `bin/importmap pin` downloads one file per package. It breaks if a file name contains `#` (Rails drops the pin and logs "Importmap skipped missing path") or if a file has relative imports like `from"./x.js"` (the sibling files aren't downloaded). Check both after pinning, and confirm in a real browser: specs can't catch it. `@mapbox/search-js-web@1.6.0` downloads cleanly; the old `@mapbox/mapbox-gl-geocoder` stack did not.
+- **Vendored importmap pins can be silently broken.** `bin/importmap pin` downloads one file per package. It breaks if a file name contains `#` (Rails drops the pin and logs "Importmap skipped missing path") or if a file has relative imports like `from"./x.js"` (the sibling files aren't downloaded). Check both after pinning, and confirm in a real browser: specs can't catch it.
 
 ---
 
@@ -157,7 +157,7 @@ Don't add editable local fields on top of Fliip-owned columns. Data migrations u
 
 ## Linear
 
-Work is tracked in Linear, in the **Informatique** team.
+Work is tracked in Linear.
 
 - Issue creation requires the team to be set (it can fail silently without it).
 - Status must reflect reality. When an issue's original scope is complete, close it immediately and open a new issue for follow-on work.
