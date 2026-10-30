@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-ruby "3.3.11"
+ruby "3.4.9"
 
 # Geocoding gem for location-based features
 gem "geocoder"
