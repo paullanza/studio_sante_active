@@ -8,21 +8,12 @@ pin_all_from "app/javascript/controllers", under: "controllers"
 pin "bootstrap", to: "bootstrap.min.js", preload: true
 pin "@popperjs/core", to: "popper.js", preload: true
 pin "flatpickr" # @4.6.13
-pin "mapbox-gl", to: "https://ga.jspm.io/npm:mapbox-gl@3.1.2/dist/mapbox-gl.js"
-pin "process", to: "https://ga.jspm.io/npm:@jspm/core@2.1.0/nodelibs/browser/process-production.js"
-pin "@mapbox/mapbox-gl-geocoder", to: "https://ga.jspm.io/npm:@mapbox/mapbox-gl-geocoder@5.0.0/lib/index.js"
-pin "#lib/client.js", to: "https://ga.jspm.io/npm:@mapbox/mapbox-sdk@0.13.7/lib/browser/browser-client.js"
-pin "@mapbox/fusspot", to: "https://ga.jspm.io/npm:@mapbox/fusspot@0.4.0/lib/index.js"
-pin "@mapbox/mapbox-sdk", to: "https://ga.jspm.io/npm:@mapbox/mapbox-sdk@0.13.7/index.js"
-pin "@mapbox/mapbox-sdk/services/geocoding", to: "https://ga.jspm.io/npm:@mapbox/mapbox-sdk@0.13.7/services/geocoding.js"
-pin "@mapbox/parse-mapbox-token", to: "https://ga.jspm.io/npm:@mapbox/parse-mapbox-token@0.2.0/index.js"
-pin "base-64", to: "https://ga.jspm.io/npm:base-64@0.1.0/base64.js"
-pin "eventemitter3", to: "https://ga.jspm.io/npm:eventemitter3@3.1.2/index.js"
-pin "events", to: "https://ga.jspm.io/npm:events@3.3.0/events.js"
-pin "fuzzy", to: "https://ga.jspm.io/npm:fuzzy@0.1.3/lib/fuzzy.js"
-pin "is-plain-obj", to: "https://ga.jspm.io/npm:is-plain-obj@1.1.0/index.js"
-pin "lodash.debounce", to: "https://ga.jspm.io/npm:lodash.debounce@4.0.8/index.js"
-pin "nanoid", to: "https://ga.jspm.io/npm:nanoid@3.3.20/index.browser.js"
-pin "subtag", to: "https://ga.jspm.io/npm:subtag@0.5.0/subtag.js"
-pin "suggestions", to: "https://ga.jspm.io/npm:suggestions@1.7.1/index.js"
-pin "xtend", to: "https://ga.jspm.io/npm:xtend@4.0.2/immutable.js"
+pin "@mapbox/search-js-web", to: "@mapbox--search-js-web.js" # @1.6.0
+pin "@floating-ui/core", to: "@floating-ui--core.js" # @0.7.3
+pin "@floating-ui/dom", to: "@floating-ui--dom.js" # @0.5.4
+pin "@mapbox/search-js-core", to: "@mapbox--search-js-core.js" # @1.6.0
+pin "@mapbox/sphericalmercator", to: "@mapbox--sphericalmercator.js" # @1.2.0
+pin "focus-trap" # @6.9.4
+pin "no-scroll" # @2.1.1
+pin "subtag" # @0.5.0
+pin "tabbable" # @5.3.3
