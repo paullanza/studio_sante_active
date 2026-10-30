@@ -38,13 +38,8 @@ gem "dotenv-rails"
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.4"
 
-# json 3.x breaks Sprockets 4.2.2: it calls JSON.parse(..., create_additions: false) when it
-# reads an existing asset manifest, which json 3 rejects, so production fails to boot once
-# assets are compiled. Keep json on 2.x; drop this pin when Sprockets goes (Propshaft move).
-gem "json", "~> 2.21"
-
-# The original asset pipeline for Rails [https://github.com/rails/sprockets-rails]
-gem "sprockets-rails"
+# The modern asset pipeline for Rails [https://github.com/rails/propshaft]
+gem "propshaft"
 
 # Use postgresql as the database for Active Record
 gem "pg", "~> 1.1"

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Internal staff app for Studio Santé Active, a fitness/health studio. Employees log training sessions ("séances") and consultations against client services that are mirrored from the **Fliip** gym-management API. Admins confirm sessions and consultations for payroll and adjust service usage. UI copy and validation messages are in **French**. App time zone is `Eastern Time (US & Canada)`.
 
-Stack: Rails 8.1, Ruby 3.3.11, PostgreSQL (needs the `unaccent` extension), Devise, Hotwire (Turbo + Stimulus via importmap, so there is no Node build step), Bootstrap 5 compiled by `dartsass-rails` and served by Sprockets, simple_form, pg_search, Pagy, Solid Queue. Deployed on Render (`render.yaml`, `bin/render-build.sh`, which runs migrations and seeds on every build).
+Stack: Rails 8.1, Ruby 3.3.11, PostgreSQL (needs the `unaccent` extension), Devise, Hotwire (Turbo + Stimulus via importmap, so there is no Node build step), Bootstrap 5 compiled by `dartsass-rails` and served by Propshaft, simple_form, pg_search, Pagy, Solid Queue. Deployed on Render (`render.yaml`, `bin/render-build.sh`, which runs migrations and seeds on every build).
 
 Solo lead dev (Paul) owns all architecture and maintenance decisions. The app is in production, so production safety matters. Work happens in bursts after long quiet periods, so a snapshot of the code may be stale: read the current file before changing it.
 
@@ -84,6 +84,8 @@ A migration to Pundit is planned (see Planned direction). Until then, don't add 
 ### Frontend
 Interactivity uses Stimulus controllers in `app/javascript/controllers/` together with server-rendered partials. Inline table editing fetches member `row` routes (for example `GET /sessions/:id/row`) to swap rows. JS packages are vendored into `vendor/javascript` and pinned in `config/importmap.rb` (`./bin/importmap pin <pkg>` downloads them; there are no CDN pins). Address autocomplete is the `<mapbox-search-box>` web component from `@mapbox/search-js-web`, created by `address_autocomplete_controller.js`; it writes the chosen address into the hidden `address` input. Clean up event listeners in `disconnect()` for Turbo compatibility.
 
+Styles: Sass partials live in `app/assets/stylesheets/components/` and each must be listed with `@use` in `components/index.scss`. `dartsass-rails` compiles `application.scss` into `app/assets/builds/` (gitignored) and Propshaft serves it; the raw `.scss` files are excluded from publishing in `config/initializers/assets.rb`. The `bootstrap`, `@popperjs/core`, Turbo and Stimulus pins resolve from gem assets, not from `vendor/javascript`.
+
 ---
 
 ## Known gotchas
@@ -108,8 +110,6 @@ Work is sequenced in phases. Bugs and stability come first, so don't start a lat
 5. Timesheet
 6. Analytics and client map
 
-When the Propshaft move lands, new Sass partials must be registered with `@use` in `application.scss`, and this file needs updating (the Sprockets and asset notes above go away).
-
 ---
 
 ## Code conventions
@@ -123,7 +123,7 @@ When the Propshaft move lands, new Sass partials must be registered with `@use` 
 
 ## Testing
 
-RSpec, FactoryBot (`spec/factories/`), Shoulda Matchers and Faker, with config in `spec/support/`. Request specs sign in with Devise's `sign_in`. `spec/factories_spec.rb` lints every factory and trait. Bullet is enabled in development only. CI (`.github/workflows/ci.yml`) runs Brakeman, bundler-audit, `bin/importmap audit`, RuboCop and RSpec on every pull request; the existing RuboCop offenses are listed in `.rubocop_todo.yml`, so new code must be clean.
+RSpec, FactoryBot (`spec/factories/`), Shoulda Matchers and Faker, with config in `spec/support/`. Request specs sign in with Devise's `sign_in`. `spec/factories_spec.rb` lints every factory and trait. Bullet is enabled in development only. CI (`.github/workflows/ci.yml`) runs Brakeman, bundler-audit, `bin/importmap audit`, RuboCop and RSpec on every pull request, plus a production boot check (production gems only, assets compiled twice, then booted); the existing RuboCop offenses are listed in `.rubocop_todo.yml`, so new code must be clean.
 
 - The Fliip API is never called in specs: stub `FliipApi::ApiClient.new` with an `instance_double` (see `spec/services/fliip_api/user_sync/user_importer_spec.rb`).
 - Build coverage in this order: models, then services, then controller/request specs.
