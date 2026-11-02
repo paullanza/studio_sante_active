@@ -102,6 +102,11 @@ RSpec.describe "Role-based access", type: :request do
       get manager_dashboard_path
       expect(response).to redirect_to(user_path(employee))
     end
+
+    it "no longer include the unused services pages" do
+      expect { Rails.application.routes.recognize_path("/manager/services", method: :get) }
+        .to raise_error(ActionController::RoutingError)
+    end
   end
 
   describe "confirming sessions" do

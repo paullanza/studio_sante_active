@@ -96,12 +96,10 @@ Rails.application.routes.draw do
   # =====================================================================
   # MANAGER VIEWS (READ-ONLY/REDUCED POWERS VS. ADMIN)
   # ---------------------------------------------------------------------
-  # Manager dashboard and service views for day-to-day oversight without
-  # admin-level mutation rights. Managers can also create signup codes.
+  # Manager dashboard for day-to-day oversight without admin-level
+  # mutation rights. Managers can also create signup codes.
   # =====================================================================
   get  "manager/dashboard",     to: "manager#dashboard",    as: :manager_dashboard
-  get  "manager/services",      to: "manager#services",     as: :manager_services
-  get  "manager/services/:id",  to: "manager#service_show", as: :manager_service
   post "manager/signup_codes",  to: "manager#create_signup_code", as: :manager_signup_codes
 
   # =====================================================================
@@ -145,12 +143,13 @@ Rails.application.routes.draw do
   # =====================================================================
   # CONSULTATIONS — CREATION & ASSOCIATION FLOW
   # ---------------------------------------------------------------------
-  # New/Create/Destroy/Edit/Update for consultation records. Member
+  # Create/Destroy/Edit/Update for consultation records (the form lives on
+  # the booking page, seances/new?tab=consultation). Member
   # routes support table row rendering (`row`), association UI (`association`),
   # and persisting the selected association (`associate`). `service_select`
   # offers a picker for linking to a client service.
   # =====================================================================
-  resources :consultations, only: [:new, :create, :destroy, :edit, :update] do
+  resources :consultations, only: [:create, :destroy, :edit, :update] do
     member do
       get  :row
       get  :association

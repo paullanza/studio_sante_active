@@ -87,6 +87,16 @@ RSpec.describe "Sessions", type: :request do
       expect { delete session_path(session_record) }.not_to change(Session, :count)
     end
 
+    it "keeps a deactivated owner selected in the admin edit row" do
+      employee.update!(active: false)
+      sign_in create(:user, :admin)
+
+      get edit_session_path(session_record)
+
+      # The selected option is only visible in the markup.
+      expect(response.body).to include(%(<option value="#{employee.id}" selected>))
+    end
+
     it "lets admins delete confirmed sessions" do
       session_record.update_columns(confirmed: true)
       sign_in create(:user, :admin)

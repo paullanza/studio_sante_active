@@ -7,14 +7,6 @@ class ManagerPolicy < ApplicationPolicy
     manager?
   end
 
-  def services?
-    manager?
-  end
-
-  def service_show?
-    manager?
-  end
-
   def create_signup_code?
     manager?
   end

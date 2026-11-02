@@ -5,6 +5,19 @@ module ApplicationHelper
     user_path(user)
   end
 
+  # Staff for an owner dropdown, plus the record's current owner when they
+  # are no longer selectable (e.g. deactivated), so saving an edit never
+  # reassigns the record to whoever is listed first.
+  def owner_options(staff, current_owner)
+    users = staff.to_a
+    users += [current_owner] if current_owner && users.exclude?(current_owner)
+    users
+  end
+
+  def owner_option_label(user)
+    user.active? ? user.full_name : "#{user.full_name} (inactif·ve)"
+  end
+
   def flash_toast_bg(type)
     case type.to_sym
     when :notice, :success
