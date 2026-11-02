@@ -1,0 +1,28 @@
+{
+  "error": false,
+  "message": "Success.",
+  "code": 0,
+  "result": {
+    "users": [
+      {
+        "gym_title": "Rocket Gym",
+        "plan_title": "Rocket Membership",
+        "card_id": "222333",
+        "user_phone": "",
+        "user_address": "12 av rock",
+        "user_gender": "male",
+        "user_dob": "1982-11-27",
+        "user_image": "default.png",
+        "user_firstname": "Andy",
+        "user_lastname": "Smith",
+        "user_id": "26605",
+        "main_plan_expiring_date": "2025-11-27",
+        "zone_ids": [
+          1,
+          5,
+          12
+        ]
+      }
+    ]
+  }
+}

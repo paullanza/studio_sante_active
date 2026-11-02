@@ -1,0 +1,29 @@
+{
+  "error": false,
+  "message": "Enregistrement réussi.",
+  "code": 0,
+  "result": {
+    "id": "110",
+    "gym_title": "Rocket Gym",
+    "card_id": "22233",
+    "user_phone": "",
+    "user_address": "12 av rock",
+    "user_gender": "male",
+    "user_dob": "1982-11-27",
+    "user_image": "default.png",
+    "user_firstname": "Andy",
+    "user_lastname": "Smith",
+    "vaccinated": true,
+    "plan_title": "Platinum Membership",
+    "contract_gym_id": "110",
+    "contract_gym_name": "Rocket Gym",
+    "main_plan_expiring_date": "2025-11-17",
+    "zone_ids": [
+      1,
+      5,
+      12
+    ]
+  },
+  "status": "Valide",
+  "gate_status": "open"
+}

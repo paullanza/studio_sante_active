@@ -1,0 +1,11 @@
+{
+  "error": false,
+  "message": "Success.",
+  "code": 0,
+  "result": [
+    {
+      "zone_id": 1,
+      "zone_name": "Main Floor"
+    }
+  ]
+}

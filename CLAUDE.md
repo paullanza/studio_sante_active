@@ -60,6 +60,7 @@ Prefer Ruby scripts over bash for API experiments. Save their output files next 
 `Session` is a domain model (a booked training session), not an HTTP session. `SessionsController` / `resources :sessions` are this model's CRUD and are separate from Devise's `devise/sessions` login controller. The booking form lives at `seances/new` (`BookingsController#new`).
 
 ### Fliip sync (`app/services/fliip_api/`)
+- `docs/fliip_api/` documents the Fliip API: the endpoints the app calls, its quirks, the full field reference and example responses. Check response shapes there before changing the sync.
 - `ApiClient` is a thin HTTParty wrapper over `https://static.fliipapp.com/api/v2`. On failure it logs the error and returns `[]`, so an outage looks like "no data". Keep that in mind when a sync appears to do nothing.
 - `UserSync::Base#upsert_user` upserts a `FliipUser` by `remote_id`, then always runs `ContractSync` and `ServiceSync` (current, future and history endpoints). Services are upserted by `remote_purchase_id`.
 - Entry points: `UserImporter` (full sync: admin "import clients" button and `rake fliip:sync`), `NewUserImporter` (new clients only: the "refresh clients" button on the booking page), `UserUpdater` (one client by `remote_id`).
