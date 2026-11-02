@@ -123,4 +123,7 @@ group :test do
 
   # Blocks real HTTP in specs and stubs the Fliip API
   gem "webmock"
+
+  # RSpec matchers for Pundit policies
+  gem "pundit-matchers"
 end
