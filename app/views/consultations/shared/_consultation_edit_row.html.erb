@@ -76,7 +76,7 @@
 
   <%# 5) Employee %>
   <td class="text-nowrap align-middle text-center">
-    <% if current_user.admin? || (current_user.respond_to?(:super_admin?) && current_user.super_admin?) %>
+    <% if policy(c).change_owner? %>
       <label class="form-label small mb-0 d-block">Employé·e</label>
       <select name="consultation[user_id]" class="form-select form-select-sm">
         <% @staff.each do |u| %>

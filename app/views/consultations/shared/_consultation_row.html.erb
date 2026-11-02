@@ -111,23 +111,26 @@
 
   <%# 6) Actions — icons %>
   <td class="text-end align-middle text-nowrap">
-    <% if c.modifiable_by?(current_user) %>
+    <% consultation_policy = policy(c) %>
+    <% actions = capture do %>
       <% if c.fliip_user.present? %>
-        <%# Disassociate as a LINK (no nested form). Turbo disabled. %>
-        <%= link_to disassociate_consultation_path(c),
-                    class: "btn btn-sm btn-outline-danger me-1",
-                    title: "Retirer l’association",
-                    data: {
-                      action: "consultation-row#confirmDisassociate",
-                      turbo: false,
-                      modal_title: consultations_modal_disassociate_title(c),
-                      modal_body:  consultations_modal_disassociate_body(c),
-                      modal_primary_label:   consultations_modal_disassociate_primary_label,
-                      modal_secondary_label: consultations_modal_disassociate_secondary_label
-                    } do %>
-          <i class="fa-solid fa-link-slash"></i>
+        <% if consultation_policy.disassociate? %>
+          <%# Disassociate as a LINK (no nested form). Turbo disabled. %>
+          <%= link_to disassociate_consultation_path(c),
+                      class: "btn btn-sm btn-outline-danger me-1",
+                      title: "Retirer l’association",
+                      data: {
+                        action: "consultation-row#confirmDisassociate",
+                        turbo: false,
+                        modal_title: consultations_modal_disassociate_title(c),
+                        modal_body:  consultations_modal_disassociate_body(c),
+                        modal_primary_label:   consultations_modal_disassociate_primary_label,
+                        modal_secondary_label: consultations_modal_disassociate_secondary_label
+                      } do %>
+            <i class="fa-solid fa-link-slash"></i>
+          <% end %>
         <% end %>
-      <% else %>
+      <% elsif consultation_policy.associate? %>
         <%= link_to association_consultation_path(c),
                     class: "btn btn-sm btn-outline-primary me-1",
                     title: "Associer un service",
@@ -137,7 +140,7 @@
       <% end %>
 
       <%# Hide Edit when associated to a FliipUser %>
-      <% unless c.fliip_user.present? %>
+      <% if c.fliip_user.blank? && consultation_policy.edit? %>
         <%= link_to edit_consultation_path(c),
                     class: "btn btn-sm btn-outline-secondary me-1",
                     title: "Modifier",
@@ -146,17 +149,23 @@
         <% end %>
       <% end %>
 
-      <a href="<%= consultation_path(c) %>"
-        class="btn btn-sm btn-outline-danger"
-        title="Supprimer"
-        data-action="consultation-row#confirmDelete"
-        data-modal-title="<%= consultations_modal_delete_title(c) %>"
-        data-modal-body="<%= consultations_modal_delete_body(c) %>"
-        data-modal-primary-label="<%= consultations_modal_delete_primary_label %>"
-        data-modal-secondary-label="<%= consultations_modal_delete_secondary_label %>"
-        data-turbo="false">
-        <i class="fa-solid fa-trash-can"></i>
-      </a>
+      <% if consultation_policy.destroy? %>
+        <a href="<%= consultation_path(c) %>"
+          class="btn btn-sm btn-outline-danger"
+          title="Supprimer"
+          data-action="consultation-row#confirmDelete"
+          data-modal-title="<%= consultations_modal_delete_title(c) %>"
+          data-modal-body="<%= consultations_modal_delete_body(c) %>"
+          data-modal-primary-label="<%= consultations_modal_delete_primary_label %>"
+          data-modal-secondary-label="<%= consultations_modal_delete_secondary_label %>"
+          data-turbo="false">
+          <i class="fa-solid fa-trash-can"></i>
+        </a>
+      <% end %>
+    <% end %>
+
+    <% if actions.present? %>
+      <%= actions %>
     <% else %>
       <span class="text-muted small">—</span>
     <% end %>
