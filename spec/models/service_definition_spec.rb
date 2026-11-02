@@ -1,0 +1,39 @@
+require "rails_helper"
+
+RSpec.describe ServiceDefinition, type: :model do
+  describe "validations" do
+    subject { build(:service_definition) }
+
+    it { is_expected.to validate_presence_of(:service_id) }
+    it { is_expected.to validate_uniqueness_of(:service_id) }
+    it { is_expected.to validate_numericality_of(:paid_sessions).only_integer.is_greater_than_or_equal_to(0).allow_nil }
+    it { is_expected.to validate_numericality_of(:free_sessions).only_integer.is_greater_than_or_equal_to(0).allow_nil }
+  end
+
+  it "links to services through service_id" do
+    definition = create(:service_definition)
+    service = create(:fliip_service, service_definition: definition)
+
+    expect(definition.fliip_services).to contain_exactly(service)
+  end
+
+  describe ".create_missing_definitions!" do
+    it "creates a 0/0 definition for each service type that has none" do
+      service = create(:fliip_service, :without_definition, service_name: "Pilates")
+      create(:fliip_service, :without_definition, service_id: service.service_id)
+
+      expect { described_class.create_missing_definitions! }.to change(described_class, :count).by(1)
+
+      definition = described_class.find_by(service_id: service.service_id)
+      expect(definition).to have_attributes(service_name: "Pilates", paid_sessions: 0, free_sessions: 0)
+    end
+
+    it "leaves existing definitions alone" do
+      definition = create(:service_definition, paid_sessions: 8)
+      create(:fliip_service, service_definition: definition)
+
+      expect { described_class.create_missing_definitions! }.not_to change(described_class, :count)
+      expect(definition.reload.paid_sessions).to eq(8)
+    end
+  end
+end

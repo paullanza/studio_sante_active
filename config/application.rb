@@ -29,6 +29,20 @@ module StudioSanteActive
     # in config/environments, which are processed later.
     #
     config.time_zone = 'Eastern Time (US & Canada)'
+
+    # Generators: RSpec with FactoryBot, request specs only (no fixtures,
+    # view, routing, helper or controller specs), and no empty helper modules.
+    config.generators do |g|
+      g.helper false
+      g.test_framework :rspec,
+                       fixtures: false,
+                       view_specs: false,
+                       routing_specs: false,
+                       helper_specs: false,
+                       controller_specs: false,
+                       request_specs: true
+      g.fixture_replacement :factory_bot, dir: "spec/factories"
+    end
     # config.eager_load_paths << Rails.root.join("extras")
 
     config.active_job.queue_adapter = :solid_queue

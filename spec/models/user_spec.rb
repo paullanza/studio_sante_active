@@ -58,4 +58,47 @@ RSpec.describe User, type: :model do
       expect(build(:user).active_for_authentication?).to be true
     end
   end
+
+  describe "other required fields" do
+    subject { build(:user) }
+
+    it { is_expected.to validate_presence_of(:last_name).with_message("ne peut pas être vide") }
+    it { is_expected.to validate_presence_of(:address).with_message("ne peut pas être vide") }
+  end
+
+  describe "scopes" do
+    let!(:employee)    { create(:user) }
+    let!(:former)      { create(:user, :inactive) }
+    let!(:super_admin) { create(:user, :super_admin) }
+
+    it "splits active from inactive users" do
+      expect(described_class.active).to contain_exactly(employee, super_admin)
+      expect(described_class.inactive).to contain_exactly(former)
+    end
+
+    it ".selectable keeps active users other than the super admin" do
+      expect(described_class.selectable).to contain_exactly(employee)
+    end
+  end
+
+  describe "#translated_role" do
+    it "uses the French labels, with admin for both admin roles" do
+      expect(build(:user).translated_role).to eq("Employé·e")
+      expect(build(:user, :manager).translated_role).to eq("Gestionnaire")
+      expect(build(:user, :admin).translated_role).to eq("Admin")
+      expect(build(:user, :super_admin).translated_role).to eq("Admin")
+    end
+  end
+
+  describe "#full_name" do
+    it "joins first and last name" do
+      expect(build(:user, first_name: "Alex", last_name: "Côté").full_name).to eq("Alex Côté")
+    end
+  end
+
+  describe "#inactive_message" do
+    it "uses Devise's inactive message for deactivated users" do
+      expect(build(:user, :inactive).inactive_message).to eq(:inactive)
+    end
+  end
 end
