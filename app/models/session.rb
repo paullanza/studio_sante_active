@@ -218,12 +218,10 @@ class Session < ApplicationRecord
     paid? ? 'bg-danger' : 'bg-warning'
   end
 
+  # The rule lives in SessionPolicy. This delegates until the Pundit
+  # wrap-up removes it.
   def modifiable_by?(current_user)
-    # Admin-like users: full powers
-    return true if current_user&.admin? || current_user&.super_admin?
-
-    # Employees/Managers: only if unconfirmed AND they are the owner
-    !confirmed? && user_id == current_user&.id
+    SessionPolicy.new(current_user, self).update?
   end
 
   def self.confirm(ids)
