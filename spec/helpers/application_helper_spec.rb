@@ -32,4 +32,27 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(helper.owner_option_label(user)).to eq("Alex Côté")
     end
   end
+
+  describe "#dashboard_path_for" do
+    it "sends each role to its home page" do
+      employee = create(:user)
+
+      expect(helper.dashboard_path_for(create(:user, :admin))).to eq(admin_dashboard_path)
+      expect(helper.dashboard_path_for(create(:user, :super_admin))).to eq(admin_dashboard_path)
+      expect(helper.dashboard_path_for(create(:user, :manager))).to eq(manager_dashboard_path)
+      expect(helper.dashboard_path_for(employee)).to eq(user_path(employee))
+    end
+  end
+
+  describe "#flash_toast_bg" do
+    it "maps flash types to Bootstrap backgrounds" do
+      expect(helper.flash_toast_bg(:notice)).to eq("text-bg-success")
+      expect(helper.flash_toast_bg("success")).to eq("text-bg-success")
+      expect(helper.flash_toast_bg(:alert)).to eq("text-bg-danger")
+      expect(helper.flash_toast_bg(:error)).to eq("text-bg-danger")
+      expect(helper.flash_toast_bg(:warning)).to eq("text-bg-warning")
+      expect(helper.flash_toast_bg(:info)).to eq("text-bg-info")
+      expect(helper.flash_toast_bg(:anything)).to eq("text-bg-info")
+    end
+  end
 end
