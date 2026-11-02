@@ -112,15 +112,6 @@ class Consultation < ApplicationRecord
   end
 
   # -----------------------------------------
-  # Permissions
-  # -----------------------------------------
-  # The rule lives in ConsultationPolicy. This delegates until the Pundit
-  # wrap-up removes it.
-  def modifiable_by?(current_user)
-    ConsultationPolicy.new(current_user, self).update?
-  end
-
-  # -----------------------------------------
   # UI helpers
   # -----------------------------------------
   def full_name

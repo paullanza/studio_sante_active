@@ -4,9 +4,9 @@ class ApplicationController < ActionController::Base
 
   before_action :configure_permitted_parameters, if: :devise_controller?
   before_action :logout_if_inactive
+  # Every action must authorize or explicitly skip_authorization.
+  after_action :verify_authorized, unless: :devise_controller?
 
-  # verify_authorized is added per controller as each one is migrated to
-  # Pundit; it moves here once every controller authorizes.
   rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
 
   def after_sign_in_path_for(resource)

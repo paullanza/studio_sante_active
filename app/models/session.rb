@@ -218,12 +218,6 @@ class Session < ApplicationRecord
     paid? ? 'bg-danger' : 'bg-warning'
   end
 
-  # The rule lives in SessionPolicy. This delegates until the Pundit
-  # wrap-up removes it.
-  def modifiable_by?(current_user)
-    SessionPolicy.new(current_user, self).update?
-  end
-
   def self.confirm(ids)
     ids = Array(ids).map(&:to_i).uniq
     return 0 if ids.empty?

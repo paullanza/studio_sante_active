@@ -1,7 +1,6 @@
 class BookingsController < ApplicationController
   before_action :authenticate_user!
   before_action :load_staff
-  after_action :verify_authorized
 
   def new
     authorize :booking

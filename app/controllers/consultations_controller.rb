@@ -2,7 +2,6 @@ class ConsultationsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_consultation, only: [:edit, :update, :destroy, :row, :association, :associate, :service_select, :disassociate]
   before_action :load_staff,       only: [:new, :create, :edit, :update]
-  after_action :verify_authorized
 
   OWNER_REQUIRED_MESSAGE = "Veuillez choisir un·e employé·e.".freeze
 

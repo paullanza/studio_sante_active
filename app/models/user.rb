@@ -90,36 +90,6 @@ class User < ApplicationRecord
   # Instance Methods
   # -----------------------------------------
 
-  # The rules live in UserPolicy. These delegate until the Pundit wrap-up
-  # removes them.
-  def active_status_change_allowed?(actor)
-    UserPolicy.new(actor, self).deactivate?
-  end
-
-  def editable_by?(actor)
-    UserPolicy.new(actor, self).update?
-  end
-
-  # Activates the user if the actor has permission
-  def activate_by!(actor)
-    unless active_status_change_allowed?(actor)
-      errors.add(:base, "Vous n’avez pas l’autorisation d’activer cet·te utilisateur·trice")
-      return false
-    end
-
-    update!(active: true)
-  end
-
-  # Deactivates the user if the actor has permission
-  def deactivate_by!(actor)
-    unless active_status_change_allowed?(actor)
-      errors.add(:base, "Vous n’avez pas l’autorisation de désactiver cet·te utilisateur·trice")
-      return false
-    end
-
-    update!(active: false)
-  end
-
   # Returns the user's full name by combining first and last names
   def full_name
     "#{first_name} #{last_name}"

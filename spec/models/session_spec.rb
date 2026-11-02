@@ -124,31 +124,6 @@ RSpec.describe Session, type: :model do
     end
   end
 
-  describe "#modifiable_by?" do
-    let(:owner)   { create(:user) }
-    let(:session) { create(:session, fliip_service: service, user: owner) }
-
-    it "lets the owner modify an unconfirmed session" do
-      expect(session.modifiable_by?(owner)).to be true
-    end
-
-    it "stops the owner once the session is confirmed" do
-      session.update_columns(confirmed: true)
-      expect(session.modifiable_by?(owner)).to be false
-    end
-
-    it "stops other employees and managers" do
-      expect(session.modifiable_by?(create(:user))).to be false
-      expect(session.modifiable_by?(create(:user, :manager))).to be false
-    end
-
-    it "lets admins modify confirmed sessions" do
-      session.update_columns(confirmed: true)
-      expect(session.modifiable_by?(create(:user, :admin))).to be true
-      expect(session.modifiable_by?(create(:user, :super_admin))).to be true
-    end
-  end
-
   describe ".confirm" do
     it "confirms only unconfirmed sessions and returns the count" do
       first  = create(:session, fliip_service: service, occurred_at: 1.day.ago)

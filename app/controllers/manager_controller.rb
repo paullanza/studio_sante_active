@@ -2,7 +2,6 @@
 class ManagerController < ApplicationController
   before_action :authenticate_user!
   before_action :authorize_manager
-  after_action :verify_authorized
 
   def dashboard
     # Staff list (order by role then name)

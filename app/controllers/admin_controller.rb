@@ -2,7 +2,6 @@ class AdminController < ApplicationController
   require "csv"
   before_action :authenticate_user!
   before_action :authorize_admin
-  after_action :verify_authorized
 
   def dashboard
     @users = policy_scope(User).order(role: :desc, last_name: :asc, first_name: :asc)

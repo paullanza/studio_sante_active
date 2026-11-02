@@ -2,7 +2,6 @@ class SessionsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_session, only: [:destroy, :edit, :update, :row]
   before_action :load_staff,  only: [:edit, :update]
-  after_action :verify_authorized
 
   OWNER_REQUIRED_MESSAGE = "Veuillez choisir un·e employé·e.".freeze
 

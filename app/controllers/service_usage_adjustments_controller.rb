@@ -2,7 +2,6 @@ class ServiceUsageAdjustmentsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_service
   before_action :set_adjustment, only: [:edit, :update, :destroy]
-  after_action :verify_authorized
 
   def create
     adj = @service.service_usage_adjustments.new

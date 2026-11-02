@@ -58,45 +58,4 @@ RSpec.describe User, type: :model do
       expect(build(:user).active_for_authentication?).to be true
     end
   end
-
-  describe "#active_status_change_allowed?" do
-    let(:employee)    { create(:user) }
-    let(:manager)     { create(:user, :manager) }
-    let(:admin)       { create(:user, :admin) }
-    let(:super_admin) { create(:user, :super_admin) }
-
-    it "never lets users change their own status" do
-      expect(admin.active_status_change_allowed?(admin)).to be false
-    end
-
-    it "lets admins and super admins change anyone" do
-      expect(manager.active_status_change_allowed?(admin)).to be true
-      expect(admin.active_status_change_allowed?(super_admin)).to be true
-    end
-
-    it "lets managers change employees only" do
-      expect(employee.active_status_change_allowed?(manager)).to be true
-      expect(create(:user, :manager).active_status_change_allowed?(manager)).to be false
-    end
-
-    it "does not let employees change anyone" do
-      expect(create(:user).active_status_change_allowed?(employee)).to be false
-    end
-  end
-
-  describe "#editable_by?" do
-    let(:user) { create(:user) }
-
-    it "allows the user themself and admins" do
-      expect(user.editable_by?(user)).to be true
-      expect(user.editable_by?(create(:user, :admin))).to be true
-      expect(user.editable_by?(create(:user, :super_admin))).to be true
-    end
-
-    it "does not allow managers or other employees" do
-      expect(user.editable_by?(create(:user, :manager))).to be false
-      expect(user.editable_by?(create(:user))).to be false
-      expect(user.editable_by?(nil)).to be false
-    end
-  end
 end
