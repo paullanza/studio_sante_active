@@ -90,18 +90,14 @@ class User < ApplicationRecord
   # Instance Methods
   # -----------------------------------------
 
-  # Determines if the given actor can change the active/inactive status of this user
-  # Rules:
-  #   - Cannot change your own active status
-  #   - super_admin and admin can change anyone's status
-  #   - manager can only change employee status
+  # The rules live in UserPolicy. These delegate until the Pundit wrap-up
+  # removes them.
   def active_status_change_allowed?(actor)
-    return false if actor == self
-    actor.super_admin? || actor.admin? || (actor.manager? && employee?)
+    UserPolicy.new(actor, self).deactivate?
   end
 
   def editable_by?(actor)
-    actor.present? && (actor == self || actor.admin? || actor.super_admin?)
+    UserPolicy.new(actor, self).update?
   end
 
   # Activates the user if the actor has permission

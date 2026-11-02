@@ -54,46 +54,27 @@
 
         <% if show_actions %>
           <td class="text-end">
-            <% if user.super_admin? %>
-              <em>Super admin</em>
-
-            <% elsif current_user.super_admin? %>
-              <div class="d-flex justify-content-end gap-2">
-                <% if user.admin? %>
-                  <%= button_to "Nommer gestionnaire", make_manager_user_path(user), method: :patch, class: "btn btn-sm btn-outline-primary" %>
-                <% elsif user.manager? %>
-                  <%= button_to "Nommer employé·e", make_employee_user_path(user), method: :patch, class: "btn btn-sm btn-outline-secondary" %>
-                  <%= button_to "Nommer admin",    make_admin_user_path(user),    method: :patch, class: "btn btn-sm btn-outline-dark" %>
-                <% else %>
-                  <%= button_to "Nommer gestionnaire",  make_manager_user_path(user),  method: :patch, class: "btn btn-sm btn-outline-primary" %>
-                <% end %>
+            <% user_policy = policy(user) %>
+            <% actions = capture do %>
+              <% if (user.admin? || user.employee?) && user_policy.make_manager? %>
+                <%= button_to "Nommer gestionnaire", make_manager_user_path(user), method: :patch, class: "btn btn-sm btn-outline-primary" %>
+              <% end %>
+              <% if user.manager? && user_policy.make_employee? %>
+                <%= button_to "Nommer employé·e", make_employee_user_path(user), method: :patch, class: "btn btn-sm btn-outline-secondary" %>
+              <% end %>
+              <% if user.manager? && user_policy.make_admin? %>
+                <%= button_to "Nommer admin", make_admin_user_path(user), method: :patch, class: "btn btn-sm btn-outline-dark" %>
+              <% end %>
+              <% if user.active? ? user_policy.deactivate? : user_policy.activate? %>
                 <%= button_to(user.active? ? 'Désactiver' : 'Réactiver',
                               user.active? ? deactivate_user_path(user) : activate_user_path(user),
                               method: :patch,
                               class: "btn btn-sm #{user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
-              </div>
-
-            <% elsif current_user.admin? %>
-              <% if user.admin? %>
-                <em>Admin</em>
-              <% elsif user.manager? %>
-                <div class="d-flex justify-content-end gap-2">
-                  <%= button_to "Nommer employé·e", make_employee_user_path(user), method: :patch, class: "btn btn-sm btn-outline-secondary" %>
-                  <%= button_to(user.active? ? 'Désactiver' : 'Réactiver',
-                                user.active? ? deactivate_user_path(user) : activate_user_path(user),
-                                method: :patch,
-                                class: "btn btn-sm #{user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
-                </div>
-              <% else %>
-                <div class="d-flex justify-content-end gap-2">
-                  <%= button_to "Nommer gestionnaire",  make_manager_user_path(user),  method: :patch, class: "btn btn-sm btn-outline-primary" %>
-                  <%= button_to(user.active? ? 'Désactiver' : 'Réactiver',
-                                user.active? ? deactivate_user_path(user) : activate_user_path(user),
-                                method: :patch,
-                                class: "btn btn-sm #{user.active? ? 'btn-outline-danger' : 'btn-outline-success'}") %>
-                </div>
               <% end %>
+            <% end %>
 
+            <% if actions.present? %>
+              <div class="d-flex justify-content-end gap-2"><%= actions %></div>
             <% else %>
               <em>—</em>
             <% end %>

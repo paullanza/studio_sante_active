@@ -40,65 +40,32 @@
           </div>
 
           <!-- Role / Activation controls -->
+          <% user_policy = policy(@user) %>
           <div class="mt-3">
-            <% if @user.super_admin? %>
-              <span class="text-muted small">—</span>
-            <% elsif current_user.super_admin? %>
-              <div class="d-flex flex-wrap gap-2">
-                <% if @user.admin? %>
-                  <%= button_to "Nommer gestionnaire", make_manager_user_path(@user), method: :patch, class: "btn btn-outline-primary btn-sm" %>
-                <% elsif @user.manager? %>
-                  <%= button_to "Nommer employé·e", make_employee_user_path(@user), method: :patch, class: "btn btn-outline-secondary btn-sm" %>
-                  <%= button_to "Nommer admin",    make_admin_user_path(@user),    method: :patch, class: "btn btn-outline-dark btn-sm" %>
-                <% else %>
-                  <%= button_to "Nommer gestionnaire",  make_manager_user_path(@user),  method: :patch, class: "btn btn-outline-primary btn-sm" %>
-                <% end %>
-
+            <div class="d-flex flex-wrap gap-2">
+              <% if (@user.admin? || @user.employee?) && user_policy.make_manager? %>
+                <%= button_to "Nommer gestionnaire", make_manager_user_path(@user), method: :patch, class: "btn btn-outline-primary btn-sm" %>
+              <% end %>
+              <% if @user.manager? && user_policy.make_employee? %>
+                <%= button_to "Nommer employé·e", make_employee_user_path(@user), method: :patch, class: "btn btn-outline-secondary btn-sm" %>
+              <% end %>
+              <% if @user.manager? && user_policy.make_admin? %>
+                <%= button_to "Nommer admin", make_admin_user_path(@user), method: :patch, class: "btn btn-outline-dark btn-sm" %>
+              <% end %>
+              <% if @user.active? ? user_policy.deactivate? : user_policy.activate? %>
                 <%= button_to(
                       @user.active? ? "Désactiver" : "Réactiver",
                       @user.active? ? deactivate_user_path(@user) : activate_user_path(@user),
                       method: :patch,
                       class: "btn btn-sm #{ @user.active? ? 'btn-outline-danger' : 'btn-outline-success' }"
                 ) %>
-              </div>
-
-            <% elsif current_user.admin? %>
-              <% if @user.admin? %>
-                <span class="text-muted small">Admin</span>
-              <% elsif @user.manager? %>
-                <div class="d-flex flex-wrap gap-2">
-                  <%= button_to "Nommer employé·e", make_employee_user_path(@user), method: :patch, class: "btn btn-outline-secondary btn-sm" %>
-                  <%= button_to(
-                        @user.active? ? "Désactiver" : "Réactiver",
-                        @user.active? ? deactivate_user_path(@user) : activate_user_path(@user),
-                        method: :patch,
-                        class: "btn btn-sm #{ @user.active? ? 'btn-outline-danger' : 'btn-outline-success' }"
-                  ) %>
-                </div>
-              <% else %>
-                <div class="d-flex flex-wrap gap-2">
-                  <%= button_to "Nommer gestionnaire",  make_manager_user_path(@user),  method: :patch, class: "btn btn-outline-primary btn-sm" %>
-                  <%= button_to(
-                        @user.active? ? "Désactiver" : "Réactiver",
-                        @user.active? ? deactivate_user_path(@user) : activate_user_path(@user),
-                        method: :patch,
-                        class: "btn btn-sm #{ @user.active? ? 'btn-outline-danger' : 'btn-outline-success' }"
-                  ) %>
-                </div>
               <% end %>
-            <% elsif current_user.manager? && @user.employee? %>
-              <%= button_to(
-                    @user.active? ? "Désactiver" : "Réactiver",
-                    @user.active? ? deactivate_user_path(@user) : activate_user_path(@user),
-                    method: :patch,
-                    class: "btn btn-sm #{ @user.active? ? 'btn-outline-danger' : 'btn-outline-success' }"
-              ) %>
-            <% end %>
+            </div>
           </div>
 
           <!-- Edit button -->
           <div class="mt-3">
-            <% if @user.editable_by?(current_user) %>
+            <% if user_policy.edit? %>
               <div class="d-grid">
                 <% if @user == current_user %>
                   <%= link_to "Modifier mon profil", edit_user_registration_path, class: "btn btn-outline-primary" %>
