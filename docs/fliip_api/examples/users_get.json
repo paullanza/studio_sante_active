@@ -1,0 +1,120 @@
+[
+  {
+    "user_id": "26605",
+    "custom_id": "1298",
+    "user_role": "member",
+    "user_firstname": "Andy",
+    "user_lastname": "Smith",
+    "user_gender": "male",
+    "member_type": "member",
+    "user_end_date": "2026-12-31",
+    "classes_left": 8,
+    "user_status": "active",
+    "user_email": "andy.smith@example.com",
+    "user_image": "default.png",
+    "user_phone1": "514-555-0101",
+    "user_phone2": "514-555-0102",
+    "user_dob": "1982-11-27",
+    "user_address": "12 av rock",
+    "user_city": "Montreal",
+    "user_zipcode": "H2X 1Y4",
+    "user_language": "fr",
+    "profile_step": "4",
+    "sync_g_cal": "0",
+    "progress": "90",
+    "user_emergency_contact": {
+      "emergency_contact_name": "Jane Doe",
+      "emergency_contact_phone": "514-555-6889",
+      "relation_to_member": "friend"
+    },
+    "reminder_settings": {
+      "send_reminders": "Y",
+      "reminder_type": "E",
+      "reminder_setting_email": "member@example.com",
+      "reminder_setting_mobile": "514-555-8698",
+      "reminder_setting_delay": "3600"
+    },
+    "custom_field_value": "Morning",
+    "custom_field_option": {
+      "custom_option_name_en": "Morning",
+      "custom_option_name_fr": "Matin",
+      "custom_option_name_es": "Mañana",
+      "custom_option_name_de": "Morgen",
+      "custom_option_name_it": "Mattina",
+      "custom_option_name_pt": "Manhã"
+    },
+    "member_since": "2024-04-12",
+    "user_notes": [
+      {
+        "note_text": "Prefers morning classes",
+        "created_date": "2024-03-01 09:15:00",
+        "creator_of_note_full_name": "Jean Tremblay"
+      }
+    ],
+    "appointment_notes": [
+      {
+        "note_text": "Prefers morning classes",
+        "created_date": "2024-03-01 09:15:00",
+        "creator_of_note_full_name": "Jean Tremblay",
+        "service_name": "Exercise Appointement",
+        "appointment_start": "2024-11-19 12:11:10"
+      }
+    ]
+  },
+  {
+    "user_id": "26606",
+    "custom_id": null,
+    "user_role": "member",
+    "user_firstname": "Marie",
+    "user_lastname": "Gagnon",
+    "user_gender": null,
+    "member_type": "member",
+    "user_end_date": null,
+    "classes_left": null,
+    "user_status": "active",
+    "user_email": "marie.gagnon@example.com",
+    "user_image": "default.png",
+    "user_phone1": null,
+    "user_phone2": null,
+    "user_dob": null,
+    "user_address": null,
+    "user_city": null,
+    "user_zipcode": null,
+    "user_language": "fr",
+    "profile_step": "4",
+    "sync_g_cal": "0",
+    "progress": null,
+    "user_emergency_contact": {
+      "emergency_contact_name": null,
+      "emergency_contact_phone": null,
+      "relation_to_member": null
+    },
+    "reminder_settings": {
+      "send_reminders": null,
+      "reminder_type": null,
+      "reminder_setting_email": null,
+      "reminder_setting_mobile": null,
+      "reminder_setting_delay": null
+    },
+    "custom_field_value": "Morning",
+    "custom_field_option": {
+      "custom_option_name_en": null,
+      "custom_option_name_fr": null,
+      "custom_option_name_es": null,
+      "custom_option_name_de": null,
+      "custom_option_name_it": null,
+      "custom_option_name_pt": null
+    },
+    "member_since": "2024-04-12",
+    "user_notes": [],
+    "appointment_notes": [
+      {
+        "note_text": "Prefers morning classes",
+        "created_date": "2024-03-01 09:15:00",
+        "creator_of_note_full_name": "Jean Tremblay",
+        "service_name": null,
+        "appointment_start": null
+      }
+    ]
+  }
+]

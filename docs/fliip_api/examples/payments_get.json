@@ -1,0 +1,18 @@
+[
+  {
+    "payment_id": "923",
+    "payment_method": "card",
+    "payment_agreement_date": "2019-11-28",
+    "is_default": "1",
+    "creditcard_name": "Test",
+    "card_type": "Visa",
+    "card_number": "************4444",
+    "expiration_date": "12/27",
+    "mandate_status": "INITIAL",
+    "bank_number": "001",
+    "transit_number": "12345",
+    "account_number": "*2345",
+    "has_image": "false",
+    "image": "data:image/gif;base64,R0lGODlhAQABAAAAACw="
+  }
+]

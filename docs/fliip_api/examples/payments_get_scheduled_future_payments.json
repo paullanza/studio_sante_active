@@ -1,0 +1,16 @@
+[
+  {
+    "amount": "57.49",
+    "payment_number": "1",
+    "payment_date": "2024-04-24",
+    "service_name": "Exercise Appointement",
+    "membership_name": null
+  },
+  {
+    "amount": "57.49",
+    "payment_number": "2",
+    "payment_date": "2024-05-24",
+    "service_name": null,
+    "membership_name": "Spring Session"
+  }
+]

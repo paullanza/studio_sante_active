@@ -1,0 +1,52 @@
+[
+  {
+    "payment_history_id": "10776",
+    "payment_history_date": "2021-05-24T08:00:35+00:00",
+    "amount": "114.98",
+    "payment_type": "card",
+    "payment_history_status": "A",
+    "trans_id": "10003593",
+    "payment_date": "2021-05-24T08:00:39+00:00",
+    "payment_reason_id": "1",
+    "payment_card_type": "Visa",
+    "balance_payment": "non_balance_payment",
+    "difference_original_amount": "0",
+    "payment_description": "Monthly fee",
+    "contract_id": "1234",
+    "membership_name": "1 an illimité",
+    "payment_type_name": "Carte",
+    "payment_history_status_name": "Valides",
+    "payment_reason_name": "Paiement récurrent",
+    "product_names": [
+      "Water bottle"
+    ],
+    "service_name": "Pay After service",
+    "service_purchase_id": "1234",
+    "auto_rescue": false
+  },
+  {
+    "payment_history_id": "10776",
+    "payment_history_date": "2021-05-24T08:00:35+00:00",
+    "amount": "114.98",
+    "payment_type": "card",
+    "payment_history_status": "A",
+    "trans_id": "10003593",
+    "payment_date": "2021-05-24T08:00:39+00:00",
+    "payment_reason_id": "1",
+    "payment_card_type": "Visa",
+    "balance_payment": "non_balance_payment",
+    "difference_original_amount": "0",
+    "payment_description": "Monthly fee",
+    "contract_id": null,
+    "membership_name": null,
+    "payment_type_name": "Carte",
+    "payment_history_status_name": "Valides",
+    "payment_reason_name": "Paiement récurrent",
+    "product_names": [
+      "Water bottle"
+    ],
+    "service_name": null,
+    "service_purchase_id": null,
+    "auto_rescue": false
+  }
+]

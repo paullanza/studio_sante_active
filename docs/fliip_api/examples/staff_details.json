@@ -1,0 +1,37 @@
+{
+  "user_id": "4564",
+  "custom_id": "S100",
+  "user_role": "coach",
+  "user_firstname": "Jean",
+  "user_lastname": "Tremblay",
+  "user_gender": "female",
+  "member_type": "member",
+  "user_email": "jean.tremblay@example.com",
+  "user_image": "default.png",
+  "user_phone1": "514-555-0101",
+  "user_phone2": "514-555-0102",
+  "user_dob": "1982-11-27",
+  "user_address": "12 av rock",
+  "user_city": "Montreal",
+  "user_zipcode": "H2X 1Y4",
+  "user_language": "fr",
+  "profile_step": "4",
+  "sync_g_cal": "0",
+  "progress": "90",
+  "user_emergency_contact": {
+    "emergency_contact_name": "Jane Doe",
+    "emergency_contact_phone": "514-555-6889",
+    "relation_to_member": "friend"
+  },
+  "working_hours": [
+    {
+      "working_hours_id": 1,
+      "day_of_week": "Monday",
+      "start_time": "08:00:00",
+      "end_time": "16:00:00",
+      "start_date": "2024-01-01",
+      "end_date": "2026-12-31",
+      "status": "A"
+    }
+  ]
+}

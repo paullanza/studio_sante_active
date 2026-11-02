@@ -1,0 +1,172 @@
+{
+  "class_schedule": [
+    {
+      "class_name": "Yoga class",
+      "visit_number": 5,
+      "max_number_of_classes": 7,
+      "date": "2024-05-08",
+      "time": "07:00:00",
+      "instructor": "Jean Tremblay",
+      "instructor_user_id": "4564",
+      "contract": "Carte de 5 cours",
+      "status": {
+        "status_text": "Active",
+        "status_code": "A"
+      }
+    }
+  ],
+  "events_schedule": [
+    {
+      "event_title": "Party Event",
+      "member_price": "20.00",
+      "date": "2024-05-08",
+      "time": "07:00:00",
+      "instructor": "Jean Tremblay",
+      "instructor_user_id": "4564",
+      "status": {
+        "status_text": "Active",
+        "status_code": "A"
+      }
+    }
+  ],
+  "events_history": [
+    {
+      "event_title": "Party Event",
+      "member_price": "20.00",
+      "date": "2024-05-08",
+      "time": "07:00:00",
+      "instructor": "Jean Tremblay",
+      "instructor_user_id": "4564",
+      "status": {
+        "status_text": "Active",
+        "status_code": "A"
+      }
+    }
+  ],
+  "appointments_schedule": [
+    {
+      "service_type_name": "Initial Evaluation",
+      "date": "25 April 2024",
+      "start_time": "07:35",
+      "end_time": "07:50",
+      "professional": "Jean Tremblay",
+      "professional_user_id": "4564",
+      "package": "Private Training",
+      "status": {
+        "status_text": "Registered",
+        "status_code": "R",
+        "appointment_status": {
+          "appointment_status_description": "Active",
+          "appointment_status_code": "A"
+        },
+        "attendance_status": {
+          "attendance_status_text": "Presence not checked",
+          "attendance_status_code": "NC"
+        }
+      },
+      "used_hours": 0.5,
+      "duration_hours": 1
+    }
+  ],
+  "all_schedule": [
+    {
+      "type": "Event",
+      "date": "25 April 2024",
+      "time": "09:35",
+      "teacher": "Jean Tremblay",
+      "teacher_user_id": "4564",
+      "user": "John Smith",
+      "name": "Party Event",
+      "gym_name": "Club de Sports",
+      "status": {
+        "status_text": "Active",
+        "status_code": "A"
+      }
+    }
+  ],
+  "all_history": [
+    {
+      "type": "Event",
+      "date": "25 April 2024",
+      "time": "09:35",
+      "teacher": "Jean Tremblay",
+      "teacher_user_id": "4564",
+      "user": "John Smith",
+      "name": "Party Event",
+      "gym_name": "Club de Sports",
+      "status": {
+        "status_text": "Active",
+        "status_code": "A"
+      }
+    }
+  ],
+  "appointments_history": [
+    {
+      "service_type_name": "Évaluation initiale",
+      "date": "07 July 2023",
+      "start_time": "08:00:00",
+      "end_time": "08:45",
+      "professional": "Jean Tremblay",
+      "professional_user_id": "4564",
+      "package": "Private Training",
+      "status": {
+        "status_text": "Registered",
+        "status_code": "R",
+        "appointment_status": {
+          "appointment_status_description": "Active",
+          "appointment_status_code": "A"
+        },
+        "attendance_status": {
+          "attendance_status_text": "Presence not checked",
+          "attendance_status_code": "NC"
+        }
+      },
+      "used_hours": 0.5,
+      "duration_hours": 1
+    }
+  ],
+  "class_history": [
+    {
+      "class_name": "Yoga",
+      "date": "2024-02-28",
+      "day_of_the_week": "Monday",
+      "time": "07:00:00",
+      "instructor": "Jean Tremblay",
+      "instructor_user_id": "4564",
+      "contract": "Carte de 5 cours",
+      "status": {
+        "status_text": "Registered",
+        "status_code": "R",
+        "presence_code": "2",
+        "presence_text": "Presence not checked"
+      }
+    }
+  ],
+  "class_recurring": [
+    {
+      "class_name": "Yoga",
+      "start_date": "2022-03-02",
+      "end_date": "2300-01-01",
+      "day_of_the_week": "Wednesday",
+      "time_start": "07:00:00",
+      "status": {
+        "status_text": "Active",
+        "status_code": "A"
+      }
+    }
+  ],
+  "recurring_appointments": [
+    {
+      "service_name": "Private Training",
+      "instructor": "Jean Tremblay",
+      "instructor_user_id": "4564",
+      "start_date": "2024-04-10",
+      "end_date": "2024-05-08",
+      "time_start": "07:35:00",
+      "status": {
+        "status_text": "Active",
+        "status_code": "A"
+      }
+    }
+  ]
+}

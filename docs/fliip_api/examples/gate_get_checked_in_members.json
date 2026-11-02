@@ -1,0 +1,30 @@
+{
+  "gym_id": "110",
+  "checkins": [
+    {
+      "member_id": "12345",
+      "full_name": "John Doe",
+      "at": "2024-01-01 14:30:00",
+      "status": "success",
+      "check_in_id": "98765",
+      "check_in_result_message": "success_check_in",
+      "additional_message_alert": " 1h 30min",
+      "location_alerts": [
+        {
+          "type": "payment_due",
+          "location_count": 2,
+          "location_name": "Rocket Gym"
+        }
+      ],
+      "message": "Successful check-in.",
+      "profile_picture_url": "https://example.com/pic.png",
+      "membership_or_service_name": "Gold Membership",
+      "check_in_type": "membership",
+      "is_birthday_today": false,
+      "zone_name": "Main Floor"
+    }
+  ],
+  "from": "2024-01-01T00:00:00Z",
+  "to": "2024-01-01T23:59:59Z",
+  "count": 1
+}
