@@ -147,7 +147,7 @@ RSpec.describe FliipService, type: :model do
 
     it "#start_or_purchase_date prefers the start date" do
       expect(build(:fliip_service, start_date: base, purchase_date: base - 5).start_or_purchase_date).to eq(base)
-      expect(build(:fliip_service, start_date: nil, purchase_date: (base - 5).to_time).start_or_purchase_date).to eq(base - 5)
+      expect(build(:fliip_service, start_date: nil, purchase_date: Time.zone.local(2026, 6, 10, 12)).start_or_purchase_date).to eq(base - 5)
     end
   end
 
