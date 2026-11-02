@@ -50,17 +50,6 @@ class ManagerController < ApplicationController
       .order(occurred_at: :desc)
   end
 
-  def services
-    @q = FliipService.order(updated_at: :desc).includes(:fliip_user)
-    @pagy, @services = pagy(@q)
-  end
-
-  def service_show
-    @service = FliipService.includes(:fliip_user).find(params[:id])
-    # Show sessions table, etc. No “upload adjustments” entry point here.
-    @sessions = @service.sessions.includes(:fliip_user, :created_by).order(date: :desc, time: :desc)
-  end
-
   def create_signup_code
     SignupCode.create!
     redirect_to manager_dashboard_path, notice: "Signup code generated."

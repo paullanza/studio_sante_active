@@ -96,12 +96,10 @@ Rails.application.routes.draw do
   # =====================================================================
   # MANAGER VIEWS (READ-ONLY/REDUCED POWERS VS. ADMIN)
   # ---------------------------------------------------------------------
-  # Manager dashboard and service views for day-to-day oversight without
-  # admin-level mutation rights. Managers can also create signup codes.
+  # Manager dashboard for day-to-day oversight without admin-level
+  # mutation rights. Managers can also create signup codes.
   # =====================================================================
   get  "manager/dashboard",     to: "manager#dashboard",    as: :manager_dashboard
-  get  "manager/services",      to: "manager#services",     as: :manager_services
-  get  "manager/services/:id",  to: "manager#service_show", as: :manager_service
   post "manager/signup_codes",  to: "manager#create_signup_code", as: :manager_signup_codes
 
   # =====================================================================
