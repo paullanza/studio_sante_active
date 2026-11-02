@@ -1,21 +1,9 @@
 class ConsultationsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_consultation, only: [:edit, :update, :destroy, :row, :association, :associate, :service_select, :disassociate]
-  before_action :load_staff,       only: [:new, :create, :edit, :update]
+  before_action :load_staff,       only: [:create, :edit, :update]
 
   OWNER_REQUIRED_MESSAGE = "Veuillez choisir un·e employé·e.".freeze
-
-  def new
-    authorize Consultation
-
-    @consultation = Consultation.new
-    @consultations = Consultation
-      .unconfirmed
-      .where(user_id: current_user.id)
-      .with_associations
-      .order_by_occurred_at_desc
-      .limit(25)
-  end
 
   def create
     authorize Consultation
@@ -31,13 +19,28 @@ class ConsultationsController < ApplicationController
       redirect_to new_seance_path, notice: "Consultation créée."
     else
       @consultation.errors.add(:base, OWNER_REQUIRED_MESSAGE) if @consultation.user.nil?
+
+      # Rehydrate everything bookings/new needs, on the consultation tab
+      @active_tab = "consultation"
+      @session    = Session.new
+      @services   = []
+      load_fliip_users
+      @sessions = Session
+                    .where(user_id: current_user.id)
+                    .unconfirmed
+                    .with_associations
+                    .order_by_occurred_at_desc
+                    .limit(25)
       @consultations = Consultation
         .unconfirmed
-        .where(user_id: current_user.id)
-        .with_associations
+        .by_employee(current_user.id)
         .order_by_occurred_at_desc
+        .includes(:user)
         .limit(25)
-      render :new, status: :unprocessable_content
+
+      flash.now[:alert] = @consultation.errors.full_messages.to_sentence.presence ||
+                          "Un problème est survenu lors de la création de la consultation."
+      render "bookings/new", status: :unprocessable_content
     end
   end
 
@@ -149,7 +152,7 @@ class ConsultationsController < ApplicationController
              layout:  false
     else
       respond_to do |format|
-        format.html { redirect_to request.referer || new_consultation_path, notice: "Association retirée." }
+        format.html { redirect_to request.referer || new_seance_path(tab: "consultation"), notice: "Association retirée." }
         format.turbo_stream if respond_to?(:turbo_stream)
       end
     end
@@ -174,7 +177,7 @@ class ConsultationsController < ApplicationController
     @consultation.destroy
     respond_to do |format|
       format.json { head :no_content }
-      format.html { redirect_back fallback_location: new_consultation_path, notice: "Consultation supprimée." }
+      format.html { redirect_back fallback_location: new_seance_path(tab: "consultation"), notice: "Consultation supprimée." }
     end
   end
 
@@ -218,7 +221,7 @@ class ConsultationsController < ApplicationController
 
     respond_to do |format|
       format.json { head :forbidden }
-      format.html { redirect_back fallback_location: new_consultation_path, alert: "Non autorisé·e." }
+      format.html { redirect_back fallback_location: new_seance_path(tab: "consultation"), alert: "Non autorisé·e." }
     end
   end
 
@@ -241,6 +244,16 @@ class ConsultationsController < ApplicationController
     rescue ArgumentError
       record.occurred_at ||= Time.zone.now
     end
+  end
+
+  # Matches SessionsController#load_fliip_users
+  def load_fliip_users
+    service_user_ids = FliipService.distinct.pluck(:fliip_user_id)
+    @fliip_users = FliipUser
+      .where(id: service_user_ids)
+      .sort_by do |u|
+        I18n.transliterate("#{u.user_lastname.to_s.strip} #{u.user_firstname.to_s.strip}").downcase
+      end
   end
 
   def consultation_cutoff_date(consultation)
