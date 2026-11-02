@@ -48,4 +48,56 @@ RSpec.describe SignupCode, type: :model do
       expect(good.reload).to be_active
     end
   end
+
+  describe "validations" do
+    subject { create(:signup_code) }
+
+    it { is_expected.to validate_uniqueness_of(:code) }
+    it { is_expected.to validate_length_of(:code).is_equal_to(8) }
+    it { is_expected.to belong_to(:used_by).class_name("User").optional }
+  end
+
+  it "keeps a code given on create" do
+    expect(create(:signup_code, code: "ABCDEFGH").code).to eq("ABCDEFGH")
+  end
+
+  describe ".usable" do
+    it "returns active codes that have not expired" do
+      fresh = create(:signup_code)
+      create(:signup_code, :expired)
+      create(:signup_code, :deactivated)
+
+      expect(described_class.usable).to contain_exactly(fresh)
+    end
+  end
+
+  describe "#expired_by_time? and #mark_as_expired!" do
+    it "expires an active code past its date" do
+      code = create(:signup_code, :expired)
+
+      expect(code).to be_expired_by_time
+      expect(code.mark_as_expired!).to be true
+      expect(code.reload).to be_expired
+    end
+
+    it "leaves a code that is still valid" do
+      code = create(:signup_code)
+
+      expect(code).not_to be_expired_by_time
+      expect(code.mark_as_expired!).to be false
+      expect(code.reload).to be_active
+    end
+  end
+
+  describe "#used!" do
+    it "marks the code used by a user" do
+      code = create(:signup_code)
+      user = create(:user)
+
+      code.used!(by: user)
+
+      expect(code.reload).to be_used
+      expect(code.used_by).to eq(user)
+    end
+  end
 end

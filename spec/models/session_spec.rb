@@ -139,4 +139,153 @@ RSpec.describe Session, type: :model do
       expect(described_class.confirm([])).to eq(0)
     end
   end
+
+  describe "defaults and validations" do
+    it "defaults created_by to the responsible user" do
+      session = build_session(created_by: nil)
+      session.save!
+
+      expect(session.created_by).to eq(staff)
+    end
+
+    it "rejects a non-positive duration" do
+      session = build_session(duration: -1)
+
+      expect(session).not_to be_valid
+      expect(session.errors[:duration]).to be_present
+    end
+  end
+
+  describe "status and ordering scopes" do
+    let(:roomy) { create(:fliip_service, service_definition: create(:service_definition, paid_sessions: 20, free_sessions: 5)) }
+    let!(:older) { create(:session, fliip_service: roomy, occurred_at: 2.days.ago.change(min: 0)) }
+    let!(:newer) { create(:session, fliip_service: roomy, occurred_at: 1.day.ago.change(min: 0)) }
+
+    it "treats nil and false as unconfirmed" do
+      older.update_columns(confirmed: nil)
+      newer.update_columns(confirmed: true)
+
+      expect(described_class.unconfirmed).to contain_exactly(older)
+      expect(described_class.confirmed).to contain_exactly(newer)
+    end
+
+    it "orders by occurred_at" do
+      expect(described_class.order_by_occurred_at_desc).to eq([newer, older])
+      expect(described_class.order_by_occurred_at_asc).to eq([older, newer])
+    end
+  end
+
+  describe "filters" do
+    let(:roomy)  { create(:fliip_service, service_definition: create(:service_definition, paid_sessions: 20, free_sessions: 5)) }
+    let(:other)  { create(:user) }
+    let!(:present_paid) do
+      create(:session, fliip_service: roomy, user: staff, present: true, occurred_at: Time.zone.local(2026, 10, 5, 10))
+    end
+    let!(:absent_free) do
+      create(:session, fliip_service: roomy, user: other, present: false, occurred_at: Time.zone.local(2026, 10, 20, 10))
+    end
+
+    before { travel_to Time.zone.local(2026, 10, 25, 12) }
+
+    it ".by_employee filters by user and ignores a blank id" do
+      expect(described_class.by_employee(staff.id)).to contain_exactly(present_paid)
+      expect(described_class.by_employee("")).to contain_exactly(present_paid, absent_free)
+    end
+
+    it ".date_between filters on the occurred_at date, open on either side" do
+      expect(described_class.date_between("2026-10-01", "2026-10-10")).to contain_exactly(present_paid)
+      expect(described_class.date_between("2026-10-15", nil)).to contain_exactly(absent_free)
+      expect(described_class.date_between(nil, nil)).to contain_exactly(present_paid, absent_free)
+    end
+
+    it ".created_between filters on created_at" do
+      present_paid.update_columns(created_at: Time.zone.local(2026, 9, 1))
+
+      expect(described_class.created_between("2026-10-01", nil)).to contain_exactly(absent_free)
+      expect(described_class.created_between(nil, "2026-09-02")).to contain_exactly(present_paid)
+    end
+
+    it ".present_value accepts yes, no, both or nothing" do
+      expect(described_class.present_value("yes")).to contain_exactly(present_paid)
+      expect(described_class.present_value(["no"])).to contain_exactly(absent_free)
+      expect(described_class.present_value(%w[yes no])).to contain_exactly(present_paid, absent_free)
+      expect(described_class.present_value(nil)).to contain_exactly(present_paid, absent_free)
+    end
+
+    it ".of_type accepts paid, free, both or nothing" do
+      expect(described_class.of_type("paid")).to contain_exactly(present_paid)
+      expect(described_class.of_type(["free"])).to contain_exactly(absent_free)
+      expect(described_class.of_type(%w[paid free])).to contain_exactly(present_paid, absent_free)
+      expect(described_class.of_type([])).to contain_exactly(present_paid, absent_free)
+    end
+
+    it ".apply_filters chains the filters, including a client name search" do
+      roomy.fliip_user.update!(user_firstname: "Gabrielle", user_lastname: "Tremblay")
+
+      result = described_class.apply_filters(q: "Gabri", employee_id: other.id, present: ["no"], session_type: ["free"])
+      expect(result).to contain_exactly(absent_free)
+
+      expect(described_class.apply_filters(q: "Personne")).to be_empty
+    end
+  end
+
+  describe "display helpers" do
+    it "#duration_display names full and half hours" do
+      expect(build_session(duration: 1.0).duration_display).to eq("1 heure")
+      expect(build_session(duration: 0.5).duration_display).to eq("Demi-heure")
+      expect(build_session(duration: 1.5).duration_display).to eq("1.5 h")
+    end
+
+    it "#presence_label and #presence_badge_variant reflect presence and type" do
+      present = build_session(present: true, session_type: :paid)
+      late    = build_session(present: false, session_type: :paid)
+      absence = build_session(present: false, session_type: :free)
+
+      expect([present, late, absence].map(&:presence_label)).to eq(["Présent", "Absent (-24h)", "Absent"])
+      expect([present, late, absence].map(&:presence_badge_variant)).to eq(%w[bg-success bg-danger bg-warning])
+    end
+
+    it "#presence_with_duration_label combines both" do
+      expect(build_session(present: true, duration: 0.5).presence_with_duration_label).to eq("Demi-heure Présent")
+    end
+
+    it "#date_time_label and #created_at_label format in dd/mm/yyyy" do
+      session = build_session(occurred_at: Time.zone.local(2026, 3, 4, 9, 30), created_at: Time.zone.local(2026, 3, 5, 8, 0))
+
+      expect(session.date_time_label).to eq("04/03/2026 09:30")
+      expect(session.created_at_label).to eq("créé : 05/03/2026 08:00")
+      expect(build_session(occurred_at: nil).date_time_label).to eq("")
+    end
+  end
+
+  describe "sequence numbers" do
+    let(:roomy) { create(:fliip_service, service_definition: create(:service_definition, paid_sessions: 20, free_sessions: 5)) }
+    let!(:first)  { create(:session, fliip_service: roomy, occurred_at: 3.days.ago.change(min: 0)) }
+    let!(:second) { create(:session, fliip_service: roomy, occurred_at: 2.days.ago.change(min: 0)) }
+
+    it "counts paid sessions in occurred_at order" do
+      expect(first.sequence_number_in_service).to eq(1.0)
+      expect(second.sequence_label).to eq("Séance #2")
+    end
+
+    it "adds used adjustments that existed before the session" do
+      adjustment = create(:service_usage_adjustment, fliip_service: roomy, paid_used_delta: 0.5)
+      adjustment.update_columns(created_at: 4.days.ago)
+      create(:service_usage_adjustment, fliip_service: roomy, paid_used_delta: 3)
+
+      expect(second.adjustments_used_before_self).to eq(0.5)
+      expect(second.sequence_label).to eq("Séance #2.5")
+    end
+
+    it "labels absences separately" do
+      absence = create(:session, fliip_service: roomy, present: false, occurred_at: 1.day.ago.change(min: 0))
+
+      expect(absence).to be_free
+      expect(absence.sequence_label).to eq("Absence #1")
+    end
+
+    it "is nil without an occurred_at" do
+      expect(build(:session, occurred_at: nil).sequence_label).to be_nil
+    end
+  end
 end
