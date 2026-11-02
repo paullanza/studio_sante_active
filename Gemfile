@@ -118,10 +118,9 @@ group :development do
 end
 
 group :test do
-  # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
-  gem "capybara"
-  gem "selenium-webdriver"
-
   # Shoulda Matchers for RSpec
   gem "shoulda-matchers"
+
+  # Blocks real HTTP in specs and stubs the Fliip API
+  gem "webmock"
 end
