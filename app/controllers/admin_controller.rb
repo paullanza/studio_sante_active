@@ -1,14 +1,10 @@
 class AdminController < ApplicationController
   require "csv"
   before_action :authenticate_user!
-  before_action :ensure_admin!
+  before_action :authorize_admin
 
   def dashboard
-    if current_user.super_admin?
-      @users = User.order(role: :desc, last_name: :asc, first_name: :asc)
-    else
-      @users = User.where.not(role: :super_admin).order(role: :desc, last_name: :asc, first_name: :asc)
-    end
+    @users = policy_scope(User).order(role: :desc, last_name: :asc, first_name: :asc)
 
     @unconfirmed_counts = Session
       .where(confirmed: [false, nil])
@@ -97,7 +93,7 @@ class AdminController < ApplicationController
                        .with_associations
                        .order_by_occurred_at_asc
 
-    @staff = User.where(active: true).order(:first_name, :last_name)
+    @staff = User.selectable.order(:first_name, :last_name)
   end
 
   def confirm_sessions
@@ -124,7 +120,7 @@ class AdminController < ApplicationController
                                  .with_associations
                                  .order_by_occurred_at_desc
 
-    @staff = User.where(active: true).order(:first_name, :last_name)
+    @staff = User.selectable.order(:first_name, :last_name)
   end
 
   def confirm_consultations
@@ -174,7 +170,7 @@ class AdminController < ApplicationController
     end
 
     @payload_json = { rows: @rows.map(&:to_h) }.to_json
-    @users_for_select = User.order(:first_name, :last_name)
+    @users_for_select = User.selectable.order(:first_name, :last_name)
   rescue => e
     redirect_to admin_adjustments_new_path, alert: "Could not read CSV: #{e.message}"
   end
@@ -229,8 +225,14 @@ class AdminController < ApplicationController
     d.present? ? d.strftime("%d/%m/%Y") : nil
   end
 
-  def ensure_admin!
-    redirect_to authenticated_root_path, alert: "Not authorized" unless current_user.admin? || current_user.super_admin?
+  # The query is inferred from the action name.
+  def authorize_admin
+    authorize :admin
+  end
+
+  # Keeps the existing redirect and message for non-admins.
+  def user_not_authorized
+    redirect_to authenticated_root_path, alert: "Not authorized"
   end
 
   def to_f_or_zero(value)

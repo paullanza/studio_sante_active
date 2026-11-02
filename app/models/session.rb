@@ -218,14 +218,6 @@ class Session < ApplicationRecord
     paid? ? 'bg-danger' : 'bg-warning'
   end
 
-  def modifiable_by?(current_user)
-    # Admin-like users: full powers
-    return true if current_user&.admin? || current_user&.super_admin?
-
-    # Employees/Managers: only if unconfirmed AND they are the owner
-    !confirmed? && user_id == current_user&.id
-  end
-
   def self.confirm(ids)
     ids = Array(ids).map(&:to_i).uniq
     return 0 if ids.empty?

@@ -65,6 +65,11 @@ class User < ApplicationRecord
   scope :active,   -> { where(active: true) }
   scope :inactive, -> { where(active: false) }
 
+  # Users who can be picked in an employee dropdown. The super admin is the
+  # owner, not a trainer, so they never own sessions, consultations or
+  # adjustments and are excluded for every role.
+  scope :selectable, -> { active.where.not(role: :super_admin) }
+
   # -----------------------------------------
   # Validations
   # -----------------------------------------
@@ -84,40 +89,6 @@ class User < ApplicationRecord
   # -----------------------------------------
   # Instance Methods
   # -----------------------------------------
-
-  # Determines if the given actor can change the active/inactive status of this user
-  # Rules:
-  #   - Cannot change your own active status
-  #   - super_admin and admin can change anyone's status
-  #   - manager can only change employee status
-  def active_status_change_allowed?(actor)
-    return false if actor == self
-    actor.super_admin? || actor.admin? || (actor.manager? && employee?)
-  end
-
-  def editable_by?(actor)
-    actor.present? && (actor == self || actor.admin? || actor.super_admin?)
-  end
-
-  # Activates the user if the actor has permission
-  def activate_by!(actor)
-    unless active_status_change_allowed?(actor)
-      errors.add(:base, "Vous n’avez pas l’autorisation d’activer cet·te utilisateur·trice")
-      return false
-    end
-
-    update!(active: true)
-  end
-
-  # Deactivates the user if the actor has permission
-  def deactivate_by!(actor)
-    unless active_status_change_allowed?(actor)
-      errors.add(:base, "Vous n’avez pas l’autorisation de désactiver cet·te utilisateur·trice")
-      return false
-    end
-
-    update!(active: false)
-  end
 
   # Returns the user's full name by combining first and last names
   def full_name

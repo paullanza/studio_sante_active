@@ -3,8 +3,12 @@ class SessionsController < ApplicationController
   before_action :set_session, only: [:destroy, :edit, :update, :row]
   before_action :load_staff,  only: [:edit, :update]
 
+  OWNER_REQUIRED_MESSAGE = "Veuillez choisir un·e employé·e.".freeze
+
   def create
-    @session = Session.new(session_params)
+    authorize Session
+
+    @session = Session.new(permitted_attributes(Session))
     @session.user       = chosen_creator_for_create
     @session.created_by = current_user
     @session.occurred_at = parsed_occurred_at_from_params
@@ -12,9 +16,11 @@ class SessionsController < ApplicationController
     @session.present     = params[:session][:present] == "1"
     @session.duration    = params[:half_hour] == "1" ? 0.5 : 1.0
 
-    if @session.save
+    if @session.user.present? && @session.save
       redirect_to new_seance_path, notice: "Séance créée avec succès."
     else
+      @session.errors.add(:base, OWNER_REQUIRED_MESSAGE) if @session.user.nil?
+
       # Rehydrate everything the :new template needs
       load_fliip_users
       load_staff
@@ -44,42 +50,41 @@ class SessionsController < ApplicationController
     end
   end
 
-  def can_modify?(session, action:)
-    session.modifiable_by?(current_user)
-  end
-
   def edit
-    return forbid unless can_modify?(@session, action: :edit)
+    authorize @session
     render partial: "sessions/shared/session_edit_row",
           locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
           layout: false
   end
 
   def row
+    authorize @session
     render partial: "sessions/shared/session_row",
           locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
           layout: false
   end
 
   def update
-    return forbid unless can_modify?(@session, action: :update)
+    authorize @session
 
     @session.note        = params.dig(:session, :note).to_s
     @session.present     = params.dig(:session, :present) == "1"
     @session.duration    = (params[:half_hour] == "1") ? 0.5 : 1.0
     @session.occurred_at = parsed_occurred_at_from_params
 
-    if admin_like? && (uid = params.dig(:session, :user_id)).present?
-      @session.user_id = uid
+    uid = permitted_attributes(@session)[:user_id]
+    if uid.present? && uid.to_i != @session.user_id
+      @session.user = User.selectable.find_by(id: uid)
       @session.created_by = current_user
     end
     @session.send(:set_session_type_and_duration)
 
-    if @session.save
+    if @session.user.present? && @session.save
       render partial: "sessions/shared/session_row",
             locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
             layout: false
     else
+      @session.errors.add(:base, OWNER_REQUIRED_MESSAGE) if @session.user.nil?
       render partial: "sessions/shared/session_edit_row",
             locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
             status: :unprocessable_content,
@@ -88,12 +93,7 @@ class SessionsController < ApplicationController
   end
 
   def destroy
-    unless can_modify?(@session, action: :destroy)
-      return respond_to do |format|
-        format.json { head :forbidden }
-        format.html { redirect_back fallback_location: admin_unconfirmed_sessions_path, alert: "Non autorisé·e." }
-      end
-    end
+    authorize @session
 
     @session.destroy
     respond_to do |format|
@@ -103,6 +103,8 @@ class SessionsController < ApplicationController
   end
 
   def preview_type
+    authorize Session
+
     fliip_service_id = params[:fliip_service_id]
     present          = params[:present] == "1"
     duration         = (params[:half_hour] == "1") ? 0.5 : 1.0
@@ -121,6 +123,8 @@ class SessionsController < ApplicationController
   end
 
   def services_table
+    authorize Session
+
     fliip_user_id = params.require(:fliip_user_id)
     @services = FliipService
                   .where(fliip_user_id: fliip_user_id)
@@ -132,6 +136,8 @@ class SessionsController < ApplicationController
 
   # Turbo Frame: the <select name="session[fliip_service_id]">, server-rendered
   def service_select
+    authorize Session
+
     fliip_user_id   = params.require(:fliip_user_id)
     @selected_id    = params[:selected_id] # optional
     @services = FliipService
@@ -143,6 +149,8 @@ class SessionsController < ApplicationController
   end
 
   def refresh_clients
+    authorize Session
+
     msg = FliipApi::UserSync::NewUserImporter.call
     redirect_to new_seance_path, notice: msg
   rescue => e
@@ -151,26 +159,27 @@ class SessionsController < ApplicationController
 
   private
 
-  def admin_like?
-    current_user.admin? || current_user.super_admin?
-  end
-
   def load_staff
-    @staff = admin_like? ? User.active.order(:last_name, :first_name) : []
+    @staff = policy(Session).change_owner? ? User.selectable.order(:last_name, :first_name) : []
+    # The super admin is not selectable, so must pick an employee.
+    @owner_required = @staff.any? && @staff.none? { |u| u.id == current_user.id }
   end
 
-  def forbid
+  # Keeps this controller's existing response formats.
+  def user_not_authorized
     respond_to do |format|
       format.json { head :forbidden }
       format.html { redirect_back fallback_location: admin_unconfirmed_sessions_path, alert: "Non autorisé·e." }
     end
   end
 
+  # Nil when the owner is not selectable, such as a super admin who left
+  # the employee blank.
   def chosen_creator_for_create
-    return current_user unless admin_like?
+    return current_user unless policy(Session).change_owner?
 
-    id = params.dig(:session, :user_id).presence
-    id ? User.find(id) : current_user
+    id = params.dig(:session, :user_id).presence || current_user.id
+    User.selectable.find_by(id: id)
   end
 
   def set_session
@@ -185,13 +194,6 @@ class SessionsController < ApplicationController
       .sort_by do |u|
         I18n.transliterate("#{u.user_lastname.to_s.strip} #{u.user_firstname.to_s.strip}").downcase
       end
-  end
-
-  def session_params
-    allowed = [:fliip_user_id, :fliip_service_id, :present, :note]
-    # if you let admins pick the creator:
-    allowed << :user_id if admin_like?
-    params.require(:session).permit(*allowed)
   end
 
   def parsed_occurred_at_from_params

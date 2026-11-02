@@ -112,14 +112,6 @@ class Consultation < ApplicationRecord
   end
 
   # -----------------------------------------
-  # Permissions
-  # -----------------------------------------
-  def modifiable_by?(current_user)
-    return true if current_user&.admin? || current_user&.super_admin?
-    !confirmed? && user_id == current_user&.id
-  end
-
-  # -----------------------------------------
   # UI helpers
   # -----------------------------------------
   def full_name

@@ -3,6 +3,8 @@ class BookingsController < ApplicationController
   before_action :load_staff
 
   def new
+    authorize :booking
+
     @active_tab = %w[session consultation].include?(params[:tab]) ? params[:tab] : "session"
 
     # Forms
@@ -39,16 +41,11 @@ class BookingsController < ApplicationController
 
   private
 
-  def admin_like?
-    current_user.admin? || (current_user.respond_to?(:super_admin?) && current_user.super_admin?)
-  end
-
+  # Matches SessionsController#load_staff
   def load_staff
-    @staff = if admin_like?
-      User.where(active: true).order(:first_name, :last_name)
-    else
-      []
-    end
+    @staff = policy(Session).change_owner? ? User.selectable.order(:first_name, :last_name) : []
+    # The super admin is not selectable, so must pick an employee.
+    @owner_required = @staff.any? && @staff.none? { |u| u.id == current_user.id }
   end
 
   # Matches SessionsController#load_fliip_users to keep UX consistent

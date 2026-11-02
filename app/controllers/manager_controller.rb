@@ -1,11 +1,11 @@
 # app/controllers/manager_controller.rb
 class ManagerController < ApplicationController
   before_action :authenticate_user!
-  before_action :require_manager_only!
+  before_action :authorize_manager
 
   def dashboard
     # Staff list (order by role then name)
-    @users = User.where.not(role: :super_admin).order(role: :desc, last_name: :asc, first_name: :asc)
+    @users = policy_scope(User).order(role: :desc, last_name: :asc, first_name: :asc)
 
     # Per-user unconfirmed session counts (include nil as unconfirmed)
     @unconfirmed_counts = Session
@@ -68,9 +68,18 @@ class ManagerController < ApplicationController
 
   private
 
-  def require_manager_only!
-    # Managers only. Admins/SuperAdmins should use the admin dashboard only; employees → profile.
-    redirect_to(admin_dashboard_path, alert: "Admins must use the Admin dashboard") and return if current_user.admin? || current_user.super_admin?
-    redirect_to(user_path(current_user), alert: "Not authorized") unless current_user.manager?
+  # The query is inferred from the action name.
+  def authorize_manager
+    authorize :manager
+  end
+
+  # Keeps the existing redirects: whoever can use the admin dashboard is
+  # sent there, everyone else to their own profile.
+  def user_not_authorized
+    if policy(:admin).dashboard?
+      redirect_to admin_dashboard_path, alert: "Admins must use the Admin dashboard"
+    else
+      redirect_to user_path(current_user), alert: "Not authorized"
+    end
   end
 end

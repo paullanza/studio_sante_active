@@ -22,12 +22,12 @@
           <li class="nav-item">
             <%= link_to "Client·e·s", fliip_users_path, class: "nav-link" %>
           </li>
-          <% if current_user.admin? || current_user.super_admin? %>
+          <% if policy(:admin).unconfirmed_sessions? %>
             <li class="nav-item">
               <%= link_to "Séances", admin_unconfirmed_sessions_path, class: "nav-link" %>
             </li>
           <% end %>
-          <% if current_user.admin? || current_user.super_admin? %>
+          <% if policy(:admin).unconfirmed_consultations? %>
             <li class="nav-item">
               <%= link_to "Consultations", admin_unconfirmed_consultations_path, class: "nav-link" %>
             </li>

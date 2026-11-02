@@ -17,26 +17,6 @@ RSpec.describe Consultation, type: :model do
     end
   end
 
-  describe "#modifiable_by?" do
-    let(:owner)        { create(:user) }
-    let(:consultation) { create(:consultation, user: owner) }
-
-    it "lets the owner modify until confirmed" do
-      expect(consultation.modifiable_by?(owner)).to be true
-      consultation.update_columns(confirmed: true)
-      expect(consultation.modifiable_by?(owner)).to be false
-    end
-
-    it "lets admins modify anything" do
-      consultation.update_columns(confirmed: true)
-      expect(consultation.modifiable_by?(create(:user, :admin))).to be true
-    end
-
-    it "stops other staff" do
-      expect(consultation.modifiable_by?(create(:user, :manager))).to be false
-    end
-  end
-
   describe ".confirm" do
     it "confirms unconfirmed consultations" do
       consultation = create(:consultation)

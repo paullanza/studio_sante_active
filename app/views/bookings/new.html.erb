@@ -100,8 +100,8 @@
                 <% if @staff.any? %>
                   <div class="col-12">
                     <label for="session_user_id" class="form-label">Créé par</label>
-                    <select name="session[user_id]" id="session_user_id" class="form-select form-select-sm">
-                      <option value="">Moi (<%= current_user.full_name %>)</option>
+                    <select name="session[user_id]" id="session_user_id" class="form-select form-select-sm" <%= "required" if @owner_required %>>
+                      <option value=""><%= @owner_required ? "Choisir un·e employé·e" : "Moi (#{current_user.full_name})" %></option>
                       <% @staff.each do |u| %>
                         <option value="<%= u.id %>"><%= u.full_name %></option>
                       <% end %>
@@ -201,8 +201,8 @@
                 <% if @staff.any? %>
                   <div class="col-12">
                     <label for="consultation_user_id" class="form-label">Créé par</label>
-                    <select name="consultation[user_id]" id="consultation_user_id" class="form-select form-select-sm">
-                      <option value="">Moi (<%= current_user.full_name %>)</option>
+                    <select name="consultation[user_id]" id="consultation_user_id" class="form-select form-select-sm" <%= "required" if @owner_required %>>
+                      <option value=""><%= @owner_required ? "Choisir un·e employé·e" : "Moi (#{current_user.full_name})" %></option>
                       <% @staff.each do |u| %>
                         <option value="<%= u.id %>"><%= u.full_name %></option>
                       <% end %>

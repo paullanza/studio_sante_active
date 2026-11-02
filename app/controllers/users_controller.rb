@@ -1,11 +1,11 @@
 class UsersController < ApplicationController
   before_action :authenticate_user!
   before_action :set_user, only: [:show, :edit, :update, :make_employee, :make_manager, :make_admin, :activate, :deactivate]
-  before_action :authorize_role_changes!, only: [:make_employee, :make_manager, :make_admin]
-  before_action :authorize_profile_edit!, only: [:edit, :update]
 
   # GET /users/:id
   def show
+    authorize @user
+
     # Services this staff user has touched (sessions or adjustments)
     svc_ids_from_sessions = Session.where(user_id: @user.id).distinct.pluck(:fliip_service_id)
     svc_ids_from_adjusts  = ServiceUsageAdjustment.where(user_id: @user.id).distinct.pluck(:fliip_service_id)
@@ -44,12 +44,14 @@ class UsersController < ApplicationController
   end
 
   def edit
-    authorize_profile_edit! # same logic as update
+    authorize @user
   end
 
   # PATCH /users/:id
   def update
-    if @user.update(user_params)
+    authorize @user
+
+    if @user.update(permitted_attributes(@user))
       redirect_to user_path(@user), notice: "User updated."
     else
       # Rebuild show data so the page re-renders fully with errors
@@ -60,6 +62,8 @@ class UsersController < ApplicationController
   end
 
   def make_employee
+    authorize @user
+
     unless @user.manager?
       return redirect_back fallback_location: user_path(@user), alert: "Only managers can be demoted to employee."
     end
@@ -68,11 +72,9 @@ class UsersController < ApplicationController
   end
 
   def make_manager
-    if @user.employee?
-      @user.update!(role: :manager)
-      redirect_back fallback_location: user_path(@user), notice: "#{@user.first_name} is now a Manager."
-    elsif @user.admin?
-      return redirect_back fallback_location: user_path(@user), alert: "Not authorized." unless current_user.super_admin?
+    authorize @user
+
+    if @user.employee? || @user.admin?
       @user.update!(role: :manager)
       redirect_back fallback_location: user_path(@user), notice: "#{@user.first_name} is now a Manager."
     else
@@ -81,9 +83,8 @@ class UsersController < ApplicationController
   end
 
   def make_admin
-    unless current_user.super_admin?
-      return redirect_back fallback_location: user_path(@user), alert: "Not authorized."
-    end
+    authorize @user
+
     unless @user.manager?
       return redirect_back fallback_location: user_path(@user), alert: "Only managers can be promoted to admin."
     end
@@ -92,21 +93,17 @@ class UsersController < ApplicationController
   end
 
   def activate
-    if @user.active_status_change_allowed?(current_user)
-      @user.activate_by!(current_user)
-      redirect_back fallback_location: user_path(@user), notice: "#{@user.first_name} has been reactivated."
-    else
-      redirect_back fallback_location: user_path(@user), alert: "Not authorized to activate this user."
-    end
+    authorize @user
+
+    @user.update!(active: true)
+    redirect_back fallback_location: user_path(@user), notice: "#{@user.first_name} has been reactivated."
   end
 
   def deactivate
-    if @user.active_status_change_allowed?(current_user)
-      @user.deactivate_by!(current_user)
-      redirect_back fallback_location: user_path(@user), notice: "#{@user.first_name} has been deactivated."
-    else
-      redirect_back fallback_location: user_path(@user), alert: "Not authorized to deactivate this user."
-    end
+    authorize @user
+
+    @user.update!(active: false)
+    redirect_back fallback_location: user_path(@user), notice: "#{@user.first_name} has been deactivated."
   end
 
   private
@@ -115,25 +112,23 @@ class UsersController < ApplicationController
     @user = User.find(params[:id])
   end
 
-  # Admins/super_admins can edit profile fields (not role/active/password)
-  def authorize_profile_edit!
-    unless @user.editable_by?(current_user)
+  # Keeps each action's existing message. Profiles the user cannot see fall
+  # back to the default handler instead of redirecting to them.
+  def user_not_authorized
+    return super unless @user && policy(@user).show?
+
+    case action_name
+    when "edit", "update"
       redirect_to user_path(@user), alert: "Not authorized."
+    when "make_employee", "make_manager", "make_admin"
+      alert = @user.super_admin? ? "You can't change a Super Admin." : "Not authorized."
+      redirect_back fallback_location: user_path(@user), alert: alert
+    when "activate"
+      redirect_back fallback_location: user_path(@user), alert: "Not authorized to activate this user."
+    when "deactivate"
+      redirect_back fallback_location: user_path(@user), alert: "Not authorized to deactivate this user."
+    else
+      super
     end
-  end
-
-  def authorize_role_changes!
-    if @user.super_admin?
-      redirect_back fallback_location: user_path(@user), alert: "You can't change a Super Admin." and return
-    end
-    unless current_user.admin? || current_user.super_admin?
-      redirect_back fallback_location: user_path(@user), alert: "Not authorized." and return
-    end
-  end
-
-  def user_params
-    params.require(:user).permit(
-      :first_name, :last_name, :email, :phone, :address, :birthday
-    )
   end
 end

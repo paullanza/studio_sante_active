@@ -95,7 +95,7 @@
               Séances
             </button>
 
-            <% if current_user.manager? || current_user.admin? || current_user.super_admin? %>
+            <% if policy(ServiceUsageAdjustment).index? %>
               <button
                 class="nav-link"
                 id="tab-adjustments"
@@ -170,7 +170,7 @@
               </section>
 
               <!-- Adjustments (role-gated) -->
-              <% if current_user.manager? || current_user.admin? || current_user.super_admin? %>
+              <% if policy(ServiceUsageAdjustment).index? %>
                 <section class="d-none" id="pane-adjustments" role="tabpanel" aria-labelledby="tab-adjustments">
                   <%= turbo_frame_tag "service_adjustments_frame", target: "_top" do %>
                     <div class="row g-3 mb-2">
@@ -198,7 +198,7 @@
                               <th class="text-end">Chargées utilisées Δ</th>
                               <th class="text-end">Absences utilisées Δ</th>
                               <th class="text-end">Séances bonus Δ</th>
-                              <% if current_user.admin? || current_user.super_admin? %>
+                              <% if policy(ServiceUsageAdjustment).update? || policy(ServiceUsageAdjustment).destroy? %>
                                 <th class="text-end" style="width:1%;">Actions</th>
                               <% end %>
                             </tr>
@@ -211,20 +211,24 @@
                                 <td class="text-end"><%= adj.paid_used_delta.to_f.zero? ? "—" : fmt1(adj.paid_used_delta) %></td>
                                 <td class="text-end"><%= adj.free_used_delta.to_f.zero? ? "—" : fmt1(adj.free_used_delta) %></td>
                                 <td class="text-end"><%= adj.bonus_sessions.to_f.zero? ? "—" : fmt1(adj.bonus_sessions) %></td>
-                                <% if current_user.admin? || current_user.super_admin? %>
+                                <% if policy(adj).update? || policy(adj).destroy? %>
                                   <td class="text-end align-middle text-nowrap">
-                                    <%= link_to edit_fliip_service_service_usage_adjustment_path(@service, adj),
-                                          class: "btn btn-sm btn-outline-secondary me-1",
-                                          title: "Modifier" do %>
-                                      <i class="fa-solid fa-pencil"></i>
+                                    <% if policy(adj).update? %>
+                                      <%= link_to edit_fliip_service_service_usage_adjustment_path(@service, adj),
+                                            class: "btn btn-sm btn-outline-secondary me-1",
+                                            title: "Modifier" do %>
+                                        <i class="fa-solid fa-pencil"></i>
+                                      <% end %>
                                     <% end %>
 
-                                    <%= button_to fliip_service_service_usage_adjustment_path(@service, adj),
-                                          method: :delete,
-                                          data: { turbo_confirm: "Supprimer cet ajustement ?" },
-                                          class: "btn btn-sm btn-outline-danger d-inline-flex align-items-center",
-                                          form: { class: "d-inline" } do %>
-                                      <i class="fa-solid fa-trash-can"></i>
+                                    <% if policy(adj).destroy? %>
+                                      <%= button_to fliip_service_service_usage_adjustment_path(@service, adj),
+                                            method: :delete,
+                                            data: { turbo_confirm: "Supprimer cet ajustement ?" },
+                                            class: "btn btn-sm btn-outline-danger d-inline-flex align-items-center",
+                                            form: { class: "d-inline" } do %>
+                                        <i class="fa-solid fa-trash-can"></i>
+                                      <% end %>
                                     <% end %>
                                   </td>
                                 <% end %>
@@ -237,16 +241,18 @@
                       <p class="text-muted mb-0">Aucun ajustement enregistré pour ce service.</p>
                     <% end %>
 
-                    <div class="card mt-3">
-                      <div class="card-body">
-                        <h5 class="card-title mb-2">Ajouter un ajustement</h5>
-                        <% @adjustment = @service.service_usage_adjustments.new(user: current_user) %>
-                        <%= render "service_usage_adjustments/form",
-                              service: @service,
-                              adjustment: @adjustment,
-                              cancel_path: fliip_service_path(@service) %>
+                    <% if policy(ServiceUsageAdjustment).create? %>
+                      <div class="card mt-3">
+                        <div class="card-body">
+                          <h5 class="card-title mb-2">Ajouter un ajustement</h5>
+                          <% @adjustment = @service.service_usage_adjustments.new(user: current_user) %>
+                          <%= render "service_usage_adjustments/form",
+                                service: @service,
+                                adjustment: @adjustment,
+                                cancel_path: fliip_service_path(@service) %>
+                        </div>
                       </div>
-                    </div>
+                    <% end %>
                   <% end %>
                 </section>
               <% end %>

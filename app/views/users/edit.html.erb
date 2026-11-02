@@ -54,11 +54,13 @@
               } %>
       </div>
 
-      <div class="mb-3">
-        <%= f.input :email,
-              label: "Courriel",
-              input_html: { autocomplete: "email", class: "form-control form-control-lg" } %>
-      </div>
+      <% if policy(@user).permitted_attributes.include?(:email) %>
+        <div class="mb-3">
+          <%= f.input :email,
+                label: "Courriel",
+                input_html: { autocomplete: "email", class: "form-control form-control-lg" } %>
+        </div>
+      <% end %>
 
       <div class="d-grid mt-4">
         <%= f.button :submit, "Enregistrer",

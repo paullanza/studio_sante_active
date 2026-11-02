@@ -10,6 +10,7 @@ class FliipServicesController < ApplicationController
                    consultation: [:user, :fliip_user, :fliip_service]
                  )
                  .find(params[:id])
+    authorize @service
 
     @adjustments = @service.service_usage_adjustments.includes(:user).order(created_at: :desc)
     @sessions    = @service.sessions.includes(:user, :fliip_user).order_by_occurred_at_desc

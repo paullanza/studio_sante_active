@@ -164,8 +164,6 @@ Rails.application.routes.draw do
     end
   end
 
-  get "consultations/associations", to: "consultations#associations", as: :consultations_associations
-
   # =====================================================================
   # BOOKINGS — ALIAS FOR SÉANCES ENTRY POINT
   # ---------------------------------------------------------------------

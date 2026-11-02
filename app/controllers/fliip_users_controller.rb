@@ -2,6 +2,8 @@ class FliipUsersController < ApplicationController
   before_action :authenticate_user!
 
   def index
+    authorize FliipUser
+
     scope = FliipUser.order(:remote_id)
     scope = scope.search_clients(params[:query]) if params[:query].present?
 
@@ -36,17 +38,22 @@ class FliipUsersController < ApplicationController
         ]
       )
       .find(params[:id])
+    authorize @fliip_user
 
     @consultations = @fliip_user.consultations.with_associations.order_by_occurred_at_desc
   end
 
   def refresh
+    authorize FliipUser
+
     remote_id = params[:remote_id]
     msg = FliipApi::UserSync::UserUpdater.call(remote_id.to_i)
     redirect_to fliip_user_path(FliipUser.find_by(remote_id: remote_id)), notice: msg
   end
 
   def suggest
+    authorize FliipUser
+
     q = params[:query].to_s.strip
     @users =
       if q.length >= 2
