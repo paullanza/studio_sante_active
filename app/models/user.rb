@@ -65,6 +65,11 @@ class User < ApplicationRecord
   scope :active,   -> { where(active: true) }
   scope :inactive, -> { where(active: false) }
 
+  # Users who can be picked in an employee dropdown. The super admin is the
+  # owner, not a trainer, so they never own sessions, consultations or
+  # adjustments and are excluded for every role.
+  scope :selectable, -> { active.where.not(role: :super_admin) }
+
   # -----------------------------------------
   # Validations
   # -----------------------------------------
