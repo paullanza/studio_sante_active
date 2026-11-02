@@ -25,8 +25,9 @@
       <%= f.input :user_id,
                   label: "Employé·e",
                   as: :select,
-                  collection: User.selectable.order(:last_name, :first_name),
-                  label_method: :full_name,
+                  collection: owner_options(User.selectable.order(:last_name, :first_name),
+                                            (@adjustment.user if @adjustment.persisted?)),
+                  label_method: ->(u) { owner_option_label(u) },
                   value_method: :id,
                   include_blank: false,
                   input_html: { class: "form-select" } %>

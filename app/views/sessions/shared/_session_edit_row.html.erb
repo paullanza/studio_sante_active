@@ -92,8 +92,8 @@
         <div class="col-auto">
           <label class="form-label small mb-0 d-block">Employé·e</label>
           <select name="session[user_id]" class="form-select form-select-sm">
-            <% @staff.each do |u| %>
-              <option value="<%= u.id %>" <%= "selected" if u.id == s.user_id %>><%= u.full_name %></option>
+            <% owner_options(@staff, s.user).each do |u| %>
+              <option value="<%= u.id %>" <%= "selected" if u.id == s.user_id %>><%= owner_option_label(u) %></option>
             <% end %>
           </select>
           <% if s.created_by_id.present? && s.created_by_id != s.user_id %>

@@ -79,8 +79,8 @@
     <% if policy(c).change_owner? %>
       <label class="form-label small mb-0 d-block">Employé·e</label>
       <select name="consultation[user_id]" class="form-select form-select-sm">
-        <% @staff.each do |u| %>
-          <option value="<%= u.id %>" <%= "selected" if u.id == c.user_id %>><%= u.full_name %></option>
+        <% owner_options(@staff, c.user).each do |u| %>
+          <option value="<%= u.id %>" <%= "selected" if u.id == c.user_id %>><%= owner_option_label(u) %></option>
         <% end %>
       </select>
       <% if c.created_by_id.present? && c.created_by_id != c.user_id %>
