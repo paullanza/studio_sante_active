@@ -1,8 +1,13 @@
 class ApplicationController < ActionController::Base
   include Pagy::Method
+  include Pundit::Authorization
 
   before_action :configure_permitted_parameters, if: :devise_controller?
   before_action :logout_if_inactive
+
+  # verify_authorized is added per controller as each one is migrated to
+  # Pundit; it moves here once every controller authorizes.
+  rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
 
   def after_sign_in_path_for(resource)
     return super unless resource.is_a?(User)
@@ -52,5 +57,14 @@ class ApplicationController < ActionController::Base
         :birthday
       ]
     )
+  end
+
+  private
+
+  def user_not_authorized
+    respond_to do |format|
+      format.json { head :forbidden }
+      format.any  { redirect_back fallback_location: authenticated_root_path, alert: "Non autorisé·e." }
+    end
   end
 end

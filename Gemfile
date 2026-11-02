@@ -26,6 +26,9 @@ gem "pagy"
 # Devise gem for user authentication
 gem "devise"
 
+# Pundit for policy-based authorization
+gem "pundit", "~> 2.5"
+
 # Solid Queue for background jobs
 gem "solid_queue"
 
