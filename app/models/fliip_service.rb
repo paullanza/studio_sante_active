@@ -1,4 +1,6 @@
 class FliipService < ApplicationRecord
+  include MissingFromFliip
+
   # -----------------------------------------
   # Associations
   # -----------------------------------------
@@ -295,7 +297,13 @@ class FliipService < ApplicationRecord
     paid_used_total >= paid_allowed_total
   end
 
+  # The service, or its client, is no longer in Fliip.
+  def removed_from_fliip?
+    missing_from_fliip? || fliip_user&.missing_from_fliip? || false
+  end
+
   def booking_block_reason(reference_date = Date.current)
+    return "Retiré de Fliip" if removed_from_fliip?
     return "Annulé" if cancelled?
     return "Commence dans plus de 30 jours" if starts_too_far_in_future?(reference_date)
     return "Terminé il y a plus de 30 jours" if ended_too_long_ago?(reference_date)

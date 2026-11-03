@@ -5,5 +5,9 @@ FactoryBot.define do
     user_lastname  { Faker::Name.last_name }
     user_email     { Faker::Internet.email }
     user_role      { "user" }
+
+    trait :missing_from_fliip do
+      missing_from_fliip_at { 1.day.ago }
+    end
   end
 end

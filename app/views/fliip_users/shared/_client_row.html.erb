@@ -61,6 +61,7 @@
 
       <div class="d-flex flex-wrap align-items-center gap-2">
         <span class="badge <%= badge_class %>"><%= svc.status_name %></span>
+        <%= missing_from_fliip_badge(svc) %>
         <strong>
           <%= link_to (svc.service_name.presence || "Service ##{svc.id}"),
                       fliip_service_path(svc),
@@ -92,6 +93,7 @@
 
       <div class="d-flex flex-wrap align-items-center gap-2">
         <span class="<%= contract_badge %>"><%= contract.status_name %></span>
+        <%= missing_from_fliip_badge(contract) %>
         <strong>
           <%= link_to (contract.membership_name.presence || "Contract ##{contract.id}"),
                       fliip_user_path(user),

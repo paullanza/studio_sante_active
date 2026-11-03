@@ -62,6 +62,7 @@ class Session < ApplicationRecord
   validate :respect_quota_limits, on: :create
   # - Checks that the service is not cancelled and is within the booking window (today-based)
   validate :service_not_cancelled, on: :create
+  validate :service_present_in_fliip, on: :create
   validate :service_within_booking_window, on: :create
 
   # Ensures that the chosen service actually belongs to the selected client.
@@ -360,6 +361,14 @@ class Session < ApplicationRecord
     return if fliip_service.blank? || fliip_user_id.blank?
     if fliip_service.fliip_user_id != fliip_user_id
       errors.add(:fliip_service_id, "ne correspond pas au client sélectionné.")
+    end
+  end
+
+  # Prevents booking on a service (or client) Fliip no longer returns.
+  def service_present_in_fliip
+    return if fliip_service.blank?
+    if fliip_service.removed_from_fliip?
+      errors.add(:base, "Ce service a été retiré de Fliip. Impossible de créer une séance.")
     end
   end
 

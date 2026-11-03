@@ -1,4 +1,6 @@
 class FliipContract < ApplicationRecord
+  include MissingFromFliip
+
   # -----------------------------------------
   # Associations
   # -----------------------------------------

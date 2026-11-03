@@ -49,6 +49,22 @@ RSpec.describe FliipUser, type: :model do
     end
   end
 
+  describe "missing from Fliip" do
+    let!(:present) { create(:fliip_user) }
+    let!(:missing) { create(:fliip_user, :missing_from_fliip) }
+
+    it "scopes users by the flag" do
+      expect(described_class.missing_from_fliip).to contain_exactly(missing)
+      expect(described_class.present_in_fliip).to include(present)
+      expect(described_class.present_in_fliip).not_to include(missing)
+    end
+
+    it "answers missing_from_fliip?" do
+      expect(missing).to be_missing_from_fliip
+      expect(present).not_to be_missing_from_fliip
+    end
+  end
+
   describe "#full_name" do
     it "joins first and last name" do
       expect(build(:fliip_user, user_firstname: "Léa", user_lastname: "Roy").full_name).to eq("Léa Roy")

@@ -47,7 +47,7 @@
 
             <div class="mb-2">
               <div class="text-muted small">Statut</div>
-              <div><span class="badge bg-light text-dark"><%= status || "–" %></span></div>
+              <div><span class="badge bg-light text-dark"><%= status || "–" %></span> <%= missing_from_fliip_badge(@fliip_user) %></div>
             </div>
 
             <div class="mb-2">
@@ -164,7 +164,7 @@
                           <% label, color = status_badge.call(c.status) %>
                           <tr>
                             <td class="text-nowrap"><%= c.remote_contract_id || "—" %></td>
-                            <td class="text-nowrap"><span class="badge <%= color %>"><%= label %></span></td>
+                            <td class="text-nowrap"><span class="badge <%= color %>"><%= label %></span> <%= missing_from_fliip_badge(c) %></td>
                             <td class="text-nowrap">
                               <div><%= fmt_date.call(c.start_date) %></div>
                               <% if c.stop_date.present? %>

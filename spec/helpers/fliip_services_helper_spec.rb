@@ -1,6 +1,18 @@
 require "rails_helper"
 
 RSpec.describe FliipServicesHelper, type: :helper do
+  describe "#missing_from_fliip_badge" do
+    it "shows a badge with the date for a flagged record" do
+      service = build(:fliip_service, missing_from_fliip_at: Time.zone.local(2026, 11, 2, 10))
+
+      expect(helper.missing_from_fliip_badge(service)).to include("Retiré de Fliip", "02/11/2026")
+    end
+
+    it "renders nothing for a record still in Fliip" do
+      expect(helper.missing_from_fliip_badge(build(:fliip_service))).to be_nil
+    end
+  end
+
   describe "#purchase_status_badge_class" do
     it "maps each purchase status" do
       expect(%w[A P S C I].map { |s| helper.purchase_status_badge_class(s) })

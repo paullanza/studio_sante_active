@@ -18,5 +18,9 @@ FactoryBot.define do
     trait :stopped do
       status { "S" }
     end
+
+    trait :missing_from_fliip do
+      missing_from_fliip_at { 1.day.ago }
+    end
   end
 end

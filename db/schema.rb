@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_03_171315) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_03_172008) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "unaccent"
@@ -62,6 +62,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_171315) do
     t.string "pack_class_used"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "missing_from_fliip_at"
     t.index ["fliip_user_id"], name: "index_fliip_contracts_on_fliip_user_id"
     t.index ["remote_contract_id"], name: "index_fliip_contracts_on_remote_contract_id", unique: true
   end
@@ -91,6 +92,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_171315) do
     t.string "ledger_account"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "missing_from_fliip_at"
     t.index ["fliip_user_id"], name: "index_fliip_services_on_fliip_user_id"
     t.index ["remote_purchase_id"], name: "index_fliip_services_on_remote_purchase_id", unique: true
   end
@@ -117,6 +119,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_171315) do
     t.date "member_since"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "missing_from_fliip_at"
     t.index ["remote_id"], name: "index_fliip_users_on_remote_id", unique: true
   end
 

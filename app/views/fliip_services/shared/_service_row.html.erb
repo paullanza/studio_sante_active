@@ -22,6 +22,7 @@
   <td class="align-middle">
     <div class="d-flex flex-wrap align-items-center gap-2">
       <span class="badge <%= purchase_status_badge_class(svc.purchase_status) %>"><%= svc.status_name %></span>
+      <%= missing_from_fliip_badge(svc) %>
       <%= link_to (svc.service_name.presence || "Service ##{svc.id}"),
                   fliip_service_path(svc),
                   class: "text-decoration-none",

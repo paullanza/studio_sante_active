@@ -32,6 +32,16 @@ RSpec.describe FliipContract, type: :model do
     end
   end
 
+  describe "missing from Fliip" do
+    it "scopes contracts by the flag" do
+      present = create(:fliip_contract)
+      missing = create(:fliip_contract, :missing_from_fliip)
+
+      expect(described_class.missing_from_fliip).to contain_exactly(missing)
+      expect(described_class.present_in_fliip).to contain_exactly(present)
+    end
+  end
+
   describe "#status_name" do
     it "translates each known code" do
       expect(described_class::STATUS_MAP).to eq(

@@ -76,6 +76,16 @@ RSpec.describe FliipService, type: :model do
       expect(service.booking_block_reason).to eq("Annulé")
     end
 
+    it "blocks services missing from Fliip, before any other reason" do
+      service.update!(purchase_status: "C", missing_from_fliip_at: 1.day.ago)
+      expect(service.booking_block_reason).to eq("Retiré de Fliip")
+    end
+
+    it "blocks services whose client is missing from Fliip" do
+      service.fliip_user.update!(missing_from_fliip_at: 1.day.ago)
+      expect(service.booking_block_reason).to eq("Retiré de Fliip")
+    end
+
     it "blocks services starting more than 30 days from now" do
       service.update!(start_date: 31.days.from_now.to_date)
       expect(service.booking_block_reason).to eq("Commence dans plus de 30 jours")

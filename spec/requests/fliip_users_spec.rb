@@ -29,6 +29,14 @@ RSpec.describe "Fliip users", type: :request do
     end
   end
 
+  it "shows the missing-from-Fliip flag on the client page" do
+    client.update!(missing_from_fliip_at: 1.day.ago)
+    sign_in create(:user)
+
+    get fliip_user_path(client)
+    expect(response.body).to include("Retiré de Fliip")
+  end
+
   it "filters the index by search" do
     sign_in create(:user)
 

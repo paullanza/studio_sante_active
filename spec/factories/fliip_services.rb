@@ -17,5 +17,9 @@ FactoryBot.define do
     trait :cancelled do
       purchase_status { "C" }
     end
+
+    trait :missing_from_fliip do
+      missing_from_fliip_at { 1.day.ago }
+    end
   end
 end
