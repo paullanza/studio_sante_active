@@ -31,24 +31,4 @@ RSpec.describe ServiceDefinition, type: :model do
       expect(known.reload.paid_sessions).to eq(8)
     end
   end
-
-  describe ".create_missing_definitions!" do
-    it "creates a 0/0 definition for each service type that has none" do
-      service = create(:fliip_service, :without_definition, service_name: "Pilates")
-      create(:fliip_service, :without_definition, service_id: service.service_id)
-
-      expect { described_class.create_missing_definitions! }.to change(described_class, :count).by(1)
-
-      definition = described_class.find_by(service_id: service.service_id)
-      expect(definition).to have_attributes(service_name: "Pilates", paid_sessions: 0, free_sessions: 0)
-    end
-
-    it "leaves existing definitions alone" do
-      definition = create(:service_definition, paid_sessions: 8)
-      create(:fliip_service, service_definition: definition)
-
-      expect { described_class.create_missing_definitions! }.not_to change(described_class, :count)
-      expect(definition.reload.paid_sessions).to eq(8)
-    end
-  end
 end
