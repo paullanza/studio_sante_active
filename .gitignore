@@ -41,3 +41,7 @@
 
 /app/assets/builds/*
 !/app/assets/builds/.keep
+
+# Fliip comparison output (holds client remote IDs)
+/script/fliip_comparison/report.md
+/script/fliip_comparison/*.log
