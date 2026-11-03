@@ -59,6 +59,14 @@ RSpec.describe "Sessions", type: :request do
       expect { post sessions_path, params: session_params }.not_to change(Session, :count)
       expect(response).to have_http_status(:unprocessable_content)
     end
+
+    it "re-renders the form with an error when the service is missing from Fliip" do
+      service.update!(missing_from_fliip_at: 1.day.ago)
+      sign_in employee
+
+      expect { post sessions_path, params: session_params }.not_to change(Session, :count)
+      expect(response).to have_http_status(:unprocessable_content)
+    end
   end
 
   describe "PATCH /sessions/:id and DELETE /sessions/:id" do
@@ -287,24 +295,47 @@ RSpec.describe "Sessions", type: :request do
   end
 
   describe "POST /refresh_clients" do
-    it "imports new clients from Fliip for any signed-in user" do
-      allow(FliipApi::UserSync::NewUserImporter).to receive(:call).and_return("Sync complete")
+    let(:new_clients) { instance_double(FliipApi::NewClients) }
+
+    before do
+      allow(FliipApi::Client).to receive(:new).and_return(instance_double(FliipApi::Client))
+      allow(FliipApi::NewClients).to receive(:new).and_return(new_clients)
       sign_in employee
-
-      post refresh_clients_path
-
-      expect(FliipApi::UserSync::NewUserImporter).to have_received(:call)
-      expect(response).to redirect_to(new_seance_path)
-      expect(flash[:notice]).to eq("Sync complete")
     end
 
-    it "reports a failed import" do
-      allow(FliipApi::UserSync::NewUserImporter).to receive(:call).and_raise("API indisponible")
-      sign_in employee
+    it "imports new clients from Fliip for any signed-in user" do
+      allow(new_clients).to receive(:call).and_return(FliipApi::BatchSync::Summary.new(2, 2, [], []))
 
       post refresh_clients_path
 
-      expect(flash[:alert]).to eq("Impossible de rafraîchir les client·e·s : API indisponible")
+      expect(new_clients).to have_received(:call)
+      expect(response).to redirect_to(new_seance_path)
+      expect(flash[:notice]).to eq("2 client·e(s) ajouté·e(s) depuis Fliip.")
+    end
+
+    it "says when there is nobody new" do
+      allow(new_clients).to receive(:call).and_return(FliipApi::BatchSync::Summary.empty)
+
+      post refresh_clients_path
+
+      expect(flash[:notice]).to eq("Aucun·e nouveau·elle client·e dans Fliip.")
+    end
+
+    it "mentions clients that failed to import" do
+      allow(new_clients).to receive(:call).and_return(FliipApi::BatchSync::Summary.new(1, 1, [], [ "9: boom" ]))
+
+      post refresh_clients_path
+
+      expect(flash[:notice]).to eq("1 client·e(s) ajouté·e(s) depuis Fliip. 1 en échec, réessayez plus tard.")
+    end
+
+    it "shows a French message, not the raw error, when Fliip is unavailable" do
+      allow(new_clients).to receive(:call).and_raise(FliipApi::Unavailable, "/users/get: HTTP 503")
+
+      post refresh_clients_path
+
+      expect(response).to redirect_to(new_seance_path)
+      expect(flash[:alert]).to eq("Fliip ne répond pas, réessayez plus tard.")
     end
   end
 

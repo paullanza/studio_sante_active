@@ -31,6 +31,7 @@
           <div class="mb-2">
             <div class="text-muted small">Statut</div>
             <span class="badge <%= badge_class %>"><%= @service.status_name %></span>
+            <%= missing_from_fliip_badge(@service) %>
           </div>
 
           <div class="mb-2">

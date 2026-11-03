@@ -1,12 +1,13 @@
+# Solid Queue runs inside Puma in async mode (config/puma.rb). There are only
+# a few jobs a day, so polling is slow to keep idle database queries low.
 default: &default
   dispatchers:
-    - polling_interval: 1
+    - polling_interval: 5
       batch_size: 500
   workers:
     - queues: "*"
-      threads: 3
-      processes: <%= ENV.fetch("JOB_CONCURRENCY", 1) %>
-      polling_interval: 0.1
+      threads: 2
+      polling_interval: 5
 
 development:
   <<: *default

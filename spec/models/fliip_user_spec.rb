@@ -6,6 +6,12 @@ RSpec.describe FliipUser, type: :model do
 
     it { is_expected.to validate_presence_of(:remote_id) }
     it { is_expected.to validate_uniqueness_of(:remote_id) }
+
+    it "is backed by a unique index" do
+      existing = create(:fliip_user)
+      copy = build(:fliip_user, remote_id: existing.remote_id)
+      expect { copy.save!(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique)
+    end
   end
 
   describe "associations" do
@@ -40,6 +46,22 @@ RSpec.describe FliipUser, type: :model do
       create(:fliip_service)
 
       expect(described_class.with_service_after(nil)).to be_empty
+    end
+  end
+
+  describe "missing from Fliip" do
+    let!(:present) { create(:fliip_user) }
+    let!(:missing) { create(:fliip_user, :missing_from_fliip) }
+
+    it "scopes users by the flag" do
+      expect(described_class.missing_from_fliip).to contain_exactly(missing)
+      expect(described_class.present_in_fliip).to include(present)
+      expect(described_class.present_in_fliip).not_to include(missing)
+    end
+
+    it "answers missing_from_fliip?" do
+      expect(missing).to be_missing_from_fliip
+      expect(present).not_to be_missing_from_fliip
     end
   end
 

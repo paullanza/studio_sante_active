@@ -31,6 +31,8 @@ gem "pundit", "~> 2.5"
 
 # Solid Queue for background jobs
 gem "solid_queue"
+# Admin UI for background jobs, at /jobs
+gem "mission_control-jobs", "~> 1.3"
 
 # HTTParty for API calls
 gem 'httparty'

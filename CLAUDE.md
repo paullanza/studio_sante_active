@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Internal staff app for Studio Santé Active, a fitness/health studio. Employees log training sessions ("séances") and consultations against client services that are mirrored from the **Fliip** gym-management API. Admins confirm sessions and consultations for payroll and adjust service usage. UI copy and validation messages are in **French**. App time zone is `Eastern Time (US & Canada)`.
 
-Stack: Rails 8.1, Ruby 3.4.9, PostgreSQL (needs the `unaccent` extension), Devise, Hotwire (Turbo + Stimulus via importmap, so there is no Node build step), Bootstrap 5 compiled by `dartsass-rails` and served by Propshaft, simple_form, pg_search, Pagy, Solid Queue. Deployed on Render with its native Ruby runtime, configured in the Render dashboard (there is no `render.yaml`): `bin/render-build.sh` runs migrations and seeds on every build, and a separate cron job runs `rake fliip:sync`.
+Stack: Rails 8.1, Ruby 3.4.9, PostgreSQL (needs the `unaccent` extension), Devise, Pundit, Hotwire (Turbo + Stimulus via importmap, so there is no Node build step), Bootstrap 5 compiled by `dartsass-rails` and served by Propshaft, simple_form, pg_search, Pagy, Solid Queue (running inside Puma) with Mission Control at `/jobs`. Deployed on Render with its native Ruby runtime, configured in the Render dashboard (there is no `render.yaml`): `bin/render-build.sh` runs migrations and seeds on every build. There is no separate worker or cron service.
 
 Solo lead dev (Paul) owns all architecture and maintenance decisions. The app is in production, so production safety matters. Work happens in bursts after long quiet periods, so a snapshot of the code may be stale: read the current file before changing it.
 
@@ -43,7 +43,7 @@ bundle exec bundle-audit check --update             # known-vulnerable gems
 bin/rails fliip:sync            # full Fliip → local DB sync (lib/tasks/fliip_sync.rake)
 ```
 
-`FLIIP_API_KEY` must be set (loaded from `.env` via dotenv-rails). `FliipApi::ApiClient` calls `ENV.fetch` on it and raises if it is missing.
+`FLIIP_API_KEY` must be set (loaded from `.env` via dotenv-rails). `FliipApi::Client` calls `ENV.fetch` on it and raises if it is missing.
 
 Prefer Ruby scripts over bash for API experiments. Save their output files next to the script, not in `/tmp`, so they show up in VSCode.
 
@@ -61,10 +61,10 @@ Prefer Ruby scripts over bash for API experiments. Save their output files next 
 
 ### Fliip sync (`app/services/fliip_api/`)
 - `docs/fliip_api/` documents the Fliip API: the endpoints the app calls, its quirks, the full field reference and example responses. Check response shapes there before changing the sync.
-- `ApiClient` is a thin HTTParty wrapper over `https://static.fliipapp.com/api/v2`. On failure it logs the error and returns `[]`, so an outage looks like "no data". Keep that in mind when a sync appears to do nothing.
-- `UserSync::Base#upsert_user` upserts a `FliipUser` by `remote_id`, then always runs `ContractSync` and `ServiceSync` (current, future and history endpoints). Services are upserted by `remote_purchase_id`.
-- Entry points: `UserImporter` (full sync: admin "import clients" button and `rake fliip:sync`), `NewUserImporter` (new clients only: the "refresh clients" button on the booking page), `UserUpdater` (one client by `remote_id`).
-- When a sync finishes, it calls `ServiceDefinition.create_missing_definitions!`.
+- `Client` is the only HTTP layer: timeouts, retries, paging. It raises `FliipApi::NotFound` (400, unknown user) or `FliipApi::Unavailable`, and never returns `[]` on failure. Treat `Unavailable` as "unknown", never as "no data".
+- `Mapper` turns API rows into the current columns. `UserSyncer` brings one user up to date (user, services, contracts), fetching everything before writing. It flags records Fliip stopped returning (`missing_from_fliip_at`, never deleted) and creates missing 0/0 `ServiceDefinition`s.
+- Entry points (decisions in `docs/adr/0001-fliip-sync-jobs.md`): `UserSyncer#call_by_remote_id` (the client page's refresh, inline), `NewClients` (the booking page's "refresh clients", inline), `FliipRecentSyncJob` (hourly) and `FliipFullSyncJob` (nightly, and the admin "import clients" button). The jobs are scheduled in `config/recurring.yml`, share one concurrency key, and raise at the end when a user failed, so failures show in Mission Control.
+- A flagged service, or one whose client is flagged, can't be booked.
 
 ### Session quota math (core business logic)
 - `ServiceDefinition` is keyed by Fliip's `service_id` (non-standard PK/FK on both sides). It holds the `paid_sessions` / `free_sessions` allowance for a service type. Admins set these. New definitions are created with 0/0.
@@ -74,9 +74,11 @@ Prefer Ruby scripts over bash for API experiments. Save their output files next 
 - A `Consultation` can be associated with at most one `FliipService` (enforced by a uniqueness check), within a window of −14 days to +3 months around `occurred_at`.
 
 ### Authorization
-There is currently no policy gem. Each controller has its own `before_action` guard (`ensure_admin!`, `require_manager_only!`, `ensure_management!`, `authorize_role_changes!`) plus model predicates (`modifiable_by?`, `editable_by?`). After login, `ApplicationController#after_sign_in_path_for` and `RootController#redirect` route users by role: admins go to `/admin/dashboard`, managers to `/manager/dashboard`, and employees to their profile. `ManagerController` deliberately sends admins back to the admin dashboard.
+Pundit handles authorization, with one policy per model or area in `app/policies/` (headless ones like `:admin`, `:manager` and `:booking` cover pages with no single record). `ApplicationController` runs `verify_authorized` after every non-Devise action, so every action must call `authorize` (or `policy_scope`) or explicitly call `skip_authorization`. `Pundit::NotAuthorizedError` is rescued into a redirect with a French alert (`head :forbidden` for JSON). Some controllers override `user_not_authorized` to keep a page-specific redirect.
 
-A migration to Pundit is planned (see Planned direction). Until then, don't add new ad hoc guard styles: reuse the existing guards, and write new authorization logic so it maps cleanly onto a policy later.
+- Role checks go in policies, using the `ApplicationPolicy::RoleHelpers` predicates (`manager_or_above?`, `admin_or_above?`, ...). `admin?` and `super_admin?` are deliberately separate. Don't add `before_action` role guards or inline role checks in controllers or views; ask the policy (`policy(record).update?`).
+- Record lists that depend on the role go through a policy `Scope`.
+- After login, `ApplicationController#after_sign_in_path_for` and `RootController#redirect` route users by role: admins go to `/admin/dashboard`, managers to `/manager/dashboard`, and employees to their profile.
 
 ### Filtering, search and CSV
 - Admin list filters go through each model's `apply_filters(params)`, which chains scopes. Search uses accent-insensitive `pg_search_scope`s.
@@ -94,7 +96,7 @@ Styles: Sass partials live in `app/assets/stylesheets/components/` and each must
 - **Nil-guard pattern.** Never write `@ivar = value if condition` with no `else` in a controller. It leaves the variable `nil` on non-happy paths and crashes the view (this caused the `@staff` error in `bookings/new`). The reference implementations are `BookingsController#load_staff` and `ConsultationsController#load_staff`, which use a ternary that defaults to `[]`. When touching a controller, check for this pattern.
 - **Fliip API limit cap.** Very high `limit` values return `400 Bad Request` with an empty body. Use paginated requests (`limit=100` plus `offset`).
 - **Silent logger crashes.** Non-UTF-8 characters in API responses once crashed the Rails logger silently and masked the real error. If logs go missing, suspect encoding before suspecting the logger config.
-- **Render resources.** The web instance is small. Background jobs run in a separate Render cron job service, not in the web process. Keep heavy work (full syncs, large exports) out of web requests, and treat memory use as a design constraint.
+- **Render resources.** The web instance is small, and background jobs share it: Solid Queue runs inside Puma in async mode (threads, not forked processes). Keep heavy work (full syncs, large exports) in background jobs, never in web requests, and treat memory use as a design constraint.
 - **Build side effects.** `bin/render-build.sh` runs migrations and seeds on every deploy, so seeds must be idempotent.
 - **Vendored importmap pins can be silently broken.** `bin/importmap pin` downloads one file per package. It breaks if a file name contains `#` (Rails drops the pin and logs "Importmap skipped missing path") or if a file has relative imports like `from"./x.js"` (the sibling files aren't downloaded). Check both after pinning, and confirm in a real browser: specs can't catch it.
 
@@ -104,12 +106,9 @@ Styles: Sass partials live in `app/assets/stylesheets/components/` and each must
 
 Work is sequenced in phases. Bugs and stability come first, so don't start a later phase early without checking with Paul:
 
-1. Bug fixes (nil-guard audit across controllers and views)
-2. Test suite foundation
-3. Gem and Rails upgrade (Rails 8, Propshaft replacing Sprockets)
-4. Pundit authorization migration
-5. Timesheet
-6. Analytics and client map
+1. Codebase audit and stabilization: section by section, from the Fliip sync up to the dashboards, with a front-end rebuild (dark only, mobile-first, no Bootstrap)
+2. Timesheet
+3. Analytics and client map
 
 ---
 
@@ -126,9 +125,9 @@ Work is sequenced in phases. Bugs and stability come first, so don't start a lat
 
 RSpec, FactoryBot (`spec/factories/`), Shoulda Matchers and Faker, with config in `spec/support/`. Request specs sign in with Devise's `sign_in`. `spec/factories_spec.rb` lints every factory and trait. Bullet is enabled in development only. CI (`.github/workflows/ci.yml`) runs Brakeman, bundler-audit, `bin/importmap audit`, RuboCop and RSpec on every pull request, plus a production boot check (production gems only, assets compiled twice, then booted); specs run on Postgres 16 like production, and the dependency audits also run weekly; the existing RuboCop offenses are listed in `.rubocop_todo.yml`, so new code must be clean.
 
-- The Fliip API is never called in specs: stub `FliipApi::ApiClient.new` with an `instance_double` (see `spec/services/fliip_api/user_sync/user_importer_spec.rb`).
-- Build coverage in this order: models, then services, then controller/request specs.
-- Every new file or class gets specs in the same pass. Controller changes and their request specs ship together.
+- The Fliip API is never called in specs, and WebMock blocks all outside network calls. `Client` specs stub HTTP with WebMock; everything above it stubs `FliipApi::Client` (or `FliipApi::UserSyncer`) with an `instance_double` (see `spec/services/fliip_api/user_syncer_spec.rb`).
+- Policy specs live in `spec/policies/` and use pundit-matchers, with `user_for(role)` (from `spec/support/roles.rb`) to build one user per role. `spec/requests/role_access_spec.rb` is the route-by-role matrix: update it when a route or its access changes.
+- Every new file or class gets specs in the same pass. Controller changes ship with their request specs, and policy changes with their policy specs.
 - When adding to an existing spec file, add only the new block. Don't rewrite the whole file.
 - Request specs shouldn't match on `response.body` unless there is no other way. Prefer flat `context` structures over deeply nested ones.
 - `after_commit` callbacks don't fire in RSpec (transactions wrap specs and never truly commit). Test the private method directly via `send` instead.
@@ -152,7 +151,7 @@ Don't add editable local fields on top of Fliip-owned columns. Data migrations u
 ## Refactor safety
 
 - Never blind find-and-replace a method call across the app. First check whether the same value is used as a comparison or lookup key (case statements, `where` clauses, enum matching). Those keep their exact original value; only true display usages change.
-- Never suggest or start a change that needs significant refactoring without flagging the scope first. This matters most during the Rails 8 and Pundit work.
+- Never suggest or start a change that needs significant refactoring without flagging the scope first.
 
 ---
 
@@ -166,3 +165,19 @@ Work is tracked in Linear.
 - Issue descriptions are first person, concise but detailed, scoped as a single branch of work. Describe only what is done or what is left.
 - `save_issue` with `parentId: None` clears parent/child links. `blockedBy` takes an array of issue IDs. State names work as literal strings. Project updates need the project ID, not the name.
 - `save_project` 502 timeouts often succeed server-side. Verify with `get_project` before retrying.
+
+---
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in Linear (team Informatique), accessed through the Linear MCP tools. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default triage labels, as the optional single-select "Triage" label group in Linear. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.

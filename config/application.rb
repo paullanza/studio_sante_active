@@ -46,5 +46,12 @@ module StudioSanteActive
     # config.eager_load_paths << Rails.root.join("extras")
 
     config.active_job.queue_adapter = :solid_queue
+
+    # Mission Control (/jobs) runs behind our own login and admin policy
+    # instead of HTTP Basic auth.
+    config.mission_control.jobs.base_controller_class = "MissionControlBaseController"
+    config.mission_control.jobs.http_basic_auth_enabled = false
+    # Always Solid Queue, even in specs where Active Job uses the test adapter.
+    config.mission_control.jobs.adapters = [ :solid_queue ]
   end
 end

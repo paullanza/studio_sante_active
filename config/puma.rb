@@ -42,3 +42,12 @@ pidfile ENV.fetch("PIDFILE") { "tmp/pids/server.pid" }
 
 # Allow puma to be restarted by `bin/rails restart` command.
 plugin :tmp_restart
+
+# Background jobs run inside Puma: Solid Queue's workers, dispatcher and
+# scheduler are threads in this process (async mode), not forked processes,
+# to fit the web instance's memory. Set SOLID_QUEUE_IN_PUMA=false to run
+# them elsewhere (bin/jobs).
+unless ENV["SOLID_QUEUE_IN_PUMA"] == "false"
+  plugin :solid_queue
+  solid_queue_mode :async
+end

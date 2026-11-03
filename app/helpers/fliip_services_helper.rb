@@ -9,6 +9,14 @@ module FliipServicesHelper
     end
   end
 
+  # Badge for a Fliip record that Fliip no longer returns; nothing otherwise.
+  def missing_from_fliip_badge(record)
+    return unless record&.missing_from_fliip?
+
+    content_tag(:span, "Retiré de Fliip", class: "badge bg-dark",
+                title: "Absent de Fliip depuis le #{record.missing_from_fliip_at.strftime('%d/%m/%Y')}")
+  end
+
   def svc_time_range_label(svc)
     sd = svc.start_date&.strftime("%d/%m/%Y")
     ed = svc.expire_date&.strftime("%d/%m/%Y")

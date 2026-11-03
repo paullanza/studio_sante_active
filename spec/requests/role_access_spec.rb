@@ -122,6 +122,7 @@ RSpec.describe "Role-based access", type: :request do
         "A9 GET admin/unconfirmed_sessions"  => [ADMINS, -> { get admin_unconfirmed_sessions_path }],
         "A10 PATCH admin/confirm_sessions"   => [ADMINS, -> { patch admin_confirm_sessions_path, params: { session_ids: [session_record.id] } }],
         "A13 GET admin/adjustments/new"      => [ADMINS, -> { get admin_adjustments_new_path }],
+        "J1 GET /jobs (Mission Control)"     => [ADMINS, -> { get "/jobs" }],
         "M1 GET manager/dashboard"           => [%i[manager], -> { get manager_dashboard_path }],
         "M4 POST manager/signup_codes"       => [%i[manager], -> { post manager_signup_codes_path }],
         "X1 GET /fliip_users"                => [ALL, -> { get fliip_users_path }],
@@ -134,8 +135,12 @@ RSpec.describe "Role-based access", type: :request do
     end
 
     before do
-      allow(FliipApi::UserSync::NewUserImporter).to receive(:call).and_return("ok")
-      allow(FliipApi::UserSync::UserUpdater).to receive(:call).and_return("ok")
+      syncer = instance_double(FliipApi::UserSyncer)
+      counts = { created: 0, updated: 0, unchanged: 0, flagged: 0 }
+      allow(FliipApi::Client).to receive(:new).and_return(instance_double(FliipApi::Client))
+      allow(FliipApi::UserSyncer).to receive(:new).and_return(syncer)
+      allow(syncer).to receive(:call_by_remote_id) { |id| FliipApi::UserSyncer::Result.new(user: FliipUser.find_by!(remote_id: id), user_change: :unchanged, services: counts, contracts: counts) }
+      allow(FliipApi::NewClients).to receive(:new).and_return(instance_double(FliipApi::NewClients, call: FliipApi::BatchSync::Summary.empty))
     end
 
     ROLES.each do |role|

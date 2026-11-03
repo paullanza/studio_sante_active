@@ -1,5 +1,6 @@
 class FliipUser < ApplicationRecord
   include PgSearch::Model
+  include MissingFromFliip
 
   validates :remote_id, presence: true, uniqueness: true
 

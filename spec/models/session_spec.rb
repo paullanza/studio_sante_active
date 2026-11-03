@@ -75,6 +75,28 @@ RSpec.describe Session, type: :model do
       expect(session.errors[:base]).to include("Ce service est annulé. Impossible de créer une séance.")
     end
 
+    it "rejects services missing from Fliip" do
+      service.update!(missing_from_fliip_at: 1.day.ago)
+      session = build_session
+
+      expect(session).not_to be_valid
+      expect(session.errors[:base]).to include("Ce service a été retiré de Fliip. Impossible de créer une séance.")
+    end
+
+    it "rejects services whose client is missing from Fliip" do
+      service.fliip_user.update!(missing_from_fliip_at: 1.day.ago)
+
+      expect(build_session).not_to be_valid
+    end
+
+    it "keeps existing sessions valid once their service is flagged" do
+      session = build_session
+      session.save!
+      service.update!(missing_from_fliip_at: 1.day.ago)
+
+      expect(session.reload).to be_valid
+    end
+
     it "rejects a service starting more than 30 days from today" do
       service.update!(start_date: 31.days.from_now.to_date, expire_date: 1.year.from_now.to_date)
       session = build_session(occurred_at: service.start_date)

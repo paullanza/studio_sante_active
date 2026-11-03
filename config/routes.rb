@@ -7,6 +7,9 @@ Rails.application.routes.draw do
   # =====================================================================
   devise_for :users
 
+  # Background jobs dashboard, for admins and above (MissionControlBaseController).
+  mount MissionControl::Jobs::Engine, at: "/jobs"
+
   # Public landing page for users who are NOT authenticated. This points
   # to Devise's login form and becomes the site root for guests.
   devise_scope :user do

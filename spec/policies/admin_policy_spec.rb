@@ -7,7 +7,7 @@ RSpec.describe AdminPolicy, type: :policy do
         :dashboard, :services, :service_show, :update_service, :client_services, :import_clients,
         :create_signup_code, :deactivate_signup_code, :unconfirmed_sessions, :confirm_sessions,
         :unconfirmed_consultations, :confirm_consultations, :adjustments_new, :adjustments_preview,
-        :adjustments_commit
+        :adjustments_commit, :jobs
       )
     end
   end

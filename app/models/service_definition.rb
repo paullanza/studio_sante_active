@@ -27,33 +27,15 @@ class ServiceDefinition < ApplicationRecord
   # -----------------------------------------
   # Class Methods
   # -----------------------------------------
-  # Creates ServiceDefinition records for any FliipService service_id
-  # that does not already have a definition.
-  #
-  # Steps:
-  #   1. Fetch all distinct service_ids from FliipService.
-  #   2. Fetch all existing service_ids from ServiceDefinition.
-  #   3. Find missing IDs by subtracting existing from all found.
-  #   4. For each missing ID:
-  #        - Find one example FliipService with that ID
-  #        - Create a definition with:
-  #            service_id   → from FliipService
-  #            service_name → from FliipService
-  #            paid_sessions / free_sessions set to 0 by default
-  def self.create_missing_definitions!
-    service_ids = FliipService.distinct.pluck(:service_id)
-    existing_ids = ServiceDefinition.pluck(:service_id)
-
-    (service_ids - existing_ids).each do |missing_id|
-      fliip_service = FliipService.find_by(service_id: missing_id)
-
-      create!(
-        service_id: fliip_service.service_id,
-        service_name: fliip_service.service_name,
-        paid_sessions: 0,
-        free_sessions: 0
-      )
+  # Creates a 0/0 definition, named after the service, for each service type
+  # among these services that has none. Admins set the allowance later.
+  def self.ensure_for!(fliip_services)
+    by_type = fliip_services.reject { |s| s.service_id.blank? }.index_by(&:service_id)
+    missing = by_type.keys - where(service_id: by_type.keys).pluck(:service_id)
+    missing.each do |service_id|
+      create!(service_id: service_id, service_name: by_type[service_id].service_name, paid_sessions: 0, free_sessions: 0)
     end
+    missing.size
   end
 
   # -----------------------------------------

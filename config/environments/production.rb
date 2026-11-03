@@ -66,7 +66,7 @@ Rails.application.configure do
 
   # Use a real queuing backend for Active Job (and separate queues per environment).
   config.active_job.queue_adapter = :solid_queue
-  # config.solid_queue.connects_to = { database: { writing: :queue } }
+  # Solid Queue uses the main database and runs inside Puma (see config/puma.rb).
   # config.active_job.queue_name_prefix = "studio_sante_active_production"
 
   config.action_mailer.perform_caching = false

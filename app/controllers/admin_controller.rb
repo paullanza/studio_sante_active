@@ -139,11 +139,10 @@ class AdminController < ApplicationController
     end
   end
 
+  # Runs in the background; a sync already running makes it wait its turn.
   def import_clients
-    msg = FliipApi::UserSync::UserImporter.call
-    redirect_to admin_dashboard_path, notice: msg
-  rescue => e
-    redirect_to admin_dashboard_path, alert: "Could not refresh clients: #{e.message}"
+    FliipFullSyncJob.perform_later
+    redirect_to admin_dashboard_path, notice: "Synchronisation Fliip lancée en arrière-plan. Suivez-la dans Tâches (/jobs)."
   end
 
   def client_services

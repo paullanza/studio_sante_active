@@ -10,6 +10,14 @@
 #     schedule: at 5am every day
 
 production:
+  # Fliip sync (docs/adr/0001-fliip-sync-jobs.md). Both share a concurrency
+  # key, so a recent sync due during the nightly one waits for it.
+  fliip_recent_sync:
+    class: FliipRecentSyncJob
+    schedule: "5 * * * * America/Toronto"
+  fliip_full_sync:
+    class: FliipFullSyncJob
+    schedule: "0 0 * * * America/Toronto"
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
