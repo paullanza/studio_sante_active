@@ -17,7 +17,9 @@ default: &default
   encoding: unicode
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
-  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  # Puma's threads plus Solid Queue's (workers, dispatcher, scheduler and
+  # supervisor heartbeats run as threads in the same process).
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 }.to_i + 5 %>
 
 development:
   <<: *default

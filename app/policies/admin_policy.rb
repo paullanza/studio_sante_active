@@ -23,6 +23,11 @@ class AdminPolicy < ApplicationPolicy
     admin_or_above?
   end
 
+  # Mission Control at /jobs.
+  def jobs?
+    admin_or_above?
+  end
+
   def import_clients?
     admin_or_above?
   end
