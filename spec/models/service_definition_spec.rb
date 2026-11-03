@@ -17,6 +17,21 @@ RSpec.describe ServiceDefinition, type: :model do
     expect(definition.fliip_services).to contain_exactly(service)
   end
 
+  describe ".ensure_for!" do
+    it "creates a 0/0 definition for each service type among these services that has none" do
+      known = create(:service_definition, paid_sessions: 8)
+      services = [
+        build(:fliip_service, service_definition: known),
+        build(:fliip_service, :without_definition, service_id: 7_001, service_name: "Pilates"),
+        build(:fliip_service, :without_definition, service_id: 7_001, service_name: "Pilates")
+      ]
+
+      expect(described_class.ensure_for!(services)).to eq(1)
+      expect(described_class.find_by!(service_id: 7_001)).to have_attributes(service_name: "Pilates", paid_sessions: 0, free_sessions: 0)
+      expect(known.reload.paid_sessions).to eq(8)
+    end
+  end
+
   describe ".create_missing_definitions!" do
     it "creates a 0/0 definition for each service type that has none" do
       service = create(:fliip_service, :without_definition, service_name: "Pilates")

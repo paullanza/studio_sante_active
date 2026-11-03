@@ -40,6 +40,17 @@ class ServiceDefinition < ApplicationRecord
   #            service_id   → from FliipService
   #            service_name → from FliipService
   #            paid_sessions / free_sessions set to 0 by default
+  # Creates a 0/0 definition, named after the service, for each service type
+  # among these services that has none. Admins set the allowance later.
+  def self.ensure_for!(fliip_services)
+    by_type = fliip_services.reject { |s| s.service_id.blank? }.index_by(&:service_id)
+    missing = by_type.keys - where(service_id: by_type.keys).pluck(:service_id)
+    missing.each do |service_id|
+      create!(service_id: service_id, service_name: by_type[service_id].service_name, paid_sessions: 0, free_sessions: 0)
+    end
+    missing.size
+  end
+
   def self.create_missing_definitions!
     service_ids = FliipService.distinct.pluck(:service_id)
     existing_ids = ServiceDefinition.pluck(:service_id)
