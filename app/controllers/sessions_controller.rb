@@ -151,13 +151,19 @@ class SessionsController < ApplicationController
   def refresh_clients
     authorize Session
 
-    msg = FliipApi::UserSync::NewUserImporter.call
-    redirect_to new_seance_path, notice: msg
-  rescue => e
-    redirect_to new_seance_path, alert: "Impossible de rafraîchir les client·e·s : #{e.message}"
+    summary = FliipApi::NewClients.new(client: FliipApi::Client.new).call
+    redirect_to new_seance_path, notice: new_clients_notice(summary)
+  rescue FliipApi::Unavailable => e
+    Rails.logger.error("[Fliip] refresh_clients failed: #{e.message}")
+    redirect_to new_seance_path, alert: "Fliip ne répond pas, réessayez plus tard."
   end
 
   private
+
+  def new_clients_notice(summary)
+    notice = summary.synced.zero? ? "Aucun·e nouveau·elle client·e dans Fliip." : "#{summary.synced} client·e(s) ajouté·e(s) depuis Fliip."
+    summary.failed.any? ? "#{notice} #{summary.failed.size} en échec, réessayez plus tard." : notice
+  end
 
   def load_staff
     @staff = policy(Session).change_owner? ? User.selectable.order(:last_name, :first_name) : []

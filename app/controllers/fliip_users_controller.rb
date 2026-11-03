@@ -46,9 +46,20 @@ class FliipUsersController < ApplicationController
   def refresh
     authorize FliipUser
 
-    remote_id = params[:remote_id]
-    msg = FliipApi::UserSync::UserUpdater.call(remote_id.to_i)
-    redirect_to fliip_user_path(FliipUser.find_by(remote_id: remote_id)), notice: msg
+    remote_id = Integer(params[:remote_id], exception: false)
+    return redirect_to(fliip_users_path, alert: "Client·e introuvable dans Fliip.") unless remote_id
+
+    result = FliipApi::UserSyncer.new(client: FliipApi::Client.new).call_by_remote_id(remote_id)
+    notice = result.changed? ? "Client·e mis·e à jour depuis Fliip." : "Client·e déjà à jour."
+    redirect_to fliip_user_path(result.user), notice: notice
+  rescue FliipApi::NotFound
+    # The syncer flagged the client (and their records) as missing from Fliip.
+    user = FliipUser.find_by(remote_id: remote_id)
+    target = user ? fliip_user_path(user) : fliip_users_path
+    redirect_to target, alert: "Client·e introuvable dans Fliip."
+  rescue FliipApi::Unavailable => e
+    Rails.logger.error("[Fliip] refresh of #{remote_id} failed: #{e.message}")
+    redirect_back fallback_location: fliip_users_path, alert: "Fliip ne répond pas, réessayez plus tard."
   end
 
   def suggest
