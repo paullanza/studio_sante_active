@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Internal staff app for Studio Santé Active, a fitness/health studio. Employees log training sessions ("séances") and consultations against client services that are mirrored from the **Fliip** gym-management API. Admins confirm sessions and consultations for payroll and adjust service usage. UI copy and validation messages are in **French**. App time zone is `Eastern Time (US & Canada)`.
 
-Stack: Rails 8.1, Ruby 3.4.9, PostgreSQL (needs the `unaccent` extension), Devise, Hotwire (Turbo + Stimulus via importmap, so there is no Node build step), Bootstrap 5 compiled by `dartsass-rails` and served by Propshaft, simple_form, pg_search, Pagy, Solid Queue. Deployed on Render with its native Ruby runtime, configured in the Render dashboard (there is no `render.yaml`): `bin/render-build.sh` runs migrations and seeds on every build, and a separate cron job runs `rake fliip:sync`.
+Stack: Rails 8.1, Ruby 3.4.9, PostgreSQL (needs the `unaccent` extension), Devise, Pundit, Hotwire (Turbo + Stimulus via importmap, so there is no Node build step), Bootstrap 5 compiled by `dartsass-rails` and served by Propshaft, simple_form, pg_search, Pagy, Solid Queue. Deployed on Render with its native Ruby runtime, configured in the Render dashboard (there is no `render.yaml`): `bin/render-build.sh` runs migrations and seeds on every build, and a separate cron job runs `rake fliip:sync`.
 
 Solo lead dev (Paul) owns all architecture and maintenance decisions. The app is in production, so production safety matters. Work happens in bursts after long quiet periods, so a snapshot of the code may be stale: read the current file before changing it.
 
@@ -74,9 +74,11 @@ Prefer Ruby scripts over bash for API experiments. Save their output files next 
 - A `Consultation` can be associated with at most one `FliipService` (enforced by a uniqueness check), within a window of −14 days to +3 months around `occurred_at`.
 
 ### Authorization
-There is currently no policy gem. Each controller has its own `before_action` guard (`ensure_admin!`, `require_manager_only!`, `ensure_management!`, `authorize_role_changes!`) plus model predicates (`modifiable_by?`, `editable_by?`). After login, `ApplicationController#after_sign_in_path_for` and `RootController#redirect` route users by role: admins go to `/admin/dashboard`, managers to `/manager/dashboard`, and employees to their profile. `ManagerController` deliberately sends admins back to the admin dashboard.
+Pundit handles authorization, with one policy per model or area in `app/policies/` (headless ones like `:admin`, `:manager` and `:booking` cover pages with no single record). `ApplicationController` runs `verify_authorized` after every non-Devise action, so every action must call `authorize` (or `policy_scope`) or explicitly call `skip_authorization`. `Pundit::NotAuthorizedError` is rescued into a redirect with a French alert (`head :forbidden` for JSON). Some controllers override `user_not_authorized` to keep a page-specific redirect.
 
-A migration to Pundit is planned (see Planned direction). Until then, don't add new ad hoc guard styles: reuse the existing guards, and write new authorization logic so it maps cleanly onto a policy later.
+- Role checks go in policies, using the `ApplicationPolicy::RoleHelpers` predicates (`manager_or_above?`, `admin_or_above?`, ...). `admin?` and `super_admin?` are deliberately separate. Don't add `before_action` role guards or inline role checks in controllers or views; ask the policy (`policy(record).update?`).
+- Record lists that depend on the role go through a policy `Scope`.
+- After login, `ApplicationController#after_sign_in_path_for` and `RootController#redirect` route users by role: admins go to `/admin/dashboard`, managers to `/manager/dashboard`, and employees to their profile.
 
 ### Filtering, search and CSV
 - Admin list filters go through each model's `apply_filters(params)`, which chains scopes. Search uses accent-insensitive `pg_search_scope`s.
@@ -104,12 +106,9 @@ Styles: Sass partials live in `app/assets/stylesheets/components/` and each must
 
 Work is sequenced in phases. Bugs and stability come first, so don't start a later phase early without checking with Paul:
 
-1. Bug fixes (nil-guard audit across controllers and views)
-2. Test suite foundation
-3. Gem and Rails upgrade (Rails 8, Propshaft replacing Sprockets)
-4. Pundit authorization migration
-5. Timesheet
-6. Analytics and client map
+1. Codebase audit and stabilization: section by section, from the Fliip sync up to the dashboards, with a front-end rebuild (dark only, mobile-first, no Bootstrap)
+2. Timesheet
+3. Analytics and client map
 
 ---
 
@@ -126,9 +125,9 @@ Work is sequenced in phases. Bugs and stability come first, so don't start a lat
 
 RSpec, FactoryBot (`spec/factories/`), Shoulda Matchers and Faker, with config in `spec/support/`. Request specs sign in with Devise's `sign_in`. `spec/factories_spec.rb` lints every factory and trait. Bullet is enabled in development only. CI (`.github/workflows/ci.yml`) runs Brakeman, bundler-audit, `bin/importmap audit`, RuboCop and RSpec on every pull request, plus a production boot check (production gems only, assets compiled twice, then booted); specs run on Postgres 16 like production, and the dependency audits also run weekly; the existing RuboCop offenses are listed in `.rubocop_todo.yml`, so new code must be clean.
 
-- The Fliip API is never called in specs: stub `FliipApi::ApiClient.new` with an `instance_double` (see `spec/services/fliip_api/user_sync/user_importer_spec.rb`).
-- Build coverage in this order: models, then services, then controller/request specs.
-- Every new file or class gets specs in the same pass. Controller changes and their request specs ship together.
+- The Fliip API is never called in specs, and WebMock blocks all outside network calls. `ApiClient` specs stub HTTP with WebMock; everything above it stubs `FliipApi::ApiClient.new` with an `instance_double` (see `spec/services/fliip_api/user_sync/user_importer_spec.rb`).
+- Policy specs live in `spec/policies/` and use pundit-matchers, with `user_for(role)` (from `spec/support/roles.rb`) to build one user per role. `spec/requests/role_access_spec.rb` is the route-by-role matrix: update it when a route or its access changes.
+- Every new file or class gets specs in the same pass. Controller changes ship with their request specs, and policy changes with their policy specs.
 - When adding to an existing spec file, add only the new block. Don't rewrite the whole file.
 - Request specs shouldn't match on `response.body` unless there is no other way. Prefer flat `context` structures over deeply nested ones.
 - `after_commit` callbacks don't fire in RSpec (transactions wrap specs and never truly commit). Test the private method directly via `send` instead.
@@ -152,7 +151,7 @@ Don't add editable local fields on top of Fliip-owned columns. Data migrations u
 ## Refactor safety
 
 - Never blind find-and-replace a method call across the app. First check whether the same value is used as a comparison or lookup key (case statements, `where` clauses, enum matching). Those keep their exact original value; only true display usages change.
-- Never suggest or start a change that needs significant refactoring without flagging the scope first. This matters most during the Rails 8 and Pundit work.
+- Never suggest or start a change that needs significant refactoring without flagging the scope first.
 
 ---
 
