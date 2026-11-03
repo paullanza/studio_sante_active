@@ -31,8 +31,6 @@ RSpec.describe "Admin", type: :request do
     Rack::Test::UploadedFile.new(StringIO.new("service_id,paid_used\n1,2\n"), "text/csv", original_filename: "adjustments.csv")
   end
 
-  before { allow(FliipApi::UserSync::UserImporter).to receive(:call).and_return("Sync complete") }
-
   context "when signed out" do
     it "redirects every admin route to sign-in" do
       admin_requests.except("client_services").each do |name, request|
@@ -98,11 +96,11 @@ RSpec.describe "Admin", type: :request do
         expect(response.headers["Content-Disposition"]).to include("clients_services_")
       end
 
-      it "imports clients from Fliip" do
-        post import_clients_path
+      it "enqueues the full Fliip sync instead of running it in the request" do
+        expect { post import_clients_path }.to have_enqueued_job(FliipFullSyncJob)
 
-        expect(FliipApi::UserSync::UserImporter).to have_received(:call)
-        expect(flash[:notice]).to eq("Sync complete")
+        expect(response).to redirect_to(admin_dashboard_path)
+        expect(flash[:notice]).to start_with("Synchronisation Fliip lancée en arrière-plan.")
       end
 
       it "previews then commits an adjustments CSV for the chosen employee" do
