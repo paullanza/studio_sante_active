@@ -165,3 +165,19 @@ Work is tracked in Linear.
 - Issue descriptions are first person, concise but detailed, scoped as a single branch of work. Describe only what is done or what is left.
 - `save_issue` with `parentId: None` clears parent/child links. `blockedBy` takes an array of issue IDs. State names work as literal strings. Project updates need the project ID, not the name.
 - `save_project` 502 timeouts often succeed server-side. Verify with `get_project` before retrying.
+
+---
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in Linear (team Informatique), accessed through the Linear MCP tools. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default triage labels, as the optional single-select "Triage" label group in Linear. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
