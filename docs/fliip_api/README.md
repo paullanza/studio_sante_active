@@ -33,6 +33,13 @@ The studio's API secret goes in the `Authorization` header (Fliip accepts the ra
 
 - **Paging.** Request `limit=100` plus `offset` until a page comes back short or empty. The spec documents a maximum of 250, but very high limits return `400 Bad Request` with an empty body. `/staff/get` is called without paging; the staff list is small.
 - **Errors have no body.** 400, 401 and 403 responses are empty. `ApiClient` logs the status and returns `[]`, so an outage looks like "no data". `fetch_all_users` returns whatever pages it got before a failure, without logging.
+- **Unknown user vs no data.** The per-user endpoints return `400` (empty body) for a user id Fliip doesn't know, and `200 []` when the user has no services or contracts.
+- **`/users/get` is sorted by `user_id`, newest first.** New clients are at the start of the first page.
+- **Services: `get_history` returns everything.** It includes the active and suspended services from `get` and the planned ones from `get_future`, with identical values, so one call covers a user's services.
+- **Contracts: the three endpoints don't overlap.** `get` returns active and suspended, `get_future` planned (with a `null` status), `get_history` inactive and cancelled. All three are needed.
+- **No deletions are reported.** A service or contract deleted in Fliip (typically the same day it was created, before payment) simply stops being returned.
+- **`user_status` doesn't reflect reality.** Clients with live services are often "inactive". Use service and contract statuses and dates instead.
+- **`/gate/getChangedUsers` isn't a reliable change feed.** It only lists users who have a contract, Fliip documents it as profile changes only, and it doesn't report deletions or derived status changes.
 - **Ids are numeric strings** (`"user_id": "123"`). The sync converts them with `to_i` into `remote_id`, `remote_contract_id` and `remote_purchase_id`.
 - **Clients and staff share one shape.** `user_role` is `"user"` for clients; anything else is staff (`FliipUser#staff?`).
 - **Several date formats:** `YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` without a time zone, ISO 8601, and display strings in visits. Invalid dates become `nil`. Zoneless timestamps such as `purchase_date` are stored as UTC.

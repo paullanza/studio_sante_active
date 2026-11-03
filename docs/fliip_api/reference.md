@@ -6,7 +6,8 @@ Examples in `examples/` use fake data; shapes and types follow the spec. `[]` me
 
 ## Auth
 - `/api/v2` endpoints: studio API Secret key in the `Authorization` header (raw or `Bearer <key>`).
-- `/gate/*` endpoints: `secret_key` field in the request body (no header) — except `getCheckedInMembers`, which takes a user Bearer token.
+- `/gate/*` endpoints: `secret_key` field in the request body (no header) — except `getCheckedInMembers`, which takes a user Bearer token. The studio's regular API key works as `secret_key`.
+- `/gate/*` endpoints are v1-routed: base URL `https://static.fliipapp.com/api`, **not** `/api/v2` (which returns 404 for them).
 
 ## Endpoint index
 
