@@ -5,6 +5,8 @@ class FliipContract < ApplicationRecord
   # Each contract belongs to a specific FliipUser (client) in our system.
   belongs_to :fliip_user, inverse_of: :fliip_contracts
 
+  validates :remote_contract_id, presence: true, uniqueness: true
+
   # -----------------------------------------
   # Status Mapping
   # -----------------------------------------

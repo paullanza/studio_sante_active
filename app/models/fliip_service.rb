@@ -3,6 +3,8 @@ class FliipService < ApplicationRecord
   # Associations
   # -----------------------------------------
   belongs_to :fliip_user, inverse_of: :fliip_services
+
+  validates :remote_purchase_id, presence: true, uniqueness: true
   has_many   :sessions, dependent: :restrict_with_error, inverse_of: :fliip_service
   belongs_to :service_definition,
               primary_key: :service_id,

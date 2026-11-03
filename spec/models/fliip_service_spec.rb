@@ -4,6 +4,19 @@ RSpec.describe FliipService, type: :model do
   let(:definition) { create(:service_definition, paid_sessions: 10, free_sessions: 2) }
   let(:service)    { create(:fliip_service, service_definition: definition) }
 
+  describe "validations" do
+    subject { build(:fliip_service) }
+
+    it { is_expected.to validate_presence_of(:remote_purchase_id) }
+    it { is_expected.to validate_uniqueness_of(:remote_purchase_id) }
+
+    it "is backed by a unique index" do
+      existing = create(:fliip_service)
+      copy = build(:fliip_service, fliip_user: existing.fliip_user, service_definition: existing.service_definition, remote_purchase_id: existing.remote_purchase_id)
+      expect { copy.save!(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique)
+    end
+  end
+
   describe "usage totals" do
     it "starts with the full allowance remaining" do
       expect(service.remaining_paid_sessions).to eq(10.0)

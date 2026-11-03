@@ -10,9 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_10_16_162620) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_03_171315) do
   # These are extensions that must be enabled in order to support this database
-  enable_extension "plpgsql"
+  enable_extension "pg_catalog.plpgsql"
   enable_extension "unaccent"
 
   create_table "consultations", force: :cascade do |t|
@@ -38,7 +38,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_16_162620) do
   end
 
   create_table "fliip_contracts", force: :cascade do |t|
-    t.bigint "remote_contract_id"
+    t.bigint "remote_contract_id", null: false
     t.bigint "fliip_user_id", null: false
     t.string "status"
     t.date "start_date"
@@ -63,11 +63,11 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_16_162620) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["fliip_user_id"], name: "index_fliip_contracts_on_fliip_user_id"
-    t.index ["remote_contract_id"], name: "index_fliip_contracts_on_remote_contract_id"
+    t.index ["remote_contract_id"], name: "index_fliip_contracts_on_remote_contract_id", unique: true
   end
 
   create_table "fliip_services", force: :cascade do |t|
-    t.bigint "remote_purchase_id"
+    t.bigint "remote_purchase_id", null: false
     t.bigint "fliip_user_id", null: false
     t.string "purchase_status"
     t.date "start_date"
@@ -92,11 +92,11 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_16_162620) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["fliip_user_id"], name: "index_fliip_services_on_fliip_user_id"
-    t.index ["remote_purchase_id"], name: "index_fliip_services_on_remote_purchase_id"
+    t.index ["remote_purchase_id"], name: "index_fliip_services_on_remote_purchase_id", unique: true
   end
 
   create_table "fliip_users", force: :cascade do |t|
-    t.bigint "remote_id"
+    t.bigint "remote_id", null: false
     t.string "custom_id"
     t.string "user_role"
     t.string "user_firstname"
@@ -117,7 +117,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_10_16_162620) do
     t.date "member_since"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["remote_id"], name: "index_fliip_users_on_remote_id"
+    t.index ["remote_id"], name: "index_fliip_users_on_remote_id", unique: true
   end
 
   create_table "service_definitions", force: :cascade do |t|
