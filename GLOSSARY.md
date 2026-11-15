@@ -57,6 +57,10 @@ _Avoid_: Late cancellation, charged absence
 **Presence** (« présent » / « absent »):
 Whether the client or prospect showed up. It is always logged, on séances and consultations alike.
 
+**Overrun** (« dépassement », shown as « 12 mois + 17 j »):
+The number of days a service's start-to-end span runs past its expected length. Spans over 365 days are measured against 12 months, and spans over 90 days against 3 months.
+_Avoid_: Extension, overtime
+
 **Complete service** (« Toutes les séances utilisées »):
 A service with no séances left. It can't be booked, even if it still has absences, because an absence can never stand in for a séance.
 _Avoid_: Expired, finished (those are about dates)
