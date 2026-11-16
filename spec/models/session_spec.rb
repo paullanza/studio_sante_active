@@ -198,6 +198,9 @@ RSpec.describe Session, type: :model do
   end
 
   describe "filters" do
+    # Freeze time before the let! records: the service factory dates itself from "now".
+    before { travel_to Time.zone.local(2026, 10, 25, 12) }
+
     let(:roomy)  { create(:fliip_service, service_definition: create(:service_definition, paid_sessions: 20, free_sessions: 5)) }
     let(:other)  { create(:user) }
     let!(:present_paid) do
@@ -206,8 +209,6 @@ RSpec.describe Session, type: :model do
     let!(:absent_free) do
       create(:session, fliip_service: roomy, user: other, present: false, occurred_at: Time.zone.local(2026, 10, 20, 10))
     end
-
-    before { travel_to Time.zone.local(2026, 10, 25, 12) }
 
     it ".by_employee filters by user and ignores a blank id" do
       expect(described_class.by_employee(staff.id)).to contain_exactly(present_paid)
