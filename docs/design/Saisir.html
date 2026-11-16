@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Saisir</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700&amp;family=Lato:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;background:#0E1411}
+a{color:#6FBF8E}a:hover{color:#8FD6A9}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1900px; box-sizing: border-box; background: #0E1411; color: #ECEFEA; font-family: Lato, sans-serif; display: flex; flex-direction: column">
+
+  <nav aria-label="Navigation principale" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); background: #16201A; border-bottom: 1px solid #2C3B31; padding: 4px 4px 0">
+    <sc-for list="{{nav}}" as="n" hint-placeholder-count="5">
+      <a href="{{n.href}}" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font-size: 12px; font-weight: 700; color: {{n.color}}; border-bottom: 3px solid {{n.line}}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{n.icon}}"></path></svg>
+        {{n.label}}
+      </a>
+    </sc-for>
+  </nav>
+
+  <main style="flex-grow: 1; display: flex; flex-direction: column; gap: 18px; padding: 16px 16px 32px">
+
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+      <h1 style="margin: 0; font-family: Barlow, sans-serif; font-weight: 700; font-size: 26px">Saisir</h1>
+      <button type="button" style="min-height: 44px; padding: 0 12px; border: 1px solid #3E7A55; border-radius: 10px; background: #1E2B23; color: #ECEFEA; font-family: Lato, sans-serif; font-weight: 700; font-size: 13px">Rafraîchir les clients</button>
+    </div>
+
+    <div role="tablist" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid #2C3B31; border-radius: 12px; overflow: hidden">
+      <button type="button" role="tab" aria-selected="true" style="min-height: 48px; border: 0; background: #2F6B47; color: #FFFFFF; font-family: Barlow, sans-serif; font-weight: 600; font-size: 16px">Séance</button>
+      <button type="button" role="tab" aria-selected="false" style="min-height: 48px; border: 0; background: #16201A; color: #A3B0A7; font-family: Barlow, sans-serif; font-weight: 600; font-size: 16px">Consultation</button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="client" style="font-size: 14px; font-weight: 700">Client·e</label>
+      <input id="client" value="Ysolde Brisebois" style="min-height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid #3E7A55; border-radius: 10px; background: #0E1411; color: #ECEFEA; font-family: Lato, sans-serif; font-size: 16px">
+      <div style="font-size: 12px; color: #A3B0A7; font-variant-numeric: tabular-nums">ID 2006 · FliipUserID 2744232</div>
+    </div>
+
+    <fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 8px">
+      <legend style="font-size: 14px; font-weight: 700; margin-bottom: 8px">Service</legend>
+      <label style="display: flex; gap: 12px; align-items: flex-start; background: #16201A; border: 2px solid #D4A537; border-radius: 12px; padding: 12px 14px">
+        <input type="radio" name="svc" checked style="width: 20px; height: 20px; margin: 2px 0 0; accent-color: #D4A537">
+        <span style="display: flex; flex-direction: column; gap: 4px">
+          <span style="font-weight: 700; font-size: 15px">Ent. privé, 12 mois, 1x/mois</span>
+          <span style="font-size: 13px; color: #A3B0A7">10 séances · 2 absences restantes · jusqu'au 25/10/2027</span>
+          <span style="font-size: 12px; color: #A3B0A7; font-variant-numeric: tabular-nums">Serv# 2128 · Achat# 322932 · DefID 6770</span>
+        </span>
+      </label>
+      <div style="display: flex; gap: 12px; align-items: flex-start; background: #121A15; border: 1px solid #2C3B31; border-radius: 12px; padding: 12px 14px; color: #A3B0A7">
+        <span style="width: 20px; height: 20px; flex-shrink: 0"></span>
+        <span style="display: flex; flex-direction: column; gap: 4px">
+          <span style="font-weight: 700; font-size: 15px">Ent. privé, 3 mois, 2x/sem</span>
+          <span style="font-size: 13px">Toutes les séances utilisées</span>
+        </span>
+      </div>
+    </fieldset>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="date" style="font-size: 14px; font-weight: 700">Date</label>
+        <input id="date" value="15/11/2026" style="min-height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid #2C3B31; border-radius: 10px; background: #0E1411; color: #ECEFEA; font-family: Lato, sans-serif; font-size: 16px; width: 100%">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="heure" style="font-size: 14px; font-weight: 700">Heure</label>
+        <input id="heure" value="17:00" style="min-height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid #2C3B31; border-radius: 10px; background: #0E1411; color: #ECEFEA; font-family: Lato, sans-serif; font-size: 16px; width: 100%">
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 14px; font-weight: 700">Présence</div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid #2C3B31; border-radius: 10px; overflow: hidden">
+        <button type="button" onClick="{{setPresent}}" style="min-height: 48px; border: 0; font-family: Lato, sans-serif; font-weight: 700; font-size: 15px; background: {{presentBg}}; color: {{presentFg}}">Présent·e</button>
+        <button type="button" onClick="{{setAbsent}}" style="min-height: 48px; border: 0; font-family: Lato, sans-serif; font-weight: 700; font-size: 15px; background: {{absentBg}}; color: {{absentFg}}">Absent·e</button>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 14px; font-weight: 700">Durée</div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid #2C3B31; border-radius: 10px; overflow: hidden">
+        <button type="button" style="min-height: 48px; border: 0; background: #2F6B47; color: #FFFFFF; font-family: Lato, sans-serif; font-weight: 700; font-size: 15px">1 h</button>
+        <button type="button" style="min-height: 48px; border: 0; background: #16201A; color: #A3B0A7; font-family: Lato, sans-serif; font-weight: 700; font-size: 15px">30 min</button>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #16201A; border: 1px solid #2C3B31; border-radius: 12px; padding: 12px 14px">
+      <span style="font-size: 14px; color: #A3B0A7">Cette séance sera enregistrée comme</span>
+      <span style="padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; background: {{outcomeBg}}; color: {{outcomeFg}}">{{outcome}}</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="note" style="font-size: 14px; font-weight: 700">Note</label>
+      <textarea id="note" rows="3" style="box-sizing: border-box; padding: 12px 14px; border: 1px solid #2C3B31; border-radius: 10px; background: #0E1411; color: #ECEFEA; font-family: Lato, sans-serif; font-size: 16px; resize: vertical"></textarea>
+    </div>
+
+    <button type="button" style="min-height: 52px; border: 0; border-radius: 12px; background: #D4A537; color: #14110A; font-family: Barlow, sans-serif; font-weight: 700; font-size: 17px">Enregistrer la séance</button>
+
+    <section style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <h2 style="margin: 0; font-family: Barlow, sans-serif; font-weight: 600; font-size: 20px">10 dernières séances</h2>
+        <span style="font-size: 13px; color: #A3B0A7">Ysolde Brisebois</span>
+      </div>
+      <sc-for list="{{recent}}" as="r" hint-placeholder-count="10">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; background: #16201A; border: 1px solid #2C3B31; border-radius: 10px; padding: 10px 12px">
+          <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+            <span style="font-size: 14px; font-weight: 700">{{r.date}} · {{r.duration}}</span>
+            <span style="font-size: 12px; color: #A3B0A7">{{r.trainer}} · {{r.service}}</span>
+          </div>
+          <span style="padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; background: {{r.bg}}; color: {{r.fg}}">{{r.type}}</span>
+        </div>
+      </sc-for>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1900}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { present: true }; }
+  renderVals() {
+    const p = this.state.present;
+    const on = { bg: '#2F6B47', fg: '#FFFFFF' };
+    const off = { bg: '#16201A', fg: '#A3B0A7' };
+    const C = { type: 'Chargée', bg: '#1F3A2A', fg: '#8FD6A9' };
+    const A = { type: 'Absence', bg: '#2A2E3D', fg: '#A9B8F0' };
+    const M = { type: '-24h', bg: '#3D2E1A', fg: '#F2B66D' };
+    const longSvc = 'Ent. privé, 12 mois';
+    const oldSvc = 'Ent. privé, 3 mois';
+    return {
+      setPresent: () => this.setState({ present: true }),
+      setAbsent: () => this.setState({ present: false }),
+      presentBg: p ? on.bg : off.bg, presentFg: p ? on.fg : off.fg,
+      absentBg: p ? off.bg : on.bg, absentFg: p ? off.fg : on.fg,
+      outcome: p ? 'Chargée' : 'Absence',
+      outcomeBg: p ? '#1F3A2A' : '#2A2E3D',
+      outcomeFg: p ? '#8FD6A9' : '#A9B8F0',
+      recent: [
+        { date: '13/11 · 17 h 00', duration: '1 h', trainer: 'Thoren Lachance', service: longSvc, ...C },
+        { date: '6/11 · 17 h 00', duration: '1 h', trainer: 'Thoren Lachance', service: longSvc, ...A },
+        { date: '30/10 · 17 h 30', duration: '30 min', trainer: 'Morwen Duchesne', service: longSvc, ...C },
+        { date: '23/10 · 17 h 00', duration: '1 h', trainer: 'Thoren Lachance', service: oldSvc, ...C },
+        { date: '21/10 · 17 h 00', duration: '1 h', trainer: 'Thoren Lachance', service: oldSvc, ...M },
+        { date: '16/10 · 17 h 00', duration: '1 h', trainer: 'Thoren Lachance', service: oldSvc, ...C },
+        { date: '14/10 · 17 h 00', duration: '1 h', trainer: 'Thoren Lachance', service: oldSvc, ...A },
+        { date: '9/10 · 17 h 00', duration: '1 h', trainer: 'Morwen Duchesne', service: oldSvc, ...C },
+        { date: '7/10 · 17 h 00', duration: '1 h', trainer: 'Thoren Lachance', service: oldSvc, ...C },
+        { date: '2/10 · 17 h 00', duration: '1 h', trainer: 'Thoren Lachance', service: oldSvc, ...C }
+      ],
+      nav: [
+        { label: 'Dashboard', href: '#', color: '#A3B0A7', line: 'transparent', icon: 'M3 11l9-8 9 8M5 10v10h14V10' },
+        { label: 'Clients', href: 'Client.dc.html', color: '#A3B0A7', line: 'transparent', icon: 'M16 20v-2a4 4 0 0 0-8 0v2M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z' },
+        { label: 'Saisir', href: 'Saisir.dc.html', color: '#D4A537', line: '#D4A537', icon: 'M12 5v14M5 12h14' },
+        { label: 'Mes services', href: 'Service.dc.html', color: '#A3B0A7', line: 'transparent', icon: 'M4 6h16M4 12h16M4 18h10' },
+        { label: 'Plus', href: '#', color: '#A3B0A7', line: 'transparent', icon: 'M5 12h.01M12 12h.01M19 12h.01' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
