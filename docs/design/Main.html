@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Feuille de style</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700&amp;family=Lato:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;background:#0E1411}
+a{color:#D4A537}a:hover{color:#E6BE5C}
+</style>
+</helmet>
+<div style="width: 1200px; min-height: 1480px; box-sizing: border-box; padding: 64px; background: #0E1411; color: #ECEFEA; font-family: Lato, sans-serif; display: flex; flex-direction: column; gap: 48px">
+
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="font-family: Barlow, sans-serif; font-weight: 600; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; color: #6FBF8E">Studio Santé Active</div>
+    <h1 style="margin: 0; font-family: Barlow, sans-serif; font-weight: 700; font-size: 48px; line-height: 1.1">Feuille de style</h1>
+    <p style="margin: 0; font-size: 16px; color: #A3B0A7; max-width: 640px">Thème sombre unique. Le vert forêt porte la marque, l'or est la couleur d'accent : action principale, onglet actif et mises en avant. Tous les couples texte et fond atteignent le niveau AA.</p>
+  </div>
+
+  <section style="display: flex; flex-direction: column; gap: 16px">
+    <h2 style="margin: 0; font-family: Barlow, sans-serif; font-weight: 600; font-size: 24px">Couleurs</h2>
+    <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px">
+      <sc-for list="{{colors}}" as="c" hint-placeholder-count="12">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <div style="height: 72px; border-radius: 10px; border: 1px solid #2C3B31; background: {{c.hex}}"></div>
+          <div style="font-size: 14px; font-weight: 700">{{c.name}}</div>
+          <div style="font-size: 12px; color: #A3B0A7">{{c.hex}} · {{c.use}}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 16px">
+    <h2 style="margin: 0; font-family: Barlow, sans-serif; font-weight: 600; font-size: 24px">Typographie</h2>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; background: #16201A; border: 1px solid #2C3B31; border-radius: 14px; padding: 32px">
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <div style="font-size: 12px; color: #A3B0A7">Barlow · titres</div>
+        <div style="font-family: Barlow, sans-serif; font-weight: 700; font-size: 32px">Titre de page 32</div>
+        <div style="font-family: Barlow, sans-serif; font-weight: 600; font-size: 22px">Titre de section 22</div>
+        <div style="font-family: Barlow, sans-serif; font-weight: 600; font-size: 17px">Titre de carte 17</div>
+        <div style="font-family: Barlow, sans-serif; font-weight: 600; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #6FBF8E">Étiquette 13</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <div style="font-size: 12px; color: #A3B0A7">Lato · texte</div>
+        <div style="font-size: 16px; line-height: 1.5">Texte courant 16. Séance de 1 h avec présence notée et une note pour le dossier.</div>
+        <div style="font-size: 14px; line-height: 1.5; color: #A3B0A7">Texte secondaire 14, pour les dates, les compteurs et les détails.</div>
+        <div style="font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums">12 / 20</div>
+      </div>
+    </div>
+  </section>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px">
+    <section style="display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-family: Barlow, sans-serif; font-weight: 600; font-size: 24px">Boutons</h2>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+        <button type="button" style="min-height: 48px; padding: 0 22px; border: 0; border-radius: 10px; background: #D4A537; color: #14110A; font-family: Barlow, sans-serif; font-weight: 700; font-size: 16px">Saisir une séance</button>
+        <button type="button" style="min-height: 48px; padding: 0 22px; border: 1px solid #3E7A55; border-radius: 10px; background: #1E2B23; color: #ECEFEA; font-family: Barlow, sans-serif; font-weight: 600; font-size: 16px">Modifier</button>
+        <button type="button" style="min-height: 48px; padding: 0 18px; border: 0; border-radius: 10px; background: transparent; color: #6FBF8E; font-family: Barlow, sans-serif; font-weight: 600; font-size: 16px">Annuler</button>
+        <button type="button" style="min-height: 48px; padding: 0 22px; border: 1px solid #8C3A3A; border-radius: 10px; background: transparent; color: #F08A8A; font-family: Barlow, sans-serif; font-weight: 600; font-size: 16px">Supprimer</button>
+      </div>
+      <p style="margin: 0; font-size: 14px; color: #A3B0A7">Un seul bouton or par écran. Cibles tactiles de 48 px minimum.</p>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-family: Barlow, sans-serif; font-weight: 600; font-size: 24px">Pastilles</h2>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px">
+        <span style="padding: 5px 12px; border-radius: 999px; background: #1F3A2A; color: #8FD6A9; font-size: 13px; font-weight: 700">Chargée</span>
+        <span style="padding: 5px 12px; border-radius: 999px; background: #2A2E3D; color: #A9B8F0; font-size: 13px; font-weight: 700">Absence</span>
+        <span style="padding: 5px 12px; border-radius: 999px; background: #3D2E1A; color: #F2B66D; font-size: 13px; font-weight: 700">-24h</span>
+        <span style="padding: 5px 12px; border-radius: 999px; background: #33301A; color: #E6CC6A; font-size: 13px; font-weight: 700">Non confirmée</span>
+        <span style="padding: 5px 12px; border-radius: 999px; background: #1E2B23; color: #A3B0A7; font-size: 13px; font-weight: 700; border: 1px solid #2C3B31">Confirmée</span>
+        <span style="padding: 5px 12px; border-radius: 999px; background: #3A1F22; color: #F08A8A; font-size: 13px; font-weight: 700">Retiré de Fliip</span>
+      </div>
+      <p style="margin: 0; font-size: 14px; color: #A3B0A7">Chaque issue a sa teinte et son libellé, jamais la couleur seule.</p>
+    </section>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px">
+    <section style="display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-family: Barlow, sans-serif; font-weight: 600; font-size: 24px">Champs</h2>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="f1" style="font-size: 14px; font-weight: 700">Client·e</label>
+        <input id="f1" value="Ysolde Brisebois" style="min-height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid #3E7A55; border-radius: 10px; background: #0E1411; color: #ECEFEA; font-family: Lato, sans-serif; font-size: 16px">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="f2" style="font-size: 14px; font-weight: 700">Téléphone</label>
+        <input id="f2" value="1" style="min-height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid #C65B5B; border-radius: 10px; background: #0E1411; color: #ECEFEA; font-family: Lato, sans-serif; font-size: 16px">
+        <div style="font-size: 13px; color: #F08A8A">doit contenir 10 chiffres</div>
+      </div>
+      <div style="display: flex; gap: 0; border: 1px solid #2C3B31; border-radius: 10px; overflow: hidden; width: fit-content">
+        <button type="button" style="min-height: 44px; padding: 0 20px; border: 0; background: #2F6B47; color: #FFFFFF; font-weight: 700; font-family: Lato, sans-serif; font-size: 15px">1 h</button>
+        <button type="button" style="min-height: 44px; padding: 0 20px; border: 0; background: #16201A; color: #A3B0A7; font-weight: 700; font-family: Lato, sans-serif; font-size: 15px">30 min</button>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-family: Barlow, sans-serif; font-weight: 600; font-size: 24px">Barres de progression</h2>
+      <p style="margin: 0; font-size: 14px; color: #A3B0A7">Couleurs et règles actuelles conservées : bleu par défaut, gris à 100 %. Les séances qui prennent du retard sur le temps passent au jaune (15 à 24 points), orange (25 à 39) puis rouge (40 et plus).</p>
+      <sc-for list="{{bars}}" as="b" hint-placeholder-count="5">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <div style="display: flex; justify-content: space-between; font-size: 13px"><span style="font-weight: 700">{{b.label}}</span><span style="color: #A3B0A7">{{b.pct}} %</span></div>
+          <div style="height: 10px; border-radius: 999px; background: #26332B; overflow: hidden"><div style="height: 100%; border-radius: 999px; width: {{b.pct}}%; background: {{b.color}}"></div></div>
+        </div>
+      </sc-for>
+    </section>
+  </div>
+
+  <section style="display: flex; flex-direction: column; gap: 16px">
+    <h2 style="margin: 0; font-family: Barlow, sans-serif; font-weight: 600; font-size: 24px">Navigation mobile</h2>
+    <div style="width: 390px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); background: #16201A; border: 1px solid #2C3B31; border-radius: 14px; padding: 8px 4px">
+      <sc-for list="{{nav}}" as="n" hint-placeholder-count="5">
+        <a href="#" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font-size: 12px; font-weight: 700; color: {{n.color}}">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{n.icon}}"></path></svg>
+          {{n.label}}
+        </a>
+      </sc-for>
+    </div>
+    <p style="margin: 0; font-size: 14px; color: #A3B0A7">En haut de l'écran, sur mobile comme sur ordinateur : quatre actions quotidiennes et « Plus ». L'onglet actif est en or, souligné.</p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":1480}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      colors: [
+        { name: 'Fond', hex: '#0E1411', use: 'page' },
+        { name: 'Surface', hex: '#16201A', use: 'cartes' },
+        { name: 'Surface 2', hex: '#1E2B23', use: 'champs, survol' },
+        { name: 'Bordure', hex: '#2C3B31', use: 'séparateurs' },
+        { name: 'Vert forêt', hex: '#2F6B47', use: 'marque, actif' },
+        { name: 'Vert clair', hex: '#6FBF8E', use: 'liens, étiquettes' },
+        { name: 'Or', hex: '#D4A537', use: 'action principale' },
+        { name: 'Texte', hex: '#ECEFEA', use: 'texte' },
+        { name: 'Texte 2', hex: '#A3B0A7', use: 'secondaire' },
+        { name: 'Sur or', hex: '#14110A', use: 'texte sur or' },
+        { name: 'Erreur', hex: '#F08A8A', use: 'erreurs' },
+        { name: 'Bleu barre', hex: '#0D6EFD', use: 'progression' }
+      ],
+      bars: [
+        { label: 'Temps écoulé', pct: 55, color: '#0D6EFD' },
+        { label: 'Séances, dans les temps', pct: 50, color: '#0D6EFD' },
+        { label: 'Séances, 15 à 24 points de retard', pct: 35, color: '#FFC107' },
+        { label: 'Séances, 25 à 39 points de retard', pct: 25, color: '#FD7E14' },
+        { label: 'Séances, 40 points et plus', pct: 10, color: '#DC3545' },
+        { label: 'Terminé', pct: 100, color: '#6C757D' }
+      ],
+      nav: [
+        { label: 'Dashboard', color: '#D4A537', icon: 'M3 11l9-8 9 8M5 10v10h14V10' },
+        { label: 'Clients', color: '#A3B0A7', icon: 'M16 20v-2a4 4 0 0 0-8 0v2M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z' },
+        { label: 'Saisir', color: '#A3B0A7', icon: 'M12 5v14M5 12h14' },
+        { label: 'Mes services', color: '#A3B0A7', icon: 'M4 6h16M4 12h16M4 18h10' },
+        { label: 'Plus', color: '#A3B0A7', icon: 'M5 12h.01M12 12h.01M19 12h.01' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
