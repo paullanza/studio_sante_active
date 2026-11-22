@@ -1,0 +1,6 @@
+// Entry point for the new layout (layouts/studio). No Bootstrap.
+// Components are documented in docs/ui.md.
+@use "studio/tokens";
+@use "studio/fonts";
+@use "studio/base";
+@use "studio/progress";

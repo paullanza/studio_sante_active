@@ -1,0 +1,68 @@
+// Design tokens for the new layout (docs/ui.md). Components use only these
+// variables, never raw hex, so a theme can swap them later (ENG-182).
+:root {
+  color-scheme: dark;
+
+  // Surfaces
+  --bg: #0E1411;
+  --surface: #16201A;
+  --surface-2: #1E2B23;
+  --border: #2C3B31;
+  --border-strong: #3E7A55;
+
+  // Brand and accent
+  --brand: #2F6B47;
+  --on-brand: #FFFFFF;
+  --brand-light: #6FBF8E;
+  --accent: #D4A537;
+  --accent-hover: #E6BE5C;
+  --on-accent: #14110A;
+
+  // Text
+  --text: #ECEFEA;
+  --text-muted: #A3B0A7;
+
+  // Errors and destructive actions
+  --danger: #F08A8A;
+  --danger-border: #8C3A3A;
+  --field-invalid-border: #C65B5B;
+
+  // Badges: background / text pairs
+  --badge-chargee-bg: #1F3A2A;
+  --badge-chargee-fg: #8FD6A9;
+  --badge-absence-bg: #2A2E3D;
+  --badge-absence-fg: #A9B8F0;
+  --badge-moins24-bg: #3D2E1A;
+  --badge-moins24-fg: #F2B66D;
+  --badge-unconfirmed-bg: #33301A;
+  --badge-unconfirmed-fg: #E6CC6A;
+  --badge-retire-bg: #3A1F22;
+  --badge-retire-fg: #F08A8A;
+
+  // Progress bars: colours and rules unchanged from the old layout
+  --progress-track: #26332B;
+  --progress-primary: #0D6EFD;
+  --progress-secondary: #6C757D;
+  --progress-warning: #FFC107;
+  --progress-orange: #FD7E14;
+  --progress-danger: #DC3545;
+  --progress-success: #198754;
+  --progress-info: #0DCAF0;
+  --progress-label-dark: #14110A;
+  --progress-label-light: #FFFFFF;
+
+  // Type
+  --font-heading: "Barlow", system-ui, sans-serif;
+  --font-body: "Lato", system-ui, sans-serif;
+
+  // Shape and sizing
+  --radius: 10px;
+  --radius-card: 12px;
+  --radius-top-card: 16px;
+  --radius-pill: 999px;
+  --touch-target: 44px;
+  --control-height: 48px;
+  --primary-height: 52px;
+  --gutter: 16px;
+  --page-max-width: 960px;
+}

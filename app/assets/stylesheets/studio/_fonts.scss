@@ -1,0 +1,41 @@
+// Self-hosted fonts (app/assets/fonts, OFL licence in OFL.txt). Files are
+// referenced by bare name so Propshaft rewrites them to digested paths.
+@font-face {
+  font-family: "Barlow";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("barlow-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Barlow";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("barlow-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Barlow";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("barlow-latin-700-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Lato";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("lato-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Lato";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("lato-latin-700-normal.woff2") format("woff2");
+}
