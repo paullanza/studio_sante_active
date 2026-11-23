@@ -90,13 +90,12 @@ body:has(.top-nav) .brand-bar {
 }
 
 // Signed-out pages with a form (sign in, sign up). On a phone: the welcome
-// panel, the form, then the link to the other page. From 1024 px: the panel
-// and that link in a left column beside the form, which gets the rest of the
-// page.
+// panel, then the form. From 1024 px: the panel in a left column beside the
+// form, which gets the rest of the page.
 .auth-split {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "panel" "form" "foot";
+  grid-template-areas: "panel" "form";
   gap: 24px;
   padding-top: 16px;
 }
@@ -128,10 +127,11 @@ body:has(.top-nav) .brand-bar {
   grid-area: form;
 }
 
-// The way to the other auth page: a card with a line of context and a
-// secondary button, so it reads as a real next step, not fine print.
-.auth-split__foot {
-  grid-area: foot;
+// The way to the other auth page, in the form's actions: a card with a line
+// of context and a secondary button, so it reads as a real next step, not
+// fine print. Under the gold button on a phone; beside it, on its left, from
+// 768 px.
+.auth-switch {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -142,18 +142,26 @@ body:has(.top-nav) .brand-bar {
   background: var(--surface);
 }
 
-.auth-split__foot p {
+.auth-switch p {
   margin: 0;
   font-size: 15px;
   color: var(--text-muted);
 }
 
+@media (min-width: 768px) {
+  .form-actions .auth-switch {
+    order: -1;
+    flex: 0 1 auto;
+    margin-right: auto;
+  }
+}
+
 @media (min-width: 1024px) {
   .auth-split {
     grid-template-columns: 300px minmax(0, 1fr);
-    grid-template-rows: auto 1fr;
-    grid-template-areas: "panel form" "foot form";
-    gap: 16px 48px;
+    grid-template-areas: "panel form";
+    align-items: start;
+    gap: 48px;
     padding-top: 40px;
   }
 
