@@ -2,7 +2,7 @@
 // gold with a gold underline. « Plus » is a <details> menu, no JS.
 .top-nav {
   position: sticky;
-  top: 0;
+  top: var(--safe-top);
   z-index: 20;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -13,7 +13,7 @@
   grid-template-columns: repeat(5, minmax(0, 1fr));
   max-width: var(--page-max-width);
   margin: 0 auto;
-  padding: 4px 4px 0;
+  padding: 4px max(4px, var(--safe-right)) 0 max(4px, var(--safe-left));
 }
 
 .nav-tab {

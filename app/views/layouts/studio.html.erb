@@ -1,9 +1,20 @@
 <!DOCTYPE html>
 <html lang="fr">
   <head>
-    <title><%= content_for?(:title) ? "#{yield(:title)} · Studio Santé Active" : "Studio Santé Active" %></title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title><%= content_for?(:title) ? "#{yield(:title)} · GEKO" : "GEKO · Studio Santé Active" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="color-scheme" content="dark">
+    <%# Full-screen web app: installable from the browser's « Ajouter à l'écran d'accueil ».
+        Meta tags can't read CSS variables, so the theme colour is --surface written out. %>
+    <meta name="theme-color" content="#16201A">
+    <meta name="application-name" content="GEKO">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="GEKO">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/favicon.ico" sizes="48x48">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
@@ -12,6 +23,13 @@
   </head>
 
   <body class="studio">
+    <header class="brand-bar">
+      <%= link_to home_path, class: "brand", aria: { label: "GEKO par Studio Santé Active, accueil" } do %>
+        <span class="brand__name">GEKO</span>
+        <span class="brand__by">par Studio Santé Active</span>
+      <% end %>
+    </header>
+
     <%= render "layouts/studio_nav" if user_signed_in? %>
 
     <div class="flash-region" id="flash">

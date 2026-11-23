@@ -1,0 +1,18 @@
+{
+  "id": "/",
+  "name": "GEKO · Studio Santé Active",
+  "short_name": "GEKO",
+  "description": "GEKO, l'application du personnel de Studio Santé Active : séances, consultations et services des clients.",
+  "lang": "fr-CA",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0E1411",
+  "theme_color": "#16201A",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

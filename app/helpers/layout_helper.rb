@@ -11,6 +11,11 @@ module LayoutHelper
   }.freeze
   BACK_ICON = "M15 18l-6-6 6-6".freeze
 
+  # Where the GEKO brand links: the user's landing page, or sign in.
+  def home_path
+    user_signed_in? ? dashboard_path_for(current_user) : new_user_session_path
+  end
+
   # The small « ← Label » link at the top of a page.
   def back_link_to(label, path)
     link_to path, class: "back-link" do

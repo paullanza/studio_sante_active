@@ -6,7 +6,7 @@
   width: 100%;
   max-width: var(--page-max-width);
   margin: 0 auto;
-  padding: 0 var(--gutter);
+  padding: 0 var(--gutter-right) 0 var(--gutter-left);
 }
 
 .flash-region > .flash:first-child {

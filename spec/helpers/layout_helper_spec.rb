@@ -1,6 +1,21 @@
 require "rails_helper"
 
 RSpec.describe LayoutHelper, type: :helper do
+  describe "#home_path" do
+    it "goes to sign in when signed out" do
+      without_partial_double_verification { allow(helper).to receive(:user_signed_in?).and_return(false) }
+
+      expect(helper.home_path).to eq(new_user_session_path)
+    end
+
+    it "goes to the user's landing page when signed in" do
+      admin = create(:user, :admin)
+      without_partial_double_verification { allow(helper).to receive_messages(user_signed_in?: true, current_user: admin) }
+
+      expect(helper.home_path).to eq(admin_dashboard_path)
+    end
+  end
+
   describe "#back_link_to" do
     it "renders a back link with a decorative arrow" do
       html = Nokogiri::HTML.fragment(helper.back_link_to("Clients", "/fliip_users"))

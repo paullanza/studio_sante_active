@@ -47,7 +47,18 @@ In the view, declare the nav section, the page title, and a back link instead of
 <%= back_link_to "Clients", fliip_users_path %>
 ```
 
-Nav sections: `dashboard`, `clients`, `saisir`, `mes_services`, `plus` (every page reached from the « Plus » menu). The page sits in `<main class="page">`: a 16 px gutter on mobile and a 960 px column from tablet up. Short signed-out forms use `<div class="page-narrow auth">`.
+Nav sections: `dashboard`, `clients`, `saisir`, `mes_services`, `plus` (every page reached from the « Plus » menu). The browser tab reads « Ysolde Brisebois · GEKO ». The page sits in `<main class="page">`: a 16 px gutter on mobile and a 960 px column from tablet up. Short signed-out forms use `<div class="page-narrow auth">`. Pages don't repeat the app's name: the brand bar carries it.
+
+## Brand and full-screen web app
+
+The app is called GEKO. Every page starts with the brand bar, « GEKO par Studio Santé Active », linking to the user's landing page (`home_path`), or to sign in when signed out.
+
+GEKO can be added to a phone's home screen and opens full screen:
+
+- `public/manifest.json`: name, `display: standalone`, colours, icons. The icons (`public/icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `favicon.ico`) are placeholders, a gold « G » on the brand green, until there is a logo.
+- The layout's `<head>` has the theme colour and the Apple web app tags, with a translucent status bar and `viewport-fit=cover`.
+- Content stays clear of the notch and home indicator through the safe-area variables in `studio/_layout.scss`: `--safe-top`, `--safe-right`, `--safe-bottom`, `--safe-left`, and the gutters `--gutter-left` / `--gutter-right`. Anything fixed or sticky to a screen edge must add the matching inset (the nav sticks at `top: var(--safe-top)`).
+- An installed app has no browser back button: every page needs a way back (the nav, or `back_link_to`).
 
 ## Top nav
 

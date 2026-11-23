@@ -6,7 +6,10 @@
 }
 
 html {
+  // Also fills the overscroll area of a full-screen web app.
+  background: var(--bg);
   -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
