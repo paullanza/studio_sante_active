@@ -13,6 +13,24 @@
 <style>
 body{margin:0;background:#0E1411}
 a{color:#6FBF8E}a:hover{color:#8FD6A9}
+/* GEKO form and button styles (docs/ui.md « Forms », « Buttons ») */
+.tile{display:flex;flex-direction:column;gap:2px;min-height:60px;box-sizing:border-box;padding:9px 14px 8px;border-radius:10px;background:#1E2B23}
+.tile label{font-family:Lato,sans-serif;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#A3B0A7}
+.tile input,.tile textarea{width:100%;box-sizing:border-box;border:0;background:transparent;padding:2px 0;color:#ECEFEA;font-family:Lato,sans-serif;font-size:17px;outline:none;resize:vertical}
+.tile--focus{box-shadow:inset 0 -2px 0 #D4A537}.tile--focus label{color:#D4A537}
+.tile--invalid{box-shadow:inset 0 -2px 0 #C65B5B}.tile--invalid label{color:#F08A8A}
+.code{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;max-width:440px}
+.code input{width:100%;height:58px;box-sizing:border-box;padding:0;border:1px solid #2C3B31;border-radius:8px;background:#1E2B23;color:#ECEFEA;text-align:center;font-family:Barlow,sans-serif;font-size:24px;font-weight:600}
+.code input:nth-child(4){margin-right:8px}
+.btn-gold{position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;margin:0 4px 4px 0;padding:0 22px 0 24px;border:0;background:none;color:#14110A;font-family:Barlow,sans-serif;font-size:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;cursor:pointer}
+.btn-gold::before,.btn-gold::after{content:"";position:absolute;inset:0;clip-path:polygon(0 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%)}
+.btn-gold::before{z-index:-1;background:#D4A537}.btn-gold::after{z-index:-2;background:#8C6B1F;transform:translate(4px,4px)}
+.btn-gold:hover{color:#14110A}.btn-gold:hover::before{background:#E6BE5C}
+.btn-gold:active{transform:translate(4px,4px)}.btn-gold:active::after{transform:none}
+.btn-text{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 4px;border:0;background:none;color:#6FBF8E;font-family:Barlow,sans-serif;font-size:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:6px;cursor:pointer}
+.btn-text--ghost{color:#A3B0A7;text-decoration:none}
+.btn-text--danger{color:#F08A8A;text-decoration-color:#C65B5B}
+.btn-block{width:calc(100% - 4px)}
 </style>
 </helmet>
 <div style="width: 390px; min-height: 1900px; box-sizing: border-box; background: #0E1411; color: #ECEFEA; font-family: Lato, sans-serif; display: flex; flex-direction: column">
@@ -30,7 +48,7 @@ a{color:#6FBF8E}a:hover{color:#8FD6A9}
 
     <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
       <h1 style="margin: 0; font-family: Barlow, sans-serif; font-weight: 700; font-size: 26px">Saisir</h1>
-      <button type="button" style="min-height: 44px; padding: 0 12px; border: 1px solid #3E7A55; border-radius: 10px; background: #1E2B23; color: #ECEFEA; font-family: Lato, sans-serif; font-weight: 700; font-size: 13px">Rafraîchir les clients</button>
+      <button type="button" class="btn-text" style="font-size: 13px">Rafraîchir les clients</button>
     </div>
 
     <div role="tablist" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid #2C3B31; border-radius: 12px; overflow: hidden">
@@ -39,8 +57,10 @@ a{color:#6FBF8E}a:hover{color:#8FD6A9}
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 6px">
-      <label for="client" style="font-size: 14px; font-weight: 700">Client·e</label>
-      <input id="client" value="Ysolde Brisebois" style="min-height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid #3E7A55; border-radius: 10px; background: #0E1411; color: #ECEFEA; font-family: Lato, sans-serif; font-size: 16px">
+      <div class="tile tile--focus">
+        <label for="client">Client·e</label>
+        <input id="client" value="Ysolde Brisebois">
+      </div>
       <div style="font-size: 12px; color: #A3B0A7; font-variant-numeric: tabular-nums">ID 2006 · FliipUserID 2744232</div>
     </div>
 
@@ -64,13 +84,13 @@ a{color:#6FBF8E}a:hover{color:#8FD6A9}
     </fieldset>
 
     <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
-      <div style="display: flex; flex-direction: column; gap: 6px">
-        <label for="date" style="font-size: 14px; font-weight: 700">Date</label>
-        <input id="date" value="15/11/2026" style="min-height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid #2C3B31; border-radius: 10px; background: #0E1411; color: #ECEFEA; font-family: Lato, sans-serif; font-size: 16px; width: 100%">
+      <div class="tile">
+        <label for="date">Date</label>
+        <input id="date" value="15/11/2026">
       </div>
-      <div style="display: flex; flex-direction: column; gap: 6px">
-        <label for="heure" style="font-size: 14px; font-weight: 700">Heure</label>
-        <input id="heure" value="17:00" style="min-height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid #2C3B31; border-radius: 10px; background: #0E1411; color: #ECEFEA; font-family: Lato, sans-serif; font-size: 16px; width: 100%">
+      <div class="tile">
+        <label for="heure">Heure</label>
+        <input id="heure" value="17:00">
       </div>
     </div>
 
@@ -95,12 +115,12 @@ a{color:#6FBF8E}a:hover{color:#8FD6A9}
       <span style="padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; background: {{outcomeBg}}; color: {{outcomeFg}}">{{outcome}}</span>
     </div>
 
-    <div style="display: flex; flex-direction: column; gap: 6px">
-      <label for="note" style="font-size: 14px; font-weight: 700">Note</label>
-      <textarea id="note" rows="3" style="box-sizing: border-box; padding: 12px 14px; border: 1px solid #2C3B31; border-radius: 10px; background: #0E1411; color: #ECEFEA; font-family: Lato, sans-serif; font-size: 16px; resize: vertical"></textarea>
+    <div class="tile">
+      <label for="note">Note</label>
+      <textarea id="note" rows="3"></textarea>
     </div>
 
-    <button type="button" style="min-height: 52px; border: 0; border-radius: 12px; background: #D4A537; color: #14110A; font-family: Barlow, sans-serif; font-weight: 700; font-size: 17px">Enregistrer la séance</button>
+    <button type="button" class="btn-gold btn-block">Enregistrer la séance <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
 
     <section style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px">
       <div style="display: flex; justify-content: space-between; align-items: baseline">
