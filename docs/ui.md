@@ -51,7 +51,7 @@ Nav sections: `dashboard`, `clients`, `saisir`, `mes_services`, `plus` (every pa
 
 ## Brand and full-screen web app
 
-The app is called GEKO. Every page starts with the brand bar: « GEKO » in Barlow 700, light green (`--brand-light`), then « par Studio Santé Active » in Lato, muted. It links to the user's landing page (`home_path`), or to sign in when signed out.
+The app is called GEKO. Every page starts with the brand bar: « GEKO » in Barlow 700, gold (`--accent`), then « par Studio Santé Active » in Lato, light green (`--brand-light`). The brand name is the one gold item besides the page's main action. It links to the user's landing page (`home_path`), or to sign in when signed out.
 
 GEKO can be added to a phone's home screen and opens full screen:
 

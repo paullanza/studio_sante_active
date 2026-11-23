@@ -53,20 +53,20 @@ body:has(.top-nav) .brand-bar {
   color: var(--text);
 }
 
-// GEKO in Barlow, light green: gold stays for the page's main action.
+// GEKO in Barlow, gold; « par Studio Santé Active » in Lato, light green.
 .brand__name {
   font-family: var(--font-heading);
   font-size: 22px;
   font-weight: 700;
   letter-spacing: 0.08em;
   line-height: 1;
-  color: var(--brand-light);
+  color: var(--accent);
 }
 
 .brand__by {
   font-family: var(--font-body);
   font-size: 13px;
-  color: var(--text-muted);
+  color: var(--brand-light);
 }
 
 .page {
