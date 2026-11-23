@@ -13,7 +13,7 @@
       </summary>
 
       <div class="nav-more__menu">
-        <%= link_to "Mon profil", user_path(current_user), class: "nav-more__item" %>
+        <%= link_to "Mon profil", profile_path, class: "nav-more__item" %>
         <% if policy(:admin).unconfirmed_sessions? %>
           <%= link_to "Confirmations séances", admin_unconfirmed_sessions_path, class: "nav-more__item" %>
         <% end %>

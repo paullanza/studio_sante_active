@@ -1,0 +1,49 @@
+<% content_for :nav_section, "plus" %>
+<% content_for :title, "Mon profil" %>
+
+<div class="page-header">
+  <h1>Mon profil</h1>
+</div>
+
+<%# Two separate forms, each on its own copy of the user (see ProfilesController). %>
+<div class="form">
+  <%= form_with model: @user, url: profile_path, method: :patch, scope: :user,
+        builder: StudioFormBuilder, class: "form" do |f| %>
+    <%= f.base_errors %>
+
+    <section class="form-section" aria-labelledby="partie-informations">
+      <header class="form-section__head"><h2 id="partie-informations">Informations</h2></header>
+      <div class="form-grid">
+        <%= f.field :first_name, label: "Prénom", autocomplete: "given-name", required: true %>
+        <%= f.field :last_name, label: "Nom", autocomplete: "family-name", required: true %>
+        <%= f.field :phone, label: "Téléphone", as: :tel, autocomplete: "tel", required: true %>
+        <%= f.field :birthday, label: "Date de naissance", as: :date, max: Date.current, required: true %>
+        <%= render "shared/address_field", f: f %>
+        <%= f.field :email, label: "Courriel", as: :email, field_class: "form-grid__wide",
+              autocomplete: "email", autocapitalize: "none", spellcheck: false, required: true %>
+      </div>
+    </section>
+
+    <div class="form-actions"><%= f.submit "Enregistrer" %></div>
+  <% end %>
+
+  <%= form_with model: @password_user, url: password_profile_path, method: :patch, scope: :user,
+        builder: StudioFormBuilder, class: "form" do |f| %>
+    <section class="form-section" aria-labelledby="partie-mot-de-passe">
+      <header class="form-section__head">
+        <h2 id="partie-mot-de-passe">Mot de passe</h2>
+        <span><%= Devise.password_length.min %> caractères minimum</span>
+      </header>
+      <div class="form-grid">
+        <%= f.field :current_password, label: "Mot de passe actuel", as: :password,
+              field_class: "form-grid__wide", autocomplete: "current-password", required: true %>
+        <%= f.field :password, label: "Nouveau mot de passe", as: :password,
+              autocomplete: "new-password", required: true %>
+        <%= f.field :password_confirmation, label: "Confirmer le nouveau mot de passe", as: :password,
+              autocomplete: "new-password", required: true %>
+      </div>
+    </section>
+
+    <div class="form-actions"><%= f.submit "Changer le mot de passe", variant: :secondary %></div>
+  <% end %>
+</div>

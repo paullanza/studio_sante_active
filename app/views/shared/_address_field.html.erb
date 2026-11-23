@@ -1,0 +1,14 @@
+<%# The address tile, with Mapbox autocomplete. Locals: f (a StudioFormBuilder form).
+    The builder can't render <mapbox-search-box>, so this is the tile markup by hand.
+    address_autocomplete_controller.js inserts the search box right after the hidden input. %>
+<% address_error = f.object.errors[:address].first %>
+<div class="<%= class_names("field", "form-grid__wide", "field--invalid" => address_error) %>">
+  <div class="field__box" data-controller="address-autocomplete"
+       data-address-autocomplete-api-key-value="<%= ENV["MAPBOX_API_KEY"] %>">
+    <span class="field__label">Adresse</span>
+    <%= f.hidden_field :address, data: { address_autocomplete_target: "address" } %>
+  </div>
+  <% if address_error %>
+    <p class="field__error"><%= address_error %></p>
+  <% end %>
+</div>
