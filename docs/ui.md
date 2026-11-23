@@ -51,7 +51,7 @@ Nav sections: `dashboard`, `clients`, `saisir`, `mes_services`, `plus` (every pa
 
 ## Brand and full-screen web app
 
-The app is called GEKO. Every page starts with the brand bar, « GEKO par Studio Santé Active », linking to the user's landing page (`home_path`), or to sign in when signed out.
+The app is called GEKO. Every page starts with the brand bar: « GEKO » in Barlow 700, light green (`--brand-light`), then « par Studio Santé Active » in Lato, muted. It links to the user's landing page (`home_path`), or to sign in when signed out.
 
 GEKO can be added to a phone's home screen and opens full screen:
 
@@ -93,7 +93,7 @@ CSS custom properties on `:root` (`studio/_tokens.scss`). Use `var(--name)`.
 | `--badge-retire-bg` / `-fg` | #3A1F22 / #F08A8A | Retiré de Fliip |
 | `--progress-*` | #0D6EFD, #6C757D, #FFC107, #FD7E14, #DC3545 | progress bars (unchanged) |
 
-Type: `--font-heading` (Barlow) for headings and buttons, `--font-body` (Lato) for everything else. Sizes: page title 30, section 22, card title 17, label 13 uppercase (`.eyebrow`), body 16, secondary 14.
+Type: `--font-heading` (Barlow) for headings and buttons, `--font-body` (Lato) for everything else. Sizes: page title 30, section 22, card title 17, label 13 uppercase (`.eyebrow`), body 16, secondary 14. Only these fonts and weights exist: Barlow 500, 600, 700 and Lato 400, 700. Never set another family (use the two tokens) or another weight: a Lato 600 or a Barlow 400 is faked by the browser.
 
 ## Components
 
