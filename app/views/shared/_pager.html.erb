@@ -1,5 +1,5 @@
-<%# Page links for a Pagy offset paginator: ‹ 1 … 5 6 7 … 41 ›. Keeps the request's
-    other query params (the search). Locals: pagy. %>
+<%# Page links for a Pagy offset paginator: ‹ 1 … 5 6 7 … 41 ›, then a box to jump to any
+    page. Keeps the request's other query params (the search). Locals: pagy. %>
 <% if pagy.pages > 1 %>
   <% page_url = ->(n) { "#{request.path}?#{request.query_parameters.merge('page' => n).to_query}" } %>
   <nav class="pager" aria-label="Pages">
@@ -27,6 +27,15 @@
       <% end %>
     <% else %>
       <span class="pager__item pager__step is-disabled" aria-hidden="true"><%= icon_svg(LayoutHelper::NEXT_ICON, size: 18, stroke_width: 2.2) %></span>
+    <% end %>
+
+    <%= form_with url: request.path, method: :get, class: "pager__jump" do %>
+      <% request.query_parameters.except("page").each do |name, value| %>
+        <%= hidden_field_tag name, value, id: nil %>
+      <% end %>
+      <%= number_field_tag :page, nil, id: nil, min: 1, max: pagy.pages, placeholder: "Page",
+            class: "pager__jump-input", aria: { label: "Aller à la page (1 à #{pagy.pages})" } %>
+      <button type="submit" class="btn btn--ghost pager__jump-go">Aller</button>
     <% end %>
   </nav>
 <% end %>

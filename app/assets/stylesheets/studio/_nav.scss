@@ -125,13 +125,15 @@
 
 // From 1024 px the brand sits left of the tabs in one sticky bar.
 @media (min-width: 1024px) {
+  // Brand left, tabs centred on the page: the two outer columns match.
   body:has(.top-nav) .masthead {
     position: sticky;
     top: var(--safe-top);
     z-index: 20;
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: stretch;
-    gap: 40px;
+    gap: 24px;
     padding: 0 var(--gutter-right) 0 var(--gutter-left);
     border-bottom: 1px solid var(--border);
     background: var(--surface);
@@ -144,16 +146,15 @@
     border: 0;
   }
 
+  // On a narrow desktop « par Studio Santé Active » wraps under GEKO.
   body:has(.top-nav) .masthead .brand {
-    flex-wrap: nowrap;
+    row-gap: 2px;
     margin: 0;
     padding: 0;
-    white-space: nowrap;
   }
 
   .masthead .top-nav {
     position: static;
-    flex: 1;
     border-bottom: 0;
   }
 
@@ -166,7 +167,7 @@
   }
 
   .masthead .nav-tab {
-    min-width: 96px;
+    min-width: 88px;
     min-height: 60px;
   }
 }

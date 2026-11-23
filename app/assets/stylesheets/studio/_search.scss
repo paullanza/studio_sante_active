@@ -229,3 +229,40 @@ a.pager__item:hover {
 .client-list + .pager {
   justify-content: flex-end;
 }
+
+// Jump to any page: type its number, press Enter or « Aller ».
+.pager__jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.pager__jump-input {
+  width: 72px;
+  height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px; // under 16 px, iOS zooms in on focus
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+}
+
+.pager__jump-input::-webkit-inner-spin-button,
+.pager__jump-input::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.pager__jump-input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.pager__jump-go {
+  padding: 0 8px;
+}

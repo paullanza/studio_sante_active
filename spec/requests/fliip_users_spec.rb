@@ -152,6 +152,24 @@ RSpec.describe "Fliip users", type: :request do
       expect(response.body).to include(%(aria-current="page">2<))
     end
 
+    it "lists clients by FliipUserID without a search" do
+      create(:fliip_user, remote_id: 5, user_firstname: "Zoé")
+      create(:fliip_user, remote_id: 3, user_firstname: "Aline")
+      sign_in user_for(:employee)
+
+      get fliip_users_path
+
+      expect(response.body.index("Aline")).to be < response.body.index("Zoé")
+    end
+
+    it "answers a page past the last one without an error" do
+      sign_in user_for(:employee)
+
+      get fliip_users_path(page: 99)
+
+      expect(response).to have_http_status(:ok)
+    end
+
     it "pages through every client without a search" do
       create_list(:fliip_user, 50)
       sign_in user_for(:employee)

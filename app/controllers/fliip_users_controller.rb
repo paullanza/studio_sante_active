@@ -8,7 +8,7 @@ class FliipUsersController < ApplicationController
     @query = params[:query].to_s.strip
     @recent_services_by_user_id = {}
 
-    scope = @query.present? ? FliipUser.search(@query) : FliipUser.order(:user_firstname, :user_lastname)
+    scope = @query.present? ? FliipUser.search(@query) : FliipUser.order(:remote_id)
     @pagy, @fliip_users = pagy(
       scope.includes(:fliip_contracts, fliip_services: [ :service_definition, :service_usage_adjustments ])
     )
