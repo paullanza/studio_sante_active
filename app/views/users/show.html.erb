@@ -68,7 +68,7 @@
             <% if user_policy.edit? %>
               <div class="d-grid">
                 <%= link_to (@user == current_user ? "Modifier mon profil" : "Modifier le profil"),
-                      edit_user_path(@user), class: "btn btn-outline-primary" %>
+                      (@user == current_user ? profile_path : edit_user_path(@user)), class: "btn btn-outline-primary" %>
               </div>
             <% end %>
           </div>

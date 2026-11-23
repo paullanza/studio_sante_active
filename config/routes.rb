@@ -115,6 +115,15 @@ Rails.application.routes.draw do
   post "manager/signup_codes",  to: "manager#create_signup_code", as: :manager_signup_codes
 
   # =====================================================================
+  # MON PROFIL — THE SIGNED-IN USER'S OWN DETAILS AND PASSWORD
+  # ---------------------------------------------------------------------
+  # Always the current user, so there is no id in the URL.
+  # =====================================================================
+  resource :profile, only: [:show, :update], path: "profil" do
+    patch :password, on: :member, action: :update_password
+  end
+
+  # =====================================================================
   # USERS — PROFILE & ROLE MANAGEMENT
   # ---------------------------------------------------------------------
   # Show/update the user profile, plus role/activation toggles gated by
