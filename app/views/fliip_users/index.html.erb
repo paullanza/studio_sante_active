@@ -8,10 +8,11 @@
   </div>
 
   <%= form_with url: fliip_users_path, method: :get, class: "search-form", role: "search" do %>
-    <div class="field search-form__field">
+    <div class="field field--compact search-form__field">
       <label class="field__box" for="query">
-        <span class="field__label">Nom, courriel ou téléphone</span>
+        <span class="field__label visually-hidden">Nom, courriel ou téléphone</span>
         <%= search_field_tag :query, @query, id: "query", class: "field__input",
+              placeholder: "Nom, courriel ou téléphone",
               autofocus: true, autocomplete: "off", inputmode: "search", spellcheck: false %>
       </label>
     </div>
@@ -23,13 +24,16 @@
       <%= @query.present? ? "Aucun client ne correspond à « #{@query} »." : "Aucun client." %>
     </p>
   <% else %>
-    <p class="text-muted text-small numeric">
-      <%= pluralize(@pagy.count, "client") %><% if @query.present? %> pour « <%= @query %> » · <%= link_to "Tous les clients", fliip_users_path %><% end %>
-    </p>
+    <div class="list-toolbar">
+      <p class="text-muted text-small numeric">
+        <%= pluralize(@pagy.count, "client") %><% if @query.present? %> pour « <%= @query %> » · <%= link_to "Tous les clients", fliip_users_path %><% end %>
+      </p>
+      <%= render "shared/pager", pagy: @pagy %>
+    </div>
 
     <div class="client-list">
       <div class="client-list__head" aria-hidden="true">
-        <span>Client</span><span>Contact</span><span>Membre depuis</span><span>Service</span><span>Progression</span>
+        <span>Client</span><span>Contact</span><span>Service</span><span>Progression</span>
       </div>
       <ul class="list">
         <%= render partial: "fliip_users/client_card", collection: @fliip_users, as: :client,
@@ -37,22 +41,6 @@
       </ul>
     </div>
 
-    <% if @pagy.pages > 1 %>
-      <nav class="pager" aria-label="Pages">
-        <% if @pagy.previous %>
-          <%= link_to "Précédent", fliip_users_path(query: @query.presence, page: @pagy.previous), class: "btn btn--ghost", rel: "prev" %>
-        <% else %>
-          <span></span>
-        <% end %>
-        <span class="text-muted text-small numeric">Page <%= @pagy.page %> sur <%= @pagy.pages %></span>
-        <% if @pagy.next %>
-          <%= link_to fliip_users_path(query: @query.presence, page: @pagy.next), class: "btn btn--secondary", rel: "next" do %>
-            <%= safe_join([ "Suivant", button_arrow ]) %>
-          <% end %>
-        <% else %>
-          <span></span>
-        <% end %>
-      </nav>
-    <% end %>
+    <%= render "shared/pager", pagy: @pagy %>
   <% end %>
 </div>

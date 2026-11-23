@@ -17,19 +17,33 @@
 @media (min-width: 768px) {
   .search-form {
     flex-direction: row;
-    align-items: flex-end;
+    align-items: stretch;
   }
+}
 
-  .search-form .btn--primary {
-    min-height: 60px;
-  }
+// A one-line field: no label row in the tile (the label is visually hidden
+// and the placeholder says what to type), as tall as a button.
+.field--compact .field__box {
+  justify-content: center;
+  min-height: var(--control-height);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+// The count on the left, page links on the right.
+.list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
 }
 
 // Photo, or initials when Fliip has none.
 .avatar {
   flex: none;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   background: var(--surface-2);
@@ -42,7 +56,7 @@
   border: 1px solid var(--border);
   color: var(--text-muted);
   font-family: var(--font-heading);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -75,7 +89,7 @@
 
 .client-name {
   font-family: var(--font-heading);
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1.2;
 }
@@ -88,8 +102,7 @@
 }
 
 .client-card__name,
-.client-card__contact,
-.client-card__since {
+.client-card__contact {
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -97,16 +110,6 @@
 
 .client-card__email {
   overflow-wrap: anywhere;
-}
-
-.client-card__since {
-  flex-direction: row;
-  flex-wrap: wrap;
-  column-gap: 8px;
-}
-
-.client-card__label {
-  color: var(--text-muted);
 }
 
 .client-card__progress {
@@ -122,23 +125,30 @@
 .main-service {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
 }
 
-// The service link sits above the card's link.
+// Badge first, then the name.
+.main-service__title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.main-service__title .badge {
+  flex: none;
+}
+
 .main-service__name {
-  position: relative;
-  z-index: 1;
-  align-self: flex-start;
   font-weight: 700;
 }
 
-.main-service__meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+// The service link sits above the card's link.
+a.main-service__name {
+  position: relative;
+  z-index: 1;
 }
 
 .client-list__head {
@@ -147,16 +157,16 @@
 
 @media (min-width: 1024px) {
   .client-list {
-    --client-columns: minmax(220px, 1.3fr) minmax(200px, 1.3fr) minmax(110px, 0.7fr) minmax(240px, 1.6fr) minmax(220px, 1.3fr);
+    --client-columns: minmax(240px, 1.2fr) minmax(200px, 1fr) minmax(280px, 1.6fr) minmax(240px, 1.1fr);
   }
 
   .client-list__head {
     display: grid;
     grid-template-columns: var(--client-columns);
     gap: 16px;
-    padding: 0 17px 8px;
+    padding: 0 17px 4px;
     color: var(--text-muted);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
   }
 
@@ -165,15 +175,7 @@
     grid-template-columns: var(--client-columns);
     align-items: center;
     gap: 16px;
-    padding: 12px 16px;
-  }
-
-  .client-card__since {
-    flex-direction: column;
-  }
-
-  .client-card__label {
-    display: none;
+    padding: 10px 16px;
   }
 
   .client-card__progress:empty {
@@ -181,13 +183,49 @@
   }
 }
 
+// Page links: ‹ 1 … 5 6 7 … 41 ›. Fits 375 px with seven numbers.
 .pager {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 2px;
 }
 
-.pager > :last-child {
-  justify-self: end;
+.pager__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  min-height: var(--touch-target);
+  padding: 0 4px;
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+a.pager__item:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.pager__item.is-current {
+  background: var(--surface-2);
+  color: var(--accent);
+}
+
+.pager__item.is-disabled {
+  opacity: 0.35;
+}
+
+.pager__gap {
+  min-width: 20px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+// The bottom pager closes the list on the right.
+.client-list + .pager {
+  justify-content: flex-end;
 }

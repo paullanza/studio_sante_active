@@ -1,0 +1,32 @@
+<%# Page links for a Pagy offset paginator: ‹ 1 … 5 6 7 … 41 ›. Keeps the request's
+    other query params (the search). Locals: pagy. %>
+<% if pagy.pages > 1 %>
+  <% page_url = ->(n) { "#{request.path}?#{request.query_parameters.merge('page' => n).to_query}" } %>
+  <nav class="pager" aria-label="Pages">
+    <% if pagy.previous %>
+      <%= link_to page_url.(pagy.previous), class: "pager__item pager__step", rel: "prev", aria: { label: "Page précédente" } do %>
+        <%= icon_svg(LayoutHelper::BACK_ICON, size: 18, stroke_width: 2.2) %>
+      <% end %>
+    <% else %>
+      <span class="pager__item pager__step is-disabled" aria-hidden="true"><%= icon_svg(LayoutHelper::BACK_ICON, size: 18, stroke_width: 2.2) %></span>
+    <% end %>
+
+    <% pager_series(pagy.page, pagy.pages).each do |item| %>
+      <% if item == :gap %>
+        <span class="pager__gap" aria-hidden="true">…</span>
+      <% elsif item == pagy.page %>
+        <span class="pager__item numeric is-current" aria-current="page"><%= item %></span>
+      <% else %>
+        <%= link_to item, page_url.(item), class: "pager__item numeric", aria: { label: "Page #{item}" } %>
+      <% end %>
+    <% end %>
+
+    <% if pagy.next %>
+      <%= link_to page_url.(pagy.next), class: "pager__item pager__step", rel: "next", aria: { label: "Page suivante" } do %>
+        <%= icon_svg(LayoutHelper::NEXT_ICON, size: 18, stroke_width: 2.2) %>
+      <% end %>
+    <% else %>
+      <span class="pager__item pager__step is-disabled" aria-hidden="true"><%= icon_svg(LayoutHelper::NEXT_ICON, size: 18, stroke_width: 2.2) %></span>
+    <% end %>
+  </nav>
+<% end %>

@@ -54,7 +54,7 @@ class FliipUser < ApplicationRecord
       "OR regexp_replace(coalesce(user_phone2, ''), '\\D', '', 'g') LIKE :d " \
       "OR remote_id::text = :id",
       d: "%#{sanitize_sql_like(digits)}%", id: digits
-    ).order(:user_lastname, :user_firstname)
+    ).order(:user_firstname, :user_lastname)
   end
   private_class_method :search_by_phone
 
@@ -72,6 +72,15 @@ class FliipUser < ApplicationRecord
       return bucket.max_by { |s| [(s.expire_date || Date.new(0)), (s.start_date || Date.new(0))] }
     end
     nil
+  end
+
+  # What the Clients list shows for a client: an active service, else an
+  # active abonnement, else a stopped or planned service.
+  def main_index_item
+    service = most_recent_index_service
+    return service if service&.purchase_status == "A"
+
+    best_active_contract_for_index || service
   end
 
   def best_active_contract_for_index

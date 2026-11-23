@@ -105,6 +105,34 @@ RSpec.describe FliipUser, type: :model do
     end
   end
 
+  describe "#main_index_item" do
+    let(:client) { create(:fliip_user) }
+
+    it "prefers an active service" do
+      service = create(:fliip_service, fliip_user: client, purchase_status: "A")
+      create(:fliip_contract, fliip_user: client)
+
+      expect(client.reload.main_index_item).to eq(service)
+    end
+
+    it "shows the active abonnement when no service is active" do
+      create(:fliip_service, fliip_user: client, purchase_status: "S")
+      contract = create(:fliip_contract, fliip_user: client)
+
+      expect(client.reload.main_index_item).to eq(contract)
+    end
+
+    it "falls back to a stopped or planned service" do
+      service = create(:fliip_service, fliip_user: client, purchase_status: "P")
+
+      expect(client.reload.main_index_item).to eq(service)
+    end
+
+    it "is nil with neither" do
+      expect(client.main_index_item).to be_nil
+    end
+  end
+
   describe "#best_active_contract_for_index" do
     let(:client) { create(:fliip_user) }
 
@@ -157,11 +185,11 @@ RSpec.describe FliipUser, type: :model do
       expect(described_class.search("438 555 9911")).to contain_exactly(other)
     end
 
-    it "orders phone matches by last name, then first name" do
+    it "orders phone matches by first name, then last name" do
       gagne.update!(user_phone1: "514-555-0001")
       other.update!(user_phone2: "514-555-0002")
 
-      expect(described_class.search("555-000").to_a).to eq([ gagne, other ])
+      expect(described_class.search("555-000").to_a).to eq([ other, gagne ])
     end
 
     it "finds a FliipUserID typed as digits" do

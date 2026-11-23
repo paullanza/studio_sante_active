@@ -149,7 +149,7 @@ RSpec.describe "Fliip users", type: :request do
 
       get fliip_users_path(query: "Brisebois", page: 2)
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Page 2 sur 2")
+      expect(response.body).to include(%(aria-current="page">2<))
     end
 
     it "pages through every client without a search" do
@@ -159,7 +159,7 @@ RSpec.describe "Fliip users", type: :request do
       get fliip_users_path(page: 2)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Page 2 sur 2")
+      expect(response.body).to include(%(aria-current="page">2<))
     end
   end
 

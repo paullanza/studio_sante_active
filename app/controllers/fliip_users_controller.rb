@@ -8,14 +8,13 @@ class FliipUsersController < ApplicationController
     @query = params[:query].to_s.strip
     @recent_services_by_user_id = {}
 
-    scope = @query.present? ? FliipUser.search(@query) : FliipUser.order(:user_lastname, :user_firstname)
+    scope = @query.present? ? FliipUser.search(@query) : FliipUser.order(:user_firstname, :user_lastname)
     @pagy, @fliip_users = pagy(
       scope.includes(:fliip_contracts, fliip_services: [ :service_definition, :service_usage_adjustments ])
     )
 
-    # Each client's main service, else their best active abonnement.
     @fliip_users.each do |u|
-      item = u.most_recent_index_service || u.best_active_contract_for_index
+      item = u.main_index_item
       @recent_services_by_user_id[u.id] = item if item
     end
   end

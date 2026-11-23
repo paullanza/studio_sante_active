@@ -1,14 +1,14 @@
-<%# A client's main service (or, without one, their active abonnement): name, badge,
-    then the time and séances progress bars. Renders two grid cells of the client card. Local: item. %>
+<%# What the Clients list shows for a client (FliipUser#main_index_item): badge and name,
+    then for a service the time and séances progress bars. Renders two grid cells. Local: item. %>
 <% case item %>
 <% when FliipService %>
   <div class="main-service">
-    <%= link_to item.service_name.presence || "Service ##{item.id}", fliip_service_path(item), class: "main-service__name" %>
-    <span class="main-service__meta">
+    <span class="main-service__title">
       <%= service_status_badge(item) %>
-      <span class="text-muted text-small numeric">
-        <%= [ "Service ##{item.id}", ("Achat ##{item.remote_purchase_id}" if item.remote_purchase_id), item.duration.presence ].compact.join(" · ") %>
-      </span>
+      <%= link_to item.service_name.presence || "Service", fliip_service_path(item), class: "main-service__name" %>
+    </span>
+    <span class="text-muted text-small numeric">
+      <%= [ ("Achat ##{item.remote_purchase_id}" if item.remote_purchase_id), item.duration.presence ].compact.join(" · ") %>
     </span>
   </div>
   <% time_pct = item.time_progress_percent || 0 %>
@@ -21,10 +21,12 @@
   </div>
 <% when FliipContract %>
   <div class="main-service">
-    <span class="main-service__name">Abonnement · <%= item.membership_name.presence || "##{item.id}" %></span>
-    <span class="main-service__meta">
+    <span class="main-service__title">
       <%= contract_status_badge(item) %>
-      <% if item.end_date %><span class="text-muted text-small">Fin <%= l(item.end_date) %></span><% end %>
+      <span class="main-service__name"><%= item.membership_name.presence || "Abonnement" %></span>
+    </span>
+    <span class="text-muted text-small numeric">
+      <%= [ "Abonnement", ("Début #{l(item.start_date)}" if item.start_date), ("Fin #{l(item.end_date)}" if item.end_date) ].compact.join(" · ") %>
     </span>
   </div>
   <div class="client-card__progress"></div>
