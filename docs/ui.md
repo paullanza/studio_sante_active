@@ -212,7 +212,7 @@ The search bar stacks on a phone and sits beside its button from 768 px. Its fie
 
 ## Forms: StudioFormBuilder
 
-Forms must not look like Bootstrap: no label stacked above an outlined box, no single narrow column on desktop, no full-width bar of a button on desktop. Every form uses the pieces below. The mockups in `docs/design/` predate this field style; where they differ, this section wins until they are updated. `devise/registrations/new.html.erb` is the reference page.
+Forms must not look like Bootstrap: no label stacked above an outlined box, no single narrow column on desktop, no full-width bar of a button on desktop. Every form uses the pieces below. `devise/registrations/new.html.erb` is the reference page.
 
 ### Fields: filled tiles
 
