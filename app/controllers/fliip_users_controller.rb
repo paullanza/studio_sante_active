@@ -10,7 +10,8 @@ class FliipUsersController < ApplicationController
 
     scope = @query.present? ? FliipUser.search(@query) : FliipUser.order(:remote_id)
     @pagy, @fliip_users = pagy(
-      scope.includes(:fliip_contracts, fliip_services: [ :service_definition, :service_usage_adjustments ])
+      # Adjustments aren't preloaded: the usage totals sum them in SQL.
+      scope.includes(:fliip_contracts, fliip_services: :service_definition)
     )
 
     @fliip_users.each do |u|

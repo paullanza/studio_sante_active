@@ -158,12 +158,11 @@ a.main-service__name {
 }
 
 @media (min-width: 1024px) {
-  // One grid for the heading and every card (subgrid), so each column is as
-  // wide as its widest cell on the page, the same in every row; the service
-  // takes what is left.
+  // One grid for the heading and every card (subgrid). Fixed columns, so
+  // they don't move from one page to the next; the service takes what is left.
   .client-list {
     display: grid;
-    grid-template-columns: fit-content(300px) fit-content(280px) minmax(0, 1fr) minmax(220px, 280px);
+    grid-template-columns: 280px 260px minmax(0, 1fr) 260px;
     column-gap: 32px;
   }
 
