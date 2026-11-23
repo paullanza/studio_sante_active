@@ -116,3 +116,57 @@
 .nav-more__item--signout:hover {
   color: var(--danger);
 }
+
+// Below 1024 px the wrapper is transparent to layout, so the nav stays
+// sticky against the page rather than its wrapper.
+.masthead {
+  display: contents;
+}
+
+// From 1024 px the brand sits left of the tabs in one sticky bar.
+@media (min-width: 1024px) {
+  body:has(.top-nav) .masthead {
+    position: sticky;
+    top: var(--safe-top);
+    z-index: 20;
+    display: flex;
+    align-items: stretch;
+    gap: 40px;
+    padding: 0 var(--gutter-right) 0 var(--gutter-left);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  body:has(.top-nav) .masthead .brand-bar {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    border: 0;
+  }
+
+  body:has(.top-nav) .masthead .brand {
+    flex-wrap: nowrap;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+  }
+
+  .masthead .top-nav {
+    position: static;
+    flex: 1;
+    border-bottom: 0;
+  }
+
+  .masthead .top-nav__inner {
+    display: flex;
+    gap: 8px;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .masthead .nav-tab {
+    min-width: 96px;
+    min-height: 60px;
+  }
+}
