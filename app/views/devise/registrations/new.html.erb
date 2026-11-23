@@ -1,6 +1,6 @@
 <% content_for :title, "Créer un compte" %>
 
-<div class="page-narrow auth">
+<div class="page-full auth">
   <%= back_link_to "Connexion", new_user_session_path %>
 
   <div class="page-header">
@@ -8,16 +8,16 @@
   </div>
 
   <%= form_with model: resource, scope: resource_name, url: user_registration_path,
-        builder: StudioFormBuilder, class: "form" do |f| %>
+        builder: StudioFormBuilder, class: "form form--grid" do |f| %>
+    <%# Two columns from 768 px, filled in this (mobile) order. %>
     <%= f.base_errors %>
 
     <%= f.field :signup_code_token, label: "Code d'inscription", hint: "8 caractères",
           autocomplete: "off", autocapitalize: "characters", spellcheck: false, required: true, autofocus: true %>
+    <div class="from-tablet" aria-hidden="true"></div>
 
-    <div class="field-row">
-      <%= f.field :first_name, label: "Prénom", autocomplete: "given-name", required: true %>
-      <%= f.field :last_name, label: "Nom", autocomplete: "family-name", required: true %>
-    </div>
+    <%= f.field :first_name, label: "Prénom", autocomplete: "given-name", required: true %>
+    <%= f.field :last_name, label: "Nom", autocomplete: "family-name", required: true %>
 
     <%= f.field :phone, label: "Téléphone", as: :tel, autocomplete: "tel", required: true %>
 

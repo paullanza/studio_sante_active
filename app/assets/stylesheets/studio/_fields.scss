@@ -146,20 +146,20 @@ textarea.field__input {
   border-color: var(--field-invalid-border);
 }
 
-// Two fields side by side from 768 px (for example Prénom and Nom).
-.field-row {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
+// Long forms: two columns from 768 px so they fit a desktop screen. Fields
+// fill the grid in source order (the mobile order); `.form__full` spans both
+// columns (a lone field, base errors, the submit button).
 @media (min-width: 768px) {
-  .field-row {
-    flex-direction: row;
+  .form--grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 24px;
+    row-gap: 16px;
+    align-items: start;
   }
 
-  .field-row > .field {
-    flex: 1;
+  .form--grid > .form__full {
+    grid-column: 1 / -1;
   }
 }
 

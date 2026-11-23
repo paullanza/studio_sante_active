@@ -47,7 +47,7 @@ In the view, declare the nav section, the page title, and a back link instead of
 <%= back_link_to "Clients", fliip_users_path %>
 ```
 
-Nav sections: `dashboard`, `clients`, `saisir`, `mes_services`, `plus` (every page reached from the « Plus » menu). The browser tab reads « Ysolde Brisebois · GEKO ». The page sits in `<main class="page">`: a 16 px gutter on mobile and a 960 px column from tablet up. Short signed-out forms use `<div class="page-narrow auth">`. Pages don't repeat the app's name: the brand bar carries it.
+Nav sections: `dashboard`, `clients`, `saisir`, `mes_services`, `plus` (every page reached from the « Plus » menu). The browser tab reads « Ysolde Brisebois · GEKO ». The page sits in `<main class="page">`: a 16 px gutter on mobile and a 960 px column from tablet up. Short signed-out forms use `<div class="page-narrow auth">`; long ones (sign up) use `<div class="page-full auth">` with a `form--grid` form. Pages don't repeat the app's name: the brand bar carries it.
 
 ## Brand and full-screen web app
 
@@ -194,8 +194,8 @@ Server-rendered links with a `?tab=` param:
 - `submit(label, variant: :primary, block: false)`: a `<button type="submit">` with `.btn--{variant}` (`:primary`, `:secondary`, `:ghost`, `:danger`).
 - `base_errors`: errors on `:base` as a `.flash--alert` list above the fields.
 
-Put a form's fields in `class="form"` for the 16 px vertical rhythm. Wrap two short fields in `<div class="field-row">` to put them side by side from 768 px (Prénom and Nom).
+Put a form's fields in `class="form"` for the 16 px vertical rhythm. Mobile first, but a desktop screen gets a full-page layout, not a long phone column: a form with more than about five fields adds `form--grid` (`class="form form--grid"`), which puts the fields in two columns from 768 px, filled in source order (the mobile order). `.form__full` spans both columns; an empty `<div class="from-tablet" aria-hidden="true"></div>` leaves a cell blank so the next field starts a row. Such a page uses the full column: `<div class="page-full auth">` when signed out, instead of `page-narrow`.
 
-For a field the builder can't render (the Mapbox address box), write the same markup by hand: `.field` (plus `.field--invalid` with an error), `.field__label`, the control, `.field__error`. The address box: put `data-controller="address-autocomplete"` and the `MAPBOX_API_KEY` value on the `.field`, and a hidden `address` input as the controller's `address` target; the controller inserts `<mapbox-search-box>` right after it and themes it from the tokens. `devise/registrations/new.html.erb` is the reference.
+For a field the builder can't render (the Mapbox address box), write the same markup by hand: `.field` (plus `.field--invalid` with an error), `.field__label`, the control, `.field__error`. The address box: put `data-controller="address-autocomplete"` and the `MAPBOX_API_KEY` value on the `.field`, and a hidden `address` input as the controller's `address` target; the controller inserts `<mapbox-search-box>` right after it and styles it like `.field__input` from the tokens (including the invalid border). `devise/registrations/new.html.erb` is the reference.
 
 Validation messages are French (`config/locales/fr.yml`); field names come from `activerecord.attributes`. Add a model's attribute names there when its errors show with `full_messages`.

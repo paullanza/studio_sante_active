@@ -89,6 +89,14 @@ body:has(.top-nav) .brand-bar {
   margin: 0 auto;
 }
 
+// The full page column, for signed-out pages with a long form (sign up).
+.page-full {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
 // Signed-out pages (no nav): leave room above the form.
 .auth {
   padding-top: 24px;
