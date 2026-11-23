@@ -17,7 +17,7 @@ export default class extends Controller {
       types: ["country", "region", "place", "postcode", "locality", "neighborhood", "address"]
     }
     this.searchBox.placeholder = "Adresse"
-    this.searchBox.theme = { variables: { fontFamily: "inherit", borderRadius: "0.5rem" } }
+    this.searchBox.theme = { variables: this.themeVariables() }
 
     // sync hidden field on select/clear
     this.handleRetrieve = this.handleRetrieve.bind(this)
@@ -25,7 +25,8 @@ export default class extends Controller {
     this.searchBox.addEventListener("retrieve", this.handleRetrieve)
     this.searchBox.addEventListener("clear", this.handleClear)
 
-    this.element.appendChild(this.searchBox)
+    // Right after the hidden input, so a field error below it stays below the box.
+    this.addressTarget.after(this.searchBox)
 
     // Prefill visually with the saved address; setting value doesn't open suggestions
     const existing = (this.addressTarget.value || "").trim()
@@ -36,6 +37,25 @@ export default class extends Controller {
     this.searchBox?.removeEventListener("retrieve", this.handleRetrieve)
     this.searchBox?.removeEventListener("clear", this.handleClear)
     this.searchBox?.remove()
+  }
+
+  // On the new layout, colours come from the design tokens (docs/ui.md) so the
+  // box reads on the dark theme. The old Bootstrap layout has no tokens and
+  // keeps Mapbox's light defaults.
+  themeVariables() {
+    const styles = getComputedStyle(document.documentElement)
+    const token = (name) => styles.getPropertyValue(name).trim()
+    if (!token("--surface-2")) return { fontFamily: "inherit", borderRadius: "0.5rem" }
+
+    return {
+      colorBackground: token("--surface-2"),
+      colorBackgroundHover: token("--surface"),
+      colorText: token("--text"),
+      colorPrimary: token("--accent"),
+      border: `1px solid ${token("--border")}`,
+      borderRadius: token("--radius"),
+      fontFamily: "Lato, sans-serif"
+    }
   }
 
   handleRetrieve(event) {

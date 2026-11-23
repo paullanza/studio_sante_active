@@ -145,3 +145,27 @@ textarea.field__input {
 .field--invalid .segmented {
   border-color: var(--field-invalid-border);
 }
+
+// Two fields side by side from 768 px (for example Prénom and Nom).
+.field-row {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .field-row {
+    flex-direction: row;
+  }
+
+  .field-row > .field {
+    flex: 1;
+  }
+}
+
+// <mapbox-search-box> (address_autocomplete_controller.js) draws its own input
+// and dropdown, themed from the tokens; it only needs the field's full width.
+.field mapbox-search-box {
+  display: block;
+  width: 100%;
+}

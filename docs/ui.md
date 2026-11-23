@@ -194,6 +194,8 @@ Server-rendered links with a `?tab=` param:
 - `submit(label, variant: :primary, block: false)`: a `<button type="submit">` with `.btn--{variant}` (`:primary`, `:secondary`, `:ghost`, `:danger`).
 - `base_errors`: errors on `:base` as a `.flash--alert` list above the fields.
 
-Put a form's fields in `class="form"` for the 16 px vertical rhythm. For a field the builder can't render (the Mapbox address box), write the same markup by hand: `.field`, `.field__label`, the control, `.field__error`.
+Put a form's fields in `class="form"` for the 16 px vertical rhythm. Wrap two short fields in `<div class="field-row">` to put them side by side from 768 px (Prénom and Nom).
+
+For a field the builder can't render (the Mapbox address box), write the same markup by hand: `.field` (plus `.field--invalid` with an error), `.field__label`, the control, `.field__error`. The address box: put `data-controller="address-autocomplete"` and the `MAPBOX_API_KEY` value on the `.field`, and a hidden `address` input as the controller's `address` target; the controller inserts `<mapbox-search-box>` right after it and themes it from the tokens. `devise/registrations/new.html.erb` is the reference.
 
 Validation messages are French (`config/locales/fr.yml`); field names come from `activerecord.attributes`. Add a model's attribute names there when its errors show with `full_messages`.

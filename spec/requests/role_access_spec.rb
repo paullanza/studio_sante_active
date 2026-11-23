@@ -60,6 +60,20 @@ RSpec.describe "Role-based access", type: :request do
     end
   end
 
+  # Sign-up is the only Devise registration route (see registrations_spec.rb).
+  describe "sign-up" do
+    it "is open to signed-out visitors" do
+      get new_user_registration_path
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "sends a signed-in user to their home page" do
+      sign_in employee
+      get new_user_registration_path
+      expect(response).to redirect_to(user_path(employee))
+    end
+  end
+
 
   # One row per route in the Pundit Authorization Spec's permission matrix:
   # the request to make, and the roles allowed to make it. Every role not
