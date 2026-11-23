@@ -89,12 +89,144 @@ body:has(.top-nav) .brand-bar {
   margin: 0 auto;
 }
 
-// The full page column, for signed-out pages with a long form (sign up).
-.page-full {
+// Signed-out pages with a form (sign in, sign up). On a phone: the welcome
+// panel, the form, then the link to the other page. From 1024 px: the panel
+// and that link in a left column beside the form, which gets the rest of the
+// page.
+.auth-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "panel" "form" "foot";
+  gap: 24px;
+  padding-top: 16px;
+}
+
+.auth-split__panel {
+  grid-area: panel;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  width: 100%;
+  gap: 10px;
+}
+
+.auth-split__panel .eyebrow {
+  margin: 0;
+}
+
+.auth-split__title {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.auth-split__lead {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.auth-split__form {
+  grid-area: form;
+}
+
+.auth-split__foot {
+  grid-area: foot;
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+@media (min-width: 1024px) {
+  .auth-split {
+    grid-template-columns: 300px minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "panel form" "foot form";
+    gap: 16px 48px;
+    padding-top: 40px;
+  }
+
+  .auth-split__panel {
+    position: sticky;
+    top: 24px;
+    gap: 16px;
+    padding: 28px 24px;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  .auth-split__title {
+    font-size: 38px;
+  }
+
+  .auth-split__foot {
+    padding: 0 24px;
+    text-align: left;
+  }
+}
+
+// The parts of a sectioned form, in its welcome panel. The part holding focus
+// lights up gold (no JS: :has on the form's data-part sections). On a phone
+// they are three bars over their names; from 1024 px, a vertical list.
+.form-parts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.form-parts__part {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.form-parts__part::before {
+  content: "";
+  height: 4px;
+  border-radius: 4px;
+  background: var(--border);
+}
+
+@media (min-width: 1024px) {
+  .form-parts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    margin-top: 12px;
+  }
+
+  .form-parts__part {
+    justify-content: center;
+    min-height: 44px;
+    padding-left: 16px;
+    border-left: 3px solid var(--border);
+    font-size: 15px;
+  }
+
+  .form-parts__part::before {
+    display: none;
+  }
+}
+
+// Sign up's three parts; the first is lit until another one takes focus.
+.signup:not(:has([data-part]:focus-within)) .form-parts__part[data-part="code"],
+.signup:has(section[data-part="code"]:focus-within) .form-parts__part[data-part="code"],
+.signup:has(section[data-part="coordonnees"]:focus-within) .form-parts__part[data-part="coordonnees"],
+.signup:has(section[data-part="connexion"]:focus-within) .form-parts__part[data-part="connexion"] {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.signup:not(:has([data-part]:focus-within)) .form-parts__part[data-part="code"]::before,
+.signup:has(section[data-part="code"]:focus-within) .form-parts__part[data-part="code"]::before,
+.signup:has(section[data-part="coordonnees"]:focus-within) .form-parts__part[data-part="coordonnees"]::before,
+.signup:has(section[data-part="connexion"]:focus-within) .form-parts__part[data-part="connexion"]::before {
+  background: var(--accent);
 }
 
 // Signed-out pages (no nav): leave room above the form.

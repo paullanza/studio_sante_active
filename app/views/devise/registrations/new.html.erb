@@ -1,54 +1,71 @@
 <% content_for :title, "Créer un compte" %>
 
-<div class="page-full auth">
-  <%= back_link_to "Connexion", new_user_session_path %>
-
-  <div class="page-header">
-    <h1>Créer un compte</h1>
-  </div>
+<div class="auth-split signup">
+  <aside class="auth-split__panel">
+    <p class="eyebrow">Créer un compte</p>
+    <h1 class="auth-split__title">Bienvenue dans l'équipe.</h1>
+    <p class="auth-split__lead">Votre gestionnaire vous a remis un code de 8 caractères. Il ne sert qu'une fois.</p>
+    <%# The part being filled in lights up (CSS :has on the sections below). %>
+    <ol class="form-parts" aria-hidden="true">
+      <li class="form-parts__part" data-part="code">Code d'inscription</li>
+      <li class="form-parts__part" data-part="coordonnees">Vos coordonnées</li>
+      <li class="form-parts__part" data-part="connexion">Connexion</li>
+    </ol>
+  </aside>
 
   <%= form_with model: resource, scope: resource_name, url: user_registration_path,
-        builder: StudioFormBuilder, class: "form form--grid" do |f| %>
-    <%# Two columns from 768 px, filled in this (mobile) order. %>
+        builder: StudioFormBuilder, class: "form auth-split__form" do |f| %>
     <%= f.base_errors %>
 
-    <%= f.field :signup_code_token, label: "Code d'inscription", hint: "8 caractères",
-          autocomplete: "off", autocapitalize: "characters", spellcheck: false, required: true, autofocus: true %>
-    <div class="from-tablet" aria-hidden="true"></div>
+    <section class="form-section" data-part="code" aria-labelledby="partie-code">
+      <header class="form-section__head"><h2 id="partie-code">Code d'inscription</h2></header>
+      <%= f.code :signup_code_token, label: "Code reçu de votre gestionnaire", length: 8, autofocus: true %>
+    </section>
 
-    <%= f.field :first_name, label: "Prénom", autocomplete: "given-name", required: true %>
-    <%= f.field :last_name, label: "Nom", autocomplete: "family-name", required: true %>
+    <section class="form-section" data-part="coordonnees" aria-labelledby="partie-coordonnees">
+      <header class="form-section__head"><h2 id="partie-coordonnees">Vos coordonnées</h2></header>
+      <div class="form-grid">
+        <%= f.field :first_name, label: "Prénom", autocomplete: "given-name", required: true %>
+        <%= f.field :last_name, label: "Nom", autocomplete: "family-name", required: true %>
+        <%= f.field :phone, label: "Téléphone", as: :tel, autocomplete: "tel", required: true %>
+        <%= f.field :birthday, label: "Date de naissance", as: :date, max: Date.current, required: true %>
 
-    <%= f.field :phone, label: "Téléphone", as: :tel, autocomplete: "tel", required: true %>
+        <%# The builder can't render <mapbox-search-box>, so this is the tile markup by hand.
+            The controller inserts the search box right after the hidden input. %>
+        <% address_error = resource.errors[:address].first %>
+        <div class="<%= class_names("field", "form-grid__wide", "field--invalid" => address_error) %>">
+          <div class="field__box" data-controller="address-autocomplete"
+               data-address-autocomplete-api-key-value="<%= ENV["MAPBOX_API_KEY"] %>">
+            <span class="field__label">Adresse</span>
+            <%= f.hidden_field :address, data: { address_autocomplete_target: "address" } %>
+          </div>
+          <% if address_error %>
+            <p class="field__error"><%= address_error %></p>
+          <% end %>
+        </div>
+      </div>
+    </section>
 
-    <%= f.field :birthday, label: "Date de naissance", as: :date, max: Date.current, required: true %>
+    <section class="form-section" data-part="connexion" aria-labelledby="partie-connexion">
+      <header class="form-section__head">
+        <h2 id="partie-connexion">Connexion</h2>
+        <span><%= @minimum_password_length || 8 %> caractères minimum pour le mot de passe</span>
+      </header>
+      <div class="form-grid">
+        <%= f.field :email, label: "Courriel", as: :email, field_class: "form-grid__wide",
+              autocomplete: "email", autocapitalize: "none", spellcheck: false, required: true %>
+        <%= f.field :password, label: "Mot de passe", as: :password, autocomplete: "new-password", required: true %>
+        <%= f.field :password_confirmation, label: "Confirmer le mot de passe", as: :password,
+              autocomplete: "new-password", required: true %>
+      </div>
+    </section>
 
-    <%# The builder can't render <mapbox-search-box>, so this is the .field markup by hand.
-        The controller inserts the search box right after the hidden input. %>
-    <% address_error = resource.errors[:address].first %>
-    <div class="<%= class_names("field", "field--invalid" => address_error) %>"
-         data-controller="address-autocomplete"
-         data-address-autocomplete-api-key-value="<%= ENV["MAPBOX_API_KEY"] %>">
-      <span class="field__label">Adresse</span>
-      <%= f.hidden_field :address, data: { address_autocomplete_target: "address" } %>
-      <% if address_error %>
-        <p class="field__error"><%= address_error %></p>
-      <% end %>
+    <div class="form-actions">
+      <%= f.submit "Créer mon compte" %>
     </div>
-
-    <%= f.field :email, label: "Courriel", as: :email,
-          autocomplete: "email", autocapitalize: "none", spellcheck: false, required: true %>
-
-    <%= f.field :password, label: "Mot de passe", as: :password,
-          hint: "#{@minimum_password_length || 8} caractères minimum", autocomplete: "new-password", required: true %>
-
-    <%= f.field :password_confirmation, label: "Confirmer le mot de passe", as: :password,
-          autocomplete: "new-password", required: true %>
-
-    <%= f.submit "Créer mon compte", block: true %>
   <% end %>
 
-  <p class="text-muted text-small">
+  <p class="auth-split__foot">
     Vous avez déjà un compte?
     <%= link_to "Se connecter", new_user_session_path %>
   </p>

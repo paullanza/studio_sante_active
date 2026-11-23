@@ -1,9 +1,10 @@
 # Form builder for the new layout. Renders the `.field` markup from
-# docs/ui.md: label, input, hint and the attribute's first error, wired with
-# aria-invalid and aria-describedby.
+# docs/ui.md: a filled tile holding the label and input, then the hint and the
+# attribute's first error, wired with aria-invalid and aria-describedby.
 #
 #   form_with model: @user, builder: StudioFormBuilder do |f|
 #     f.field :email, label: "Courriel", as: :email, autocomplete: "email"
+#     f.code :signup_code_token, label: "Code d'inscription", length: 8
 #     f.segmented :present, [ [ "Présent·e", true ], [ "Absent·e", false ] ], label: "Présence"
 #     f.submit "Enregistrer"
 #   end
@@ -23,8 +24,9 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
   BUTTON_VARIANTS = %i[primary secondary ghost danger].freeze
 
   # One labelled input. `label_aside` is extra HTML on the label's line (for
-  # example the « Mot de passe oublié? » link). Other options go to the input.
-  def field(attribute, label:, as: :text, hint: nil, label_aside: nil, **input_options)
+  # example the « Mot de passe oublié? » link). `field_class` goes on the
+  # wrapper (e.g. "form-grid__wide"). Other options go to the input.
+  def field(attribute, label:, as: :text, hint: nil, label_aside: nil, field_class: nil, **input_options)
     method = INPUTS.fetch(as) { raise ArgumentError, "Unknown field type: #{as.inspect}" }
     error = error_for(attribute)
 
@@ -33,10 +35,40 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
       aria: input_aria(attribute, hint:, error:).merge(input_options.fetch(:aria, {}))
     ))
 
-    @template.tag.div(class: field_classes(error)) do
+    @template.tag.div(class: [ field_classes(error), field_class ].compact.join(" ")) do
       @template.safe_join([
-        label_row(attribute, label, label_aside),
-        input,
+        @template.tag.div(@template.safe_join([ label_row(attribute, label, label_aside), input ]), class: "field__box"),
+        hint_tag(attribute, hint),
+        error_tag(attribute, error)
+      ].compact)
+    end
+  end
+
+  # A fixed-length code (the signup code) typed into one cell per character.
+  # The cells have no name: code_input_controller.js joins them into the
+  # hidden input that submits. On a re-render the cells show the typed value.
+  def code(attribute, label:, length:, hint: nil, autofocus: false)
+    error = error_for(attribute)
+    value = object.public_send(attribute).to_s
+    label_id = field_id(attribute, :label)
+
+    cells = Array.new(length) do |index|
+      @template.tag.input(
+        type: "text", value: value[index], id: (field_id(attribute) if index.zero?),
+        class: "code__cell", maxlength: 1, autocomplete: "off", autocapitalize: "characters",
+        spellcheck: false, autofocus: (autofocus if index.zero?),
+        aria: { label: "Caractère #{index + 1} sur #{length}", invalid: ("true" if error) },
+        data: { code_input_target: "cell",
+                action: "input->code-input#input keydown->code-input#keydown paste->code-input#paste focus->code-input#select" }
+      )
+    end
+
+    @template.tag.div(class: field_classes(error), data: { controller: "code-input" }) do
+      @template.safe_join([
+        label(attribute, label, class: "field__label", id: label_id),
+        @template.tag.div(@template.safe_join(cells), class: "code", role: "group",
+                          aria: { labelledby: label_id }.merge(input_aria(attribute, hint:, error:).except(:invalid))),
+        hidden_field(attribute, data: { code_input_target: "value" }),
         hint_tag(attribute, hint),
         error_tag(attribute, error)
       ].compact)

@@ -39,39 +39,37 @@ export default class extends Controller {
     this.searchBox?.remove()
   }
 
-  // On the new layout the box matches the other inputs (.field__input in
-  // studio/_fields.scss), from the design tokens. Mapbox hard-codes a dark
-  // input text colour that no theme variable reaches, so `cssText` overrides
-  // it inside the shadow DOM. The old Bootstrap layout has no tokens and
-  // keeps Mapbox's light defaults.
+  // On the new layout the box sits inside a field tile (.field__box in
+  // studio/_fields.scss): no border or padding of its own, the tile's
+  // background, and colours from the design tokens. The tile draws the focus
+  // and error underlines. Mapbox hard-codes a dark input text colour that no
+  // theme variable reaches, so `cssText` overrides it inside the shadow DOM.
+  // The old Bootstrap layout has no tokens and keeps Mapbox's light defaults.
   theme() {
     const styles = getComputedStyle(document.documentElement)
     const token = (name) => styles.getPropertyValue(name).trim()
     if (!token("--surface-2")) return { variables: { fontFamily: "inherit", borderRadius: "0.5rem" } }
 
-    const invalid = this.element.classList.contains("field--invalid")
-    const border = token(invalid ? "--field-invalid-border" : "--border")
-
     return {
       variables: {
-        colorBackground: token("--bg"),
-        colorBackgroundHover: token("--surface-2"),
-        colorBackgroundActive: token("--surface-2"),
+        colorBackground: token("--surface-2"),
+        colorBackgroundHover: token("--surface"),
+        colorBackgroundActive: token("--surface"),
         colorText: token("--text"),
         colorSecondary: token("--text-muted"),
         colorPrimary: token("--accent"),
-        border: `1px solid ${border}`,
+        border: "none",
         borderRadius: token("--radius"),
         boxShadow: "none",
+        padding: "0",
         fontFamily: "Lato, sans-serif",
-        unit: "16px"
+        unit: "17px"
       },
       cssText: `
-        .Input, .Input:focus { color: ${token("--text")}; height: calc(${token("--control-height")} - 2px); border: 0; }
+        .Input, .Input:focus { color: ${token("--text")}; height: 28px; padding: 0 32px 0 26px; border: 0; }
         .Input::placeholder { color: ${token("--text-muted")}; opacity: 1; }
-        .SearchIcon { fill: ${token("--text-muted")}; }
+        .SearchIcon { left: 0; fill: ${token("--text-muted")}; }
         .ClearBtn:hover { color: ${token("--text")}; }
-        .SearchBox:focus-within { border-color: ${token("--border-strong")}; outline: 2px solid ${token("--border-strong")}; }
       `
     }
   }
