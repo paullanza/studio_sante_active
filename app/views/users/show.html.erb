@@ -67,11 +67,8 @@
           <div class="mt-3">
             <% if user_policy.edit? %>
               <div class="d-grid">
-                <% if @user == current_user %>
-                  <%= link_to "Modifier mon profil", edit_user_registration_path, class: "btn btn-outline-primary" %>
-                <% else %>
-                  <%= link_to "Modifier le profil", edit_user_path(@user), class: "btn btn-outline-primary" %>
-                <% end %>
+                <%= link_to (@user == current_user ? "Modifier mon profil" : "Modifier le profil"),
+                      edit_user_path(@user), class: "btn btn-outline-primary" %>
               </div>
             <% end %>
           </div>

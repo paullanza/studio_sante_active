@@ -41,7 +41,7 @@ class ApplicationController < ActionController::Base
   end
 
   def configure_permitted_parameters
-    # For sign up
+    # Sign-up is the only Devise registration action (see config/routes.rb).
     devise_parameter_sanitizer.permit(
       :sign_up,
       keys: [
@@ -51,18 +51,6 @@ class ApplicationController < ActionController::Base
         :address,
         :birthday,
         :signup_code_token
-      ]
-    )
-
-    # For account update (no signup_code_token here)
-    devise_parameter_sanitizer.permit(
-      :account_update,
-      keys: [
-        :first_name,
-        :last_name,
-        :phone,
-        :address,
-        :birthday
       ]
     )
   end

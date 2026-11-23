@@ -44,9 +44,45 @@ RSpec.describe StudioFormBuilder, type: :helper do
       expect(html.at_css(".field__label-row a[href='/aide']").text).to eq("Aide")
     end
 
+    it "puts the label and input in the tile and field_class on the wrapper" do
+      html = form_for_user { |f| f.field(:email, label: "Courriel", hint: "Aide", field_class: "form-grid__wide") }
+
+      expect(html.at_css(".field.form-grid__wide > .field__box > label.field__label")).to be_present
+      expect(html.at_css(".field__box > input#user_email")["class"]).to eq("field__input")
+      expect(html.at_css(".field > .field__hint")).to be_present
+    end
+
     it "refuses an unknown field type" do
       expect { form_for_user { |f| f.field(:email, label: "Courriel", as: :colour) } }
         .to raise_error(ArgumentError, /colour/)
+    end
+  end
+
+  describe "#code" do
+    it "renders one unnamed cell per character and the hidden input that submits" do
+      user.signup_code_token = "K7QM"
+      html = form_for_user { |f| f.code(:signup_code_token, label: "Code", length: 8, autofocus: true) }
+      cells = html.css(".code__cell")
+
+      expect(html.at_css(".field[data-controller=code-input] label#user_signup_code_token_label[for=user_signup_code_token]").text).to eq("Code")
+      expect(html.at_css(".code[role=group]")["aria-labelledby"]).to eq("user_signup_code_token_label")
+      expect(cells.size).to eq(8)
+      expect(cells.map { |c| c["name"] }.uniq).to eq([ nil ])
+      expect(cells.map { |c| c["value"].to_s }).to eq(%w[K 7 Q M] + [ "" ] * 4)
+      expect(cells.first["id"]).to eq("user_signup_code_token")
+      expect(cells.first["autofocus"]).to eq("autofocus")
+      expect(cells[1]["autofocus"]).to be_nil
+      expect(html.at_css("input[type=hidden][name='user[signup_code_token]']")["value"]).to eq("K7QM")
+    end
+
+    it "shows the error and marks the cells invalid" do
+      user.errors.add(:signup_code_token, "a expiré")
+      html = form_for_user { |f| f.code(:signup_code_token, label: "Code", length: 8) }
+
+      expect(html.at_css(".field")["class"].split).to include("field--invalid")
+      expect(html.css(".code__cell").map { |c| c["aria-invalid"] }.uniq).to eq([ "true" ])
+      expect(html.at_css(".code")["aria-describedby"]).to eq("user_signup_code_token_error")
+      expect(html.at_css("#user_signup_code_token_error").text).to eq("a expiré")
     end
   end
 
@@ -96,6 +132,14 @@ RSpec.describe StudioFormBuilder, type: :helper do
       button = form_for_user { |f| f.submit("Annuler", variant: :ghost) }.at_css("button")
 
       expect(button["class"]).to eq("btn btn--ghost")
+    end
+
+    it "adds the arrow to forward actions only" do
+      primary = form_for_user { |f| f.submit("Enregistrer") }.at_css("button")
+      ghost = form_for_user { |f| f.submit("Annuler", variant: :ghost) }.at_css("button")
+
+      expect(primary.at_css(".btn__arrow svg")).to be_present
+      expect(ghost.at_css(".btn__arrow")).to be_nil
     end
 
     it "refuses an unknown variant" do

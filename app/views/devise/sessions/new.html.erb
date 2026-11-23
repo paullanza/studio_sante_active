@@ -1,30 +1,38 @@
 <% content_for :title, "Connexion" %>
 
-<div class="page-narrow auth">
-  <div class="page-header">
-    <h1>Se connecter</h1>
-  </div>
+<div class="auth-split">
+  <aside class="auth-split__panel">
+    <p class="eyebrow">Se connecter</p>
+    <h1 class="auth-split__title">Bon retour.</h1>
+    <p class="auth-split__lead">Connectez-vous avec le courriel de votre compte.</p>
+  </aside>
 
   <%= form_with model: resource, scope: resource_name, url: user_session_path,
-        builder: StudioFormBuilder, class: "form" do |f| %>
-    <%= f.field :email, label: "Courriel", as: :email,
-          autocomplete: "email", autocapitalize: "none", spellcheck: false, required: true, autofocus: true %>
+        builder: StudioFormBuilder, class: "form auth-split__form" do |f| %>
+    <section class="form-section">
+      <%= f.field :email, label: "Courriel", as: :email,
+            autocomplete: "email", autocapitalize: "none", spellcheck: false, required: true, autofocus: true %>
 
-    <%= f.field :password, label: "Mot de passe", as: :password,
-          autocomplete: "current-password", required: true,
-          label_aside: link_to("Mot de passe oublié?", password_help_path) %>
+      <%= f.field :password, label: "Mot de passe", as: :password,
+            autocomplete: "current-password", required: true,
+            label_aside: link_to("Mot de passe oublié?", password_help_path) %>
 
-    <% if devise_mapping.rememberable? %>
-      <%= f.check :remember_me, label: "Se souvenir de moi" %>
-    <% end %>
+      <% if devise_mapping.rememberable? %>
+        <%= f.check :remember_me, label: "Se souvenir de moi" %>
+      <% end %>
+    </section>
 
-    <%= f.submit "Se connecter", block: true %>
-  <% end %>
+    <div class="form-actions">
+      <%= f.submit "Se connecter" %>
 
-  <% if devise_mapping.registerable? %>
-    <p class="text-muted text-small">
-      Nouvelle ou nouveau membre du personnel?
-      <%= link_to "Créer un compte", new_user_registration_path %>
-    </p>
+      <% if devise_mapping.registerable? %>
+        <div class="auth-switch">
+          <p>Nouvelle ou nouveau membre du personnel? Créez votre compte avec le code reçu de votre gestionnaire.</p>
+          <%= link_to new_user_registration_path, class: "btn btn--secondary" do %>
+            <%= safe_join([ "Créer un compte", button_arrow ]) %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
   <% end %>
 </div>

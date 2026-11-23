@@ -47,7 +47,7 @@ In the view, declare the nav section, the page title, and a back link instead of
 <%= back_link_to "Clients", fliip_users_path %>
 ```
 
-Nav sections: `dashboard`, `clients`, `saisir`, `mes_services`, `plus` (every page reached from the « Plus » menu). The browser tab reads « Ysolde Brisebois · GEKO ». The page sits in `<main class="page">`: a 16 px gutter on mobile and a 960 px column from tablet up. Short signed-out forms use `<div class="page-narrow auth">`. Pages don't repeat the app's name: the brand bar carries it.
+Nav sections: `dashboard`, `clients`, `saisir`, `mes_services`, `plus` (every page reached from the « Plus » menu). The browser tab reads « Ysolde Brisebois · GEKO ». The page sits in `<main class="page">`: a 16 px gutter on mobile and a 960 px column from tablet up. Signed-out forms use `auth-split` (see Forms); other short signed-out pages (« Mot de passe oublié ») use `<div class="page-narrow auth">`. Pages don't repeat the app's name: the brand bar carries it.
 
 ## Brand and full-screen web app
 
@@ -80,6 +80,7 @@ CSS custom properties on `:root` (`studio/_tokens.scss`). Use `var(--name)`.
 | `--brand-light` | #6FBF8E | links, section labels |
 | `--accent` | #D4A537 | gold: main action, active tab |
 | `--accent-hover` | #E6BE5C | gold hover |
+| `--accent-shadow` | #8C6B1F | the gold button's hard shadow |
 | `--on-accent` | #14110A | text on gold |
 | `--text` | #ECEFEA | text |
 | `--text-muted` | #A3B0A7 | secondary text |
@@ -100,14 +101,23 @@ Type: `--font-heading` (Barlow) for headings and buttons, `--font-body` (Lato) f
 ### Buttons
 
 ```erb
-<%= link_to "Saisir une séance", new_seance_path, class: "btn btn--primary btn--block" %>
-<button type="button" class="btn btn--secondary">Modifier</button>
+<%= link_to new_seance_path, class: "btn btn--primary" do %>
+  <%= safe_join([ "Saisir une séance", button_arrow ]) %>
+<% end %>
+<%= link_to edit_user_path(@user), class: "btn btn--secondary" do %>
+  <%= safe_join([ "Modifier", button_arrow ]) %>
+<% end %>
 <button type="button" class="btn btn--ghost">Annuler</button>
 <%= button_to "Supprimer", session_path(s), method: :delete, class: "btn btn--danger",
       form: { data: { turbo_confirm: "Supprimer cette séance?" } } %>
 ```
 
-`.btn--primary` (gold, 52 px, one per screen), `.btn--secondary`, `.btn--ghost`, `.btn--danger`; `.btn--block` for full width.
+Buttons must not look like Bootstrap: no rounded boxes in a row. Labels are Barlow in small caps.
+
+- `.btn--primary`: the gold main action, one per screen, 52 px. A block with a cut bottom-right corner on a hard gold shadow (`--accent-shadow`) that it presses into when clicked.
+- `.btn--secondary`: green underlined text. `.btn--danger`: red underlined text. `.btn--ghost`: plain muted text. None of them has a box.
+- `button_arrow` (`LayoutHelper`) adds the arrow that slides on hover. Forward actions (primary, secondary) carry it; `StudioFormBuilder#submit` adds it to those two variants itself.
+- `.btn--block` for full width (a form's actions do this on a phone already).
 
 ### Badges
 
@@ -175,25 +185,60 @@ Server-rendered links with a `?tab=` param:
 
 ## Forms: StudioFormBuilder
 
+Forms must not look like Bootstrap: no label stacked above an outlined box, no single narrow column on desktop, no full-width bar of a button on desktop. Every form uses the pieces below. The mockups in `docs/design/` predate this field style; where they differ, this section wins until they are updated. `devise/registrations/new.html.erb` is the reference page.
+
+### Fields: filled tiles
+
 ```erb
 <%= form_with model: @user, url: profile_path, builder: StudioFormBuilder, class: "form" do |f| %>
   <%= f.base_errors %>
   <%= f.field :email, label: "Courriel", as: :email, autocomplete: "email" %>
   <%= f.field :password, label: "Mot de passe", as: :password, hint: "8 caractères minimum",
         label_aside: link_to("Mot de passe oublié?", password_help_path) %>
-  <%= f.field :note, label: "Note", as: :textarea %>
+  <%= f.field :note, label: "Note", as: :textarea, field_class: "form-grid__wide" %>
+  <%= f.code :signup_code_token, label: "Code reçu de votre gestionnaire", length: 8 %>
   <%= f.check :remember_me, label: "Se souvenir de moi" %>
   <%= f.segmented :duration, [ [ "1 h", 1.0 ], [ "30 min", 0.5 ] ], label: "Durée" %>
   <%= f.submit "Enregistrer" %>
 <% end %>
 ```
 
-- `field(attr, label:, as:, hint:, label_aside:, **input_options)`: `as` is `:text` (default), `:email`, `:password`, `:tel`, `:date`, `:time`, `:number`, `:search` or `:textarea`. Renders the label, the input, the hint and the attribute's first error. With an error it adds `.field--invalid`, `aria-invalid="true"` and points `aria-describedby` at the hint and error. Other options (`autocomplete`, `required`, `min`, `step`, …) go to the input.
+A field is a filled tile (`.field__box`, `--surface-2`, no outline) holding its label in small caps and its input; the hint and error sit under the tile. Focus draws a gold underline on the tile and turns the label gold; an error draws a red underline and turns the label red.
+
+- `field(attr, label:, as:, hint:, label_aside:, field_class:, **input_options)`: `as` is `:text` (default), `:email`, `:password`, `:tel`, `:date`, `:time`, `:number`, `:search` or `:textarea`. With an error it adds `.field--invalid`, `aria-invalid="true"` and points `aria-describedby` at the hint and error. `label_aside` goes on the label's line inside the tile; `field_class` goes on the wrapper (`form-grid__wide`). Other options (`autocomplete`, `required`, `min`, `step`, …) go to the input.
+- `code(attr, label:, length:, hint:, autofocus:)`: a fixed-length code typed into one cell per character, split in two halves. `code_input_controller.js` moves between cells, takes a paste, uppercases, and joins the cells into a hidden input, the only one that submits.
 - `check(attr, label:)`: a checkbox inside its label.
 - `segmented(attr, choices, label:)`: radio buttons as a toggle in a `<fieldset>`; `choices` is `[[label, value], …]`. The option matching the current value is checked; the checked option uses `--brand`.
 - `submit(label, variant: :primary, block: false)`: a `<button type="submit">` with `.btn--{variant}` (`:primary`, `:secondary`, `:ghost`, `:danger`).
 - `base_errors`: errors on `:base` as a `.flash--alert` list above the fields.
 
-Put a form's fields in `class="form"` for the 16 px vertical rhythm. For a field the builder can't render (the Mapbox address box), write the same markup by hand: `.field`, `.field__label`, the control, `.field__error`.
+For a field the builder can't render (the Mapbox address box), write the tile by hand: `.field` (plus `.field--invalid` with an error) › `.field__box` › `.field__label` and the control, then `.field__error` after the box. For the address, put `data-controller="address-autocomplete"` and the `MAPBOX_API_KEY` value on the `.field__box`, with a hidden `address` input as the controller's `address` target; the controller inserts `<mapbox-search-box>` after it, borderless on the tile's background.
+
+### Form layout
+
+Mobile first, but on desktop a form is a full-page layout, not a phone column.
+
+```erb
+<%= form_with …, class: "form" do |f| %>
+  <section class="form-section" aria-labelledby="partie-coordonnees">
+    <header class="form-section__head"><h2 id="partie-coordonnees">Vos coordonnées</h2><span>Aide courte</span></header>
+    <div class="form-grid">
+      <%= f.field :first_name, label: "Prénom" %>
+      <%= f.field :last_name, label: "Nom" %>
+      <%= f.field :address, label: "Adresse", field_class: "form-grid__wide" %>
+    </div>
+  </section>
+  <div class="form-actions"><%= f.submit "Enregistrer" %></div>
+<% end %>
+```
+
+- `.form` stacks its children 16 px apart, 28 px when they are sections.
+- `.form-section` groups related fields under a Barlow heading, with an optional short note on the right. Split any form of more than about five fields into sections.
+- `.form-grid` lays the fields in two columns from 768 px, in source order (the mobile order); `.form-grid__wide` spans both.
+- `.form-actions` closes the form: the button is full width on a phone, right-aligned under a rule from 768 px.
+
+### Signed-out pages: auth split
+
+Sign in and sign up use `<div class="auth-split">`: a welcome panel (`.auth-split__panel`: `.eyebrow`, `.auth-split__title` as the page's `h1`, `.auth-split__lead`) and the form (`.auth-split__form`). On a phone they stack; from 1024 px the panel is a sticky card in a 300 px column beside the form. The way to the other page is an `.auth-switch` card (a line of context and a `.btn--secondary` link with `button_arrow`) inside `.form-actions`, after the gold button: under it on a phone, on its left from 768 px. A sectioned form can list its parts in the panel with `.form-parts`; the part holding focus lights up gold through `:has` (see `.signup` in `studio/_layout.scss`).
 
 Validation messages are French (`config/locales/fr.yml`); field names come from `activerecord.attributes`. Add a model's attribute names there when its errors show with `full_messages`.

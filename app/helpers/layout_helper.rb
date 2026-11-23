@@ -10,6 +10,7 @@ module LayoutHelper
     "plus" => "M5 12h.01M12 12h.01M19 12h.01"
   }.freeze
   BACK_ICON = "M15 18l-6-6 6-6".freeze
+  ARROW_ICON = "M5 12h14M13 6l6 6-6 6".freeze
 
   # Where the GEKO brand links: the user's landing page, or sign in.
   def home_path
@@ -41,6 +42,14 @@ module LayoutHelper
   end
 
   # Decorative inline SVG drawn with the current text colour.
+  # The arrow a forward button carries after its label; it slides on hover.
+  #   link_to new_seance_path, class: "btn btn--primary" do
+  #     safe_join([ "Saisir une séance", button_arrow ])
+  #   end
+  def button_arrow
+    tag.span(icon_svg(ARROW_ICON, size: 18, stroke_width: 2.4), class: "btn__arrow")
+  end
+
   def icon_svg(path_data, size: 24, stroke_width: 2)
     tag.svg(
       tag.path(d: path_data),

@@ -6,8 +6,10 @@ Rails.application.routes.draw do
   # are public. Authorization is handled in controllers/policies.
   # =====================================================================
   # No email reset flow (the app sends no email): « Mot de passe oublié? »
-  # explains who can reset a password instead.
-  devise_for :users, skip: [ :passwords ]
+  # explains who can reset a password instead. Registrations keep only
+  # sign-up (below): accounts are deactivated, never deleted, and profiles
+  # are edited through UsersController.
+  devise_for :users, skip: [ :passwords, :registrations ]
 
   # Background jobs dashboard, for admins and above (MissionControlBaseController).
   mount MissionControl::Jobs::Engine, at: "/jobs"
@@ -20,6 +22,9 @@ Rails.application.routes.draw do
     end
 
     get "mot-de-passe-oublie", to: "password_help#show", as: :password_help
+
+    get "users/sign_up", to: "devise/registrations#new", as: :new_user_registration
+    post "users", to: "devise/registrations#create", as: :user_registration
   end
 
   # =====================================================================
