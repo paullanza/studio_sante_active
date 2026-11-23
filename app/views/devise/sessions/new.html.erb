@@ -28,9 +28,11 @@
   <% end %>
 
   <% if devise_mapping.registerable? %>
-    <p class="auth-split__foot">
-      Nouvelle ou nouveau membre du personnel?
-      <%= link_to "Créer un compte", new_user_registration_path %>
-    </p>
+    <div class="auth-split__foot">
+      <p>Nouvelle ou nouveau membre du personnel? Créez votre compte avec le code reçu de votre gestionnaire.</p>
+      <%= link_to new_user_registration_path, class: "btn btn--secondary" do %>
+        <%= safe_join([ "Créer un compte", button_arrow ]) %>
+      <% end %>
+    </div>
   <% end %>
 </div>

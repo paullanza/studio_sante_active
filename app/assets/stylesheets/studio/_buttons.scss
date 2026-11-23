@@ -129,23 +129,6 @@
   text-decoration-color: var(--danger);
 }
 
-// The end of a long form (sign up): taller, wider, a deeper cut and shadow.
-.btn--large.btn--primary {
-  --cut: 16px;
-  --press: 6px;
-  gap: 14px;
-  min-height: 64px;
-  min-width: 300px;
-  padding: 0 32px 0 36px;
-  font-size: 19px;
-  letter-spacing: 0.1em;
-}
-
-.btn--large .btn__arrow svg {
-  width: 22px;
-  height: 22px;
-}
-
 .btn--block {
   width: 100%;
 }

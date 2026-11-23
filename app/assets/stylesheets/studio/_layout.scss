@@ -128,12 +128,24 @@ body:has(.top-nav) .brand-bar {
   grid-area: form;
 }
 
+// The way to the other auth page: a card with a line of context and a
+// secondary button, so it reads as a real next step, not fine print.
 .auth-split__foot {
   grid-area: foot;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 16px 20px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.auth-split__foot p {
   margin: 0;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-muted);
-  text-align: center;
 }
 
 @media (min-width: 1024px) {
@@ -157,11 +169,6 @@ body:has(.top-nav) .brand-bar {
 
   .auth-split__title {
     font-size: 38px;
-  }
-
-  .auth-split__foot {
-    padding: 0 24px;
-    text-align: left;
   }
 }
 

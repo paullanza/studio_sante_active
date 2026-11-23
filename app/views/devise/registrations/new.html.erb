@@ -61,12 +61,14 @@
     </section>
 
     <div class="form-actions">
-      <%= f.submit "Créer mon compte", large: true %>
+      <%= f.submit "Créer mon compte" %>
     </div>
   <% end %>
 
-  <p class="auth-split__foot">
-    Vous avez déjà un compte?
-    <%= link_to "Se connecter", new_user_session_path %>
-  </p>
+  <div class="auth-split__foot">
+    <p>Vous avez déjà un compte?</p>
+    <%= link_to new_user_session_path, class: "btn btn--secondary" do %>
+      <%= safe_join([ "Se connecter", button_arrow ]) %>
+    <% end %>
+  </div>
 </div>

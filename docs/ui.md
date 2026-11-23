@@ -117,7 +117,6 @@ Buttons must not look like Bootstrap: no rounded boxes in a row. Labels are Barl
 - `.btn--primary`: the gold main action, one per screen, 52 px. A block with a cut bottom-right corner on a hard gold shadow (`--accent-shadow`) that it presses into when clicked.
 - `.btn--secondary`: green underlined text. `.btn--danger`: red underlined text. `.btn--ghost`: plain muted text. None of them has a box.
 - `button_arrow` (`LayoutHelper`) adds the arrow that slides on hover. Forward actions (primary, secondary) carry it; `StudioFormBuilder#submit` adds it to those two variants itself.
-- `.btn--large` (`f.submit …, large: true`): a 64 px gold button with a deeper cut and shadow, to close a long form (sign up).
 - `.btn--block` for full width (a form's actions do this on a phone already).
 
 ### Badges
@@ -210,7 +209,7 @@ A field is a filled tile (`.field__box`, `--surface-2`, no outline) holding its 
 - `code(attr, label:, length:, hint:, autofocus:)`: a fixed-length code typed into one cell per character, split in two halves. `code_input_controller.js` moves between cells, takes a paste, uppercases, and joins the cells into a hidden input, the only one that submits.
 - `check(attr, label:)`: a checkbox inside its label.
 - `segmented(attr, choices, label:)`: radio buttons as a toggle in a `<fieldset>`; `choices` is `[[label, value], …]`. The option matching the current value is checked; the checked option uses `--brand`.
-- `submit(label, variant: :primary, block: false, large: false)`: a `<button type="submit">` with `.btn--{variant}` (`:primary`, `:secondary`, `:ghost`, `:danger`).
+- `submit(label, variant: :primary, block: false)`: a `<button type="submit">` with `.btn--{variant}` (`:primary`, `:secondary`, `:ghost`, `:danger`).
 - `base_errors`: errors on `:base` as a `.flash--alert` list above the fields.
 
 For a field the builder can't render (the Mapbox address box), write the tile by hand: `.field` (plus `.field--invalid` with an error) › `.field__box` › `.field__label` and the control, then `.field__error` after the box. For the address, put `data-controller="address-autocomplete"` and the `MAPBOX_API_KEY` value on the `.field__box`, with a hidden `address` input as the controller's `address` target; the controller inserts `<mapbox-search-box>` after it, borderless on the tile's background.
@@ -240,6 +239,6 @@ Mobile first, but on desktop a form is a full-page layout, not a phone column.
 
 ### Signed-out pages: auth split
 
-Sign in and sign up use `<div class="auth-split">`: a welcome panel (`.auth-split__panel`: `.eyebrow`, `.auth-split__title` as the page's `h1`, `.auth-split__lead`), the form (`.auth-split__form`), and a link to the other page (`.auth-split__foot`). On a phone they stack; from 1024 px the panel (a sticky card) and the link sit in a 300 px column beside the form. A sectioned form can list its parts in the panel with `.form-parts`; the part holding focus lights up gold through `:has` (see `.signup` in `studio/_layout.scss`).
+Sign in and sign up use `<div class="auth-split">`: a welcome panel (`.auth-split__panel`: `.eyebrow`, `.auth-split__title` as the page's `h1`, `.auth-split__lead`), the form (`.auth-split__form`), and the way to the other page (`.auth-split__foot`: a card with a line of context and a `.btn--secondary` link with `button_arrow`). On a phone they stack; from 1024 px the panel (a sticky card) and the link sit in a 300 px column beside the form. A sectioned form can list its parts in the panel with `.form-parts`; the part holding focus lights up gold through `:has` (see `.signup` in `studio/_layout.scss`).
 
 Validation messages are French (`config/locales/fr.yml`); field names come from `activerecord.attributes`. Add a model's attribute names there when its errors show with `full_messages`.
