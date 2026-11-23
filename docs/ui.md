@@ -62,7 +62,7 @@ GEKO can be added to a phone's home screen and opens full screen:
 
 ## Top nav
 
-Five tabs on every width, icon above label: Dashboard, Clients, Saisir, Mes services, Plus. On a phone the brand bar sits above the tabs and only the tabs stick to the top. From 1024 px the brand bar and the tabs share one sticky bar (`.masthead` in the layout), brand on the left. `nav_tab_to(label, path, section)` renders a tab and marks it active (gold, underlined, `aria-current="page"`) when the page declared that section. « Plus » is a `<details>` menu with no JS. Each item is gated by its policy in the partial: add a page by adding a link inside `if policy(...).action?`, never a role check.
+Five tabs on every width, icon above label: Dashboard, Clients, Saisir, Mes services, Plus. On a phone the brand bar sits above the tabs and only the tabs stick to the top. From 1024 px the brand bar and the tabs share one sticky bar (`.masthead` in the layout): brand on the left, tabs centred on the page. `nav_tab_to(label, path, section)` renders a tab and marks it active (gold, underlined, `aria-current="page"`) when the page declared that section. « Plus » is a `<details>` menu with no JS. Each item is gated by its policy in the partial: add a page by adding a link inside `if policy(...).action?`, never a role check.
 
 ## Tokens
 
@@ -200,7 +200,7 @@ Server-rendered links with a `?tab=` param:
 
 The search bar stacks on a phone and sits beside its button from 768 px. Its field is `.field--compact`: one line, 44 px, the label visually hidden and the placeholder saying what to type. A client is a `.client-card` on every width: stacked on a phone, its parts in columns under `.client-list__head` from 1024 px, so desktop rows stand out from the page like the phone cards. The name's `.client-card__link` covers the card; a link inside it (the service) sits above with `position: relative; z-index: 1`. `client_avatar(client)` shows the Fliip photo or the initials.
 
-`render "shared/pager", pagy: @pagy` gives page links (‹ 1 … 5 6 7 … 41 ›, from `pager_series`) that keep the request's other params, such as the search. Put it above the list in a `.list-toolbar` beside the count, and again under the list.
+`render "shared/pager", pagy: @pagy` gives page links (‹ 1 … 5 6 7 … 41 ›, from `pager_series`) and a « go to page » box (type a number, press Enter), all keeping the request's other params, such as the search. Put it above the list in a `.list-toolbar` beside the count, and again under the list.
 
 ### Progress bars
 
