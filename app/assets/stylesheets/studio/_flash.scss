@@ -1,0 +1,61 @@
+// Flash messages, under the nav and above the page content.
+.flash-region {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.flash-region > .flash:first-child {
+  margin-top: 12px;
+}
+
+.flash {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 4px 4px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.flash--alert {
+  border-color: var(--danger-border);
+  background: var(--badge-retire-bg);
+}
+
+.flash__message {
+  flex: 1;
+  padding: 9px 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.flash--alert .flash__message {
+  color: var(--danger);
+}
+
+.flash__close {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.flash__close:hover {
+  background: var(--surface);
+  color: var(--text);
+}

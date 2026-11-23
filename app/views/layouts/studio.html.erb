@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <title><%= content_for?(:title) ? "#{yield(:title)} · Studio Santé Active" : "Studio Santé Active" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag "studio", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags "studio" %>
+  </head>
+
+  <body class="studio">
+    <%= render "layouts/studio_nav" if user_signed_in? %>
+
+    <div class="flash-region" id="flash">
+      <%= render "shared/studio_flash" %>
+    </div>
+
+    <main class="page" id="contenu">
+      <%= yield %>
+    </main>
+  </body>
+</html>

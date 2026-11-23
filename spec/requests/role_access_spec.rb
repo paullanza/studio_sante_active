@@ -130,6 +130,7 @@ RSpec.describe "Role-based access", type: :request do
         "X2 POST fliip_users/:remote_id/refresh" => [ALL, -> { post refresh_fliip_user_path(service.fliip_user.remote_id) }],
         "X3 GET /fliip_services/:id"         => [ALL, -> { get fliip_service_path(service) }],
         "X4 POST service_usage_adjustments"  => [ADMINS, -> { post fliip_service_service_usage_adjustments_path(service), params: { service_usage_adjustment: { bonus_sessions: 1, user_id: other_employee.id } } }],
+        "P1 GET /mot-de-passe-oublie"        => [ALL, -> { get password_help_path }],
         "X5 GET service_usage_adjustments/:id/edit" => [ADMINS, -> { get edit_fliip_service_service_usage_adjustment_path(service, adjustment) }]
       }
     end

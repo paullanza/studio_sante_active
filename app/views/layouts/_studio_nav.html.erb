@@ -1,0 +1,37 @@
+<%# Top nav on every screen size. Each « Plus » item asks its policy; no role checks here. %>
+<nav class="top-nav" aria-label="Navigation principale">
+  <div class="top-nav__inner">
+    <%= nav_tab_to "Dashboard", dashboard_path_for(current_user), :dashboard %>
+    <%= nav_tab_to "Clients", fliip_users_path, :clients %>
+    <%= nav_tab_to "Saisir", new_seance_path, :saisir %>
+    <%= nav_tab_to "Mes services", user_path(current_user), :mes_services %>
+
+    <details class="nav-more">
+      <summary class="<%= class_names("nav-tab", "is-active" => nav_section_active?(:plus)) %>">
+        <%= nav_icon(:plus) %>
+        <span class="nav-tab__label">Plus</span>
+      </summary>
+
+      <div class="nav-more__menu">
+        <%= link_to "Mon profil", user_path(current_user), class: "nav-more__item" %>
+        <% if policy(:admin).unconfirmed_sessions? %>
+          <%= link_to "Confirmations séances", admin_unconfirmed_sessions_path, class: "nav-more__item" %>
+        <% end %>
+        <% if policy(:admin).unconfirmed_consultations? %>
+          <%= link_to "Confirmations consultations", admin_unconfirmed_consultations_path, class: "nav-more__item" %>
+        <% end %>
+        <% if policy(Consultation).associations? %>
+          <%= link_to "Lier les consultations", associations_consultations_path, class: "nav-more__item" %>
+        <% end %>
+        <% if policy(:admin).services? %>
+          <%= link_to "Allocations", admin_services_path, class: "nav-more__item" %>
+        <% end %>
+        <% if policy(:admin).jobs? %>
+          <%= link_to "Tâches", mission_control_jobs_path, class: "nav-more__item", data: { turbo: false } %>
+        <% end %>
+        <%= button_to "Se déconnecter", destroy_user_session_path, method: :delete,
+              class: "nav-more__item nav-more__item--signout", form_class: "nav-more__form" %>
+      </div>
+    </details>
+  </div>
+</nav>

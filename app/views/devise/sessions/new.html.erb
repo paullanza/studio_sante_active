@@ -26,7 +26,7 @@
       <div class="mb-2">
         <div class="d-flex justify-content-between align-items-center">
           <label for="user_password" class="form-label mb-1">Mot de passe</label>
-          <%= link_to "Mot de passe oublié?", new_password_path(resource_name), class: "small link-brand" %>
+          <%= link_to "Mot de passe oublié?", password_help_path, class: "small link-brand" %>
         </div>
         <%= f.input :password,
               label: false,

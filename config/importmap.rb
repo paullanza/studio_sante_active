@@ -1,12 +1,15 @@
 # Pin npm packages by running ./bin/importmap
 
 pin "application"
+# Entry point for the new layout (layouts/studio), without Bootstrap.
+pin "studio"
 pin "@hotwired/turbo-rails", to: "turbo.min.js"
 pin "@hotwired/stimulus", to: "stimulus.min.js"
 pin "@hotwired/stimulus-loading", to: "stimulus-loading.js"
 pin_all_from "app/javascript/controllers", under: "controllers"
-pin "bootstrap", to: "bootstrap.min.js", preload: true
-pin "@popperjs/core", to: "popper.js", preload: true
+# Preloaded only for the old layout's entry point.
+pin "bootstrap", to: "bootstrap.min.js", preload: "application"
+pin "@popperjs/core", to: "popper.js", preload: "application"
 pin "flatpickr" # @4.6.13
 pin "@mapbox/search-js-web", to: "@mapbox--search-js-web.js" # @1.6.0
 pin "@floating-ui/core", to: "@floating-ui--core.js" # @0.7.3
