@@ -36,6 +36,11 @@
   font-weight: 700;
 }
 
+.flash__list {
+  margin: 0;
+  padding: 9px 0 9px 18px;
+}
+
 .flash--alert .flash__message {
   color: var(--danger);
 }

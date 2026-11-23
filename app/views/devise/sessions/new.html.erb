@@ -1,49 +1,31 @@
-<div class="auth-page min-vh-100 d-flex align-items-center justify-content-center p-4">
-  <div class="auth-card w-100" style="max-width: 640px;">
-    <h1 class="mb-2 fw-bold">Se connecter</h1>
+<% content_for :title, "Connexion" %>
 
-    <div class="mb-4 small text-muted">
-      <% if devise_mapping.registerable? %>
-        Besoin d'un compte?
-        <%= link_to "Inscrivez-vous maintenant", new_registration_path(resource_name), class: "link-brand fw-semibold" %><br>
-      <% end %>
-    </div>
-
-    <%= simple_form_for(resource,
-          as: resource_name,
-          url: user_session_path,           # explicit Devise route
-          html: { class: "auth-form" }) do |f| %>
-
-      <%= f.error_notification %>
-
-      <div class="mb-3">
-        <%= f.input :email,
-              label: "Courriel",
-              required: true,
-              input_html: { autocomplete: "email", class: "form-control form-control-lg" } %>
-      </div>
-
-      <div class="mb-2">
-        <div class="d-flex justify-content-between align-items-center">
-          <label for="user_password" class="form-label mb-1">Mot de passe</label>
-          <%= link_to "Mot de passe oublié?", password_help_path, class: "small link-brand" %>
-        </div>
-        <%= f.input :password,
-              label: false,
-              required: true,
-              input_html: { autocomplete: "current-password", class: "form-control form-control-lg" } %>
-      </div>
-
-      <% if devise_mapping.rememberable? %>
-        <div class="form-check mt-2 mb-4">
-          <%= f.input :remember_me, as: :boolean, label: "Se souvenir de moi" %>
-        </div>
-      <% end %>
-
-      <div class="d-grid">
-        <%= f.button :submit, "Se connecter",
-              class: "btn btn-brand btn-lg rounded-pill shadow-sm" %>
-      </div>
-    <% end %>
+<div class="page-narrow auth">
+  <div class="page-header">
+    <p class="eyebrow">Studio Santé Active</p>
+    <h1>Se connecter</h1>
   </div>
+
+  <%= form_with model: resource, scope: resource_name, url: user_session_path,
+        builder: StudioFormBuilder, class: "form" do |f| %>
+    <%= f.field :email, label: "Courriel", as: :email,
+          autocomplete: "email", autocapitalize: "none", spellcheck: false, required: true, autofocus: true %>
+
+    <%= f.field :password, label: "Mot de passe", as: :password,
+          autocomplete: "current-password", required: true,
+          label_aside: link_to("Mot de passe oublié?", password_help_path) %>
+
+    <% if devise_mapping.rememberable? %>
+      <%= f.check :remember_me, label: "Se souvenir de moi" %>
+    <% end %>
+
+    <%= f.submit "Se connecter", block: true %>
+  <% end %>
+
+  <% if devise_mapping.registerable? %>
+    <p class="text-muted text-small">
+      Nouvelle ou nouveau membre du personnel?
+      <%= link_to "Créer un compte", new_user_registration_path %>
+    </p>
+  <% end %>
 </div>

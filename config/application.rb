@@ -30,6 +30,12 @@ module StudioSanteActive
     #
     config.time_zone = 'Eastern Time (US & Canada)'
 
+    # The app is in French. English stays as a fallback for keys the old
+    # pages and simple_form still read from the *.en.yml files.
+    config.i18n.default_locale = :fr
+    config.i18n.available_locales = [ :fr, :en ]
+    config.i18n.fallbacks = [ :en ]
+
     # Generators: RSpec with FactoryBot, request specs only (no fixtures,
     # view, routing, helper or controller specs), and no empty helper modules.
     config.generators do |g|

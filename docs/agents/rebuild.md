@@ -4,7 +4,7 @@ Rules for every issue in the Linear project Total Restructure. The issue's own A
 
 ## Before you start
 
-- Read `CLAUDE.md`, `GLOSSARY.md`, `docs/ui.md` (once it exists) and the issue, including what blocks it. Don't start an issue whose blockers aren't merged.
+- Read `CLAUDE.md`, `GLOSSARY.md`, `docs/ui.md` and the issue, including what blocks it. Don't start an issue whose blockers aren't merged.
 - Use the terms in `GLOSSARY.md`, in code comments and in UI copy alike.
 - Mockups live in `docs/design/` (inline-styled HTML). When an issue names one, match its structure, order and wording. When none exists, build from `docs/ui.md` components and the layout the issue describes.
 - Work in your own worktree on a short branch named `paullanza/<issue-number>-<short-slug>` (e.g. `paullanza/190-rebuild-rules`), not Linear's long branch name: `git worktree add ../studio_sante_active-eng-NNN -b paullanza/NNN-<slug> origin/main`.

@@ -19,6 +19,17 @@
   margin: 0 auto;
 }
 
+// Signed-out pages (no nav): leave room above the form.
+.auth {
+  padding-top: 24px;
+}
+
+@media (min-width: 768px) {
+  .auth {
+    padding-top: 64px;
+  }
+}
+
 .page-header {
   display: flex;
   flex-direction: column;

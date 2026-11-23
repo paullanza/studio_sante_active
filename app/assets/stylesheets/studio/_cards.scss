@@ -1,0 +1,92 @@
+// Cards, stat tiles, lists (cards on mobile) and tables (from 768 px).
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.card--top {
+  gap: 14px;
+  padding: 18px 16px;
+  border-color: var(--border-strong);
+  border-radius: var(--radius-top-card);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.stat__value {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat__label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.table th {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.table tbody tr:hover {
+  background: var(--surface);
+}
+
+// Show a list on phones and a table from tablet width up.
+.from-tablet {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .from-tablet {
+    display: revert;
+  }
+
+  .until-tablet {
+    display: none;
+  }
+}

@@ -9,6 +9,10 @@ class ApplicationController < ActionController::Base
 
   rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
 
+  # Devise pages are on the new layout; every other controller opts in with
+  # its own `layout "studio"` as its page is rebuilt.
+  layout :layout_for_request
+
   def after_sign_in_path_for(resource)
     return super unless resource.is_a?(User)
 
@@ -29,7 +33,11 @@ class ApplicationController < ActionController::Base
     return if current_user.active?
 
     sign_out current_user
-    redirect_to new_user_session_path, alert: "Your account has been deactivated."
+    redirect_to new_user_session_path, alert: t("devise.failure.inactive")
+  end
+
+  def layout_for_request
+    devise_controller? ? "studio" : "application"
   end
 
   def configure_permitted_parameters

@@ -87,6 +87,8 @@ Pundit handles authorization, with one policy per model or area in `app/policies
 ### Frontend
 Interactivity uses Stimulus controllers in `app/javascript/controllers/` together with server-rendered partials. Inline table editing fetches member `row` routes (for example `GET /sessions/:id/row`) to swap rows. JS packages are vendored into `vendor/javascript` and pinned in `config/importmap.rb` (`./bin/importmap pin <pkg>` downloads them; there are no CDN pins). Address autocomplete is the `<mapbox-search-box>` web component from `@mapbox/search-js-web`, created by `address_autocomplete_controller.js`; it writes the chosen address into the hidden `address` input. Clean up event listeners in `disconnect()` for Turbo compatibility.
 
+Two layouts during the rebuild: rebuilt pages use `layout "studio"` (dark, no Bootstrap, French), documented in `docs/ui.md` with `StudioFormBuilder`; the rest stay on the old Bootstrap `layouts/application` until their issue. The default locale is `:fr`, with English as a fallback.
+
 Styles: Sass partials live in `app/assets/stylesheets/components/` and each must be listed with `@use` in `components/index.scss`. `dartsass-rails` compiles `application.scss` into `app/assets/builds/` (gitignored) and Propshaft serves it; the raw `.scss` files are excluded from publishing in `config/initializers/assets.rb`. The `bootstrap`, `@popperjs/core`, Turbo and Stimulus pins resolve from gem assets, not from `vendor/javascript`.
 
 ---

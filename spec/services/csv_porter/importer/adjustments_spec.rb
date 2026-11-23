@@ -37,7 +37,7 @@ RSpec.describe CsvPorter::Importer::Adjustments do
     expect(result.errors).to eq([
       "Row 2: service_id is missing",
       "Row 3: FliipService #999999 not found",
-      "Row 4: Validation failed: Provide at least one non-zero adjustment."
+      "Row 4: La validation a échoué : Provide at least one non-zero adjustment."
     ])
     expect(ServiceUsageAdjustment.sole.free_used_delta).to eq(1.0)
   end
@@ -63,6 +63,6 @@ RSpec.describe CsvPorter::Importer::Adjustments do
     result = described_class.call(rows: [{ "service_id" => service.id, "paid_used" => "1" }], employee_id: 0)
 
     expect(result.created).to eq(0)
-    expect(result.errors.sole).to start_with("Row 2: Validation failed")
+    expect(result.errors.sole).to start_with("Row 2: La validation a échoué")
   end
 end
