@@ -80,6 +80,7 @@ CSS custom properties on `:root` (`studio/_tokens.scss`). Use `var(--name)`.
 | `--brand-light` | #6FBF8E | links, section labels |
 | `--accent` | #D4A537 | gold: main action, active tab |
 | `--accent-hover` | #E6BE5C | gold hover |
+| `--accent-shadow` | #8C6B1F | the gold button's hard shadow |
 | `--on-accent` | #14110A | text on gold |
 | `--text` | #ECEFEA | text |
 | `--text-muted` | #A3B0A7 | secondary text |
@@ -100,14 +101,23 @@ Type: `--font-heading` (Barlow) for headings and buttons, `--font-body` (Lato) f
 ### Buttons
 
 ```erb
-<%= link_to "Saisir une séance", new_seance_path, class: "btn btn--primary btn--block" %>
-<button type="button" class="btn btn--secondary">Modifier</button>
+<%= link_to new_seance_path, class: "btn btn--primary" do %>
+  <%= safe_join([ "Saisir une séance", button_arrow ]) %>
+<% end %>
+<%= link_to edit_user_path(@user), class: "btn btn--secondary" do %>
+  <%= safe_join([ "Modifier", button_arrow ]) %>
+<% end %>
 <button type="button" class="btn btn--ghost">Annuler</button>
 <%= button_to "Supprimer", session_path(s), method: :delete, class: "btn btn--danger",
       form: { data: { turbo_confirm: "Supprimer cette séance?" } } %>
 ```
 
-`.btn--primary` (gold, 52 px, one per screen), `.btn--secondary`, `.btn--ghost`, `.btn--danger`; `.btn--block` for full width.
+Buttons must not look like Bootstrap: no rounded boxes in a row. Labels are Barlow in small caps.
+
+- `.btn--primary`: the gold main action, one per screen, 52 px. A block with a cut bottom-right corner on a hard gold shadow (`--accent-shadow`) that it presses into when clicked.
+- `.btn--secondary`: green underlined text. `.btn--danger`: red underlined text. `.btn--ghost`: plain muted text. None of them has a box.
+- `button_arrow` (`LayoutHelper`) adds the arrow that slides on hover. Forward actions (primary, secondary) carry it; `StudioFormBuilder#submit` adds it to those two variants itself.
+- `.btn--block` for full width (a form's actions do this on a phone already).
 
 ### Badges
 

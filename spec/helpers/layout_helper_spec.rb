@@ -27,6 +27,15 @@ RSpec.describe LayoutHelper, type: :helper do
     end
   end
 
+  describe "#button_arrow" do
+    it "renders a decorative arrow for a button" do
+      arrow = Nokogiri::HTML.fragment(helper.button_arrow).at_css("span.btn__arrow svg")
+
+      expect(arrow["aria-hidden"]).to eq("true")
+      expect(arrow.at_css("path")["d"]).to eq(LayoutHelper::ARROW_ICON)
+    end
+  end
+
   describe "#nav_tab_to" do
     it "marks the tab of the page's section as active" do
       helper.content_for(:nav_section, "clients")

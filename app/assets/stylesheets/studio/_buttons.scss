@@ -1,21 +1,32 @@
-// Buttons. One .btn--primary (gold) per screen.
+// Buttons (docs/ui.md « Buttons »). Barlow in small caps throughout.
+// The gold main action (.btn--primary, one per screen) is a block with a cut
+// corner on a hard gold shadow; it presses into the shadow when clicked. Every
+// other button is text: underlined for secondary and danger, plain for ghost.
+// A forward action carries an arrow (button_arrow) that slides on hover.
 .btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: var(--control-height);
-  padding: 0 22px;
-  border: 1px solid transparent;
-  border-radius: var(--radius);
-  background: transparent;
+  gap: 10px;
+  min-height: var(--touch-target);
+  padding: 0 4px;
+  border: 0;
+  background: none;
   font-family: var(--font-heading);
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   line-height: 1.2;
   text-align: center;
   text-decoration: none;
+  text-transform: uppercase;
   cursor: pointer;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
 }
 
 .btn:disabled,
@@ -24,51 +35,114 @@
   cursor: not-allowed;
 }
 
+.btn__arrow {
+  display: inline-flex;
+}
+
+.btn__arrow svg {
+  transition: transform 0.18s ease;
+}
+
+.btn:hover:not(:disabled) .btn__arrow svg {
+  transform: translateX(4px);
+}
+
+// The gold block and its shadow are two pseudo-elements with the same cut
+// corner: a clip-path on the button itself would clip the shadow away.
 .btn--primary {
+  --cut: 12px;
+  --press: 4px;
+  isolation: isolate;
   min-height: var(--primary-height);
-  background: var(--accent);
+  margin: 0 var(--press) var(--press) 0;
+  padding: 0 22px 0 24px;
   color: var(--on-accent);
-  font-weight: 700;
+  transition: transform 0.08s ease;
+}
+
+.btn--primary::before,
+.btn--primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%);
+}
+
+.btn--primary::before {
+  z-index: -1;
+  background: var(--accent);
+}
+
+.btn--primary::after {
+  z-index: -2;
+  background: var(--accent-shadow);
+  transform: translate(var(--press), var(--press));
+  transition: transform 0.08s ease;
 }
 
 .btn--primary:hover:not(:disabled) {
-  background: var(--accent-hover);
   color: var(--on-accent);
 }
 
+.btn--primary:hover:not(:disabled)::before {
+  background: var(--accent-hover);
+}
+
+.btn--primary:active:not(:disabled) {
+  transform: translate(var(--press), var(--press));
+}
+
+.btn--primary:active:not(:disabled)::after {
+  transform: none;
+}
+
+.btn--secondary,
+.btn--danger {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+
 .btn--secondary {
-  border-color: var(--border-strong);
-  background: var(--surface-2);
-  color: var(--text);
+  color: var(--brand-light);
 }
 
 .btn--secondary:hover:not(:disabled) {
-  background: var(--surface);
   color: var(--text);
 }
 
 .btn--ghost {
-  padding: 0 18px;
-  color: var(--brand-light);
+  color: var(--text-muted);
 }
 
 .btn--ghost:hover:not(:disabled) {
-  background: var(--surface-2);
   color: var(--text);
 }
 
 .btn--danger {
-  border-color: var(--danger-border);
   color: var(--danger);
+  text-decoration-color: var(--field-invalid-border);
 }
 
 .btn--danger:hover:not(:disabled) {
-  background: var(--badge-retire-bg);
   color: var(--danger);
+  text-decoration-color: var(--danger);
 }
 
 .btn--block {
   width: 100%;
+}
+
+.btn--primary.btn--block {
+  width: calc(100% - var(--press));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn--primary,
+  .btn--primary::after,
+  .btn__arrow svg {
+    transition: none;
+  }
 }
 
 // button_to wraps its button in a form; keep the form out of the layout.

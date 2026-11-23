@@ -22,6 +22,7 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
   }.freeze
 
   BUTTON_VARIANTS = %i[primary secondary ghost danger].freeze
+  FORWARD_VARIANTS = %i[primary secondary].freeze
 
   # One labelled input. `label_aside` is extra HTML on the label's line (for
   # example the « Mot de passe oublié? » link). `field_class` goes on the
@@ -111,7 +112,10 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
     raise ArgumentError, "Unknown button variant: #{variant.inspect}" unless BUTTON_VARIANTS.include?(variant)
 
     classes = [ "btn", "btn--#{variant}", ("btn--block" if block), options.delete(:class) ].compact.join(" ")
-    button(value || submit_default_value, options.merge(type: "submit", name: nil, class: classes))
+    label = value || submit_default_value
+    # Forward actions (save, continue) carry the arrow; ghost and danger don't.
+    content = FORWARD_VARIANTS.include?(variant) ? @template.safe_join([ label, @template.button_arrow ]) : label
+    button(options.merge(type: "submit", name: nil, class: classes)) { content }
   end
 
   # Errors on :base, shown above the fields.

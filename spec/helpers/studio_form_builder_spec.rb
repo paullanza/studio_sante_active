@@ -134,6 +134,14 @@ RSpec.describe StudioFormBuilder, type: :helper do
       expect(button["class"]).to eq("btn btn--ghost")
     end
 
+    it "adds the arrow to forward actions only" do
+      primary = form_for_user { |f| f.submit("Enregistrer") }.at_css("button")
+      ghost = form_for_user { |f| f.submit("Annuler", variant: :ghost) }.at_css("button")
+
+      expect(primary.at_css(".btn__arrow svg")).to be_present
+      expect(ghost.at_css(".btn__arrow")).to be_nil
+    end
+
     it "refuses an unknown variant" do
       expect { form_for_user { |f| f.submit("X", variant: :gold) } }.to raise_error(ArgumentError, /gold/)
     end
