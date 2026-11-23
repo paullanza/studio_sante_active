@@ -10,6 +10,7 @@ module LayoutHelper
     "plus" => "M5 12h.01M12 12h.01M19 12h.01"
   }.freeze
   BACK_ICON = "M15 18l-6-6 6-6".freeze
+  NEXT_ICON = "M9 18l6-6-6-6".freeze
   ARROW_ICON = "M5 12h14M13 6l6 6-6 6".freeze
 
   # Where the GEKO brand links: the user's landing page, or sign in.

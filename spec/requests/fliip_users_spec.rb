@@ -101,6 +101,86 @@ RSpec.describe "Fliip users", type: :request do
     expect(response).to have_http_status(:ok)
   end
 
+  describe "GET /fliip_users (search)" do
+    let!(:ysolde) do
+      create(:fliip_user, user_firstname: "Ysolde", user_lastname: "Brisebois", user_phone1: "(514) 555-0142")
+    end
+
+    %i[employee manager admin super_admin].each do |role|
+      context "as #{role}" do
+        before { sign_in user_for(role) }
+
+        it "lists every client before a search" do
+          get fliip_users_path
+
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("Ysolde Brisebois")
+        end
+
+        it "finds a client by name" do
+          get fliip_users_path(query: "brisebois")
+
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include("Ysolde Brisebois")
+        end
+
+        it "finds a client by phone" do
+          get fliip_users_path(query: "514-555-0142")
+
+          expect(response.body).to include("Ysolde Brisebois")
+        end
+      end
+    end
+
+    it "says when nothing matches" do
+      sign_in user_for(:employee)
+
+      get fliip_users_path(query: "zzzz")
+
+      expect(response.body).to include("Aucun client ne correspond")
+    end
+
+    it "pages through results, keeping the query" do
+      create_list(:fliip_user, 50, user_lastname: "Brisebois")
+      sign_in user_for(:employee)
+
+      get fliip_users_path(query: "Brisebois")
+      expect(response.body).to include(ERB::Util.html_escape(fliip_users_path(query: "Brisebois", page: 2)))
+
+      get fliip_users_path(query: "Brisebois", page: 2)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(%(aria-current="page">2<))
+    end
+
+    it "lists clients by FliipUserID without a search" do
+      create(:fliip_user, remote_id: 5, user_firstname: "Zoé")
+      create(:fliip_user, remote_id: 3, user_firstname: "Aline")
+      sign_in user_for(:employee)
+
+      get fliip_users_path
+
+      expect(response.body.index("Aline")).to be < response.body.index("Zoé")
+    end
+
+    it "answers a page past the last one without an error" do
+      sign_in user_for(:employee)
+
+      get fliip_users_path(page: 99)
+
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "pages through every client without a search" do
+      create_list(:fliip_user, 50)
+      sign_in user_for(:employee)
+
+      get fliip_users_path(page: 2)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(%(aria-current="page">2<))
+    end
+  end
+
   it "serves the suggestion list on its own" do
     sign_in create(:user)
 

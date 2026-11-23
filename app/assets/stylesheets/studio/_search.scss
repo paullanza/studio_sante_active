@@ -1,0 +1,285 @@
+// Search pages (Clients): the search bar, the client cards and the
+// « Précédent / Suivant » pager.
+.search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.search-form__field {
+  flex: 1;
+}
+
+.search-form .field__input::-webkit-search-cancel-button {
+  filter: invert(1);
+}
+
+@media (min-width: 768px) {
+  .search-form {
+    flex-direction: row;
+    align-items: stretch;
+  }
+}
+
+// A one-line field: no label row in the tile (the label is visually hidden
+// and the placeholder says what to type), as tall as a button.
+.field--compact .field__box {
+  justify-content: center;
+  min-height: var(--control-height);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+// The count on the left, page links on the right.
+.list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+// Photo, or initials when Fliip has none.
+.avatar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--surface-2);
+}
+
+.avatar--initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+// A client: a card on a phone; from 1024 px the same card lays its parts out
+// in columns under .client-list__head. The name's link covers the whole card.
+.client-card {
+  position: relative;
+  transition: border-color 0.15s ease;
+}
+
+.client-card:hover {
+  border-color: var(--border-strong);
+}
+
+.client-card__link {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.client-card__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.client-card:hover .client-card__link {
+  color: var(--brand-light);
+}
+
+.client-name {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.client-card__who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.client-card__name,
+.client-card__contact {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.client-card__email {
+  overflow-wrap: anywhere;
+}
+
+.client-card__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.client-card__progress:empty {
+  display: none;
+}
+
+.main-service {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+// Badge first, then the name.
+.main-service__title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.main-service__title .badge {
+  flex: none;
+}
+
+.main-service__name {
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+// The service link sits above the card's link.
+a.main-service__name {
+  position: relative;
+  z-index: 1;
+}
+
+.client-list__head {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  // One grid for the heading and every card (subgrid). Fixed columns, so
+  // they don't move from one page to the next; the service takes what is left.
+  .client-list {
+    display: grid;
+    grid-template-columns: 260px 230px minmax(0, 1fr) 340px;
+    column-gap: 24px;
+  }
+
+  .client-list__head,
+  .client-list > .list,
+  .client-card {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+  }
+
+  .client-list__head {
+    padding: 0 17px 4px;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .client-card {
+    align-items: center;
+    min-height: 76px;
+    padding: 8px 16px;
+  }
+
+  // One line, cut with « … » (the full name is in the title), so every row
+  // is the same height.
+  .client-card .main-service__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .client-card__progress:empty {
+    display: block;
+  }
+}
+
+// Page links: ‹ 1 … 5 6 7 … 41 ›. Fits 375 px with seven numbers.
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+}
+
+.pager__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  min-height: var(--touch-target);
+  padding: 0 4px;
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+a.pager__item:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.pager__item.is-current {
+  background: var(--surface-2);
+  color: var(--accent);
+}
+
+.pager__item.is-disabled {
+  opacity: 0.35;
+}
+
+.pager__gap {
+  min-width: 20px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+// The bottom pager closes the list on the right.
+.client-list + .pager {
+  justify-content: flex-end;
+}
+
+// Jump to any page: type its number, press Enter or « Aller ».
+.pager__jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.pager__jump-input {
+  width: 72px;
+  height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px; // under 16 px, iOS zooms in on focus
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+}
+
+.pager__jump-input::-webkit-inner-spin-button,
+.pager__jump-input::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.pager__jump-input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.pager__jump-go {
+  padding: 0 8px;
+}

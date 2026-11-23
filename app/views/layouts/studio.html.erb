@@ -23,20 +23,23 @@
   </head>
 
   <body class="studio">
-    <header class="brand-bar">
-      <%= link_to home_path, class: "brand", aria: { label: "GEKO par Studio Santé Active, accueil" } do %>
-        <span class="brand__name">GEKO</span>
-        <span class="brand__by">par Studio Santé Active</span>
-      <% end %>
-    </header>
+    <%# Brand bar above the tabs on a phone; beside them from 1024 px. %>
+    <div class="masthead">
+      <header class="brand-bar">
+        <%= link_to home_path, class: "brand", aria: { label: "GEKO par Studio Santé Active, accueil" } do %>
+          <span class="brand__name">GEKO</span>
+          <span class="brand__by">par Studio Santé Active</span>
+        <% end %>
+      </header>
 
-    <%= render "layouts/studio_nav" if user_signed_in? %>
+      <%= render "layouts/studio_nav" if user_signed_in? %>
+    </div>
 
     <div class="flash-region" id="flash">
       <%= render "shared/studio_flash" %>
     </div>
 
-    <main class="page" id="contenu">
+    <main class="<%= class_names("page", "page--wide" => content_for?(:page_wide)) %>" id="contenu">
       <%= yield %>
     </main>
   </body>

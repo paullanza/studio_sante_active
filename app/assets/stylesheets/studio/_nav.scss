@@ -116,3 +116,58 @@
 .nav-more__item--signout:hover {
   color: var(--danger);
 }
+
+// Below 1024 px the wrapper is transparent to layout, so the nav stays
+// sticky against the page rather than its wrapper.
+.masthead {
+  display: contents;
+}
+
+// From 1024 px the brand sits left of the tabs in one sticky bar.
+@media (min-width: 1024px) {
+  // Brand left, tabs centred on the page: the two outer columns match.
+  body:has(.top-nav) .masthead {
+    position: sticky;
+    top: var(--safe-top);
+    z-index: 20;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: stretch;
+    gap: 24px;
+    padding: 0 var(--gutter-right) 0 var(--gutter-left);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  body:has(.top-nav) .masthead .brand-bar {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    border: 0;
+  }
+
+  // On a narrow desktop « par Studio Santé Active » wraps under GEKO.
+  body:has(.top-nav) .masthead .brand {
+    row-gap: 2px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .masthead .top-nav {
+    position: static;
+    border-bottom: 0;
+  }
+
+  .masthead .top-nav__inner {
+    display: flex;
+    gap: 8px;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .masthead .nav-tab {
+    min-width: 88px;
+    min-height: 60px;
+  }
+}

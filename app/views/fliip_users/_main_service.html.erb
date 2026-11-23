@@ -1,0 +1,37 @@
+<%# What the Clients list shows for a client (FliipUser#main_index_item): badge and name,
+    then for a service the time and séances progress bars. Renders two grid cells. Local: item. %>
+<% case item %>
+<% when FliipService %>
+  <div class="main-service">
+    <span class="main-service__title">
+      <%= service_status_badge(item) %>
+      <%= link_to item.service_name.presence || "Service", fliip_service_path(item), class: "main-service__name",
+            title: item.service_name %>
+    </span>
+    <span class="text-muted text-small numeric">
+      <%= [ ("Achat ##{item.remote_purchase_id}" if item.remote_purchase_id), item.duration.presence ].compact.join(" · ") %>
+    </span>
+  </div>
+  <% time_pct = item.time_progress_percent || 0 %>
+  <% paid_pct = item.paid_progress_percent || 0 %>
+  <div class="client-card__progress">
+    <%= bar_with_label(percent: time_pct, label: "#{item.time_range_label} • #{time_pct}%",
+          bg_class: progress_base_color(time_pct)) %>
+    <%= bar_with_label(percent: paid_pct, label: paid_progress_label(item, paid_pct),
+          bg_class: paid_progress_bg_class(item, paid_pct, time_pct)) %>
+  </div>
+<% when FliipContract %>
+  <div class="main-service">
+    <span class="main-service__title">
+      <%= contract_status_badge(item) %>
+      <span class="main-service__name" title="<%= item.membership_name %>"><%= item.membership_name.presence || "Abonnement" %></span>
+    </span>
+    <span class="text-muted text-small numeric">
+      <%= [ "Abonnement", ("Début #{l(item.start_date)}" if item.start_date), ("Fin #{l(item.end_date)}" if item.end_date) ].compact.join(" · ") %>
+    </span>
+  </div>
+  <div class="client-card__progress"></div>
+<% else %>
+  <div class="main-service"><span class="text-muted text-small">Aucun service</span></div>
+  <div class="client-card__progress"></div>
+<% end %>

@@ -1,38 +1,46 @@
-<div class="container mt-4">
-  <h1>Client·e·s Fliip</h1>
+<% content_for :nav_section, "clients" %>
+<% content_for :title, "Clients" %>
+<% content_for :page_wide, true %>
 
-  <!-- Inline toolbar -->
-  <div class="d-flex align-items-center justify-content-between gap-2 mb-2 flex-wrap">
-    <!-- Left: page info -->
-    <div class="text-muted small flex-shrink-0">
-      Page <%= @pagy.page %> sur <%= @pagy.pages %> — <%= @pagy.count %> client·e·s
-    </div>
-
-    <!-- Center: search (stays centered between left/right) -->
-    <div class="flex-grow-1 d-flex justify-content-center order-1 order-md-0">
-      <%= form_with url: fliip_users_path, method: :get, class: "d-flex gap-2 w-100", local: true do %>
-        <div class="flex-grow-1" style="max-width: 520px;">
-          <%= text_field_tag :query, params[:query], class: "form-control",
-                             placeholder: "Rechercher par nom, courriel ou ID…" %>
-        </div>
-        <%= submit_tag "Rechercher", name: "", class: "btn btn-primary" %>
-        <% if params[:query].present? %>
-          <%= link_to "Réinitialiser", fliip_users_path, class: "btn btn-outline-secondary" %>
-        <% end %>
-      <% end %>
-    </div>
-
-    <!-- Right: pager -->
-    <div class="flex-shrink-0">
-      <%== @pagy.series_nav(:bootstrap) %>
-    </div>
+<div class="stack">
+  <div class="page-header">
+    <h1>Clients</h1>
   </div>
 
-  <%= render "fliip_users/shared/client_table",
-             fliip_users: @fliip_users,
-             recent_services_by_user_id: @recent_services_by_user_id %>
+  <%= form_with url: fliip_users_path, method: :get, class: "search-form", role: "search" do %>
+    <div class="field field--compact search-form__field">
+      <label class="field__box" for="query">
+        <span class="field__label visually-hidden">Nom, courriel ou téléphone</span>
+        <%= search_field_tag :query, @query, id: "query", class: "field__input",
+              placeholder: "Nom, courriel ou téléphone",
+              autofocus: true, autocomplete: "off", inputmode: "search", spellcheck: false %>
+      </label>
+    </div>
+    <button type="submit" class="btn btn--primary">Rechercher</button>
+  <% end %>
 
-  <div class="d-flex justify-content-end">
-    <%== @pagy.series_nav(:bootstrap) %>
-  </div>
+  <% if @fliip_users.empty? %>
+    <p class="text-muted">
+      <%= @query.present? ? "Aucun client ne correspond à « #{@query} »." : "Aucun client." %>
+    </p>
+  <% else %>
+    <div class="list-toolbar">
+      <p class="text-muted text-small numeric">
+        <%= pluralize(@pagy.count, "client") %><% if @query.present? %> pour « <%= @query %> » · <%= link_to "Tous les clients", fliip_users_path %><% end %>
+      </p>
+      <%= render "shared/pager", pagy: @pagy %>
+    </div>
+
+    <div class="client-list">
+      <div class="client-list__head" aria-hidden="true">
+        <span>Client</span><span>Contact</span><span>Service</span><span>Progression</span>
+      </div>
+      <ul class="list">
+        <%= render partial: "fliip_users/client_card", collection: @fliip_users, as: :client,
+              locals: { recent: @recent_services_by_user_id } %>
+      </ul>
+    </div>
+
+    <%= render "shared/pager", pagy: @pagy %>
+  <% end %>
 </div>

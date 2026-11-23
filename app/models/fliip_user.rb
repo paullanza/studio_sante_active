@@ -29,6 +29,35 @@ class FliipUser < ApplicationRecord
     },
     ignoring: :accents
 
+  PHONE_SEARCH_MIN_DIGITS = 4
+
+  # The one entry point for client search (the Clients page).
+  # A query of digits only, in any phone format (« 514-555-0142 », « 555 0142 »),
+  # matches either phone with its formatting stripped, or the FliipUserID
+  # exactly. Anything else goes through the accent-insensitive search_clients.
+  # The table holds a few thousand rows, so the regexp_replace scan needs no index.
+  def self.search(query)
+    query = query.to_s.strip
+    return none if query.length < 2
+
+    digits = query.gsub(/\D/, "")
+    if digits.length >= PHONE_SEARCH_MIN_DIGITS && query !~ /\p{L}/
+      search_by_phone(digits)
+    else
+      search_clients(query)
+    end
+  end
+
+  def self.search_by_phone(digits)
+    where(
+      "regexp_replace(coalesce(user_phone1, ''), '\\D', '', 'g') LIKE :d " \
+      "OR regexp_replace(coalesce(user_phone2, ''), '\\D', '', 'g') LIKE :d " \
+      "OR remote_id::text = :id",
+      d: "%#{sanitize_sql_like(digits)}%", id: digits
+    ).order(:user_firstname, :user_lastname)
+  end
+  private_class_method :search_by_phone
+
   def full_name
     "#{user_firstname} #{user_lastname}"
   end
@@ -43,6 +72,15 @@ class FliipUser < ApplicationRecord
       return bucket.max_by { |s| [(s.expire_date || Date.new(0)), (s.start_date || Date.new(0))] }
     end
     nil
+  end
+
+  # What the Clients list shows for a client: an active service, else an
+  # active abonnement, else a stopped or planned service.
+  def main_index_item
+    service = most_recent_index_service
+    return service if service&.purchase_status == "A"
+
+    best_active_contract_for_index || service
   end
 
   def best_active_contract_for_index

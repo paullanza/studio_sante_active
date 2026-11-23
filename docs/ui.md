@@ -8,7 +8,7 @@ How to build a page on the new layout. Every Total Restructure issue builds from
 - One gold button (`.btn--primary`) per screen: the page's main action.
 - No Bootstrap classes, no `simple_form`, no inline styles and no raw hex in views or component styles. Colours come from the tokens below.
 - Lists are cards on mobile. Admin lists (Confirmations, Personnel, Allocations) become tables from 768 px.
-- Touch targets are at least 44 px; inputs and buttons are 48 px, the gold button 52 px.
+- Touch targets are at least 44 px. Buttons, the gold button and one-line fields are 44 px (`--control-height`); a field tile with its label is 50 px. Inputs stay at 16 px text, since iOS zooms in on anything smaller.
 - UI copy is French. Dates show as `dd/mm/yyyy`, times as `HH:MM` (`l(date)` gives `dd/mm/yyyy`).
 - Icons are inline SVG (`icon_svg`), never an icon font.
 - Never show a status with colour alone: badges always carry their label.
@@ -47,7 +47,7 @@ In the view, declare the nav section, the page title, and a back link instead of
 <%= back_link_to "Clients", fliip_users_path %>
 ```
 
-Nav sections: `dashboard`, `clients`, `saisir`, `mes_services`, `plus` (every page reached from the « Plus » menu). The browser tab reads « Ysolde Brisebois · GEKO ». The page sits in `<main class="page">`: a 16 px gutter on mobile and a 960 px column from tablet up. Signed-out forms use `auth-split` (see Forms); other short signed-out pages (« Mot de passe oublié ») use `<div class="page-narrow auth">`. Pages don't repeat the app's name: the brand bar carries it.
+Nav sections: `dashboard`, `clients`, `saisir`, `mes_services`, `plus` (every page reached from the « Plus » menu). The browser tab reads « Ysolde Brisebois · GEKO ». The page sits in `<main class="page">`: a 16 px gutter on mobile and a 960 px column from tablet up. A list with many columns declares `content_for :page_wide, true` to use the screen's width (up to 1680 px). Signed-out forms use `auth-split` (see Forms); other short signed-out pages (« Mot de passe oublié ») use `<div class="page-narrow auth">`. Pages don't repeat the app's name: the brand bar carries it.
 
 ## Brand and full-screen web app
 
@@ -62,7 +62,7 @@ GEKO can be added to a phone's home screen and opens full screen:
 
 ## Top nav
 
-Five tabs on every width, icon above label: Dashboard, Clients, Saisir, Mes services, Plus. `nav_tab_to(label, path, section)` renders a tab and marks it active (gold, underlined, `aria-current="page"`) when the page declared that section. « Plus » is a `<details>` menu with no JS. Each item is gated by its policy in the partial: add a page by adding a link inside `if policy(...).action?`, never a role check.
+Five tabs on every width, icon above label: Dashboard, Clients, Saisir, Mes services, Plus. On a phone the brand bar sits above the tabs and only the tabs stick to the top. From 1024 px the brand bar and the tabs share one sticky bar (`.masthead` in the layout): brand on the left, tabs centred on the page. `nav_tab_to(label, path, section)` renders a tab and marks it active (gold, underlined, `aria-current="page"`) when the page declared that section. « Plus » is a `<details>` menu with no JS. Each item is gated by its policy in the partial: add a page by adding a link inside `if policy(...).action?`, never a role check.
 
 ## Tokens
 
@@ -94,7 +94,7 @@ CSS custom properties on `:root` (`studio/_tokens.scss`). Use `var(--name)`.
 | `--badge-retire-bg` / `-fg` | #3A1F22 / #F08A8A | Retiré de Fliip |
 | `--progress-*` | #0D6EFD, #6C757D, #FFC107, #FD7E14, #DC3545 | progress bars (unchanged) |
 
-Type: `--font-heading` (Barlow) for headings and buttons, `--font-body` (Lato) for everything else. Sizes: page title 30, section 22, card title 17, label 13 uppercase (`.eyebrow`), body 16, secondary 14. Only these fonts and weights exist: Barlow 500, 600, 700 and Lato 400, 700. Never set another family (use the two tokens) or another weight: a Lato 600 or a Barlow 400 is faked by the browser.
+Type: `--font-heading` (Barlow) for headings and buttons, `--font-body` (Lato) for everything else. Sizes: page title 26, section 20, card title 16, label 12 uppercase (`.eyebrow`), body 15, secondary 13, inputs 16. Only these fonts and weights exist: Barlow 500, 600, 700 and Lato 400, 700. Never set another family (use the two tokens) or another weight: a Lato 600 or a Barlow 400 is faked by the browser.
 
 ## Components
 
@@ -133,6 +133,8 @@ Buttons must not look like Bootstrap: no rounded boxes in a row. Labels are Barl
 ```
 
 `.badge--neutral` is for inactive states and « Toutes les séances utilisées ». `.text-unconfirmed` is the plain-text form.
+
+A service's status badge comes from `service_status_badge(svc)` (`ServiceBadgesHelper`): « Retiré de Fliip » when the service or its client is removed from Fliip, « Toutes les séances utilisées » when a set allocation is used up, else the Fliip status (Actif `--chargee`, Planifié `--absence`, Suspendu `--moins24`, others `--neutral`). `contract_status_badge(contract)` does the same for an abonnement.
 
 ### Cards and stat tiles
 
@@ -174,6 +176,31 @@ Server-rendered links with a `?tab=` param:
 ```
 
 `.until-tablet` shows only below 768 px and `.from-tablet` only from 768 px: when a page needs both, render the cards with one and the table with the other.
+
+### Search pages and client cards
+
+```erb
+<%= form_with url: fliip_users_path, method: :get, class: "search-form", role: "search" do %>
+  <div class="field search-form__field">
+    <label class="field__box" for="query">
+      <span class="field__label">Nom, courriel ou téléphone</span>
+      <%= search_field_tag :query, @query, id: "query", class: "field__input" %>
+    </label>
+  </div>
+  <button type="submit" class="btn btn--primary">Rechercher</button>
+<% end %>
+
+<div class="client-list">
+  <div class="client-list__head" aria-hidden="true"><span>Client</span>…</div>
+  <ul class="list"><%= render partial: "fliip_users/client_card", collection: @fliip_users, as: :client, locals: { recent: … } %></ul>
+</div>
+
+<%= render "shared/pager", pagy: @pagy %>
+```
+
+The search bar stacks on a phone and sits beside its button from 768 px. Its field is `.field--compact`: one line, 44 px, the label visually hidden and the placeholder saying what to type. A client is a `.client-card` on every width: stacked on a phone, its parts in columns under `.client-list__head` from 1024 px, so desktop rows stand out from the page like the phone cards. The name's `.client-card__link` covers the card; a link inside it (the service) sits above with `position: relative; z-index: 1`. `client_avatar(client)` shows the Fliip photo or the initials.
+
+`render "shared/pager", pagy: @pagy` gives page links (‹ 1 … 5 6 7 … 41 ›, from `pager_series`) and a « go to page » box (type a number, press Enter), all keeping the request's other params, such as the search. Put it above the list in a `.list-toolbar` beside the count, and again under the list.
 
 ### Progress bars
 
