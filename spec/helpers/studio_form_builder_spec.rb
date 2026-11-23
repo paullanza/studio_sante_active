@@ -134,6 +134,12 @@ RSpec.describe StudioFormBuilder, type: :helper do
       expect(button["class"]).to eq("btn btn--ghost")
     end
 
+    it "renders a large button" do
+      button = form_for_user { |f| f.submit("Créer mon compte", large: true) }.at_css("button")
+
+      expect(button["class"]).to eq("btn btn--primary btn--large")
+    end
+
     it "adds the arrow to forward actions only" do
       primary = form_for_user { |f| f.submit("Enregistrer") }.at_css("button")
       ghost = form_for_user { |f| f.submit("Annuler", variant: :ghost) }.at_css("button")

@@ -40,11 +40,12 @@ export default class extends Controller {
   }
 
   // On the new layout the box sits inside a field tile (.field__box in
-  // studio/_fields.scss): no border or padding of its own, the tile's
-  // background, and colours from the design tokens. The tile draws the focus
-  // and error underlines. Mapbox hard-codes a dark input text colour that no
-  // theme variable reaches, so `cssText` overrides it inside the shadow DOM.
-  // The old Bootstrap layout has no tokens and keeps Mapbox's light defaults.
+  // studio/_fields.scss) and the tile draws the focus and error underlines.
+  // Mapbox's variables style both the box and its dropdown, so they are set
+  // for the dropdown (a raised card with padded rows) and `cssText` strips
+  // the box back to bare text on the tile. Mapbox also hard-codes a dark
+  // input text colour that no variable reaches. The old Bootstrap layout has
+  // no tokens and keeps Mapbox's light defaults.
   theme() {
     const styles = getComputedStyle(document.documentElement)
     const token = (name) => styles.getPropertyValue(name).trim()
@@ -52,24 +53,33 @@ export default class extends Controller {
 
     return {
       variables: {
-        colorBackground: token("--surface-2"),
-        colorBackgroundHover: token("--surface"),
-        colorBackgroundActive: token("--surface"),
+        colorBackground: token("--surface"),
+        colorBackgroundHover: token("--surface-2"),
+        colorBackgroundActive: token("--surface-2"),
         colorText: token("--text"),
         colorSecondary: token("--text-muted"),
         colorPrimary: token("--accent"),
-        border: "none",
+        border: `1px solid ${token("--border-strong")}`,
         borderRadius: token("--radius"),
-        boxShadow: "none",
-        padding: "0",
+        boxShadow: "0 16px 32px rgba(0, 0, 0, 0.45)",
+        padding: "12px 16px",
+        paddingFooterLabel: "10px 16px",
+        lineHeight: "1.35",
         fontFamily: "Lato, sans-serif",
         unit: "17px"
       },
       cssText: `
+        .SearchBox { padding: 0; border: 0; box-shadow: none; background: transparent; }
         .Input, .Input:focus { color: ${token("--text")}; height: 28px; padding: 0 32px 0 26px; border: 0; }
         .Input::placeholder { color: ${token("--text-muted")}; opacity: 1; }
         .SearchIcon { left: 0; fill: ${token("--text-muted")}; }
         .ClearBtn:hover { color: ${token("--text")}; }
+        .Results { margin-top: 8px; overflow: hidden; }
+        .Suggestion { color: ${token("--text-muted")}; font-size: 14px; }
+        .Suggestion + .Suggestion { border-top: 1px solid ${token("--border")}; }
+        .Suggestion[aria-selected=true] { box-shadow: inset 3px 0 0 ${token("--accent")}; }
+        .SuggestionName { margin-bottom: 2px; color: ${token("--text")}; font-size: 16px; }
+        .ResultsAttribution { border-top: 1px solid ${token("--border")}; font-size: 12px; }
       `
     }
   }

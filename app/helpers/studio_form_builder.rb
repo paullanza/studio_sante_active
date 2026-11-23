@@ -108,10 +108,11 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
   end
 
   # A submit button. Only one :primary (gold) button per screen.
-  def submit(value = nil, variant: :primary, block: false, **options)
+  # `large` makes the gold button the clear end of a long form (sign up).
+  def submit(value = nil, variant: :primary, block: false, large: false, **options)
     raise ArgumentError, "Unknown button variant: #{variant.inspect}" unless BUTTON_VARIANTS.include?(variant)
 
-    classes = [ "btn", "btn--#{variant}", ("btn--block" if block), options.delete(:class) ].compact.join(" ")
+    classes = [ "btn", "btn--#{variant}", ("btn--large" if large), ("btn--block" if block), options.delete(:class) ].compact.join(" ")
     label = value || submit_default_value
     # Forward actions (save, continue) carry the arrow; ghost and danger don't.
     content = FORWARD_VARIANTS.include?(variant) ? @template.safe_join([ label, @template.button_arrow ]) : label
