@@ -1,0 +1,48 @@
+// Badges: always a label, never the colour alone.
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.badge--chargee {
+  background: var(--badge-chargee-bg);
+  color: var(--badge-chargee-fg);
+}
+
+.badge--absence {
+  background: var(--badge-absence-bg);
+  color: var(--badge-absence-fg);
+}
+
+.badge--moins24,
+.badge--overrun {
+  background: var(--badge-moins24-bg);
+  color: var(--badge-moins24-fg);
+}
+
+.badge--unconfirmed {
+  background: var(--badge-unconfirmed-bg);
+  color: var(--badge-unconfirmed-fg);
+}
+
+.badge--retire {
+  background: var(--badge-retire-bg);
+  color: var(--badge-retire-fg);
+}
+
+.badge--neutral {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+.text-unconfirmed {
+  color: var(--badge-unconfirmed-fg);
+  font-weight: 700;
+}

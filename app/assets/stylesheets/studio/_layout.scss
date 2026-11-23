@@ -1,0 +1,130 @@
+// Page frame: brand bar, content column, gutters and the back link.
+//
+// Full-screen web app: the viewport covers the whole screen
+// (viewport-fit=cover) and the status bar is translucent, so the safe-area
+// insets keep content clear of the notch, the rounded corners and the home
+// indicator. Outside an installed app the insets are 0.
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --gutter-left: max(var(--gutter), var(--safe-left));
+  --gutter-right: max(var(--gutter), var(--safe-right));
+}
+
+// Keeps the status bar area opaque while the page scrolls under it.
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 30;
+  height: var(--safe-top);
+  background: var(--surface);
+}
+
+// « GEKO par Studio Santé Active », on every page.
+.brand-bar {
+  padding: var(--safe-top) var(--gutter-right) 0 var(--gutter-left);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+// Signed in, the nav's own border closes the bar.
+body:has(.top-nav) .brand-bar {
+  border-bottom-color: transparent;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  column-gap: 8px;
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: 10px 0 8px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.brand:hover {
+  color: var(--text);
+}
+
+// GEKO in Barlow, gold; « par Studio Santé Active » in Lato, light green.
+.brand__name {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.brand__by {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--brand-light);
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: 8px var(--gutter-right) calc(32px + var(--safe-bottom)) var(--gutter-left);
+}
+
+// A narrow centred column for short forms (sign in, sign up, help pages).
+.page-narrow {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+// Signed-out pages (no nav): leave room above the form.
+.auth {
+  padding-top: 24px;
+}
+
+@media (min-width: 768px) {
+  .auth {
+    padding-top: 64px;
+  }
+}
+
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  min-height: var(--touch-target);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding-top: 24px;
+  }
+}

@@ -1,0 +1,12 @@
+<%# Notices close on their own after 5 s; alerts stay until closed so errors can be read. %>
+<% flash.each do |type, message| %>
+  <% next unless %w[notice alert].include?(type.to_s) && message.present? %>
+  <% alert = type.to_s == "alert" %>
+  <div class="flash flash--<%= type %>" role="<%= alert ? "alert" : "status" %>"
+       data-controller="flash" data-flash-timeout-value="<%= alert ? 0 : 5000 %>">
+    <p class="flash__message"><%= message %></p>
+    <button type="button" class="flash__close" data-action="flash#dismiss" aria-label="Fermer le message">
+      <%= icon_svg("M18 6L6 18M6 6l12 12", size: 18) %>
+    </button>
+  </div>
+<% end %>

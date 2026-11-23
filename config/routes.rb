@@ -5,7 +5,9 @@ Rails.application.routes.draw do
   # Devise provides sign up / sign in / password flows. All Devise paths
   # are public. Authorization is handled in controllers/policies.
   # =====================================================================
-  devise_for :users
+  # No email reset flow (the app sends no email): « Mot de passe oublié? »
+  # explains who can reset a password instead.
+  devise_for :users, skip: [ :passwords ]
 
   # Background jobs dashboard, for admins and above (MissionControlBaseController).
   mount MissionControl::Jobs::Engine, at: "/jobs"
@@ -16,6 +18,8 @@ Rails.application.routes.draw do
     unauthenticated do
       root to: "devise/sessions#new", as: :unauthenticated_root
     end
+
+    get "mot-de-passe-oublie", to: "password_help#show", as: :password_help
   end
 
   # =====================================================================
