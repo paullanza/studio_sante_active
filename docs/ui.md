@@ -134,6 +134,8 @@ Buttons must not look like Bootstrap: no rounded boxes in a row. Labels are Barl
 
 `.badge--neutral` is for inactive states and « Toutes les séances utilisées ». `.text-unconfirmed` is the plain-text form.
 
+A service's status badge comes from `service_status_badge(svc)` (`ServiceBadgesHelper`): « Retiré de Fliip » when the service or its client is removed from Fliip, « Toutes les séances utilisées » when a set allocation is used up, else the Fliip status (Actif `--chargee`, Planifié `--absence`, Suspendu `--moins24`, others `--neutral`). `contract_status_badge(contract)` does the same for an abonnement.
+
 ### Cards and stat tiles
 
 ```erb
@@ -174,6 +176,26 @@ Server-rendered links with a `?tab=` param:
 ```
 
 `.until-tablet` shows only below 768 px and `.from-tablet` only from 768 px: when a page needs both, render the cards with one and the table with the other.
+
+### Search pages
+
+```erb
+<%= form_with url: fliip_users_path, method: :get, class: "search-form", role: "search" do %>
+  <div class="field search-form__field">
+    <label class="field__box" for="query">
+      <span class="field__label">Nom, courriel ou téléphone</span>
+      <%= search_field_tag :query, @query, id: "query", class: "field__input" %>
+    </label>
+  </div>
+  <button type="submit" class="btn btn--primary">Rechercher</button>
+<% end %>
+
+<tr class="row-link"><td><%= link_to client.full_name, fliip_user_path(client), class: "row-link__target" %></td>…</tr>
+
+<nav class="pager" aria-label="Pages">« Précédent » · Page 1 sur 3 · « Suivant »</nav>
+```
+
+The search bar stacks on a phone and sits beside its button from 768 px. A result card can be the link itself (`link_to …, class: "card client-card"`). In a table, `.row-link` makes the first cell's `.row-link__target` link cover the whole row. `.pager` puts « Précédent » left, the page count centred and « Suivant » right; build its links from `@pagy.previous` / `@pagy.next` and keep the query in them.
 
 ### Progress bars
 

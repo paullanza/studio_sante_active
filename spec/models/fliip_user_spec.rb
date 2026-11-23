@@ -123,6 +123,56 @@ RSpec.describe FliipUser, type: :model do
     end
   end
 
+  describe ".search" do
+    let!(:gagne) do
+      create(:fliip_user, remote_id: 77_001, user_firstname: "Ysolde", user_lastname: "Gagne",
+        user_email: "ysolde.gagne@example.com", user_phone1: "(514) 555-0142", user_phone2: nil)
+    end
+    let!(:other) do
+      create(:fliip_user, remote_id: 77_002, user_firstname: "Aldo", user_lastname: "Moreau",
+        user_email: "aldo@example.com", user_phone1: nil, user_phone2: "438.555.9911")
+    end
+
+    it "returns nothing for a blank or one-letter query" do
+      expect(described_class.search("")).to be_empty
+      expect(described_class.search("  ")).to be_empty
+      expect(described_class.search("G")).to be_empty
+    end
+
+    it "finds a last name without its accents" do
+      expect(described_class.search("Gagné")).to contain_exactly(gagne)
+    end
+
+    it "finds an email by its start" do
+      expect(described_class.search("ysolde.ga")).to contain_exactly(gagne)
+    end
+
+    it "finds the first phone in any format" do
+      %w[5145550142 514-555-0142].push("555 0142").each do |query|
+        expect(described_class.search(query)).to contain_exactly(gagne), "query #{query.inspect}"
+      end
+    end
+
+    it "finds the second phone" do
+      expect(described_class.search("438 555 9911")).to contain_exactly(other)
+    end
+
+    it "orders phone matches by last name, then first name" do
+      gagne.update!(user_phone1: "514-555-0001")
+      other.update!(user_phone2: "514-555-0002")
+
+      expect(described_class.search("555-000").to_a).to eq([ gagne, other ])
+    end
+
+    it "finds a FliipUserID typed as digits" do
+      expect(described_class.search("77002")).to contain_exactly(other)
+    end
+
+    it "doesn't search phones with fewer than 4 digits" do
+      expect(described_class.search("555")).to be_empty
+    end
+  end
+
   describe "#staff?" do
     it "is true for any role other than user" do
       expect(build(:fliip_user, user_role: "admin")).to be_staff

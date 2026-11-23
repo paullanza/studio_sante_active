@@ -1,0 +1,21 @@
+<%# A client's main service (or, without one, their active abonnement) with its status badge. Local: item. %>
+<% case item %>
+<% when FliipService %>
+  <span class="main-service">
+    <span class="main-service__name"><%= item.service_name.presence || "Service ##{item.id}" %></span>
+    <span class="main-service__meta">
+      <%= service_status_badge(item) %>
+      <% if item.expire_date %><span class="text-muted text-small">Fin <%= l(item.expire_date) %></span><% end %>
+    </span>
+  </span>
+<% when FliipContract %>
+  <span class="main-service">
+    <span class="main-service__name">Abonnement · <%= item.membership_name.presence || "##{item.id}" %></span>
+    <span class="main-service__meta">
+      <%= contract_status_badge(item) %>
+      <% if item.end_date %><span class="text-muted text-small">Fin <%= l(item.end_date) %></span><% end %>
+    </span>
+  </span>
+<% else %>
+  <span class="text-muted text-small">Aucun service</span>
+<% end %>

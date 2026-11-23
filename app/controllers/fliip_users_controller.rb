@@ -1,28 +1,26 @@
 class FliipUsersController < ApplicationController
   before_action :authenticate_user!
+  layout "studio", only: :index
 
   def index
     authorize FliipUser
 
-    scope = FliipUser.order(:remote_id)
-    scope = scope.search_clients(params[:query]) if params[:query].present?
-
-    scope = scope.includes(
-      :fliip_contracts,
-      fliip_services: [:service_definition, :service_usage_adjustments, :sessions]
-    )
-
-    @pagy, @fliip_users = pagy(scope)
-
+    @query = params[:query].to_s.strip
     @recent_services_by_user_id = {}
+
+    if @query.present?
+      scope = FliipUser.search(@query)
+        .includes(:fliip_contracts, fliip_services: [ :service_definition, :service_usage_adjustments ])
+      @pagy, @fliip_users = pagy(scope)
+    else
+      @pagy = nil
+      @fliip_users = []
+    end
+
+    # Each client's main service, else their best active abonnement.
     @fliip_users.each do |u|
-      svc = u.most_recent_index_service
-      if svc
-        @recent_services_by_user_id[u.id] = svc
-      else
-        contract = u.best_active_contract_for_index
-        @recent_services_by_user_id[u.id] = contract if contract
-      end
+      item = u.most_recent_index_service || u.best_active_contract_for_index
+      @recent_services_by_user_id[u.id] = item if item
     end
   end
 

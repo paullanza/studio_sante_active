@@ -1,0 +1,12 @@
+<%# One client in the Clients search results, as a card (below 768 px). Locals: client, recent. %>
+<li>
+  <%= link_to fliip_user_path(client), class: "card client-card" do %>
+    <span class="client-name"><%= client.full_name %></span>
+    <span class="text-muted text-small numeric">ID <%= client.id %> · FliipUserID <%= client.remote_id %></span>
+    <span class="client-card__contact">
+      <span class="numeric"><%= [ client.user_phone1, client.user_phone2 ].compact_blank.first || "—" %></span>
+      <span class="client-card__email"><%= client.user_email.presence || "—" %></span>
+    </span>
+    <%= render "fliip_users/main_service", item: recent[client.id] %>
+  <% end %>
+</li>

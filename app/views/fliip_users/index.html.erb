@@ -1,38 +1,70 @@
-<div class="container mt-4">
-  <h1>Client·e·s Fliip</h1>
+<% content_for :nav_section, "clients" %>
+<% content_for :title, "Clients" %>
 
-  <!-- Inline toolbar -->
-  <div class="d-flex align-items-center justify-content-between gap-2 mb-2 flex-wrap">
-    <!-- Left: page info -->
-    <div class="text-muted small flex-shrink-0">
-      Page <%= @pagy.page %> sur <%= @pagy.pages %> — <%= @pagy.count %> client·e·s
+<div class="stack">
+  <div class="page-header">
+    <h1>Clients</h1>
+  </div>
+
+  <%= form_with url: fliip_users_path, method: :get, class: "search-form", role: "search" do %>
+    <div class="field search-form__field">
+      <label class="field__box" for="query">
+        <span class="field__label">Nom, courriel ou téléphone</span>
+        <%= search_field_tag :query, @query, id: "query", class: "field__input",
+              autofocus: true, autocomplete: "off", inputmode: "search", spellcheck: false %>
+      </label>
     </div>
+    <button type="submit" class="btn btn--primary">Rechercher</button>
+  <% end %>
 
-    <!-- Center: search (stays centered between left/right) -->
-    <div class="flex-grow-1 d-flex justify-content-center order-1 order-md-0">
-      <%= form_with url: fliip_users_path, method: :get, class: "d-flex gap-2 w-100", local: true do %>
-        <div class="flex-grow-1" style="max-width: 520px;">
-          <%= text_field_tag :query, params[:query], class: "form-control",
-                             placeholder: "Rechercher par nom, courriel ou ID…" %>
-        </div>
-        <%= submit_tag "Rechercher", name: "", class: "btn btn-primary" %>
-        <% if params[:query].present? %>
-          <%= link_to "Réinitialiser", fliip_users_path, class: "btn btn-outline-secondary" %>
+  <% if @query.blank? %>
+    <p class="text-muted">Cherchez un client par nom, courriel ou téléphone.</p>
+  <% elsif @fliip_users.empty? %>
+    <p class="text-muted">Aucun client ne correspond à « <%= @query %> ».</p>
+  <% else %>
+    <p class="text-muted text-small numeric"><%= pluralize(@pagy.count, "client") %></p>
+
+    <ul class="list until-tablet">
+      <%= render partial: "fliip_users/search_result", collection: @fliip_users, as: :client,
+            locals: { recent: @recent_services_by_user_id } %>
+    </ul>
+
+    <table class="table from-tablet client-table">
+      <thead>
+        <tr><th>Client</th><th>Téléphone</th><th>Courriel</th><th>Service</th></tr>
+      </thead>
+      <tbody>
+        <% @fliip_users.each do |client| %>
+          <% item = @recent_services_by_user_id[client.id] %>
+          <tr class="row-link">
+            <td>
+              <%= link_to client.full_name, fliip_user_path(client), class: "client-name row-link__target" %>
+              <div class="text-muted text-small numeric">ID <%= client.id %> · FliipUserID <%= client.remote_id %></div>
+            </td>
+            <td class="numeric"><%= [ client.user_phone1, client.user_phone2 ].compact_blank.first || "—" %></td>
+            <td class="client-table__email"><%= client.user_email.presence || "—" %></td>
+            <td><%= render "fliip_users/main_service", item: item %></td>
+          </tr>
         <% end %>
-      <% end %>
-    </div>
+      </tbody>
+    </table>
 
-    <!-- Right: pager -->
-    <div class="flex-shrink-0">
-      <%== @pagy.series_nav(:bootstrap) %>
-    </div>
-  </div>
-
-  <%= render "fliip_users/shared/client_table",
-             fliip_users: @fliip_users,
-             recent_services_by_user_id: @recent_services_by_user_id %>
-
-  <div class="d-flex justify-content-end">
-    <%== @pagy.series_nav(:bootstrap) %>
-  </div>
+    <% if @pagy.pages > 1 %>
+      <nav class="pager" aria-label="Pages">
+        <% if @pagy.previous %>
+          <%= link_to "Précédent", fliip_users_path(query: @query, page: @pagy.previous), class: "btn btn--ghost", rel: "prev" %>
+        <% else %>
+          <span></span>
+        <% end %>
+        <span class="text-muted text-small numeric">Page <%= @pagy.page %> sur <%= @pagy.pages %></span>
+        <% if @pagy.next %>
+          <%= link_to fliip_users_path(query: @query, page: @pagy.next), class: "btn btn--secondary", rel: "next" do %>
+            <%= safe_join([ "Suivant", button_arrow ]) %>
+          <% end %>
+        <% else %>
+          <span></span>
+        <% end %>
+      </nav>
+    <% end %>
+  <% end %>
 </div>
