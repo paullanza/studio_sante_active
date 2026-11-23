@@ -142,6 +142,8 @@
 }
 
 .main-service__name {
+  min-width: 0;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -156,14 +158,24 @@ a.main-service__name {
 }
 
 @media (min-width: 1024px) {
+  // One grid for the heading and every card (subgrid), so each column is as
+  // wide as its widest cell on the page, the same in every row; the service
+  // takes what is left.
   .client-list {
-    --client-columns: minmax(240px, 1.2fr) minmax(200px, 1fr) minmax(280px, 1.6fr) minmax(240px, 1.1fr);
+    display: grid;
+    grid-template-columns: fit-content(300px) fit-content(280px) minmax(0, 1fr) minmax(220px, 280px);
+    column-gap: 32px;
+  }
+
+  .client-list__head,
+  .client-list > .list,
+  .client-card {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
   }
 
   .client-list__head {
-    display: grid;
-    grid-template-columns: var(--client-columns);
-    gap: 16px;
     padding: 0 17px 4px;
     color: var(--text-muted);
     font-size: 12px;
@@ -171,11 +183,17 @@ a.main-service__name {
   }
 
   .client-card {
-    display: grid;
-    grid-template-columns: var(--client-columns);
     align-items: center;
-    gap: 16px;
-    padding: 10px 16px;
+    min-height: 76px;
+    padding: 8px 16px;
+  }
+
+  // One line, cut with « … » (the full name is in the title), so every row
+  // is the same height.
+  .client-card .main-service__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .client-card__progress:empty {

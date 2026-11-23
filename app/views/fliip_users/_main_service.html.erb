@@ -5,7 +5,8 @@
   <div class="main-service">
     <span class="main-service__title">
       <%= service_status_badge(item) %>
-      <%= link_to item.service_name.presence || "Service", fliip_service_path(item), class: "main-service__name" %>
+      <%= link_to item.service_name.presence || "Service", fliip_service_path(item), class: "main-service__name",
+            title: item.service_name %>
     </span>
     <span class="text-muted text-small numeric">
       <%= [ ("Achat ##{item.remote_purchase_id}" if item.remote_purchase_id), item.duration.presence ].compact.join(" · ") %>
@@ -23,7 +24,7 @@
   <div class="main-service">
     <span class="main-service__title">
       <%= contract_status_badge(item) %>
-      <span class="main-service__name"><%= item.membership_name.presence || "Abonnement" %></span>
+      <span class="main-service__name" title="<%= item.membership_name %>"><%= item.membership_name.presence || "Abonnement" %></span>
     </span>
     <span class="text-muted text-small numeric">
       <%= [ "Abonnement", ("Début #{l(item.start_date)}" if item.start_date), ("Fin #{l(item.end_date)}" if item.end_date) ].compact.join(" · ") %>

@@ -6,9 +6,7 @@
     <div class="client-card__name">
       <%= link_to client.full_name, fliip_user_path(client), class: "client-name client-card__link" %>
       <span class="text-muted text-small numeric">FliipUserID <%= client.remote_id %></span>
-      <% if client.member_since %>
-        <span class="text-muted text-small numeric">Membre depuis <%= l(client.member_since) %></span>
-      <% end %>
+      <span class="text-muted text-small numeric">Membre depuis <%= client.member_since ? l(client.member_since) : "—" %></span>
     </div>
   </div>
 
