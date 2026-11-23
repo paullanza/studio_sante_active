@@ -1,21 +1,34 @@
-<%# A client's main service (or, without one, their active abonnement) with its status badge. Local: item. %>
+<%# A client's main service (or, without one, their active abonnement): name, badge,
+    then the time and séances progress bars. Renders two grid cells of the client card. Local: item. %>
 <% case item %>
 <% when FliipService %>
-  <span class="main-service">
-    <span class="main-service__name"><%= item.service_name.presence || "Service ##{item.id}" %></span>
+  <div class="main-service">
+    <%= link_to item.service_name.presence || "Service ##{item.id}", fliip_service_path(item), class: "main-service__name" %>
     <span class="main-service__meta">
       <%= service_status_badge(item) %>
-      <% if item.expire_date %><span class="text-muted text-small">Fin <%= l(item.expire_date) %></span><% end %>
+      <span class="text-muted text-small numeric">
+        <%= [ "Service ##{item.id}", ("Achat ##{item.remote_purchase_id}" if item.remote_purchase_id), item.duration.presence ].compact.join(" · ") %>
+      </span>
     </span>
-  </span>
+  </div>
+  <% time_pct = item.time_progress_percent || 0 %>
+  <% paid_pct = item.paid_progress_percent || 0 %>
+  <div class="client-card__progress">
+    <%= bar_with_label(percent: time_pct, label: "#{item.time_range_label} • #{time_pct}%",
+          bg_class: progress_base_color(time_pct)) %>
+    <%= bar_with_label(percent: paid_pct, label: paid_progress_label(item, paid_pct),
+          bg_class: paid_progress_bg_class(item, paid_pct, time_pct)) %>
+  </div>
 <% when FliipContract %>
-  <span class="main-service">
+  <div class="main-service">
     <span class="main-service__name">Abonnement · <%= item.membership_name.presence || "##{item.id}" %></span>
     <span class="main-service__meta">
       <%= contract_status_badge(item) %>
       <% if item.end_date %><span class="text-muted text-small">Fin <%= l(item.end_date) %></span><% end %>
     </span>
-  </span>
+  </div>
+  <div class="client-card__progress"></div>
 <% else %>
-  <span class="text-muted text-small">Aucun service</span>
+  <div class="main-service"><span class="text-muted text-small">Aucun service</span></div>
+  <div class="client-card__progress"></div>
 <% end %>

@@ -79,6 +79,12 @@ body:has(.top-nav) .brand-bar {
   padding: 8px var(--gutter-right) calc(32px + var(--safe-bottom)) var(--gutter-left);
 }
 
+// A page that needs the whole screen on desktop (lists with many columns).
+// Declared with content_for(:page_wide, true).
+.page--wide {
+  max-width: var(--page-wide-max-width);
+}
+
 // A narrow centred column for short forms (sign in, sign up, help pages).
 .page-narrow {
   display: flex;

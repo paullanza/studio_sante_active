@@ -1,5 +1,6 @@
 <% content_for :nav_section, "clients" %>
 <% content_for :title, "Clients" %>
+<% content_for :page_wide, true %>
 
 <div class="stack">
   <div class="page-header">
@@ -17,48 +18,35 @@
     <button type="submit" class="btn btn--primary">Rechercher</button>
   <% end %>
 
-  <% if @query.blank? %>
-    <p class="text-muted">Cherchez un client par nom, courriel ou téléphone.</p>
-  <% elsif @fliip_users.empty? %>
-    <p class="text-muted">Aucun client ne correspond à « <%= @query %> ».</p>
+  <% if @fliip_users.empty? %>
+    <p class="text-muted">
+      <%= @query.present? ? "Aucun client ne correspond à « #{@query} »." : "Aucun client." %>
+    </p>
   <% else %>
-    <p class="text-muted text-small numeric"><%= pluralize(@pagy.count, "client") %></p>
+    <p class="text-muted text-small numeric">
+      <%= pluralize(@pagy.count, "client") %><% if @query.present? %> pour « <%= @query %> » · <%= link_to "Tous les clients", fliip_users_path %><% end %>
+    </p>
 
-    <ul class="list until-tablet">
-      <%= render partial: "fliip_users/search_result", collection: @fliip_users, as: :client,
-            locals: { recent: @recent_services_by_user_id } %>
-    </ul>
-
-    <table class="table from-tablet client-table">
-      <thead>
-        <tr><th>Client</th><th>Téléphone</th><th>Courriel</th><th>Service</th></tr>
-      </thead>
-      <tbody>
-        <% @fliip_users.each do |client| %>
-          <% item = @recent_services_by_user_id[client.id] %>
-          <tr class="row-link">
-            <td>
-              <%= link_to client.full_name, fliip_user_path(client), class: "client-name row-link__target" %>
-              <div class="text-muted text-small numeric">ID <%= client.id %> · FliipUserID <%= client.remote_id %></div>
-            </td>
-            <td class="numeric"><%= [ client.user_phone1, client.user_phone2 ].compact_blank.first || "—" %></td>
-            <td class="client-table__email"><%= client.user_email.presence || "—" %></td>
-            <td><%= render "fliip_users/main_service", item: item %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+    <div class="client-list">
+      <div class="client-list__head" aria-hidden="true">
+        <span>Client</span><span>Contact</span><span>Membre depuis</span><span>Service</span><span>Progression</span>
+      </div>
+      <ul class="list">
+        <%= render partial: "fliip_users/client_card", collection: @fliip_users, as: :client,
+              locals: { recent: @recent_services_by_user_id } %>
+      </ul>
+    </div>
 
     <% if @pagy.pages > 1 %>
       <nav class="pager" aria-label="Pages">
         <% if @pagy.previous %>
-          <%= link_to "Précédent", fliip_users_path(query: @query, page: @pagy.previous), class: "btn btn--ghost", rel: "prev" %>
+          <%= link_to "Précédent", fliip_users_path(query: @query.presence, page: @pagy.previous), class: "btn btn--ghost", rel: "prev" %>
         <% else %>
           <span></span>
         <% end %>
         <span class="text-muted text-small numeric">Page <%= @pagy.page %> sur <%= @pagy.pages %></span>
         <% if @pagy.next %>
-          <%= link_to fliip_users_path(query: @query, page: @pagy.next), class: "btn btn--secondary", rel: "next" do %>
+          <%= link_to fliip_users_path(query: @query.presence, page: @pagy.next), class: "btn btn--secondary", rel: "next" do %>
             <%= safe_join([ "Suivant", button_arrow ]) %>
           <% end %>
         <% else %>

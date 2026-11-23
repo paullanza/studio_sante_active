@@ -1,5 +1,5 @@
-// Search pages (Clients): the search bar, result cards and rows that open a
-// record, and the « Précédent / Suivant » pager.
+// Search pages (Clients): the search bar, the client cards and the
+// « Précédent / Suivant » pager.
 .search-form {
   display: flex;
   flex-direction: column;
@@ -25,45 +25,113 @@
   }
 }
 
-// A whole card is the link.
+// Photo, or initials when Fliip has none.
+.avatar {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--surface-2);
+}
+
+.avatar--initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+// A client: a card on a phone; from 1024 px the same card lays its parts out
+// in columns under .client-list__head. The name's link covers the whole card.
 .client-card {
-  gap: 4px;
-  color: var(--text);
-  text-decoration: none;
+  position: relative;
+  transition: border-color 0.15s ease;
 }
 
 .client-card:hover {
   border-color: var(--border-strong);
+}
+
+.client-card__link {
   color: var(--text);
+  text-decoration: none;
+}
+
+.client-card__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.client-card:hover .client-card__link {
+  color: var(--brand-light);
 }
 
 .client-name {
   font-family: var(--font-heading);
   font-size: 17px;
   font-weight: 600;
+  line-height: 1.2;
 }
 
-.client-card__contact {
+.client-card__who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.client-card__name,
+.client-card__contact,
+.client-card__since {
   display: flex;
   flex-direction: column;
-  font-size: 14px;
+  min-width: 0;
 }
 
-.client-card__email,
-.client-table__email {
+.client-card__email {
   overflow-wrap: anywhere;
 }
 
-.client-card .main-service {
-  margin-top: 8px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
+.client-card__since {
+  flex-direction: row;
+  flex-wrap: wrap;
+  column-gap: 8px;
+}
+
+.client-card__label {
+  color: var(--text-muted);
+}
+
+.client-card__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.client-card__progress:empty {
+  display: none;
 }
 
 .main-service {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
+}
+
+// The service link sits above the card's link.
+.main-service__name {
+  position: relative;
+  z-index: 1;
+  align-self: flex-start;
+  font-weight: 700;
 }
 
 .main-service__meta {
@@ -73,24 +141,44 @@
   gap: 8px;
 }
 
-// A table row that opens its record: the link in the first cell covers the row.
-.row-link {
-  position: relative;
+.client-list__head {
+  display: none;
 }
 
-.row-link__target {
-  color: var(--text);
-  text-decoration: none;
-}
+@media (min-width: 1024px) {
+  .client-list {
+    --client-columns: minmax(220px, 1.3fr) minmax(200px, 1.3fr) minmax(110px, 0.7fr) minmax(240px, 1.6fr) minmax(220px, 1.3fr);
+  }
 
-.row-link__target::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-}
+  .client-list__head {
+    display: grid;
+    grid-template-columns: var(--client-columns);
+    gap: 16px;
+    padding: 0 17px 8px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 700;
+  }
 
-.row-link:hover .row-link__target {
-  color: var(--brand-light);
+  .client-card {
+    display: grid;
+    grid-template-columns: var(--client-columns);
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+  }
+
+  .client-card__since {
+    flex-direction: column;
+  }
+
+  .client-card__label {
+    display: none;
+  }
+
+  .client-card__progress:empty {
+    display: block;
+  }
 }
 
 .pager {

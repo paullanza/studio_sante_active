@@ -1,0 +1,28 @@
+<%# One client in the Clients list: a card on a phone, a row of cards' columns from 1024 px.
+    The name's link covers the card; the service link sits above it. Locals: client, recent. %>
+<li class="card client-card">
+  <div class="client-card__who">
+    <%= client_avatar(client) %>
+    <div class="client-card__name">
+      <%= link_to client.full_name, fliip_user_path(client), class: "client-name client-card__link" %>
+      <span class="text-muted text-small numeric">ID <%= client.id %> · FliipUserID <%= client.remote_id %></span>
+    </div>
+  </div>
+
+  <div class="client-card__contact text-small">
+    <span class="client-card__email"><%= client.user_email.presence || "—" %></span>
+    <span class="numeric text-muted"><%= [ client.user_phone1, client.user_phone2 ].compact_blank.first || "—" %></span>
+  </div>
+
+  <div class="client-card__since text-small">
+    <span class="client-card__label">Membre depuis</span>
+    <% if client.member_since %>
+      <span class="numeric"><%= l(client.member_since) %></span>
+      <span class="text-muted"><%= membership_length(client.member_since) %></span>
+    <% else %>
+      <span class="text-muted">—</span>
+    <% end %>
+  </div>
+
+  <%= render "fliip_users/main_service", item: recent[client.id] %>
+</li>

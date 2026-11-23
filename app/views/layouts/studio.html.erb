@@ -36,7 +36,7 @@
       <%= render "shared/studio_flash" %>
     </div>
 
-    <main class="page" id="contenu">
+    <main class="<%= class_names("page", "page--wide" => content_for?(:page_wide)) %>" id="contenu">
       <%= yield %>
     </main>
   </body>

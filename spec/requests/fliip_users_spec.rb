@@ -110,11 +110,11 @@ RSpec.describe "Fliip users", type: :request do
       context "as #{role}" do
         before { sign_in user_for(role) }
 
-        it "lists no clients before a search" do
+        it "lists every client before a search" do
           get fliip_users_path
 
           expect(response).to have_http_status(:ok)
-          expect(response.body).not_to include("Brisebois")
+          expect(response.body).to include("Ysolde Brisebois")
         end
 
         it "finds a client by name" do
@@ -148,6 +148,16 @@ RSpec.describe "Fliip users", type: :request do
       expect(response.body).to include(ERB::Util.html_escape(fliip_users_path(query: "Brisebois", page: 2)))
 
       get fliip_users_path(query: "Brisebois", page: 2)
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Page 2 sur 2")
+    end
+
+    it "pages through every client without a search" do
+      create_list(:fliip_user, 50)
+      sign_in user_for(:employee)
+
+      get fliip_users_path(page: 2)
+
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Page 2 sur 2")
     end

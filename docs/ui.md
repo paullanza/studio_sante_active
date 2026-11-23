@@ -47,7 +47,7 @@ In the view, declare the nav section, the page title, and a back link instead of
 <%= back_link_to "Clients", fliip_users_path %>
 ```
 
-Nav sections: `dashboard`, `clients`, `saisir`, `mes_services`, `plus` (every page reached from the « Plus » menu). The browser tab reads « Ysolde Brisebois · GEKO ». The page sits in `<main class="page">`: a 16 px gutter on mobile and a 960 px column from tablet up. Signed-out forms use `auth-split` (see Forms); other short signed-out pages (« Mot de passe oublié ») use `<div class="page-narrow auth">`. Pages don't repeat the app's name: the brand bar carries it.
+Nav sections: `dashboard`, `clients`, `saisir`, `mes_services`, `plus` (every page reached from the « Plus » menu). The browser tab reads « Ysolde Brisebois · GEKO ». The page sits in `<main class="page">`: a 16 px gutter on mobile and a 960 px column from tablet up. A list with many columns declares `content_for :page_wide, true` to use the screen's width (up to 1680 px). Signed-out forms use `auth-split` (see Forms); other short signed-out pages (« Mot de passe oublié ») use `<div class="page-narrow auth">`. Pages don't repeat the app's name: the brand bar carries it.
 
 ## Brand and full-screen web app
 
@@ -177,7 +177,7 @@ Server-rendered links with a `?tab=` param:
 
 `.until-tablet` shows only below 768 px and `.from-tablet` only from 768 px: when a page needs both, render the cards with one and the table with the other.
 
-### Search pages
+### Search pages and client cards
 
 ```erb
 <%= form_with url: fliip_users_path, method: :get, class: "search-form", role: "search" do %>
@@ -190,12 +190,15 @@ Server-rendered links with a `?tab=` param:
   <button type="submit" class="btn btn--primary">Rechercher</button>
 <% end %>
 
-<tr class="row-link"><td><%= link_to client.full_name, fliip_user_path(client), class: "row-link__target" %></td>…</tr>
+<div class="client-list">
+  <div class="client-list__head" aria-hidden="true"><span>Client</span>…</div>
+  <ul class="list"><%= render partial: "fliip_users/client_card", collection: @fliip_users, as: :client, locals: { recent: … } %></ul>
+</div>
 
 <nav class="pager" aria-label="Pages">« Précédent » · Page 1 sur 3 · « Suivant »</nav>
 ```
 
-The search bar stacks on a phone and sits beside its button from 768 px. A result card can be the link itself (`link_to …, class: "card client-card"`). In a table, `.row-link` makes the first cell's `.row-link__target` link cover the whole row. `.pager` puts « Précédent » left, the page count centred and « Suivant » right; build its links from `@pagy.previous` / `@pagy.next` and keep the query in them.
+The search bar stacks on a phone and sits beside its button from 768 px. A client is a `.client-card` on every width: stacked on a phone, its parts in columns under `.client-list__head` from 1024 px, so desktop rows stand out from the page like the phone cards. The name's `.client-card__link` covers the card; a link inside it (the service) sits above with `position: relative; z-index: 1`. `client_avatar(client)` shows the Fliip photo or the initials; `membership_length(date)` gives « 5 ans 6 mois ». `.pager` puts « Précédent » left, the page count centred and « Suivant » right; build its links from `@pagy.previous` / `@pagy.next` and keep the query in them.
 
 ### Progress bars
 
