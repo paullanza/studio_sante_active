@@ -22,7 +22,7 @@ RSpec.describe "Service usage adjustments", type: :request do
       expect { post fliip_service_service_usage_adjustments_path(service), params: adjustment_params }
         .not_to change(ServiceUsageAdjustment, :count)
       expect(response).to redirect_to(fliip_service_path(service))
-      expect(flash[:alert]).to eq("Not authorized.")
+      expect(flash[:alert]).to eq("Non autorisé·e.")
 
       get edit_fliip_service_service_usage_adjustment_path(service, adjustment)
       expect(response).to redirect_to(fliip_service_path(service))

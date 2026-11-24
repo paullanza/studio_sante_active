@@ -9,7 +9,7 @@ class ServiceUsageAdjustmentsController < ApplicationController
     adj.assign_attributes(permitted_attributes(adj))
 
     if selectable_employee?(adj) && adj.save
-      redirect_to fliip_service_path(@service, tab: "adjustments"), notice: "Adjustment added."
+      redirect_to fliip_service_path(@service, tab: "adjustments"), notice: "Ajustement ajouté."
     else
       redirect_to fliip_service_path(@service, tab: "adjustments"), alert: adj.errors.full_messages.to_sentence
     end
@@ -24,7 +24,7 @@ class ServiceUsageAdjustmentsController < ApplicationController
     @adjustment.assign_attributes(permitted_attributes(@adjustment))
 
     if selectable_employee?(@adjustment) && @adjustment.save
-      redirect_to fliip_service_path(@service, tab: "adjustments"), notice: "Adjustment updated."
+      redirect_to fliip_service_path(@service, tab: "adjustments"), notice: "Ajustement modifié."
     else
       render :edit, status: :unprocessable_content
     end
@@ -33,7 +33,7 @@ class ServiceUsageAdjustmentsController < ApplicationController
   def destroy
     authorize @adjustment
     @adjustment.destroy
-    redirect_to fliip_service_path(@service, tab: "adjustments"), notice: "Adjustment deleted."
+    redirect_to fliip_service_path(@service, tab: "adjustments"), notice: "Ajustement supprimé."
   end
 
   private
@@ -48,7 +48,7 @@ class ServiceUsageAdjustmentsController < ApplicationController
 
   # Keeps this controller's existing redirect and message.
   def user_not_authorized
-    redirect_to fliip_service_path(@service), alert: "Not authorized."
+    redirect_to fliip_service_path(@service), alert: "Non autorisé·e."
   end
 
   # The employee must come from User.selectable, so never the super admin.
