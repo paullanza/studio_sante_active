@@ -47,6 +47,42 @@ RSpec.describe ServiceBadgesHelper, type: :helper do
     end
   end
 
+  describe "#service_status_badge for an ended service" do
+    it "says « Terminé » when Fliip still says active but the end date has passed" do
+      svc = build(:fliip_service, purchase_status: "A", expire_date: 1.day.ago.to_date)
+
+      expect(helper.service_status_badge(svc)).to eq(badge("Terminé", "badge--neutral"))
+    end
+  end
+
+  describe "#service_row_state" do
+    let(:today) { Date.new(2026, 11, 24) }
+
+    def state(**attrs)
+      helper.service_row_state(build(:fliip_service, start_date: Date.new(2026, 1, 1), expire_date: Date.new(2027, 1, 1), **attrs), today: today)
+    end
+
+    it "follows the Fliip status while the service runs" do
+      expect(state(purchase_status: "A")).to eq(:active)
+      expect(state(purchase_status: "P")).to eq(:planned)
+      expect(state(purchase_status: "S")).to eq(:suspended)
+    end
+
+    it "is done when inactive, cancelled, ended or removed from Fliip" do
+      expect(state(purchase_status: "I")).to eq(:done)
+      expect(state(purchase_status: "C")).to eq(:done)
+      expect(state(purchase_status: "A", expire_date: Date.new(2026, 11, 23))).to eq(:done)
+      expect(state(missing_from_fliip_at: 1.day.ago)).to eq(:done)
+    end
+
+    it "is done when a set allocation is used up" do
+      svc = build(:fliip_service, expire_date: Date.new(2027, 1, 1), service_definition: build(:service_definition, paid_sessions: 2))
+      allow(svc).to receive(:paid_used_total).and_return(2.0)
+
+      expect(helper.service_row_state(svc, today: today)).to eq(:done)
+    end
+  end
+
   describe "#contract_status_badge" do
     it "shows an active abonnement" do
       expect(helper.contract_status_badge(build(:fliip_contract, status: "A"))).to eq(badge("Actif", "badge--chargee"))

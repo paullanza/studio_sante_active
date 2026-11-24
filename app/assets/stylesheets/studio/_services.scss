@@ -285,33 +285,77 @@
   }
 }
 
-// From 1024 px a card becomes a row: who (title, service, IDs), status,
-// dates, then the bars and counts. The head's name and badge become grid
-// cells of the row (display: contents).
+// A service's state at a glance (ServiceBadgesHelper#service_row_state): a
+// stripe for active (green), planned (blue) or suspended (orange) services;
+// finished ones (inactive, cancelled, ended, used up, removed) sit flat on
+// the page, muted, with grey bars.
+.service-card--active { border-left: 4px solid var(--brand-light); }
+.service-card--planned { border-left: 4px solid var(--badge-absence-fg); }
+.service-card--suspended { border-left: 4px solid var(--badge-moins24-fg); }
+
+.service-card--done {
+  border-style: dashed;
+  background: var(--bg);
+  color: var(--text-muted);
+}
+
+.service-card--done .service-card__name,
+.service-card--done .service-card__dates {
+  color: var(--text-muted);
+}
+
+.service-card--done .progress-bar {
+  filter: grayscale(1);
+}
+
+// From 1024 px a card becomes a row: who (title with its badge, service,
+// IDs), dates, then the two bars stacked, each on one line (label, bar, %).
 @media (min-width: 1024px) {
   .service-card {
     display: grid;
-    grid-template-columns: minmax(0, 1.3fr) 170px 200px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 200px minmax(280px, 0.9fr);
     grid-template-areas:
-      "name     status dates usage"
-      "service  status dates usage"
-      "trainers status dates usage"
-      "ids      status dates usage";
-    column-gap: 24px;
-    row-gap: 2px;
+      "head     dates usage"
+      "service  dates usage"
+      "trainers dates usage"
+      "ids      dates usage";
+    column-gap: 28px;
+    row-gap: 1px;
     align-items: start;
-    padding: 12px 16px;
+    padding: 10px 16px;
   }
 
-  // The two bars side by side keep the row short.
+  .service-card .service-card__head {
+    grid-area: head;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .service-card .service-card__service { grid-area: service; margin-top: 0; }
+  .service-card .service-card__trainers { grid-area: trainers; }
+  .service-card .service-card__ids { grid-area: ids; }
+  .service-card .service-card__dates { grid-area: dates; }
+  .service-card .service-card__usage { grid-area: usage; display: flex; flex-direction: column; gap: 3px; }
+
   .service-card__usage .service-bars {
-    flex-direction: row;
-    gap: 16px;
+    gap: 3px;
   }
 
   .service-card__usage .service-bar {
-    flex: 1;
+    display: grid;
+    grid-template-columns: 58px minmax(0, 1fr) 42px;
+    align-items: center;
+    column-gap: 8px;
   }
+
+  .service-card__usage .service-bar__label {
+    display: contents;
+  }
+
+  .service-card__usage .service-bar__label > span:first-child { grid-column: 1; }
+  .service-card__usage .service-bar .progress { grid-column: 2; grid-row: 1; }
+  .service-card__usage .service-bar__pct { grid-column: 3; grid-row: 1; text-align: right; }
 
   // The overrun on its own line under the dates.
   .service-card__overrun {
@@ -323,18 +367,6 @@
   .service-card__sep {
     display: none;
   }
-
-  .service-card .service-card__head {
-    display: contents;
-  }
-
-  .service-card .service-card__name { grid-area: name; }
-  .service-card .service-card__head .badge { grid-area: status; justify-self: start; }
-  .service-card .service-card__service { grid-area: service; margin-top: 0; }
-  .service-card .service-card__trainers { grid-area: trainers; }
-  .service-card .service-card__ids { grid-area: ids; }
-  .service-card .service-card__dates { grid-area: dates; }
-  .service-card .service-card__usage { grid-area: usage; display: flex; flex-direction: column; gap: 6px; }
 
   // Abonnement and consultation rows: the same columns on every row.
   .contract-card,

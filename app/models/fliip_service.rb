@@ -36,6 +36,17 @@ class FliipService < ApplicationRecord
       .or(where(id: ServiceUsageAdjustment.where(user_id: user.id).select(:fliip_service_id)))
   }
 
+  # Running services first, soonest end date at the top; then services whose
+  # end date has passed, most recently ended first (Mes services).
+  scope :ending_soonest_first, ->(today = Date.current) {
+    order(Arel.sql(sanitize_sql_array([
+      "CASE WHEN expire_date < ? THEN 1 ELSE 0 END, " \
+      "CASE WHEN expire_date < ? THEN NULL ELSE expire_date END ASC NULLS LAST, " \
+      "expire_date DESC",
+      today, today
+    ])))
+  }
+
   scope :current, -> {
     where(purchase_status: "A")
       .where("start_date IS NULL OR start_date <= ?", Date.current)

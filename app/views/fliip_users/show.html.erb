@@ -62,7 +62,7 @@
     </div>
 
     <% address = [ @fliip_user.user_address, @fliip_user.user_city, @fliip_user.user_zipcode ].compact_blank.join(", ") %>
-    <dl class="facts">
+    <dl class="facts facts--3">
       <div><dt>Membre depuis</dt><dd class="numeric"><%= @fliip_user.member_since ? l(@fliip_user.member_since) : "—" %></dd></div>
       <div><dt>Statut Fliip</dt><dd><%= @fliip_user.user_status.presence || "—" %></dd></div>
       <div><dt>Genre</dt><dd><%= @fliip_user.user_gender.presence || "—" %></dd></div>

@@ -352,4 +352,17 @@ RSpec.describe FliipService, type: :model do
       expect(roomy.numbered_sessions).to eq([ [ second, 7.5 ], [ first, 3.5 ] ])
     end
   end
+
+  describe ".ending_soonest_first" do
+    it "orders running services by end date, then ended ones most recent first" do
+      today = Date.new(2026, 11, 24)
+      soon = create(:fliip_service, expire_date: Date.new(2026, 12, 1))
+      later = create(:fliip_service, expire_date: Date.new(2027, 6, 1))
+      undated = create(:fliip_service, expire_date: nil)
+      ended_lately = create(:fliip_service, expire_date: Date.new(2026, 11, 20))
+      ended_long_ago = create(:fliip_service, expire_date: Date.new(2026, 1, 1))
+
+      expect(described_class.ending_soonest_first(today).to_a).to eq([ soon, later, undated, ended_lately, ended_long_ago ])
+    end
+  end
 end
