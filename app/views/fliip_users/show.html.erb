@@ -28,8 +28,12 @@
     <% if phones.any? || @fliip_user.user_email.present? %>
       <div class="contact-links">
         <% phones.each do |phone| %>
-          <%= link_to "tel:#{phone.gsub(/[^\d+]/, '')}", class: "contact-link numeric" do %>
-            <%= icon_svg(LayoutHelper::PHONE_ICON, size: 18) %><span class="contact-link__text"><%= phone %></span>
+          <% if (href = phone_href(phone)) %>
+            <%= link_to href, class: "contact-link numeric" do %>
+              <%= icon_svg(LayoutHelper::PHONE_ICON, size: 18) %><span class="contact-link__text"><%= format_phone(phone) %></span>
+            <% end %>
+          <% else %>
+            <span class="contact-link numeric"><%= icon_svg(LayoutHelper::PHONE_ICON, size: 18) %><span class="contact-link__text"><%= phone %></span></span>
           <% end %>
         <% end %>
         <% if @fliip_user.user_email.present? %>
