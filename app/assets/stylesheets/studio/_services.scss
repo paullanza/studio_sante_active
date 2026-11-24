@@ -41,6 +41,13 @@
   font-weight: 600;
 }
 
+// On lists scanned by client, the client's name is the bigger title.
+.service-card__name--client {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
 .service-card__service {
   margin-top: -4px;
   color: var(--text-muted);
