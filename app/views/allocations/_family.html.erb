@@ -1,0 +1,25 @@
+<%# One family of defined allocations: read-only, or inputs in « Mode correction ».
+    Locals: family, definitions, active_counts, correcting. %>
+<section class="alloc-family" aria-label="<%= family %>">
+  <h3 class="alloc-family__title"><span><%= family %></span><span class="text-muted numeric"><%= definitions.size %></span></h3>
+  <div class="alloc-line alloc-line--head" aria-hidden="true">
+    <span>DefID</span><span>Nom</span><span class="alloc-line__num">Séances</span><span class="alloc-line__num">Abs.</span><span class="alloc-line__num">Actifs</span>
+  </div>
+  <% definitions.each do |definition| %>
+    <% active = active_counts.fetch(definition.service_id, 0) %>
+    <% name = definition.service_name.presence || "Service #{definition.service_id}" %>
+    <div class="alloc-line" data-allocations-target="row" data-name="<%= name %>" data-active="<%= active %>">
+      <span class="text-muted numeric"><%= definition.service_id %></span>
+      <%= link_to name, allocation_path(definition), class: "alloc-line__name" %>
+      <% if correcting %>
+        <span class="alloc-line__num"><%= render "count_input", definition: definition, attribute: :paid_sessions, label: "Séances, #{name}" %></span>
+        <span class="alloc-line__num"><%= render "count_input", definition: definition, attribute: :free_sessions, label: "Absences, #{name}" %></span>
+      <% else %>
+        <span class="alloc-line__num numeric"><%= definition.paid_sessions %></span>
+        <span class="alloc-line__num numeric"><%= definition.free_sessions %></span>
+      <% end %>
+      <span class="alloc-line__num numeric <%= 'text-muted' if active.zero? %>"><%= active %></span>
+      <%= render "errors", definition: definition %>
+    </div>
+  <% end %>
+</section>

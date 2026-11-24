@@ -76,6 +76,14 @@ RSpec.describe FliipService, type: :model do
       expect(service.booking_block_reason).to eq("Annulé")
     end
 
+    it "blocks services whose allocation is « à définir », after cancelled ones" do
+      service.service_definition.update_columns(paid_sessions: nil, free_sessions: nil)
+      expect(service.booking_block_reason).to eq("Allocation à définir")
+
+      service.update!(purchase_status: "C")
+      expect(service.booking_block_reason).to eq("Annulé")
+    end
+
     it "blocks services missing from Fliip, before any other reason" do
       service.update!(purchase_status: "C", missing_from_fliip_at: 1.day.ago)
       expect(service.booking_block_reason).to eq("Retiré de Fliip")
@@ -300,15 +308,15 @@ RSpec.describe FliipService, type: :model do
   end
 
   describe "#allocation_to_define?" do
-    it "is true without an allocation, or with 0/0 or nil/nil" do
+    it "is true without an allocation, or with one « à définir »" do
       expect(build(:fliip_service, :without_definition)).to be_allocation_to_define
-      expect(build(:fliip_service, service_definition: build(:service_definition, paid_sessions: 0, free_sessions: 0))).to be_allocation_to_define
       expect(build(:fliip_service, service_definition: build(:service_definition, paid_sessions: nil, free_sessions: nil))).to be_allocation_to_define
+      expect(build(:fliip_service, service_definition: build(:service_definition, paid_sessions: 12, free_sessions: nil))).to be_allocation_to_define
     end
 
-    it "is false once either count is set" do
+    it "is false once both counts are set, 0/0 included" do
+      expect(build(:fliip_service, service_definition: build(:service_definition, paid_sessions: 0, free_sessions: 0))).not_to be_allocation_to_define
       expect(build(:fliip_service, service_definition: build(:service_definition, paid_sessions: 12, free_sessions: 0))).not_to be_allocation_to_define
-      expect(build(:fliip_service, service_definition: build(:service_definition, paid_sessions: 0, free_sessions: 2))).not_to be_allocation_to_define
     end
   end
 

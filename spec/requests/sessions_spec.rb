@@ -104,6 +104,14 @@ RSpec.describe "Sessions", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
     end
 
+    it "refuses a service whose allocation is « à définir »" do
+      service.service_definition.update_columns(paid_sessions: nil, free_sessions: nil)
+      sign_in employee
+
+      expect { post sessions_path, params: session_params }.not_to change(Session, :count)
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
     it "re-renders the form with an error when the service is missing from Fliip" do
       service.update!(missing_from_fliip_at: 1.day.ago)
       sign_in employee

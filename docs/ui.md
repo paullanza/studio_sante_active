@@ -192,6 +192,8 @@ Server-rendered links with a `?tab=` param:
 
 `.until-tablet` shows only below 768 px and `.from-tablet` only from 768 px: when a page needs both, render the cards with one and the table with the other.
 
+Counts edited in bulk (Allocations) use `.cell-input`: a compact 64 px number box with a green border, gold when focused or changed (`.is-changed`), red with `.cell-input--invalid`. A `.suggest` pill next to it is a hint the user clicks to fill the box. See `allocations/_count_input` and `studio/_allocations.scss`.
+
 ### Search pages and client cards
 
 ```erb
@@ -256,6 +258,7 @@ The search bar stacks on a phone and sits beside its button from 768 px. Its fie
   </label>
 <% end %>
 ```
+- `oversight/_session_row` (local `session:`): a séance in « Séances récentes », the whole row a link to its service: `seance_datetime`, the client's name with the service under it, the trainer, the outcome badge with `duration_short`, and `confirmation_status`. A card on a phone (date and outcome, client and service, trainer and confirmation), two cards a row from 768 px; from 1024 px the cards line up in columns under `.recent-seances__head` (subgrid inside `.recent-seances`), like the Clients list. An Absence or a -24h séance gets the same stripe and tint as `.seance-card--absence` / `--moins24`. « Voir plus » under the list is a `.btn--secondary` link to the next page (Pagy countless, no infinite scroll).
 - `.facts`: short label-over-value facts in two columns (`.facts--3` for three); `.facts__wide` spans the row.
 - Phones always go through `format_phone(raw)` and `phone_href(raw)` (`PhoneHelper`): « (514) 555-0142 », « +33 6 12 34 56 78 », other countries as « +44 7700900123 ». Something that isn't a phone number (« us ») shows as stored, with no link.
 - `format_count(1.5)` (`CountsHelper`) shows séance and absence counts: « 1,5 », « 12 », never « 12.0 ».

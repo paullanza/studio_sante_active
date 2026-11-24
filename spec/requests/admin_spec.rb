@@ -1,7 +1,6 @@
 require "rails_helper"
 
 RSpec.describe "Admin", type: :request do
-  let(:definition)   { create(:service_definition, paid_sessions: 4) }
   let(:signup_code)  { create(:signup_code) }
   let(:session_record) { create(:session) }
   let(:consultation) { create(:consultation) }
@@ -10,9 +9,6 @@ RSpec.describe "Admin", type: :request do
   def admin_requests
     {
       "dashboard"                 => -> { get admin_dashboard_path },
-      "services"                  => -> { get admin_services_path },
-      "service_show"              => -> { get admin_service_path(definition) },
-      "update_service"            => -> { patch update_admin_service_path(definition), params: { paid_sessions: 6, free_sessions: 1 } },
       "import_clients"            => -> { post import_clients_path },
       "create_signup_code"        => -> { post admin_signup_codes_path },
       "deactivate_signup_code"    => -> { patch deactivate_admin_signup_code_path(signup_code) },
@@ -42,7 +38,6 @@ RSpec.describe "Admin", type: :request do
           expect(response).to redirect_to(authenticated_root_path), name
           expect(flash[:alert]).to eq("Not authorized"), name
         end
-        expect(definition.reload.paid_sessions).to eq(4)
         expect(signup_code.reload).to be_active
       end
     end
@@ -58,13 +53,6 @@ RSpec.describe "Admin", type: :request do
           expect(response.status).to be < 400, name
           expect(flash[:alert]).not_to eq("Not authorized"), name
         end
-      end
-
-      it "updates a service definition" do
-        patch update_admin_service_path(definition), params: { paid_sessions: 6, free_sessions: 1 }
-
-        expect(definition.reload).to have_attributes(paid_sessions: 6, free_sessions: 1)
-        expect(response).to redirect_to(admin_services_path)
       end
 
       it "manages signup codes" do

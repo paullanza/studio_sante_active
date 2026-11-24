@@ -7,18 +7,6 @@ class AdminPolicy < ApplicationPolicy
     admin_or_above?
   end
 
-  def services?
-    admin_or_above?
-  end
-
-  def service_show?
-    admin_or_above?
-  end
-
-  def update_service?
-    admin_or_above?
-  end
-
   # Mission Control at /jobs.
   def jobs?
     admin_or_above?

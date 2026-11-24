@@ -26,9 +26,7 @@ export default class extends Controller {
     }
 
     const free = parseFloat(service.dataset.freeRemaining || "0")
-    const paidRaw = service.dataset.paidRemaining
-    // No allocation: the quota isn't enforced (Session#respect_quota_limits).
-    const paid = paidRaw === "" || paidRaw === undefined ? Infinity : parseFloat(paidRaw)
+    const paid = parseFloat(service.dataset.paidRemaining || "0")
 
     const outcome = present ? "chargee" : (free >= duration ? "absence" : "moins24")
     const needed = outcome === "absence" ? free : paid

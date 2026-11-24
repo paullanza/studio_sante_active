@@ -39,6 +39,10 @@ fr:
         user: "Entraîneur·e"
         user_id: "Entraîneur·e"
         note: "Note"
+      service_definition:
+        service_name: "Nom"
+        paid_sessions: "Séances"
+        free_sessions: "Absences"
 
   errors:
     format: "%{attribute} %{message}"

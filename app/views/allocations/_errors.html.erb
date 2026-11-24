@@ -1,0 +1,4 @@
+<%# The errors of one allocation after a failed bulk save. Locals: definition. %>
+<% if definition.errors.any? %>
+  <p class="allocation-errors" id="allocation_<%= definition.id %>_errors"><%= definition.errors.full_messages.to_sentence %></p>
+<% end %>

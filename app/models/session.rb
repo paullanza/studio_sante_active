@@ -63,6 +63,8 @@ class Session < ApplicationRecord
   validate :respect_quota_limits, on: :create
   # - Checks that the service is not cancelled and is within the booking window (today-based)
   validate :service_not_cancelled, on: :create
+  # - Checks that an admin has set the service's allocation
+  validate :allocation_defined, on: :create
   validate :service_present_in_fliip, on: :create
   validate :service_within_booking_window, on: :create
 
@@ -346,7 +348,8 @@ class Session < ApplicationRecord
   # Uses FliipService's quota calculations (which include bonuses and adjustments).
   def respect_quota_limits
     return if fliip_service.blank?
-    return if fliip_service.service_definition.nil?
+    # Without an allocation there is nothing to count (allocation_defined says why).
+    return if fliip_service.allocation_to_define?
 
     if session_type == "paid"
       remaining = fliip_service.remaining_paid_sessions.to_f
@@ -392,6 +395,14 @@ class Session < ApplicationRecord
     return if fliip_service.blank?
     if fliip_service.removed_from_fliip?
       errors.add(:base, "Ce service a été retiré de Fliip. Impossible de créer une séance.")
+    end
+  end
+
+  # Prevents booking until an admin sets the allocation (« à définir »).
+  def allocation_defined
+    return if fliip_service.blank?
+    if fliip_service.allocation_to_define?
+      errors.add(:base, "L'allocation de ce service est à définir.")
     end
   end
 

@@ -1,0 +1,58 @@
+<% content_for :nav_section, "plus" %>
+<% content_for :title, @definition.service_name.presence || "Allocation" %>
+<% content_for :page_wide, true %>
+
+<div class="stack">
+  <div class="page-bar">
+    <%= back_link_to "Allocations", allocations_path %>
+    <%# « À définir » goes to the queue; a set allocation to « Mode correction ». %>
+    <% if @definition.to_define? %>
+      <%= link_to allocations_path(q: @definition.service_id), class: "btn btn--secondary btn--small" do %>
+        <%= safe_join([ "Définir l'allocation", button_arrow ]) %>
+      <% end %>
+    <% else %>
+      <%= link_to allocations_path(q: @definition.service_id, corriger: 1), class: "btn btn--secondary btn--small" do %>
+        <%= safe_join([ "Corriger l'allocation", button_arrow ]) %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <section class="card card--top" aria-labelledby="allocation-name">
+    <div class="service-card__head">
+      <h1 id="allocation-name" class="allocation-top__name"><%= @definition.service_name.presence || "Service #{@definition.service_id}" %></h1>
+      <% if @definition.to_define? %>
+        <span class="badge badge--unconfirmed">À définir</span>
+      <% end %>
+    </div>
+    <span class="text-muted text-small numeric">DefID <%= @definition.service_id %></span>
+    <div class="stats">
+      <div class="stat">
+        <span class="stat__value"><%= @definition.paid_sessions.nil? ? "—" : format_count(@definition.paid_sessions) %></span>
+        <span class="stat__label">séances</span>
+      </div>
+      <div class="stat">
+        <span class="stat__value"><%= @definition.free_sessions.nil? ? "—" : format_count(@definition.free_sessions) %></span>
+        <span class="stat__label">absences</span>
+      </div>
+      <div class="stat">
+        <span class="stat__value"><%= @active_count %></span>
+        <span class="stat__label"><%= @active_count < 2 ? "service actif" : "services actifs" %> sur <%= @total_count %></span>
+      </div>
+    </div>
+  </section>
+
+  <h2>Services de ce type</h2>
+
+  <% if @services.any? %>
+    <div class="list-toolbar">
+      <p class="text-muted text-small numeric"><%= pluralize(@pagy.count, "service") %></p>
+      <%= render "shared/pager", pagy: @pagy %>
+    </div>
+    <ul class="list card-grid">
+      <%= render partial: "fliip_services/card", collection: @services, as: :service, locals: { show_client: true } %>
+    </ul>
+    <%= render "shared/pager", pagy: @pagy %>
+  <% else %>
+    <p class="empty-state">Aucun service de ce type.</p>
+  <% end %>
+</div>

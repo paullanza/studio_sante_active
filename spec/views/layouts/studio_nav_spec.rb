@@ -31,14 +31,14 @@ RSpec.describe "layouts/_studio_nav", type: :view do
     expect(plus_items(render_nav_for(create(:user)))).to eq([ "Mon profil", "Se déconnecter" ])
   end
 
-  it "adds consultation linking and Échéances for a manager" do
+  it "adds consultation linking, Échéances and Séances récentes for a manager" do
     expect(plus_items(render_nav_for(create(:user, :manager))))
-      .to eq([ "Mon profil", "Lier les consultations", "Échéances", "Se déconnecter" ])
+      .to eq([ "Mon profil", "Lier les consultations", "Échéances", "Séances récentes", "Se déconnecter" ])
   end
 
   it "adds the admin pages for an admin and the super admin" do
     expected = [ "Mon profil", "Confirmations séances", "Confirmations consultations",
-                 "Lier les consultations", "Échéances", "Allocations", "Tâches", "Se déconnecter" ]
+                 "Lier les consultations", "Échéances", "Séances récentes", "Allocations", "Tâches", "Se déconnecter" ]
 
     expect(plus_items(render_nav_for(create(:user, :admin)))).to eq(expected)
     expect(plus_items(render_nav_for(create(:user, :super_admin)))).to eq(expected)

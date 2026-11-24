@@ -41,6 +41,20 @@ RSpec.describe "Bookings", type: :request do
         expect(response.body).to include("Ent. privé, 3 mois", "Toutes les séances utilisées")
       end
 
+      it "shows an allocation « à définir » as not bookable, and books a 0/0 one by the quota rules" do
+        to_define = create(:fliip_service, fliip_user: client, service_name: "Nouveau service",
+                           service_definition: create(:service_definition, paid_sessions: nil, free_sessions: nil))
+        zero = create(:fliip_service, fliip_user: client, service_name: "Zéro",
+                      service_definition: create(:service_definition, paid_sessions: 0, free_sessions: 0))
+
+        get new_seance_path(fliip_user_id: client.id)
+
+        expect(service_radio(to_define)).to be_nil
+        expect(service_radio(zero)).to be_nil
+        reasons = Nokogiri::HTML(response.body).css(".service-option--blocked .service-option__reason").map(&:text)
+        expect(reasons).to contain_exactly("Allocation à définir", "Toutes les séances utilisées")
+      end
+
       it "preselects the service from fliip_service_id" do
         create(:fliip_service, fliip_user: client)
         wanted = create(:fliip_service, fliip_user: client)

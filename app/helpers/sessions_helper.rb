@@ -37,7 +37,7 @@ module SessionsHelper
     return { outcome: nil, duration: 1.0, absences_after: nil, none_left: false, submit_label: "Enregistrer la séance" } unless service
 
     duration = Session::DURATIONS.include?(session.duration.to_f) ? session.duration.to_f : 1.0
-    free_left = service.service_definition ? service.remaining_free_sessions.to_f : 0.0
+    free_left = service.allocation_to_define? ? 0.0 : service.remaining_free_sessions.to_f
     outcome =
       if session.present then :chargee
       elsif free_left >= duration then :absence
@@ -49,7 +49,7 @@ module SessionsHelper
       outcome: outcome,
       duration: duration,
       absences_after: (free_left - duration if outcome == :absence),
-      none_left: service.service_definition.present? && needed_left < duration,
+      none_left: !service.allocation_to_define? && needed_left < duration,
       submit_label: SUBMIT_LABELS.fetch(outcome, "Enregistrer la séance")
     }
   end
