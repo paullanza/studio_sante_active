@@ -19,10 +19,6 @@ class AdminPolicy < ApplicationPolicy
     admin_or_above?
   end
 
-  def client_services?
-    admin_or_above?
-  end
-
   # Mission Control at /jobs.
   def jobs?
     admin_or_above?
@@ -53,18 +49,6 @@ class AdminPolicy < ApplicationPolicy
   end
 
   def confirm_consultations?
-    admin_or_above?
-  end
-
-  def adjustments_new?
-    admin_or_above?
-  end
-
-  def adjustments_preview?
-    admin_or_above?
-  end
-
-  def adjustments_commit?
     admin_or_above?
   end
 end

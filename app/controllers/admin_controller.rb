@@ -1,5 +1,4 @@
 class AdminController < ApplicationController
-  require "csv"
   before_action :authenticate_user!
   before_action :authorize_admin
 
@@ -38,8 +37,6 @@ class AdminController < ApplicationController
       .where(expire_date: (today - 30.days)..(today - 1.day))
       .includes(:fliip_user, :service_definition, :service_usage_adjustments)
       .order(expire_date: :desc)
-
-    @exportable_services_count = FliipService.count
 
     @consultations_last_30 = Consultation
       .where(occurred_at: (today - 30.days)..today)
@@ -145,59 +142,6 @@ class AdminController < ApplicationController
     redirect_to admin_dashboard_path, notice: "Synchronisation Fliip lancée en arrière-plan. Suivez-la dans Tâches (/jobs)."
   end
 
-  def client_services
-    csv_str, filename = CsvPorter::Exporter::Services.call
-    send_data csv_str, filename:, type: "text/csv"
-  end
-
-  def adjustments_new
-  end
-
-  def adjustments_preview
-    file = params[:csv]
-    unless file&.respond_to?(:path)
-      redirect_to admin_adjustments_new_path, alert: "Please choose a CSV file." and return
-    end
-
-    require "csv"
-    @headers = nil
-    @rows    = []
-
-    CSV.foreach(file, headers: true) do |row|
-      @headers ||= row.headers
-      @rows << row
-    end
-
-    @payload_json = { rows: @rows.map(&:to_h) }.to_json
-    @users_for_select = User.selectable.order(:first_name, :last_name)
-  rescue => e
-    redirect_to admin_adjustments_new_path, alert: "Could not read CSV: #{e.message}"
-  end
-
-  def adjustments_commit
-    payload = JSON.parse(params[:payload].to_s) rescue nil
-    unless payload && payload["rows"].is_a?(Array)
-      redirect_to admin_adjustments_new_path, alert: "Invalid or missing import payload." and return
-    end
-
-    employee_id = params[:employee_id].presence
-    unless employee_id
-      redirect_to admin_adjustments_new_path, alert: "Please select an employee." and return
-    end
-
-    result = CsvPorter::Importer::Adjustments.call(
-      rows: payload["rows"],
-      employee_id: employee_id
-    )
-
-    if result.success?
-      redirect_to admin_dashboard_path, notice: "Adjustments imported: #{result.created} created."
-    else
-      msg = "Created #{result.created}. #{result.errors.size} error#{'s' unless result.errors.size == 1}."
-      redirect_to admin_dashboard_path, alert: msg
-    end
-  end
-
   private
 
   def permitted_session_filters
@@ -220,10 +164,6 @@ class AdminController < ApplicationController
     )
   end
 
-  def fmt_date(d)
-    d.present? ? d.strftime("%d/%m/%Y") : nil
-  end
-
   # The query is inferred from the action name.
   def authorize_admin
     authorize :admin
@@ -232,13 +172,5 @@ class AdminController < ApplicationController
   # Keeps the existing redirect and message for non-admins.
   def user_not_authorized
     redirect_to authenticated_root_path, alert: "Not authorized"
-  end
-
-  def to_f_or_zero(value)
-    s = value.to_s.strip
-    return 0.0 if s.blank?
-    Float(s)
-  rescue ArgumentError
-    0.0
   end
 end

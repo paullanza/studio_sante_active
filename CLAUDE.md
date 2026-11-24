@@ -80,9 +80,8 @@ Pundit handles authorization, with one policy per model or area in `app/policies
 - Record lists that depend on the role go through a policy `Scope`.
 - After login, `ApplicationController#after_sign_in_path_for` and `RootController#redirect` route users by role: admins go to `/admin/dashboard`, managers to `/manager/dashboard`, and employees to their profile.
 
-### Filtering, search and CSV
+### Filtering and search
 - Admin list filters go through each model's `apply_filters(params)`, which chains scopes. Search uses accent-insensitive `pg_search_scope`s.
-- `app/services/csv_porter/` handles CSV export of client services and the adjustments import. The import is a three-step flow: `adjustments_new` → `adjustments_preview` (dry run) → `adjustments_commit`. CSV dates use `dd/mm/yyyy`.
 
 ### Frontend
 Interactivity uses Stimulus controllers in `app/javascript/controllers/` together with server-rendered partials. Inline table editing fetches member `row` routes (for example `GET /sessions/:id/row`) to swap rows. JS packages are vendored into `vendor/javascript` and pinned in `config/importmap.rb` (`./bin/importmap pin <pkg>` downloads them; there are no CDN pins). Address autocomplete is the `<mapbox-search-box>` web component from `@mapbox/search-js-web`, created by `address_autocomplete_controller.js`; it writes the chosen address into the hidden `address` input. Clean up event listeners in `disconnect()` for Turbo compatibility.
@@ -142,7 +141,7 @@ When a table is modified (field added, removed, or changed), check and update al
 
 - Factories
 - Views and forms that render the changed fields
-- Service objects that touch the table, including the Fliip sync and CSV porter
+- Service objects that touch the table, including the Fliip sync
 - Controllers, especially strong params
 - Colspan values on empty-state rows and any other multi-column-spanning rows
 
