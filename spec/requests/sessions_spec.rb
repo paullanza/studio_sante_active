@@ -27,8 +27,12 @@ RSpec.describe "Sessions", type: :request do
       expect(session.created_by).to eq(employee)
       expect(session).to be_paid
       expect(session).not_to be_confirmed
-      expect(response).to redirect_to(new_seance_path(fliip_user_id: service.fliip_user_id))
+      expect(response).to redirect_to(new_seance_path)
       expect(flash[:notice]).to eq("Séance enregistrée.")
+
+      # The blank form that follows lists the new séance among the trainer's latest.
+      follow_redirect!
+      expect(Nokogiri::HTML(response.body).css("#recent_sessions .latest-seance").size).to eq(1)
     end
 
     it "records a present 30 min séance as a paid half" do

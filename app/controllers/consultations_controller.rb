@@ -18,7 +18,7 @@ class ConsultationsController < ApplicationController
     assign_occurred_at(@consultation, params[:consultation][:date], params[:consultation][:time])
 
     if @consultation.user.present? && @consultation.save
-      redirect_to new_seance_path, notice: "Consultation créée."
+      redirect_to new_seance_path(tab: "consultation"), notice: "Consultation créée."
     else
       @consultation.errors.add(:base, OWNER_REQUIRED_MESSAGE) if @consultation.user.nil?
 

@@ -23,7 +23,7 @@ RSpec.describe "Consultations", type: :request do
       expect { post consultations_path, params: consultation_params }.to change(Consultation, :count).by(1)
 
       expect(Consultation.last.user).to eq(employee)
-      expect(response).to redirect_to(new_seance_path)
+      expect(response).to redirect_to(new_seance_path(tab: "consultation"))
     end
 
     it "re-renders the booking page when a required field is missing" do

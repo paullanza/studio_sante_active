@@ -18,7 +18,7 @@ class SessionsController < ApplicationController
     @session.present     = params.dig(:session, :present) == "1"
 
     if @session.user.present? && @session.save
-      redirect_to new_seance_path(fliip_user_id: @session.fliip_user_id), notice: "Séance enregistrée."
+      redirect_to new_seance_path, notice: "Séance enregistrée."
     else
       @session.errors.add(:base, OWNER_REQUIRED_MESSAGE) if @session.user.nil?
 
