@@ -183,16 +183,25 @@
   padding: 12px 14px;
 }
 
+// The séance's number and outcome, together, first.
+.seance-card__tag {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .seance-card__title {
   font-family: var(--font-heading);
   font-size: 15px;
   font-weight: 700;
 }
 
-.seance-card__badges {
+.seance-card__main,
+.seance-card__people {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .seance-card__when {
@@ -200,13 +209,25 @@
   font-weight: 700;
 }
 
-.seance-card__foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px 8px;
+.seance-card__presence {
+  font-weight: 400;
+  color: var(--text-muted);
 }
+
+// An Absence or a -24h séance (or an absent prospect) stands out: a stripe
+// and a tint in the badge's colours, and its presence in the badge colour.
+.seance-card--absence {
+  border-left: 4px solid var(--badge-absence-fg);
+  background: color-mix(in srgb, var(--badge-absence-bg) 55%, var(--surface));
+}
+
+.seance-card--moins24 {
+  border-left: 4px solid var(--badge-moins24-fg);
+  background: color-mix(in srgb, var(--badge-moins24-bg) 55%, var(--surface));
+}
+
+.seance-card--absence .seance-card__presence { color: var(--badge-absence-fg); font-weight: 700; }
+.seance-card--moins24 .seance-card__presence { color: var(--badge-moins24-fg); font-weight: 700; }
 
 .adjustment-card__actions {
   display: flex;
@@ -215,44 +236,24 @@
 }
 
 // From 1024 px séance, consultation and adjustment cards on the Service page
-// become rows; the head's parts become cells of the row (display: contents).
+// become rows: number and outcome stacked on the left, as on the old tables.
 @media (min-width: 1024px) {
-  .seance-card--session,
-  .seance-card--consultation {
+  .seance-card--session {
     display: grid;
+    grid-template-columns: 120px minmax(0, 1.2fr) minmax(0, 1fr) 190px;
     align-items: center;
     column-gap: 24px;
-    row-gap: 2px;
   }
 
-  .seance-card--session {
-    grid-template-columns: 100px 230px minmax(0, 1fr) 190px 230px;
-    grid-template-areas:
-      "title when trainer badges foot"
-      "title when by      badges foot";
+  .seance-card__tag {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
   }
 
-  .seance-card--consultation {
-    grid-template-columns: 230px 130px minmax(0, 1fr) 230px;
-    grid-template-areas:
-      "when badges trainer foot"
-      "when badges by      foot";
+  .seance-card__status {
+    justify-self: end;
   }
-
-  .seance-card--session .service-card__head,
-  .seance-card--consultation .service-card__head {
-    display: contents;
-  }
-
-  .seance-card__title { grid-area: title; }
-  .seance-card--session .seance-card__badges,
-  .seance-card--consultation .badge { grid-area: badges; justify-self: start; }
-  .seance-card--session .seance-card__when,
-  .seance-card--consultation .seance-card__when { grid-area: when; }
-  .seance-card__trainer { grid-area: trainer; }
-  .seance-card__by { grid-area: by; }
-  .seance-card--session .seance-card__foot,
-  .seance-card--consultation .seance-card__foot { grid-area: foot; justify-content: flex-end; }
 
   .adjustment-card {
     flex-direction: row;
