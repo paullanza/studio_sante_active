@@ -138,6 +138,7 @@ RSpec.describe "Role-based access", type: :request do
         "J1 GET /jobs (Mission Control)"     => [ADMINS, -> { get "/jobs" }],
         "M1 GET manager/dashboard"           => [%i[manager], -> { get manager_dashboard_path }],
         "M4 POST manager/signup_codes"       => [%i[manager], -> { post manager_signup_codes_path }],
+        "O1 GET /echeances"                  => [MANAGEMENT, -> { get echeances_path }],
         "X1 GET /fliip_users"                => [ALL, -> { get fliip_users_path }],
         "X1 GET /fliip_users/:id"            => [ALL, -> { get fliip_user_path(service.fliip_user) }],
         "X2 POST fliip_users/:remote_id/refresh" => [ALL, -> { post refresh_fliip_user_path(service.fliip_user.remote_id) }],

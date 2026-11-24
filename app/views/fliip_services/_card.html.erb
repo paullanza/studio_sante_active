@@ -1,7 +1,8 @@
 <%# A service as a card on a phone and a row from 1024 px (Client page, Mes services, Échéances).
     The whole card opens the Service page.
     Locals: service, show_client (default false: when true, the client's name is the card's title
-    and the service name sits under it, for lists people scan by client). %>
+    and the service name sits under it, for lists people scan by client),
+    trainers (default none: staff names, shown as « Entraîneur·e·s : … » when given). %>
 <% removed = service.removed_from_fliip? %>
 <li>
   <%= link_to fliip_service_path(service), class: "card service-card service-card--#{service_row_state(service)}" do %>
@@ -36,6 +37,10 @@
           <% end %>
         </div>
       </div>
+    <% end %>
+
+    <% if local_assigns.key?(:trainers) %>
+      <div class="service-card__trainers text-small">Entraîneur·e·s : <%= trainers.presence&.join(", ") || "—" %></div>
     <% end %>
 
     <div class="service-card__ids text-muted text-small numeric">
