@@ -64,6 +64,9 @@ module FliipApi
           services, service_counts = upsert_owned(FliipService, :remote_purchase_id, service_rows.map { |r| Mapper.service(r) }, user)
           _, contract_counts = upsert_owned(FliipContract, :remote_contract_id, contract_rows.map { |r| Mapper.contract(r) }, user)
           definitions = ServiceDefinition.ensure_for!(services)
+          # The Client page's « Synchronisé avec Fliip il y a … ». A plain
+          # column write: it doesn't count as a change or touch updated_at.
+          user.update_column(:synced_at, Time.current)
 
           Result.new(user: user, user_change: user_change, services: service_counts,
                      contracts: contract_counts, definitions_created: definitions)

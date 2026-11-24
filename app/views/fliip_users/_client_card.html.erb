@@ -12,7 +12,7 @@
 
   <div class="client-card__contact text-small">
     <span class="client-card__email"><%= client.user_email.presence || "—" %></span>
-    <span class="numeric text-muted"><%= [ client.user_phone1, client.user_phone2 ].compact_blank.first || "—" %></span>
+    <span class="numeric text-muted"><%= format_phone([ client.user_phone1, client.user_phone2 ].compact_blank.first).presence || "—" %></span>
   </div>
 
   <%= render "fliip_users/main_service", item: recent[client.id] %>

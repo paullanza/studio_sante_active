@@ -202,6 +202,35 @@ The search bar stacks on a phone and sits beside its button from 768 px. Its fie
 
 `render "shared/pager", pagy: @pagy` gives page links (‹ 1 … 5 6 7 … 41 ›, from `pager_series`) and a « go to page » box (type a number, press Enter), all keeping the request's other params, such as the search. Put it above the list in a `.list-toolbar` beside the count, and again under the list.
 
+### Client and Service pages
+
+```erb
+<div class="page-bar">
+  <%= back_link_to "Clients", fliip_users_path %>
+  <%= button_to refresh_fliip_user_path(client.remote_id), class: "btn btn--secondary btn--small" do %>…<% end %>
+</div>
+
+<ul class="list card-grid">
+  <%= render partial: "fliip_services/card", collection: services, as: :service, locals: { show_client: false } %>
+</ul>
+<p class="empty-state">Aucun service.</p>
+
+<dl class="facts">
+  <div><dt>Membre depuis</dt><dd>01/01/2025</dd></div>
+  <div class="facts__wide"><dt>Adresse</dt><dd>…</dd></div>
+</dl>
+```
+
+- `.page-bar`: the back link on the left, a page action on the right (`.btn--small` is a 13 px text button).
+- `.client-page`: the top card, then the tabs; from 1024 px the top card is a sticky 360 px column beside them.
+- `fliip_services/_card`: a service as a card linking to its Service page (name, `service_status_badge`, dates with the overrun, bars, counts, IDs). `show_client: true` adds the client's name above it. A service removed from Fliip shows « historique seulement » and no bars or counts; an allocation not set yet shows « Allocation à définir » and no Séances bar.
+- `fliip_services/_bars`: the two thin bars, Temps and Séances, each with its label and percentage above.
+- `fliip_contracts/_card` (abonnement) and `consultations/_client_card` (a consultation on the Client page).
+- `.card-grid`: a list of cards, one column, two from 1280 px. `.empty-state`: a tab or list with nothing in it.
+- `.facts`: short label-over-value facts in two columns; `.facts__wide` spans both.
+- Phones always go through `format_phone(raw)` and `phone_href(raw)` (`PhoneHelper`): « (514) 555-0142 », « +33 6 12 34 56 78 », other countries as « +44 7700900123 ». Something that isn't a phone number (« us ») shows as stored, with no link.
+- `format_count(1.5)` (`CountsHelper`) shows séance and absence counts: « 1,5 », « 12 », never « 12.0 ».
+
 ### Progress bars
 
 `bar_with_label(percent:, label:, bg_class:)` and the colour helpers in `ProgressHelper` work unchanged; `studio/_progress.scss` styles their class names (`progress`, `progress-bar`, `bg-primary`, `bg-secondary`, `bg-warning`, `bg-orange`, `bg-danger`, `label-dark`, `label-light`).

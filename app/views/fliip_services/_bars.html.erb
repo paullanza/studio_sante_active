@@ -1,0 +1,21 @@
+<%# A service's two thin bars, Temps and Séances, each with its label and percentage above.
+    Colours follow ProgressHelper. The Séances bar is left out until the allocation is set.
+    Local: service. %>
+<% time_pct = service.time_progress_percent || 0 %>
+<% paid_pct = service.paid_progress_percent || 0 %>
+<div class="service-bars">
+  <div class="service-bar">
+    <div class="service-bar__label"><span>Temps</span><span class="service-bar__pct"><%= time_pct %> %</span></div>
+    <%= tag.div class: "progress", role: "progressbar", aria: { label: "Temps", valuemin: 0, valuemax: 100, valuenow: time_pct } do %>
+      <%= tag.div class: [ "progress-bar", progress_base_color(time_pct) ], style: "width: #{time_pct}%" %>
+    <% end %>
+  </div>
+  <% unless service.allocation_to_define? %>
+    <div class="service-bar">
+      <div class="service-bar__label"><span>Séances</span><span class="service-bar__pct"><%= paid_pct %> %</span></div>
+      <%= tag.div class: "progress", role: "progressbar", aria: { label: "Séances", valuemin: 0, valuemax: 100, valuenow: paid_pct } do %>
+        <%= tag.div class: [ "progress-bar", progress_usage_color(paid_pct, time_pct) ], style: "width: #{[ paid_pct, 100 ].min}%" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_03_172501) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_24_165728) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "unaccent"
@@ -120,6 +120,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_172501) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "missing_from_fliip_at"
+    t.datetime "synced_at"
     t.index ["remote_id"], name: "index_fliip_users_on_remote_id", unique: true
   end
 

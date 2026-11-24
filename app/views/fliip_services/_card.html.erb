@@ -1,0 +1,39 @@
+<%# A service as a card (Client page, Mes services). The whole card opens the Service page.
+    Locals: service, show_client (default false: the client's name above the service). %>
+<% removed = service.removed_from_fliip? %>
+<li>
+  <%= link_to fliip_service_path(service), class: "card service-card" do %>
+    <% if local_assigns[:show_client] && service.fliip_user %>
+      <span class="eyebrow"><%= service.fliip_user.full_name %></span>
+    <% end %>
+    <div class="service-card__head">
+      <span class="service-card__name"><%= service.service_name.presence || "Service" %></span>
+      <%= service_status_badge(service) %>
+    </div>
+
+    <div class="service-card__dates numeric">
+      <% if removed %>
+        historique seulement
+      <% else %>
+        <%= [ service.start_date ? l(service.start_date) : "?", service.expire_date ? l(service.expire_date) : "?" ].join(" → ") %>
+        <% if (overrun = service.overrun_label) %> · <%= overrun %><% end %>
+      <% end %>
+    </div>
+
+    <% unless removed %>
+      <%= render "fliip_services/bars", service: service %>
+      <div class="text-muted text-small numeric">
+        <% if service.allocation_to_define? %>
+          Allocation à définir
+        <% else %>
+          <%= format_count(service.paid_used_total) %> / <%= format_count(service.paid_allowed_total) %> séances ·
+          <%= format_count(service.free_used_total) %> / <%= format_count(service.free_allowed_total) %> absences
+        <% end %>
+      </div>
+    <% end %>
+
+    <div class="text-muted text-small numeric">
+      Serv# <%= service.id %> · Achat# <%= service.remote_purchase_id %> · DefID <%= service.service_id || "—" %>
+    </div>
+  <% end %>
+</li>

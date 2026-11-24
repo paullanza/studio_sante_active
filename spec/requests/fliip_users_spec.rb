@@ -93,6 +93,39 @@ RSpec.describe "Fliip users", type: :request do
     expect(response.body).to include("Retiré de Fliip")
   end
 
+  describe "GET /fliip_users/:id (client page)" do
+    before do
+      create(:fliip_contract, fliip_user: client)
+      create(:consultation, fliip_user: client, fliip_service: service)
+      create(:fliip_service, :without_definition, fliip_user: client)
+      sign_in create(:user)
+    end
+
+    %w[services contracts consultations unknown].each do |tab|
+      it "renders the #{tab} tab" do
+        get fliip_user_path(client, tab: tab)
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    it "marks a service Fliip no longer returns" do
+      create(:fliip_service, :missing_from_fliip, fliip_user: client)
+
+      get fliip_user_path(client)
+
+      expect(response.body).to include("Retiré de Fliip", "historique seulement")
+    end
+
+    it "says when the client was last synced" do
+      client.update_column(:synced_at, 2.hours.ago)
+
+      get fliip_user_path(client)
+
+      expect(response.body).to include("Synchronisé avec Fliip il y a environ 2 heures")
+    end
+  end
+
   it "filters the index by search" do
     sign_in create(:user)
 

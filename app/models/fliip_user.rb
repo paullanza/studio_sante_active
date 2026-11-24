@@ -89,7 +89,27 @@ class FliipUser < ApplicationRecord
     active.max_by { |c| [(c.end_date || Date.new(0)), (c.start_date || Date.new(0))] }
   end
 
+  # The Client page's top card. Services count when active in Fliip and not
+  # removed from it; a service without an allocation adds no séances.
+  def last_session_at
+    sessions.maximum(:occurred_at)
+  end
+
+  def active_services_count
+    countable_services.size
+  end
+
+  def remaining_sessions_total
+    countable_services.sum { |s| s.remaining_paid_sessions.to_f }
+  end
+
   def staff?
     user_role.present? && user_role != "user"
+  end
+
+  private
+
+  def countable_services
+    fliip_services.select { |s| s.purchase_status == "A" && !s.removed_from_fliip? }
   end
 end

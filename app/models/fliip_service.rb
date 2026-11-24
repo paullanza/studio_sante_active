@@ -234,6 +234,36 @@ class FliipService < ApplicationRecord
     pct.round
   end
 
+  # Overrun (GLOSSARY.md): the days the start-to-end span runs past its
+  # expected length, 12 months for spans over 365 days, 3 months over 90.
+  OVERRUN_BASES = [ [ 365, "12 mois" ], [ 90, "3 mois" ] ].freeze
+
+  def overrun_days
+    overrun&.first
+  end
+
+  def overrun_label
+    days, base_label = overrun
+    "#{base_label} + #{days} j" if days
+  end
+
+  # Days until the end date, floored at 0; nil without an end date.
+  def days_left(today = Date.current)
+    return nil if expire_date.blank?
+
+    [ (expire_date - today).to_i, 0 ].max
+  end
+
+  # The allocation hasn't been set yet: no definition, or 0/0 (or nil/nil).
+  # Every page asks this method rather than checking the counts itself.
+  def allocation_to_define?
+    definition = service_definition
+    return true if definition.nil?
+
+    counts = [ definition.paid_sessions, definition.free_sessions ]
+    counts.all?(&:nil?) || counts.all? { |count| count == 0 }
+  end
+
   def time_range_label
     return "—" if start_date.blank? || expire_date.blank?
     "#{start_date.strftime('%d/%m/%Y')} – #{expire_date.strftime('%d/%m/%Y')}"
@@ -313,5 +343,15 @@ class FliipService < ApplicationRecord
 
   def booking_blocked?(reference_date = Date.current)
     booking_block_reason(reference_date).present?
+  end
+
+  private
+
+  def overrun
+    return nil if start_date.blank? || expire_date.blank?
+
+    days = (expire_date - start_date).to_i
+    base, label = OVERRUN_BASES.find { |limit, _| days > limit }
+    [ days - base, label ] if base
   end
 end
