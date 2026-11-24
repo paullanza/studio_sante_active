@@ -1,266 +1,119 @@
-<div class="container mt-4">
-  <div class="row g-4">
-    <!-- LEFT: Summary -->
-    <div class="col-12 col-lg-3">
-      <div class="mb-2 d-flex justify-content-between align-items-center">
-        <h1 class="mb-0">
-          <%= @service.service_name.presence || "Service ##{@service.id}" %>
-        </h1>
-      </div>
+<% client = @service.fliip_user %>
+<% content_for :nav_section, "clients" %>
+<% content_for :title, @service.service_name.presence || "Service" %>
+<% content_for :page_wide, true %>
 
-      <div class="card shadow-sm stretch-card">
-        <div class="card-body p-3">
-          <% badge_class =
-               case @service.purchase_status
-               when "A" then "bg-success"
-               when "P" then "bg-info text-dark"
-               when "S" then "bg-warning text-dark"
-               when "C" then "bg-danger"
-               else           "bg-secondary"
-               end %>
+<%= back_link_to "Client·e", fliip_user_path(client) %>
 
-          <div class="mb-2">
-            <div class="text-muted small">Client·e</div>
-            <div class="fw-bold">
-              <%= link_to @service.fliip_user.full_name,
-                          fliip_user_path(@service.fliip_user),
-                          class: "text-decoration-none" %>
-            </div>
-          </div>
-
-          <div class="mb-2">
-            <div class="text-muted small">Statut</div>
-            <span class="badge <%= badge_class %>"><%= @service.status_name %></span>
-            <%= missing_from_fliip_badge(@service) %>
-          </div>
-
-          <div class="mb-2">
-            <div class="text-muted small">Identifiants</div>
-            <div class="small">
-              <div><strong>Service # :</strong> <%= @service.id %></div>
-              <div><strong>Achat # :</strong> <%= @service.remote_purchase_id || "—" %></div>
-              <div><strong>ID déf. :</strong> <%= @service.service_definition&.service_id || @service.service_id || "—" %></div>
-            </div>
-          </div>
-
-          <div class="mb-2">
-            <div class="text-muted small">Séances incluses</div>
-            <div class="small">
-              Chargées : <strong><%= @service.service_definition&.paid_sessions || "—" %></strong>
-              &nbsp;•&nbsp;
-              Absences : <strong><%= @service.service_definition&.free_sessions || "—" %></strong>
-            </div>
-          </div>
-
-          <div class="mb-2">
-            <div class="text-muted small">Période</div>
-            <div class="small">
-              Début : <strong><%= @service.start_date&.strftime("%d/%m/%Y") || "—" %></strong>
-              &nbsp;•&nbsp;
-              Fin : <strong><%= @service.expire_date&.strftime("%d/%m/%Y") || "—" %></strong>
-            </div>
-            <div class="small text-muted mt-1">
-              <span>Acheté : <strong><%= @service.purchase_date&.strftime("%d/%m/%Y") || "—" %></strong></span>
-              &nbsp;•&nbsp;
-              <span>Arrêt : <strong><%= @service.stop_date&.strftime("%d/%m/%Y") || "—" %></strong></span>
-              &nbsp;•&nbsp;
-              <span>Annulé : <strong><%= @service.cancel_date&.strftime("%d/%m/%Y") || "—" %></strong></span>
-            </div>
-          </div>
-
-          <div class="mt-3">
-            <div class="d-grid">
-              <%= link_to "← Retour à la fiche client·e",
-                          fliip_user_path(@service.fliip_user),
-                          class: "btn btn-outline-secondary" %>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT: Tabs (header) + Card (content) -->
-    <div class="col-12 col-lg-9">
-      <div class="tab-header" data-controller="tabs">
-        <nav>
-          <div class="nav nav-tabs" id="service-tablist" role="tablist">
-            <button
-              class="nav-link active"
-              id="tab-sessions"
-              type="button"
-              role="tab"
-              aria-controls="pane-sessions"
-              aria-selected="true"
-              data-bs-target="#pane-sessions"
-              data-action="click->tabs#activate">
-              Séances
-            </button>
-
-            <% if policy(ServiceUsageAdjustment).index? %>
-              <button
-                class="nav-link"
-                id="tab-adjustments"
-                type="button"
-                role="tab"
-                aria-controls="pane-adjustments"
-                aria-selected="false"
-                data-bs-target="#pane-adjustments"
-                data-action="click->tabs#activate">
-                Ajustements
-              </button>
-            <% end %>
-          </div>
-        </nav>
-
-        <div class="card shadow-sm stretch-card">
-          <div class="card-body p-3 scrollable-card-body">
-            <div id="service-tabcontent">
-              <!-- Sessions (default) -->
-              <section id="pane-sessions" role="tabpanel" aria-labelledby="tab-sessions">
-                <%= turbo_frame_tag "service_sessions_frame", target: "_top" do %>
-                  <% time_pct = @service.time_progress_percent || 0 %>
-                  <% paid_pct = @service.paid_progress_percent || 0 %>
-                  <% paid_used     = @service.paid_used_total %>
-                  <% total_allowed = @service.paid_allowed_total %>
-                  <% paid_base     = @service.service_definition&.paid_sessions %>
-                  <% bonus_total   = @service.bonus_sessions_total %>
-                  <% free_used     = @service.free_used_total %>
-                  <% free_base     = @service.service_definition&.free_sessions %>
-
-                  <!-- Time bar -->
-                  <div class="mb-3">
-                    <div class="text-muted small mb-1">Temps</div>
-                    <%= bar_with_label(
-                          percent: time_pct,
-                          label:   "#{@service.time_range_label} • #{time_pct}%",
-                          bg_class: progress_base_color(time_pct)
-                        ) %>
-                  </div>
-
-                  <!-- Sessions bar -->
-                  <div class="mb-3">
-                    <div class="d-flex justify-content-between small">
-                      <span>
-                        <%= "#{fmt1(paid_used)}/#{total_allowed.to_f.positive? ? fmt1(total_allowed) : '—'} séances" %>
-                        <span class="text-muted">
-                          (base : <%= paid_base.nil? ? "—" : paid_base %><% if bonus_total.to_f.nonzero? %>, bonus : <%= fmt1(bonus_total) %><% end %>)
-                        </span>
-                      </span>
-                      <span>
-                        <%= paid_pct %>%
-                        <span class="ms-2 text-muted">[<%= fmt1(free_used) %>/<%= free_base.nil? ? '—' : free_base %> absences]</span>
-                      </span>
-                    </div>
-
-                    <%= bar_with_label(
-                          percent: paid_pct,
-                          label:   paid_progress_label(@service, paid_pct),
-                          bg_class: paid_progress_bg_class(@service, paid_pct, time_pct)
-                        ) %>
-                  </div>
-
-                  <div class="table-scroll">
-                    <%= render "sessions/shared/sessions_table",
-                        sessions: @sessions,
-                        show_bulk_checkbox: false,
-                        scope_name: :new_session,
-                        show_adjustment: true,
-                        fliip_service: @service %>
-                  </div>
-                <% end %>
-              </section>
-
-              <!-- Adjustments (role-gated) -->
-              <% if policy(ServiceUsageAdjustment).index? %>
-                <section class="d-none" id="pane-adjustments" role="tabpanel" aria-labelledby="tab-adjustments">
-                  <%= turbo_frame_tag "service_adjustments_frame", target: "_top" do %>
-                    <div class="row g-3 mb-2">
-                      <div class="col-md-4">
-                        <div class="small text-muted">Total des séances bonus</div>
-                        <div class="fw-semibold"><%= fmt1(@service.bonus_sessions_total) %></div>
-                      </div>
-                      <div class="col-md-4">
-                        <div class="small text-muted">Chargées utilisées (ajustements seulement)</div>
-                        <div class="fw-semibold"><%= fmt1(@service.paid_used_adjustment) %></div>
-                      </div>
-                      <div class="col-md-4">
-                        <div class="small text-muted">Absences utilisées (ajustements seulement)</div>
-                        <div class="fw-semibold"><%= fmt1(@service.free_used_adjustment) %></div>
-                      </div>
-                    </div>
-
-                    <% if @adjustments.any? %>
-                      <div class="table-responsive">
-                        <table class="table table-sm table-bordered align-middle">
-                          <thead class="table-light">
-                            <tr>
-                              <th>Date</th>
-                              <th>Employé·e</th>
-                              <th class="text-end">Chargées utilisées Δ</th>
-                              <th class="text-end">Absences utilisées Δ</th>
-                              <th class="text-end">Séances bonus Δ</th>
-                              <% if policy(ServiceUsageAdjustment).update? || policy(ServiceUsageAdjustment).destroy? %>
-                                <th class="text-end" style="width:1%;">Actions</th>
-                              <% end %>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <% @adjustments.each do |adj| %>
-                              <tr>
-                                <td><%= adj.created_at.strftime("%d/%m/%Y %H:%M") %></td>
-                                <td><%= adj.user&.full_name || "—" %></td>
-                                <td class="text-end"><%= adj.paid_used_delta.to_f.zero? ? "—" : fmt1(adj.paid_used_delta) %></td>
-                                <td class="text-end"><%= adj.free_used_delta.to_f.zero? ? "—" : fmt1(adj.free_used_delta) %></td>
-                                <td class="text-end"><%= adj.bonus_sessions.to_f.zero? ? "—" : fmt1(adj.bonus_sessions) %></td>
-                                <% if policy(adj).update? || policy(adj).destroy? %>
-                                  <td class="text-end align-middle text-nowrap">
-                                    <% if policy(adj).update? %>
-                                      <%= link_to edit_fliip_service_service_usage_adjustment_path(@service, adj),
-                                            class: "btn btn-sm btn-outline-secondary me-1",
-                                            title: "Modifier" do %>
-                                        <i class="fa-solid fa-pencil"></i>
-                                      <% end %>
-                                    <% end %>
-
-                                    <% if policy(adj).destroy? %>
-                                      <%= button_to fliip_service_service_usage_adjustment_path(@service, adj),
-                                            method: :delete,
-                                            data: { turbo_confirm: "Supprimer cet ajustement ?" },
-                                            class: "btn btn-sm btn-outline-danger d-inline-flex align-items-center",
-                                            form: { class: "d-inline" } do %>
-                                        <i class="fa-solid fa-trash-can"></i>
-                                      <% end %>
-                                    <% end %>
-                                  </td>
-                                <% end %>
-                              </tr>
-                            <% end %>
-                          </tbody>
-                        </table>
-                      </div>
-                    <% else %>
-                      <p class="text-muted mb-0">Aucun ajustement enregistré pour ce service.</p>
-                    <% end %>
-
-                    <% if policy(ServiceUsageAdjustment).create? %>
-                      <div class="card mt-3">
-                        <div class="card-body">
-                          <h5 class="card-title mb-2">Ajouter un ajustement</h5>
-                          <% @adjustment = @service.service_usage_adjustments.new(user: current_user) %>
-                          <%= render "service_usage_adjustments/form",
-                                service: @service,
-                                adjustment: @adjustment,
-                                cancel_path: fliip_service_path(@service) %>
-                        </div>
-                      </div>
-                    <% end %>
-                  <% end %>
-                </section>
+<div class="client-page">
+  <div class="service-page__side client-page__top">
+    <section class="card card--top" aria-labelledby="service-name">
+      <div class="service-top__client">
+        <%= link_to client.full_name.presence || "—", fliip_user_path(client), class: "service-top__client-name" %>
+        <% phones = [ client.user_phone1, client.user_phone2 ].compact_blank.uniq %>
+        <% if phones.any? || client.user_email.present? %>
+          <div class="service-top__contact">
+            <% phones.each do |phone| %>
+              <% if (href = phone_href(phone)) %>
+                <%= link_to format_phone(phone), href, class: "numeric" %>
+              <% else %>
+                <span class="numeric"><%= phone %></span>
               <% end %>
+            <% end %>
+            <%= mail_to client.user_email if client.user_email.present? %>
+          </div>
+        <% end %>
+        <span class="text-muted text-small numeric">ID <%= client.id %> · FliipUserID <%= client.remote_id %></span>
+      </div>
+
+      <hr class="service-top__rule">
+
+      <div class="service-top__service">
+        <div class="service-card__head">
+          <h1 id="service-name" class="service-top__name"><%= @service.service_name.presence || "Service" %></h1>
+          <%= service_status_badge(@service) %>
+        </div>
+        <div class="service-top__dates">
+          <span class="service-top__range numeric">
+            <%= [ @service.start_date ? l(@service.start_date) : "?", @service.expire_date ? l(@service.expire_date) : "?" ].join(" → ") %>
+          </span>
+          <% if (overrun = @service.overrun_label) %>
+            <span class="badge badge--overrun"><%= overrun %></span>
+          <% end %>
+        </div>
+      </div>
+
+      <% time_pct = @service.time_progress_percent || 0 %>
+      <% days_left = @service.days_left %>
+      <div class="service-bars service-bars--detail">
+        <%= service_bar("Temps", time_pct, progress_base_color(time_pct),
+              aside: (days_left ? "#{days_left} #{days_left < 2 ? 'jour restant' : 'jours restants'}" : "—")) %>
+        <% if @service.allocation_to_define? %>
+          <p class="text-muted text-small">Allocation à définir</p>
+        <% else %>
+          <% paid_pct = @service.paid_progress_percent || 0 %>
+          <% paid_left = @service.remaining_paid_sessions.to_f %>
+          <% free_left = @service.remaining_free_sessions.to_f %>
+          <%= service_bar("Séances", paid_pct, progress_usage_color(paid_pct, time_pct),
+                aside: safe_join([ tag.strong("#{format_count(@service.paid_used_total)} / #{format_count(@service.paid_allowed_total)}"),
+                                   " · #{format_count(paid_left)} #{paid_left < 2 ? 'restante' : 'restantes'}" ])) %>
+          <%# Absences have no bar (mockup): the counts only. %>
+          <div class="service-bar">
+            <div class="service-bar__label">
+              <span>Absences</span>
+              <span><%= tag.strong("#{format_count(@service.free_used_total)} / #{format_count(@service.free_allowed_total)}") %> · <%= format_count(free_left) %> <%= free_left < 2 ? "restante" : "restantes" %></span>
             </div>
           </div>
-        </div>
-      </div><!-- /tabs controller scope -->
-    </div>
+        <% end %>
+      </div>
+
+      <p class="text-muted text-small numeric">
+        Acheté le <%= @service.purchase_date ? l(@service.purchase_date.to_date) : "—" %> ·
+        Serv# <%= @service.id %> · Achat# <%= @service.remote_purchase_id %> · DefID <%= @service.service_id || "—" %>
+      </p>
+    </section>
+
+    <% if @service.booking_blocked? %>
+      <p class="service-page__blocked text-muted"><%= @service.booking_block_reason %></p>
+    <% else %>
+      <%= link_to new_seance_path(fliip_user_id: @service.fliip_user_id, fliip_service_id: @service.id), class: "btn btn--primary btn--block" do %>
+        <%= safe_join([ "Saisir une séance", button_arrow ]) %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="client-page__tabs">
+    <% tabs = [ [ "sessions", "Séances", @numbered_sessions.size ], [ "consultations", "Consultations", @consultations.size ] ] %>
+    <% tabs << [ "adjustments", "Ajustements", @adjustments.size ] if policy(ServiceUsageAdjustment).index? %>
+    <nav class="tabs" aria-label="Sections">
+      <% tabs.each do |key, label, count| %>
+        <%= link_to "#{label} (#{count})", fliip_service_path(@service, tab: key), class: "tabs__tab",
+              aria: { current: (@tab == key ? "page" : nil) } %>
+      <% end %>
+    </nav>
+
+    <% case @tab %>
+    <% when "sessions" %>
+      <% if @numbered_sessions.any? %>
+        <ul class="list card-grid">
+          <% @numbered_sessions.each do |session, number| %>
+            <%= render "sessions/card", session: session, number: number %>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="empty-state">Aucune séance.</p>
+      <% end %>
+    <% when "consultations" %>
+      <% if @consultations.any? %>
+        <ul class="list card-grid">
+          <%= render partial: "consultations/service_card", collection: @consultations, as: :consultation %>
+        </ul>
+      <% else %>
+        <p class="empty-state">Aucune consultation.</p>
+      <% end %>
+    <% when "adjustments" %>
+      <%= render "fliip_services/adjustments", service: @service, adjustments: @adjustments,
+            adjustment: @adjustment, staff: @staff %>
+    <% end %>
   </div>
 </div>

@@ -193,6 +193,28 @@ class Session < ApplicationRecord
     end
   end
 
+  # The séance's outcome (GLOSSARY.md): Chargée when the client was present,
+  # -24h when absent with no absence left, Absence when an absence was used.
+  OUTCOME_LABELS = { chargee: "Chargée", moins24: "-24h", absence: "Absence" }.freeze
+
+  def outcome
+    return :absence if free?
+
+    present ? :chargee : :moins24
+  end
+
+  def outcome_label
+    OUTCOME_LABELS.fetch(outcome)
+  end
+
+  # « 1 h », « 30 min », « 1 h 30 ».
+  def duration_short
+    hours, minutes = (duration.to_f * 60).round.divmod(60)
+    return "#{minutes} min" if hours.zero?
+
+    minutes.zero? ? "#{hours} h" : "#{hours} h #{minutes}"
+  end
+
   # Small helper used by the table to render presence meaning succinctly.
   # (Can be moved to a view helper later if you prefer.)
   def presence_label
