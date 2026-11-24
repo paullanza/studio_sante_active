@@ -135,7 +135,6 @@ RSpec.describe "Role-based access", type: :request do
         "A1 GET admin/dashboard"             => [ADMINS, -> { get admin_dashboard_path }],
         "A9 GET admin/unconfirmed_sessions"  => [ADMINS, -> { get admin_unconfirmed_sessions_path }],
         "A10 PATCH admin/confirm_sessions"   => [ADMINS, -> { patch admin_confirm_sessions_path, params: { session_ids: [session_record.id] } }],
-        "A13 GET admin/adjustments/new"      => [ADMINS, -> { get admin_adjustments_new_path }],
         "J1 GET /jobs (Mission Control)"     => [ADMINS, -> { get "/jobs" }],
         "M1 GET manager/dashboard"           => [%i[manager], -> { get manager_dashboard_path }],
         "M4 POST manager/signup_codes"       => [%i[manager], -> { post manager_signup_codes_path }],

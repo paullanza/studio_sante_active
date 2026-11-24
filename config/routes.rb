@@ -55,17 +55,15 @@ Rails.application.routes.draw do
   post "fliip_users/:remote_id/refresh", to: "fliip_users#refresh", as: :refresh_fliip_user
 
   # =====================================================================
-  # ADMIN — DASHBOARD, SERVICE OVERSIGHT & EXPORTS
+  # ADMIN — DASHBOARD & SERVICE OVERSIGHT
   # ---------------------------------------------------------------------
-  # High-level admin views over services plus a CSV export for auditing
-  # or payroll. `service_show` is an admin lens over a service; PATCH
-  # allows inline updates by admins.
+  # High-level admin views over services. `service_show` is an admin
+  # lens over a service; PATCH allows inline updates by admins.
   # =====================================================================
   get   "admin/dashboard",        to: "admin#dashboard",        as: :admin_dashboard
   get   "admin/services",         to: "admin#services",         as: :admin_services
   get   "admin/services/:id",     to: "admin#service_show",     as: :admin_service
   patch "admin/services/:id",     to: "admin#update_service",   as: :update_admin_service
-  get   "admin/client_services",  to: "admin#client_services",  defaults: { format: :csv }
 
   # =====================================================================
   # ADMIN — SIGNUP CODES (ACCESS CONTROL FOR NEW EMPLOYEES)
@@ -93,17 +91,6 @@ Rails.application.routes.draw do
   # =====================================================================
   get   "admin/unconfirmed_consultations", to: "admin#unconfirmed_consultations", as: :admin_unconfirmed_consultations
   patch "admin/confirm_consultations",     to: "admin#confirm_consultations",     as: :admin_confirm_consultations
-
-  # =====================================================================
-  # ADMIN — SERVICE USAGE ADJUSTMENTS (BULK TOOLS)
-  # ---------------------------------------------------------------------
-  # 1) `adjustments_new`: start a new adjustment run
-  # 2) `adjustments_preview`: dry-run to review computed changes
-  # 3) `adjustments_commit`: apply adjustments to usage counters
-  # =====================================================================
-  get  "admin/adjustments/new",     to: "admin#adjustments_new",     as: :admin_adjustments_new
-  post "admin/adjustments/preview", to: "admin#adjustments_preview", as: :admin_adjustments_preview
-  post "admin/adjustments/commit",  to: "admin#adjustments_commit",  as: :admin_adjustments_commit
 
   # =====================================================================
   # MANAGER VIEWS (READ-ONLY/REDUCED POWERS VS. ADMIN)
