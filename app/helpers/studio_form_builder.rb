@@ -9,10 +9,10 @@
 #     f.segmented :duration, [ [ "1 h", "1.0" ], [ "30 min", "0.5" ] ], label: "Durée"
 #     f.switch :present, [ [ "Présent·e", "1" ], [ "Absent·e", "0" ] ], label: "Présence"
 #     f.submit "Enregistrer"
-#
-# Fields are settings-style rows (docs/ui.md « Forms »): the label on the
-# left, the value on the right, grouped in a .form-grid card.
 #   end
+#
+# Inside a .form-rows wrapper (Saisir only) the same markup reads as
+# settings-style rows; see docs/ui.md « Forms » and studio/_form_rows.scss.
 class StudioFormBuilder < ActionView::Helpers::FormBuilder
   INPUTS = {
     text: :text_field,
@@ -32,7 +32,8 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
   # One labelled input. `label_aside` is extra HTML on the label's line (for
   # example the « Mot de passe oublié? » link). `field_class` goes on the
   # wrapper (e.g. "form-grid__wide"). `icon` is an SVG path drawn before the
-  # label (LayoutHelper's *_ICON). Other options go to the input.
+  # label (LayoutHelper's *_ICON; styled in .form-rows only). Other options go
+  # to the input.
   def field(attribute, label:, as: :text, hint: nil, label_aside: nil, field_class: nil, icon: nil, **input_options)
     method = INPUTS.fetch(as) { raise ArgumentError, "Unknown field type: #{as.inspect}" }
     error = error_for(attribute)
@@ -42,7 +43,7 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
       aria: input_aria(attribute, hint:, error:).merge(input_options.fetch(:aria, {}))
     ))
 
-    @template.tag.div(class: [ field_classes(error), ("field--textarea" if as == :textarea), field_class ].compact.join(" ")) do
+    @template.tag.div(class: [ field_classes(error), field_class ].compact.join(" ")) do
       @template.safe_join([
         @template.tag.div(@template.safe_join([ field_icon(icon), label_row(attribute, label, label_aside), input ].compact), class: "field__box"),
         hint_tag(attribute, hint),
@@ -126,7 +127,7 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
       end
     end
 
-    @template.tag.fieldset(class: "#{field_classes(error)} field--choice", aria: { describedby: (error_id(attribute) if error) }) do
+    @template.tag.fieldset(class: field_classes(error), aria: { describedby: (error_id(attribute) if error) }) do
       @template.safe_join([
         @template.tag.legend(label, class: "field__label"),
         field_icon(icon),
@@ -137,7 +138,7 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
   end
 
   # A large two-option sliding switch, for the choice a form can't afford to
-  # get wrong (Présent·e / Absent·e). The second option is the exception and
+  # get wrong (Présent·e / Absent·e). Styled in .form-rows (Saisir). The second option is the exception and
   # takes the Absence colours when chosen. `choices` is [[label, value], …];
   # a label may hold an icon (safe HTML).
   def switch(attribute, choices, label:)

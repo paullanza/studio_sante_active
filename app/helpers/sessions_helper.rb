@@ -95,6 +95,27 @@ module SessionsHelper
     "Annuler"
   end
 
+  # Asked before saving a séance where the client was absent.
+  def sessions_modal_absence_title
+    "Confirmer l'absence"
+  end
+
+  def sessions_modal_absence_body
+    "Cette séance sera enregistrée comme une absence."
+  end
+
+  def sessions_modal_moins24_body
+    "Aucune absence restante : cette séance sera enregistrée comme -24h et déduite du forfait."
+  end
+
+  def sessions_modal_absence_confirm_label
+    "Confirmer l'absence"
+  end
+
+  def sessions_modal_absence_cancel_label
+    "Revenir"
+  end
+
   def sessions_modal_before_start_title
     "Séance avant le début du service"
   end

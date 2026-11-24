@@ -21,7 +21,7 @@ module BookingPage
                              user: chosen_trainer)
     @trainer = @session.user || current_user
     @recent_sessions = Session.where(user: @trainer).with_associations.order_by_occurred_at_desc.limit(10)
-    @consultation ||= Consultation.new(present: false)
+    @consultation ||= Consultation.new(present: true)
     load_booking_staff
   end
 

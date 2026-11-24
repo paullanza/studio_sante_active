@@ -20,10 +20,20 @@
   color: var(--badge-absence-fg);
 }
 
-.badge--moins24,
-.badge--overrun {
+.badge--moins24 {
   background: var(--badge-moins24-bg);
   color: var(--badge-moins24-fg);
+}
+
+.badge--planned {
+  background: var(--badge-planned-bg);
+  color: var(--badge-planned-fg);
+}
+
+.badge--warning,
+.badge--overrun {
+  background: var(--badge-warning-bg);
+  color: var(--badge-warning-fg);
 }
 
 .badge--unconfirmed {

@@ -309,7 +309,7 @@
 }
 
 // The recent séances: compact rows linking to the Service page.
-.recent-seance {
+.latest-seance {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
@@ -319,27 +319,27 @@
   text-decoration: none;
 }
 
-.recent-seance:hover {
+.latest-seance:hover {
   border-color: var(--border-strong);
   color: var(--text);
 }
 
-.recent-seance--absence { border-left: 4px solid var(--badge-absence-fg); }
-.recent-seance--moins24 { border-left: 4px solid var(--badge-moins24-fg); }
+.latest-seance--absence { border-left: 4px solid var(--badge-absence-fg); }
+.latest-seance--moins24 { border-left: 4px solid var(--badge-moins24-fg); }
 
-.recent-seance__main {
+.latest-seance__main {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
 }
 
-.recent-seance__client {
+.latest-seance__client {
   font-family: var(--font-heading);
   font-weight: 600;
 }
 
-.recent-seance__when {
+.latest-seance__when {
   font-size: 14px;
   font-weight: 700;
 }

@@ -103,10 +103,10 @@ RSpec.describe StudioFormBuilder, type: :helper do
       expect(html.at_css(".field__box > .field__icon + label.field__label")).to be_present
     end
 
-    it "marks a textarea's field so its row stacks" do
-      html = form_for_user { |f| f.field(:address, label: "Adresse", as: :textarea) }
+    it "renders no icon unless given one" do
+      html = form_for_user { |f| f.field(:first_name, label: "Prénom") }
 
-      expect(html.at_css(".field")["class"].split).to include("field--textarea")
+      expect(html.at_css(".field__icon")).to be_nil
     end
   end
 
@@ -147,6 +147,7 @@ RSpec.describe StudioFormBuilder, type: :helper do
       html = form_for_user { |f| f.switch(:active, [ [ "Oui", "1" ], [ "Non", "0" ] ], label: "Actif") }
 
       expect(html.at_css("fieldset.field--switch legend.field__label").text).to eq("Actif")
+      expect(html.at_css("fieldset")["class"].split).to eq(%w[field field--switch])
       expect(html.css(".switch .switch__text").map(&:text)).to eq([ "Oui", "Non" ])
       expect(html.at_css("input.switch__input[value='1']")["checked"]).to eq("checked")
       expect(html.at_css("input.switch__input[value='0']")["checked"]).to be_nil

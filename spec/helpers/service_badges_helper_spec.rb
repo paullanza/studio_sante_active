@@ -33,8 +33,8 @@ RSpec.describe ServiceBadgesHelper, type: :helper do
 
     {
       "A" => [ "Actif", "badge--chargee" ],
-      "P" => [ "Planifié", "badge--absence" ],
-      "S" => [ "Suspendu", "badge--moins24" ],
+      "P" => [ "Planifié", "badge--planned" ],
+      "S" => [ "Suspendu", "badge--warning" ],
       "I" => [ "Inactif", "badge--neutral" ],
       "C" => [ "Annulé", "badge--neutral" ],
       "X" => [ "Inconnu", "badge--neutral" ]
@@ -93,7 +93,7 @@ RSpec.describe ServiceBadgesHelper, type: :helper do
     end
 
     it "shows a suspended abonnement in orange" do
-      expect(helper.contract_status_badge(build(:fliip_contract, status: "S"))).to eq(badge("Suspendu", "badge--moins24"))
+      expect(helper.contract_status_badge(build(:fliip_contract, status: "S"))).to eq(badge("Suspendu", "badge--warning"))
     end
 
     it "says « Retiré de Fliip » when the abonnement is removed from Fliip" do

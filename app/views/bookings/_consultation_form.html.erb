@@ -14,8 +14,7 @@
     </div>
   </section>
 
-  <%# Unchanged rule: absent unless chosen otherwise, as the old unticked
-      checkbox was (BookingPage builds the consultation with present: false). %>
+  <%# Présent·e by default (BookingPage builds the consultation with present: true). %>
   <%= f.switch :present, [ [ safe_join([ icon_svg(LayoutHelper::CHECK_ICON, size: 22, stroke_width: 2.4), "Présent·e" ]), "1" ],
                            [ safe_join([ icon_svg(LayoutHelper::CROSS_ICON, size: 22, stroke_width: 2.4), "Absent·e" ]), "0" ] ],
         label: "Présence" %>
@@ -24,7 +23,7 @@
     <section class="form-section" aria-labelledby="consultation-qui">
       <header class="form-section__head"><h2 id="consultation-qui">Entraîneur·e</h2></header>
       <div class="form-grid form-grid--single">
-        <%= f.select_field :user_id, @staff.map { |u| [ u.full_name, u.id ] }, label: "Consultation donnée par",
+        <%= f.select_field :user_id, @staff.map { |u| [ u.full_name, u.id ] }, label: "Donnée par",
               icon: LayoutHelper::NAV_ICONS["clients"],
               include_blank: (@owner_required ? "Choisir un·e employé·e" : "Moi (#{current_user.full_name})"),
               required: @owner_required %>
@@ -34,7 +33,7 @@
 
   <section class="form-section" aria-labelledby="consultation-quand">
     <header class="form-section__head"><h2 id="consultation-quand">Quand</h2></header>
-    <div class="form-grid form-grid--single">
+    <div class="form-grid">
       <%= f.field :date, label: "Date", as: :date, icon: LayoutHelper::CALENDAR_ICON,
             value: params.dig(:consultation, :date).presence || @consultation.occurred_at&.to_date&.iso8601 || Time.zone.today.iso8601 %>
       <%= f.field :time, label: "Heure", as: :time, step: 1800, icon: LayoutHelper::CLOCK_ICON,

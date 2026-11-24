@@ -10,14 +10,12 @@
   <%= form_with model: resource, scope: resource_name, url: user_session_path,
         builder: StudioFormBuilder, class: "form auth-split__form" do |f| %>
     <section class="form-section">
-      <div class="form-grid form-grid--single">
-        <%= f.field :email, label: "Courriel", as: :email,
-              autocomplete: "email", autocapitalize: "none", spellcheck: false, required: true, autofocus: true %>
+      <%= f.field :email, label: "Courriel", as: :email,
+            autocomplete: "email", autocapitalize: "none", spellcheck: false, required: true, autofocus: true %>
 
-        <%= f.field :password, label: "Mot de passe", as: :password,
-              autocomplete: "current-password", required: true,
-              label_aside: link_to("Mot de passe oublié?", password_help_path) %>
-      </div>
+      <%= f.field :password, label: "Mot de passe", as: :password,
+            autocomplete: "current-password", required: true,
+            label_aside: link_to("Mot de passe oublié?", password_help_path) %>
 
       <% if devise_mapping.rememberable? %>
         <%= f.check :remember_me, label: "Se souvenir de moi" %>

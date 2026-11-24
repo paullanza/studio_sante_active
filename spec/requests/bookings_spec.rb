@@ -91,7 +91,7 @@ RSpec.describe "Bookings", type: :request do
       end
 
       def listed_trainer_sessions
-        Nokogiri::HTML(response.body).css("#recent_sessions .recent-seance").size
+        Nokogiri::HTML(response.body).css("#recent_sessions .latest-seance").size
       end
 
       it "shows the signed-in trainer's séances, never the client's" do

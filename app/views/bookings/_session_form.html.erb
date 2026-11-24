@@ -64,7 +64,7 @@
       <section class="form-section" aria-labelledby="saisir-qui">
         <header class="form-section__head"><h2 id="saisir-qui">Entraîneur·e</h2></header>
         <div class="form-grid form-grid--single">
-          <%= f.select_field :user_id, @staff.map { |u| [ u.full_name, u.id ] }, label: "Séance donnée par",
+          <%= f.select_field :user_id, @staff.map { |u| [ u.full_name, u.id ] }, label: "Donnée par",
                 icon: LayoutHelper::NAV_ICONS["clients"],
                 include_blank: (@owner_required ? "Choisir un·e employé·e" : "Moi (#{current_user.full_name})"),
                 required: @owner_required, data: { action: "change->recent-trainer#reload" } %>
@@ -74,7 +74,7 @@
 
     <section class="form-section" aria-labelledby="saisir-quand">
       <header class="form-section__head"><h2 id="saisir-quand">Quand</h2></header>
-      <div class="form-grid form-grid--single">
+      <div class="form-grid form-grid--when">
         <%= f.field :date, label: "Date", as: :date, required: true, icon: LayoutHelper::CALENDAR_ICON,
               value: params.dig(:session, :date).presence || @session.occurred_at&.to_date&.iso8601 || Time.zone.today.iso8601,
               data: { confirm_dialog_target: "date" } %>
@@ -90,12 +90,19 @@
             data-before-start-title="<%= sessions_modal_before_start_title %>"
             data-before-start-body="<%= sessions_modal_before_start_body %>"
             data-after-end-title="<%= sessions_modal_after_end_title %>"
-            data-after-end-body="<%= sessions_modal_after_end_body %>">
+            data-after-end-body="<%= sessions_modal_after_end_body %>"
+            data-continue-label="<%= sessions_modal_primary_label %>"
+            data-cancel-label="<%= sessions_modal_secondary_label %>"
+            data-absence-title="<%= sessions_modal_absence_title %>"
+            data-absence-body="<%= sessions_modal_absence_body %>"
+            data-moins24-body="<%= sessions_modal_moins24_body %>"
+            data-absence-confirm-label="<%= sessions_modal_absence_confirm_label %>"
+            data-absence-cancel-label="<%= sessions_modal_absence_cancel_label %>">
       <h2 id="confirm-dialog-title" class="dialog__title" data-confirm-dialog-target="title"></h2>
       <p class="dialog__body" data-confirm-dialog-target="body"></p>
       <div class="dialog__actions">
-        <button type="button" class="btn btn--ghost" data-action="confirm-dialog#cancel"><%= sessions_modal_secondary_label %></button>
-        <button type="button" class="btn btn--secondary" data-action="confirm-dialog#confirm"><%= sessions_modal_primary_label %></button>
+        <button type="button" class="btn btn--ghost" data-confirm-dialog-target="cancelButton" data-action="confirm-dialog#cancel"><%= sessions_modal_secondary_label %></button>
+        <button type="button" class="btn btn--secondary" data-confirm-dialog-target="confirmButton" data-action="confirm-dialog#confirm"><%= sessions_modal_primary_label %></button>
       </div>
     </dialog>
   <% end %>

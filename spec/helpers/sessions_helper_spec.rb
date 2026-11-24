@@ -92,4 +92,12 @@ RSpec.describe SessionsHelper, type: :helper do
       expect(helper.ticket_time("17:00")).to eq("17 h 00")
     end
   end
+
+  describe "absence confirm texts" do
+    it "asks to confirm the absence in French" do
+      expect(helper.sessions_modal_absence_title).to eq("Confirmer l'absence")
+      expect(helper.sessions_modal_moins24_body).to include("-24h", "déduite du forfait")
+      expect(helper.sessions_modal_absence_cancel_label).to eq("Revenir")
+    end
+  end
 end
