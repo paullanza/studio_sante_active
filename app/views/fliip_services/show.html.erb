@@ -52,15 +52,18 @@
           <p class="text-muted text-small">Allocation à définir</p>
         <% else %>
           <% paid_pct = @service.paid_progress_percent || 0 %>
-          <% free_pct = @service.free_progress_percent || 0 %>
           <% paid_left = @service.remaining_paid_sessions.to_f %>
           <% free_left = @service.remaining_free_sessions.to_f %>
           <%= service_bar("Séances", paid_pct, progress_usage_color(paid_pct, time_pct),
                 aside: safe_join([ tag.strong("#{format_count(@service.paid_used_total)} / #{format_count(@service.paid_allowed_total)}"),
                                    " · #{format_count(paid_left)} #{paid_left < 2 ? 'restante' : 'restantes'}" ])) %>
-          <%= service_bar("Absences", free_pct, progress_base_color(free_pct),
-                aside: safe_join([ tag.strong("#{format_count(@service.free_used_total)} / #{format_count(@service.free_allowed_total)}"),
-                                   " · #{format_count(free_left)} #{free_left < 2 ? 'restante' : 'restantes'}" ])) %>
+          <%# Absences have no bar (mockup): the counts only. %>
+          <div class="service-bar">
+            <div class="service-bar__label">
+              <span>Absences</span>
+              <span><%= tag.strong("#{format_count(@service.free_used_total)} / #{format_count(@service.free_allowed_total)}") %> · <%= format_count(free_left) %> <%= free_left < 2 ? "restante" : "restantes" %></span>
+            </div>
+          </div>
         <% end %>
       </div>
 
