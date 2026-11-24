@@ -27,12 +27,6 @@ RSpec.describe Session, type: :model do
       expect(session).to be_paid
     end
 
-    it "is paid when the service has no definition" do
-      service = create(:fliip_service, :without_definition)
-      session = create(:session, fliip_service: service, present: false)
-
-      expect(session).to be_paid
-    end
 
     it "defaults duration to 1 hour" do
       session = create(:session, fliip_service: service, duration: nil)
@@ -67,6 +61,21 @@ RSpec.describe Session, type: :model do
   end
 
   describe "service checks" do
+    it "rejects a service whose allocation is « à définir »" do
+      definition.update_columns(paid_sessions: nil, free_sessions: nil)
+      session = build_session(present: false)
+
+      expect(session).not_to be_valid
+      expect(session.errors[:base]).to contain_exactly("L'allocation de ce service est à définir.")
+    end
+
+    it "rejects a service with no allocation at all" do
+      session = build(:session, fliip_service: create(:fliip_service, :without_definition), user: staff)
+
+      expect(session).not_to be_valid
+      expect(session.errors[:base]).to include("L'allocation de ce service est à définir.")
+    end
+
     it "rejects cancelled services" do
       service.update!(purchase_status: "C")
       session = build_session

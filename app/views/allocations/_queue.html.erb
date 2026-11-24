@@ -1,0 +1,46 @@
+<%# « À définir »: the kinds of service waiting for an allocation, saved together.
+    Locals: definitions, active_counts, query. %>
+<section class="alloc-queue" aria-labelledby="a-definir">
+  <header class="alloc-queue__head">
+    <h2 id="a-definir">À définir (<%= definitions.size %>)</h2>
+    <p class="text-muted text-small">Leurs services ne peuvent pas être réservés tant que l'allocation n'est pas définie. Une ligne laissée vide reste à définir.</p>
+  </header>
+
+  <% if definitions.any? %>
+    <%= form_with url: bulk_update_allocations_path, method: :patch, class: "alloc-queue__form" do %>
+      <%= hidden_field_tag :mode, "queue", id: nil %>
+      <%= hidden_field_tag :q, query, id: nil if query.present? %>
+      <ul class="alloc-queue__list">
+        <% definitions.each do |definition| %>
+          <% active = active_counts.fetch(definition.service_id, 0) %>
+          <% name = definition.service_name.presence || "Service #{definition.service_id}" %>
+          <li class="queue-item">
+            <%= link_to name, allocation_path(definition), class: "queue-item__name" %>
+            <span class="queue-item__meta text-small numeric">
+              DefID <%= definition.service_id %> · <%= active %> <%= active < 2 ? "actif" : "actifs" %>
+              <% if (suggested = definition.suggested_paid_sessions) %>
+                <button type="button" class="suggest"
+                        data-action="allocations#suggest"
+                        data-allocations-input-param="allocation_<%= definition.id %>_paid_sessions"
+                        data-allocations-value-param="<%= suggested %>"
+                        title="D'après le nom : cliquer pour remplir les séances"><%= suggested %> séances suggérées</button>
+              <% end %>
+            </span>
+            <span class="queue-item__counts">
+              <label class="queue-item__pair" for="allocation_<%= definition.id %>_paid_sessions">Séances</label>
+              <%= render "count_input", definition: definition, attribute: :paid_sessions, label: "Séances, #{name}" %>
+              <label class="queue-item__pair" for="allocation_<%= definition.id %>_free_sessions">Absences</label>
+              <%= render "count_input", definition: definition, attribute: :free_sessions, label: "Absences, #{name}" %>
+            </span>
+            <%= render "errors", definition: definition %>
+          </li>
+        <% end %>
+      </ul>
+      <button type="submit" class="btn btn--primary btn--block">
+        <%= safe_join([ "Enregistrer les allocations", button_arrow ]) %>
+      </button>
+    <% end %>
+  <% else %>
+    <p class="empty-state"><%= query.present? ? "Aucune allocation à définir ne correspond à « #{query} »." : "Aucune allocation à définir." %></p>
+  <% end %>
+</section>

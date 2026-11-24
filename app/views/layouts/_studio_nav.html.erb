@@ -29,8 +29,8 @@
         <% if policy(:oversight).recent_sessions? %>
           <%= link_to "Séances récentes", recent_sessions_path, class: "nav-more__item" %>
         <% end %>
-        <% if policy(:admin).services? %>
-          <%= link_to "Allocations", admin_services_path, class: "nav-more__item" %>
+        <% if policy(ServiceDefinition).index? %>
+          <%= link_to "Allocations", allocations_path, class: "nav-more__item" %>
         <% end %>
         <% if policy(:admin).jobs? %>
           <%= link_to "Tâches", mission_control_jobs_path, class: "nav-more__item", data: { turbo: false } %>

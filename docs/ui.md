@@ -177,6 +177,8 @@ Server-rendered links with a `?tab=` param:
 
 `.until-tablet` shows only below 768 px and `.from-tablet` only from 768 px: when a page needs both, render the cards with one and the table with the other.
 
+Counts edited in bulk (Allocations) use `.cell-input`: a compact 64 px number box with a green border, gold when focused or changed (`.is-changed`), red with `.cell-input--invalid`. A `.suggest` pill next to it is a hint the user clicks to fill the box. See `allocations/_count_input` and `studio/_allocations.scss`.
+
 ### Search pages and client cards
 
 ```erb

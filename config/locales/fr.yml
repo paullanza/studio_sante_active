@@ -21,6 +21,10 @@ fr:
         address: "Adresse"
         birthday: "Date de naissance"
         signup_code_token: "Code d'inscription"
+      service_definition:
+        service_name: "Nom"
+        paid_sessions: "Séances"
+        free_sessions: "Absences"
 
   errors:
     format: "%{attribute} %{message}"

@@ -55,15 +55,18 @@ Rails.application.routes.draw do
   post "fliip_users/:remote_id/refresh", to: "fliip_users#refresh", as: :refresh_fliip_user
 
   # =====================================================================
-  # ADMIN — DASHBOARD & SERVICE OVERSIGHT
-  # ---------------------------------------------------------------------
-  # High-level admin views over services. `service_show` is an admin
-  # lens over a service; PATCH allows inline updates by admins.
+  # ADMIN — DASHBOARD
   # =====================================================================
-  get   "admin/dashboard",        to: "admin#dashboard",        as: :admin_dashboard
-  get   "admin/services",         to: "admin#services",         as: :admin_services
-  get   "admin/services/:id",     to: "admin#service_show",     as: :admin_service
-  patch "admin/services/:id",     to: "admin#update_service",   as: :update_admin_service
+  get "admin/dashboard", to: "admin#dashboard", as: :admin_dashboard
+
+  # =====================================================================
+  # ALLOCATIONS — SÉANCES AND ABSENCES ALLOWED PER KIND OF SERVICE
+  # ---------------------------------------------------------------------
+  # ServiceDefinition records, admins only. PATCH /allocations saves a batch:
+  # the « à définir » queue, or the corrections made in « Mode correction ».
+  # =====================================================================
+  resources :allocations, only: [:index, :show]
+  patch "allocations", to: "allocations#bulk_update", as: :bulk_update_allocations
 
   # =====================================================================
   # ADMIN — SIGNUP CODES (ACCESS CONTROL FOR NEW EMPLOYEES)

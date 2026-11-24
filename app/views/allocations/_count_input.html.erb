@@ -1,0 +1,9 @@
+<%# One count of an allocation in a bulk form: allocations[ID][attribute].
+    Locals: definition, attribute (:paid_sessions or :free_sessions), label (accessible name). %>
+<% input_id = "allocation_#{definition.id}_#{attribute}" %>
+<% error = definition.errors[attribute].first %>
+<%= number_field_tag "allocations[#{definition.id}][#{attribute}]", definition.public_send(attribute),
+      id: input_id, min: 0, step: 1, inputmode: "numeric",
+      class: class_names("cell-input", "cell-input--invalid" => error),
+      aria: { label: label, invalid: ("true" if error), describedby: ("allocation_#{definition.id}_errors" if definition.errors.any?) },
+      data: { original: definition.attribute_in_database(attribute).to_s, action: "input->allocations#track" } %>
