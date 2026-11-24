@@ -26,6 +26,9 @@
         <% if policy(:oversight).echeances? %>
           <%= link_to "Échéances", echeances_path, class: "nav-more__item" %>
         <% end %>
+        <% if policy(:oversight).recent_sessions? %>
+          <%= link_to "Séances récentes", recent_sessions_path, class: "nav-more__item" %>
+        <% end %>
         <% if policy(:admin).services? %>
           <%= link_to "Allocations", admin_services_path, class: "nav-more__item" %>
         <% end %>

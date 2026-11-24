@@ -105,8 +105,10 @@ Rails.application.routes.draw do
   # OVERSIGHT — FOLLOW-UP PAGES FOR MANAGERS AND ABOVE (« Plus » menu)
   # ---------------------------------------------------------------------
   # Échéances: services ending soon or ended recently, for renewals.
+  # Séances récentes: the latest séances across the studio.
   # =====================================================================
-  get "echeances", to: "oversight#echeances", as: :echeances
+  get "echeances",        to: "oversight#echeances",       as: :echeances
+  get "seances-recentes", to: "oversight#recent_sessions", as: :recent_sessions
 
   # =====================================================================
   # MON PROFIL — THE SIGNED-IN USER'S OWN DETAILS AND PASSWORD

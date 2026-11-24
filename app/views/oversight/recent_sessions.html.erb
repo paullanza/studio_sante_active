@@ -1,0 +1,56 @@
+<% content_for :nav_section, "plus" %>
+<% content_for :title, "Séances récentes" %>
+<% content_for :page_wide, true %>
+
+<div class="stack">
+  <div class="page-header">
+    <h1>Séances récentes</h1>
+  </div>
+
+  <div class="list-toolbar">
+    <%= form_with url: recent_sessions_path, method: :get, class: "recent-seances__filter",
+          data: { controller: "autosubmit", action: "change->autosubmit#submit" } do %>
+      <div class="field field--compact">
+        <label class="field__box" for="employee_id">
+          <span class="field__label visually-hidden">Entraîneur·e</span>
+          <%= select_tag :employee_id,
+                options_for_select(@trainers.map { |u| [ u.full_name, u.id ] }, @employee_id),
+                include_blank: "Tous les entraîneur·e·s", id: "employee_id", class: "field__input" %>
+        </label>
+      </div>
+      <noscript><button type="submit" class="btn btn--ghost">Filtrer</button></noscript>
+    <% end %>
+
+    <% if @sessions.any? %>
+      <p class="text-muted text-small numeric">Séances <%= @pagy.from %> à <%= @pagy.to %>, les plus récentes d’abord</p>
+    <% end %>
+  </div>
+
+  <% if @sessions.any? %>
+    <div class="recent-seances">
+      <div class="recent-seances__head" aria-hidden="true">
+        <span>Date</span><span>Client·e et service</span><span>Entraîneur·e</span><span>Résultat</span><span>Confirmation</span>
+      </div>
+      <ul class="list">
+        <%= render partial: "oversight/session_row", collection: @sessions, as: :session %>
+      </ul>
+    </div>
+  <% else %>
+    <p class="empty-state">
+      <%= @employee_id ? "Aucune séance pour cet·te entraîneur·e." : "Aucune séance." %>
+    </p>
+  <% end %>
+
+  <% if @pagy.next || @pagy.page > 1 %>
+    <div class="recent-seances__more">
+      <% if @pagy.page > 1 %>
+        <%= link_to "Les plus récentes", recent_sessions_path(employee_id: @employee_id), class: "btn btn--ghost" %>
+      <% end %>
+      <% if @pagy.next %>
+        <%= link_to recent_sessions_path(employee_id: @employee_id, page: @pagy.next), class: "btn btn--secondary", rel: "next" do %>
+          <%= safe_join([ "Voir plus", button_arrow ]) %>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,194 @@
+// Séances récentes (oversight/recent_sessions): each séance is a card linking
+// to its service. On a phone the parts sit in a small grid (date and outcome,
+// then the client and service, then the trainer and confirmation); two cards
+// a row from 768 px; from 1024 px the cards line up in columns under
+// .recent-seances__head (subgrid), so desktop rows stand out from the page
+// like the Clients list.
+.recent-seances__filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.recent-seances__filter .field {
+  flex: 1;
+}
+
+.recent-seance {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "when    outcome"
+    "who     who"
+    "trainer status";
+  align-items: center;
+  gap: 6px 12px;
+  padding: 12px 14px;
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.recent-seance:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.recent-seance:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+// An Absence or a -24h séance stands out, as on the Service page.
+.recent-seance--absence {
+  border-left: 4px solid var(--badge-absence-fg);
+  background: color-mix(in srgb, var(--badge-absence-bg) 55%, var(--surface));
+}
+
+.recent-seance--moins24 {
+  border-left: 4px solid var(--badge-moins24-fg);
+  background: color-mix(in srgb, var(--badge-moins24-bg) 55%, var(--surface));
+}
+
+.recent-seance__when {
+  grid-area: when;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.recent-seance__who {
+  grid-area: who;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.recent-seance__client {
+  font-family: var(--font-heading);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.recent-seance:hover .recent-seance__client {
+  color: var(--brand-light);
+}
+
+.recent-seance__trainer {
+  grid-area: trainer;
+  min-width: 0;
+}
+
+.recent-seance__trainer-label {
+  color: var(--text-muted);
+}
+
+.recent-seance__outcome {
+  grid-area: outcome;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: end;
+}
+
+.recent-seance__status {
+  grid-area: status;
+  justify-self: end;
+  text-align: right;
+}
+
+.recent-seances__head {
+  display: none;
+}
+
+// « Les plus récentes » and « Voir plus » close the list on the right.
+.recent-seances__more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 24px;
+}
+
+@media (min-width: 768px) {
+  .recent-seances__filter {
+    width: auto;
+    min-width: 280px;
+  }
+
+  // Too narrow for five columns: two cards a row.
+  .recent-seances > .list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .recent-seances > .list > li {
+    display: grid;
+  }
+}
+
+@media (min-width: 1024px) {
+
+  // Fixed columns so they don't move from one page to the next; the client
+  // and the trainer share what is left.
+  .recent-seances {
+    display: grid;
+    grid-template-columns: 196px minmax(0, 1.4fr) minmax(0, 1fr) 132px 190px;
+    column-gap: 20px;
+  }
+
+  .recent-seances__head,
+  .recent-seances > .list,
+  .recent-seances > .list > li,
+  .recent-seance {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+  }
+
+  .recent-seances__head {
+    padding: 0 15px 4px;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .recent-seance {
+    grid-template-areas: none;
+    min-height: 64px;
+    padding: 8px 14px;
+  }
+
+  .recent-seance--absence,
+  .recent-seance--moins24 {
+    padding-left: 11px;
+  }
+
+  .recent-seance > * {
+    grid-area: auto;
+  }
+
+  .recent-seance__outcome,
+  .recent-seance__status {
+    justify-self: start;
+    text-align: left;
+  }
+
+  .recent-seance__when {
+    white-space: nowrap;
+  }
+
+  // One line, cut with « … », so every row is the same height.
+  .recent-seance__client,
+  .recent-seance__service,
+  .recent-seance__trainer {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .recent-seance__trainer-label {
+    display: none;
+  }
+}
