@@ -2,29 +2,78 @@
 <% content_for :title, "Allocations" %>
 <% content_for :page_wide, true %>
 
-<div class="stack">
-  <div class="page-header">
-    <h1>Allocations</h1>
-    <p class="text-muted text-small">Séances et absences permises pour chaque type de service.</p>
-  </div>
-
-  <%= form_with url: allocations_path, method: :get, class: "search-form", role: "search" do %>
-    <div class="field field--compact search-form__field">
-      <label class="field__box" for="q">
-        <span class="field__label visually-hidden">Nom ou DefID</span>
-        <%= search_field_tag :q, @query, id: "q", class: "field__input",
-              placeholder: "Nom ou DefID", autocomplete: "off", spellcheck: false %>
-      </label>
+<div class="stack" data-controller="allocations">
+  <div class="alloc-top">
+    <div class="page-header">
+      <h1>Allocations</h1>
+      <p class="text-muted text-small">Séances et absences permises pour chaque type de service.</p>
     </div>
-    <button type="submit" class="btn btn--primary">Rechercher</button>
-  <% end %>
+
+    <%= form_with url: allocations_path, method: :get, class: "search-form alloc-top__search", role: "search" do %>
+      <%= hidden_field_tag :corriger, "1", id: nil if @correcting %>
+      <div class="field field--compact search-form__field">
+        <label class="field__box" for="q">
+          <span class="field__label visually-hidden">Nom ou DefID</span>
+          <%= search_field_tag :q, @query, id: "q", class: "field__input",
+                placeholder: "Nom ou DefID", autocomplete: "off", spellcheck: false %>
+        </label>
+      </div>
+      <button type="submit" class="btn btn--secondary">Rechercher</button>
+    <% end %>
+  </div>
 
   <% if @query.present? %>
     <p class="text-muted text-small">
-      <%= pluralize(@to_define.size + @defined.size, "allocation") %> pour « <%= @query %> » ·
-      <%= link_to "Toutes les allocations", allocations_path %>
+      <%= pluralize(@to_define.size + @defined_count, "allocation") %> pour « <%= @query %> » ·
+      <%= link_to "Toutes les allocations", allocations_path(corriger: (1 if @correcting)) %>
     </p>
   <% end %>
 
-  <%= render "sections", to_define: @to_define, defined: @defined, active_counts: @active_counts, query: @query %>
+  <div class="alloc-split">
+    <%= render "queue", definitions: @to_define, active_counts: @active_counts, query: @query %>
+
+    <section class="alloc-defined" aria-labelledby="definies">
+      <header class="alloc-defined__head">
+        <h2 id="definies">Définies (<%= @defined_count %>)</h2>
+        <% if @correcting %>
+          <%= link_to "Quitter le mode correction", allocations_path(q: @query.presence), class: "btn btn--ghost btn--small" %>
+        <% elsif @defined_count.positive? %>
+          <%= link_to allocations_path(q: @query.presence, corriger: 1), class: "btn btn--secondary btn--small" do %>
+            <%= safe_join([ "Mode correction", button_arrow ]) %>
+          <% end %>
+        <% end %>
+      </header>
+
+      <% if @families.empty? %>
+        <p class="empty-state"><%= @query.present? ? "Aucune allocation définie ne correspond à « #{@query} »." : "Aucune allocation définie." %></p>
+      <% elsif @correcting %>
+        <%= form_with url: bulk_update_allocations_path, method: :patch, class: "alloc-defined__form is-correcting",
+              data: { action: "submit->allocations#confirm" } do %>
+          <%= hidden_field_tag :mode, "correction", id: nil %>
+          <%= hidden_field_tag :q, @query, id: nil if @query.present? %>
+          <div class="alloc-families">
+            <% @families.each do |family, definitions| %>
+              <%= render "family", family: family, definitions: definitions, active_counts: @active_counts, correcting: true %>
+            <% end %>
+          </div>
+          <div class="alloc-fixbar">
+            <span class="alloc-fixbar__status">
+              <span class="badge badge--moins24">Mode correction</span>
+              <span class="text-small" data-allocations-target="count" aria-live="polite">Aucune modification</span>
+            </span>
+            <span class="alloc-fixbar__actions">
+              <%= link_to "Annuler", allocations_path(q: @query.presence), class: "btn btn--ghost" %>
+              <button type="submit" class="btn btn--secondary"><%= safe_join([ "Enregistrer les corrections", button_arrow ]) %></button>
+            </span>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="alloc-families">
+          <% @families.each do |family, definitions| %>
+            <%= render "family", family: family, definitions: definitions, active_counts: @active_counts, correcting: false %>
+          <% end %>
+        </div>
+      <% end %>
+    </section>
+  </div>
 </div>

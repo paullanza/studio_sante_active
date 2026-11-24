@@ -5,8 +5,15 @@
 <div class="stack">
   <div class="page-bar">
     <%= back_link_to "Allocations", allocations_path %>
-    <%= link_to allocations_path(q: @definition.service_id), class: "btn btn--secondary btn--small" do %>
-      <%= safe_join([ "Modifier l'allocation", button_arrow ]) %>
+    <%# « À définir » goes to the queue; a set allocation to « Mode correction ». %>
+    <% if @definition.to_define? %>
+      <%= link_to allocations_path(q: @definition.service_id), class: "btn btn--secondary btn--small" do %>
+        <%= safe_join([ "Définir l'allocation", button_arrow ]) %>
+      <% end %>
+    <% else %>
+      <%= link_to allocations_path(q: @definition.service_id, corriger: 1), class: "btn btn--secondary btn--small" do %>
+        <%= safe_join([ "Corriger l'allocation", button_arrow ]) %>
+      <% end %>
     <% end %>
   </div>
 

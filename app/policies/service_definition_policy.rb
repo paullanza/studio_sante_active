@@ -11,7 +11,8 @@ class ServiceDefinitionPolicy < ApplicationPolicy
     admin_or_above?
   end
 
-  def update?
+  # Saves several allocations at once (the queue, or the corrections).
+  def bulk_update?
     admin_or_above?
   end
 

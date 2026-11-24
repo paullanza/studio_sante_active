@@ -36,6 +36,70 @@ RSpec.describe ServiceDefinition, type: :model do
     end
   end
 
+  describe "#to_define_in_database?" do
+    it "follows the saved values, not the ones assigned" do
+      definition = create(:service_definition, paid_sessions: nil, free_sessions: nil)
+      definition.assign_attributes(paid_sessions: 10, free_sessions: 1)
+
+      expect(definition).not_to be_to_define
+      expect(definition).to be_to_define_in_database
+    end
+  end
+
+  describe "#family" do
+    {
+      "Ent. privé - 12 mois - 1x/sem."                  => "Ent. privé",
+      "Ent. privé DUO - 3 mois - 1x/sem."               => "DUO",
+      "EPDUO sur 3 mois - 1x/sem (12 séances)"          => "DUO",
+      "Duo sur 3 mois - 2x/sem"                         => "DUO",
+      "EP sur 12 mois - 2x/mois"                        => "EP",
+      "EP+1M"                                           => "EP",
+      "Ent. semi-privé - 3 mois - 1x/sem"               => "Semi-privé",
+      "Semi-privé - Introduction au powerlifting"       => "Semi-privé",
+      "Ent. par visio - 3 mois - 2x/sem"                => "Visio",
+      "Pilates sur appareils - 3 mois - 10 visites"     => "Pilates",
+      "À la carte - Entraînement privé (60 min.)"       => "À la carte",
+      "STAFF - Ent. privé - 3 mois - 1x/sem."           => "Personnel",
+      "Express30 sur 3 mois - 2x/sem (24 séances de 30 minutes)" => "Autres",
+      "TEST EP sur 12 mois - 2x/mois (24 séances) TEST" => "Autres",
+      "Accès famille et amies"                          => "Autres"
+    }.each do |name, family|
+      it "puts « #{name} » in #{family}" do
+        expect(build(:service_definition, service_name: name).family).to eq(family)
+      end
+    end
+
+    it "puts a nameless allocation in Autres" do
+      expect(build(:service_definition, service_name: nil).family).to eq("Autres")
+    end
+
+    it "lists every family in the display order" do
+      expect(described_class::FAMILY_ORDER).to match_array(described_class::FAMILIES.map(&:first) + [ "Autres" ])
+    end
+  end
+
+  describe "#suggested_paid_sessions" do
+    {
+      "EP sur 12 mois - 1x/sem (48 séances)"                      => 48,
+      "Express30 sur 3 mois - 2x/sem (24 séances de 30 minutes)"  => 12,
+      "Pilates au sol - 3 mois - 10 visites"                      => 10,
+      "Ent. privé - 6 mois - 2x/sem."                             => 48,
+      "Ent. privé - 3 mois - 1x/sem."                             => 12,
+      "Ent. privé - 12 mois - 2x/mois"                            => 24,
+      "Semi-privé - 12 mois - 2x/mois"                            => 24
+    }.each do |name, count|
+      it "reads #{count} séances from « #{name} »" do
+        expect(build(:service_definition, service_name: name).suggested_paid_sessions).to eq(count)
+      end
+    end
+
+    [ "Accès famille et amies", "EP+1M", "À la carte - Boxe 1 à 1 (60 minutes)", "Semi-privé - Introduction au powerlifting" ].each do |name|
+      it "has no suggestion for « #{name} »" do
+        expect(build(:service_definition, service_name: name).suggested_paid_sessions).to be_nil
+      end
+    end
+  end
+
   describe ".matching" do
     let!(:pilates) { create(:service_definition, service_id: 7_100, service_name: "Pilates 10 séances") }
     let!(:prive)   { create(:service_definition, service_id: 7_200, service_name: "Privé 100% _promo") }

@@ -1,184 +1,307 @@
-// Allocations: one row per kind of service, edited in place. A card on a
-// phone; from 768 px the rows share the columns of .allocation-list__head
-// (subgrid), card-like rows rather than a table, since each row is a form
-// inside its own turbo-frame.
-.allocation-section {
+// Allocations: the « À définir » queue (saved together) and the defined
+// allocations grouped by family, read-only unless « Mode correction » is on.
+// Stacked on a phone; from 1024 px the queue is a sticky column on the left.
+.alloc-top {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.allocation-section__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 4px 16px;
-}
-
-.allocation-section__head h2 {
-  font-size: 20px;
-}
-
-// The to-do section: a highlighted card with the « Non confirmée » colours.
-.allocation-section--to-define {
-  padding: 16px;
-  border: 1px solid var(--badge-unconfirmed-bg);
-  border-left: 4px solid var(--badge-unconfirmed-fg);
-  border-radius: var(--radius-card);
-  background: var(--surface);
-}
-
-.allocation-section--to-define .allocation-section__head h2 {
-  color: var(--badge-unconfirmed-fg);
-}
-
-.allocation-section--to-define .allocation-row {
-  background: var(--bg);
-}
-
-.allocation-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.allocation-list__head {
-  display: none;
-}
-
-.allocation-row-frame {
-  display: block;
-}
-
-.allocation-row {
+.alloc-split {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-areas:
-    "name name"
-    "defid active"
-    "paid free"
-    "actions actions";
-  gap: 8px 12px;
-  padding: 14px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
 }
 
-.allocation-row__name { grid-area: name; }
-.allocation-row__defid { grid-area: defid; }
-.allocation-row__active { grid-area: active; text-align: right; }
-.allocation-row__paid { grid-area: paid; }
-.allocation-row__free { grid-area: free; }
-.allocation-row__actions { grid-area: actions; }
-
-.allocation-row__link {
-  font-family: var(--font-heading);
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 1.2;
+// Compact number box for tables of counts.
+.cell-input {
+  width: 64px;
+  height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface-2);
   color: var(--text);
-  text-decoration: none;
-}
-
-.allocation-row__link:hover {
-  color: var(--brand-light);
-}
-
-.allocation-row__actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.allocation-row__saved {
-  color: var(--brand-light);
-  font-weight: 700;
-}
-
-// Number inputs: no spinners, the keyboard is numeric.
-.allocation-row .field__input {
+  font-family: var(--font-body);
+  font-size: 16px; // under 16 px, iOS zooms in on focus
+  font-variant-numeric: tabular-nums;
+  text-align: right;
   -moz-appearance: textfield;
 }
 
-.allocation-row .field__input::-webkit-inner-spin-button,
-.allocation-row .field__input::-webkit-outer-spin-button {
+.cell-input::-webkit-inner-spin-button,
+.cell-input::-webkit-outer-spin-button {
   margin: 0;
   -webkit-appearance: none;
 }
 
-.allocation-top__name {
-  font-size: 22px;
+.cell-input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.cell-input.is-changed {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.cell-input--invalid {
+  border-color: var(--field-invalid-border);
+}
+
+.allocation-errors {
+  margin: 0;
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+// A hint the user clicks to fill a box (the séances read from the name).
+.suggest {
+  padding: 2px 9px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--brand-light);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.suggest:hover {
+  border-style: solid;
+}
+
+// ---- Queue ----
+.alloc-queue {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--badge-unconfirmed-bg);
+  border-top: 4px solid var(--badge-unconfirmed-fg);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.alloc-queue__head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.alloc-queue__head h2 {
+  color: var(--badge-unconfirmed-fg);
+  font-size: 20px;
+}
+
+.alloc-queue__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.alloc-queue__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.queue-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.queue-item__name {
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.queue-item__name:hover {
+  color: var(--brand-light);
+}
+
+.queue-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--text-muted);
+}
+
+.queue-item__counts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.queue-item__pair {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.queue-item__pair + .cell-input + .queue-item__pair {
+  margin-left: 8px;
+}
+
+// ---- Defined, by family ----
+.alloc-defined {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.alloc-defined__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.alloc-defined__head h2 {
+  font-size: 20px;
+}
+
+.alloc-families {
+  column-gap: 16px;
+}
+
+.alloc-family {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+  padding: 10px 12px 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  break-inside: avoid;
+}
+
+.is-correcting .alloc-family {
+  border-color: var(--badge-moins24-fg);
+}
+
+.alloc-family__title {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  color: var(--brand-light);
+  font-size: 13px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.alloc-line {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) repeat(3, auto);
+  gap: 2px 8px;
+  align-items: center;
+  min-height: 32px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.alloc-line--head {
+  min-height: 22px;
+  border-top: 0;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+// Names wrap rather than cut: kinds of service often differ only at the end.
+.alloc-line__name {
+  padding: 5px 0;
+  color: var(--text);
+  line-height: 1.3;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.alloc-line__name:hover {
+  color: var(--brand-light);
+}
+
+.alloc-line__num {
+  text-align: right;
+}
+
+.alloc-line .cell-input {
+  width: 54px;
+  height: 30px;
+}
+
+.alloc-line .allocation-errors {
+  grid-column: 1 / -1;
+  padding-bottom: 6px;
+}
+
+.alloc-fixbar {
+  position: sticky;
+  bottom: calc(12px + var(--safe-bottom, 0px));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 10px 16px;
+  border: 1px solid var(--badge-moins24-fg);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.alloc-fixbar__status,
+.alloc-fixbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px 20px;
 }
 
 @media (min-width: 768px) {
-  .allocation-list {
-    display: grid;
-    grid-template-columns: 64px minmax(0, 1fr) 104px 104px 110px 210px;
-    column-gap: 16px;
-    row-gap: 8px;
+  .alloc-top {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
   }
 
-  .allocation-list__head,
-  .allocation-row-frame,
-  .allocation-row {
-    display: grid;
-    grid-template-columns: subgrid;
-    grid-column: 1 / -1;
+  .alloc-top__search {
+    width: 460px;
   }
 
-  .allocation-list__head {
-    padding: 0 15px 0;
-    color: var(--text-muted);
-    font-size: 12px;
-    font-weight: 700;
+  .alloc-families {
+    columns: 2;
   }
 
-  .allocation-row {
-    grid-template-areas: none;
-    align-items: start;
-    padding: 6px 14px;
+  .alloc-line {
+    grid-template-columns: 44px minmax(0, 1fr) 58px 58px 40px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .alloc-split {
+    grid-template-columns: 420px minmax(0, 1fr);
   }
 
-  .allocation-row__defid { grid-area: auto; grid-column: 1; grid-row: 1; }
-  .allocation-row__name { grid-area: auto; grid-column: 2; grid-row: 1; }
-  .allocation-row__paid { grid-area: auto; grid-column: 3; grid-row: 1; }
-  .allocation-row__free { grid-area: auto; grid-column: 4; grid-row: 1; }
-  .allocation-row__active { grid-area: auto; grid-column: 5; grid-row: 1; text-align: left; }
-  .allocation-row__actions { grid-area: auto; grid-column: 6; grid-row: 1; min-height: var(--control-height); }
-
-  // Text cells sit on the inputs' line.
-  .allocation-row__defid,
-  .allocation-row__name,
-  .allocation-row__active {
-    display: flex;
-    align-items: center;
-    min-height: var(--control-height);
-  }
-
-  .allocation-row__defid {
-    color: var(--text);
-    font-size: 15px;
-  }
-
-  // The column head names the cells: labels and suffixes are for screen readers.
-  .allocation-row__inline-label,
-  .allocation-row .field__label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-  }
-
-  .allocation-row .field__box {
-    justify-content: center;
-    min-height: var(--control-height);
-    padding-top: 0;
-    padding-bottom: 0;
-  }
-
-  .allocation-row__active {
-    font-size: 15px;
+  .alloc-queue {
+    position: sticky;
+    top: calc(76px + var(--safe-top, 0px));
+    max-height: calc(100vh - 96px);
+    overflow-y: auto;
   }
 }

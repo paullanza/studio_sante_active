@@ -57,12 +57,64 @@ class ServiceDefinition < ApplicationRecord
     missing.size
   end
 
+  # Families of the Allocations page, in display order, each with the name
+  # pattern that puts a kind of service in it. The first match wins, so DUO
+  # comes before EP and Ent. privé. A name nothing matches goes to « Autres »:
+  # add a pattern here when a new family appears in Fliip.
+  FAMILIES = [
+    [ "DUO",        /\A(EPDUO|Ent\. privé DUO|Duo)\b/i ],
+    [ "Personnel",  /\ASTAFF\b/ ],
+    [ "EP",         /\AEP\b/ ],
+    [ "Ent. privé", /\AEnt\. privé\b/i ],
+    [ "Semi-privé", /semi-privé/i ],
+    [ "Visio",      /visio/i ],
+    [ "Pilates",    /\APilates\b/i ],
+    [ "À la carte", /\AÀ la carte\b/i ]
+  ].freeze
+  OTHER_FAMILY = "Autres".freeze
+  FAMILY_ORDER = [ "Ent. privé", "EP", "DUO", "Semi-privé", "Pilates", "Visio", "À la carte", "Personnel", OTHER_FAMILY ].freeze
+
   # -----------------------------------------
   # Instance Methods
   # -----------------------------------------
   # The allocation hasn't been set yet.
   def to_define?
     paid_sessions.nil? || free_sessions.nil?
+  end
+
+  # Same, by the saved values (ignores values assigned but not saved).
+  def to_define_in_database?
+    paid_sessions_in_database.nil? || free_sessions_in_database.nil?
+  end
+
+  # The family the Allocations page groups this kind of service under.
+  def family
+    name = service_name.to_s.strip
+    FAMILIES.find { |_, pattern| name.match?(pattern) }&.first || OTHER_FAMILY
+  end
+
+  # Séances read from the name, as a hint when setting the allocation; nil
+  # when the name doesn't say. Never saved on its own.
+  #   « (48 séances) » → 48, « (24 séances de 30 minutes) » → 12 (half each),
+  #   « 10 visites » → 10, « 6 mois - 2x/sem » → 48 (4 weeks a month),
+  #   « 12 mois - 2x/mois » → 24.
+  def suggested_paid_sessions
+    name = service_name.to_s
+
+    if (match = name.match(/\((\d+) séances( de 30 min)?/i))
+      count = match[1].to_i
+      return match[2] ? count / 2 : count
+    end
+    return Regexp.last_match(1).to_i if name =~ /(\d+) visites/i
+
+    months = name[/(\d+) mois/i, 1]&.to_i
+    return unless months
+
+    if (per_week = name[%r{(\d+)x/sem}i, 1])
+      per_week.to_i * 4 * months
+    elsif (per_month = name[%r{(\d+)x/mois}i, 1])
+      per_month.to_i * months
+    end
   end
 
   # -----------------------------------------

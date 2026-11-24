@@ -62,9 +62,11 @@ Rails.application.routes.draw do
   # =====================================================================
   # ALLOCATIONS — SÉANCES AND ABSENCES ALLOWED PER KIND OF SERVICE
   # ---------------------------------------------------------------------
-  # ServiceDefinition records, admins only. Rows are edited in place.
+  # ServiceDefinition records, admins only. PATCH /allocations saves a batch:
+  # the « à définir » queue, or the corrections made in « Mode correction ».
   # =====================================================================
-  resources :allocations, only: [:index, :show, :update]
+  resources :allocations, only: [:index, :show]
+  patch "allocations", to: "allocations#bulk_update", as: :bulk_update_allocations
 
   # =====================================================================
   # ADMIN — SIGNUP CODES (ACCESS CONTROL FOR NEW EMPLOYEES)

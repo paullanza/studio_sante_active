@@ -4,9 +4,8 @@ RSpec.describe ServiceDefinitionPolicy, type: :policy do
   let(:definition) { build(:service_definition) }
 
   %i[admin super_admin].each do |role|
-    # edit? follows update? (ApplicationPolicy); there is no edit route.
     it "permits the allocations pages to #{role == :admin ? 'an admin' : 'the super admin'}" do
-      expect(described_class.new(user_for(role), definition)).to permit_only_actions(%i[index show edit update])
+      expect(described_class.new(user_for(role), definition)).to permit_only_actions(%i[index show bulk_update])
     end
   end
 

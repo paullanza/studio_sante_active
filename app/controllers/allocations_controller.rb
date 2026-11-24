@@ -1,19 +1,21 @@
 # Allocations (ServiceDefinition): the séances and absences allowed for each
-# kind of service. Admins set them in place, row by row; kinds of service not
-# set yet (« à définir ») come first, since their services can't be booked.
+# kind of service. Kinds not set yet (« à définir ») wait in a queue on the
+# left and are saved together; the defined ones are read-only, grouped by
+# family, and change only in « Mode correction » (?corriger=1).
 class AllocationsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_definition, only: %i[show update]
   layout "studio"
 
   def index
     authorize ServiceDefinition
 
     @query = params[:q].to_s.strip
+    @correcting = params[:corriger] == "1"
     load_lists
   end
 
   def show
+    @definition = ServiceDefinition.find(params[:id])
     authorize @definition
 
     services = @definition.fliip_services
@@ -26,53 +28,80 @@ class AllocationsController < ApplicationController
     )
   end
 
-  # Turbo stream: the row is replaced in place. When the allocation leaves
-  # « à définir », both sections are re-rendered so it moves down and the
-  # counts follow. Other rows keep what was typed in them only when it doesn't.
-  def update
-    authorize @definition
+  # Saves every allocation sent in `allocations[ID][paid_sessions|free_sessions]`
+  # in one transaction: all or nothing. A queue entry left blank stays
+  # « à définir »; an unchanged allocation isn't written.
+  def bulk_update
+    authorize ServiceDefinition
 
     @query = params[:q].to_s.strip
-    was_to_define = @definition.to_define?
+    @correcting = params[:mode] == "correction"
+    changed = changed_definitions
 
-    if @definition.update(permitted_attributes(@definition))
-      @moved = was_to_define && !@definition.to_define?
-      load_lists if @moved
-      @active_count = active_counts([ @definition.service_id ]).fetch(@definition.service_id, 0)
-
-      respond_to do |format|
-        format.turbo_stream
-        format.html { redirect_to allocations_path(q: @query.presence), notice: "Allocation mise à jour." }
-      end
+    if changed.empty?
+      redirect_to allocations_path(index_params), notice: "Aucune modification.", status: :see_other
+    elsif save_all(changed)
+      redirect_to allocations_path(q: @query.presence), notice: saved_notice(changed.size), status: :see_other
     else
-      @active_count = active_counts([ @definition.service_id ]).fetch(@definition.service_id, 0)
-
-      respond_to do |format|
-        format.turbo_stream { render :update_failed, status: :unprocessable_entity }
-        format.html do
-          load_lists
-          render :index, status: :unprocessable_entity
-        end
-      end
+      @edited = changed.index_by(&:id)
+      load_lists
+      flash.now[:alert] = "Rien n'a été enregistré : corrigez les valeurs en rouge."
+      render :index, status: :unprocessable_entity
     end
   end
 
   private
 
-  def set_definition
-    @definition = ServiceDefinition.find(params[:id])
+  # The submitted allocations with their new values assigned, keeping only
+  # those that change. Unknown ids are ignored.
+  def changed_definitions
+    submitted = params.fetch(:allocations, {})
+    return [] unless submitted.respond_to?(:each_pair)
+
+    attributes = policy(ServiceDefinition).permitted_attributes
+    definitions = ServiceDefinition.where(id: submitted.keys).index_by { |d| d.id.to_s }
+
+    submitted.each_pair.filter_map do |id, values|
+      definition = definitions[id]
+      next unless definition && values.respond_to?(:permit)
+
+      values = values.permit(*attributes)
+      # An untouched queue entry stays « à définir ».
+      next if definition.to_define? && attributes.all? { |attr| values[attr].blank? }
+
+      definition.assign_attributes(values)
+      definition if definition.changed?
+    end
   end
 
-  # Both sections of the index, filtered by @query, and each kind's active
-  # services, counted in one query.
+  def save_all(definitions)
+    valid = definitions.map(&:valid?).all?
+    return false unless valid
+
+    ServiceDefinition.transaction { definitions.each(&:save!) }
+    true
+  end
+
+  def saved_notice(count)
+    noun = @correcting ? "correction" : "allocation"
+    "#{count} #{noun.pluralize(count)} #{count > 1 ? 'enregistrées' : 'enregistrée'}."
+  end
+
+  def index_params
+    { q: @query.presence, corriger: (1 if @correcting) }.compact
+  end
+
+  # The queue and the families, filtered by @query, with each kind's active
+  # services counted in one query. After a failed save, the records with
+  # errors (@edited) take the place of the fresh ones.
   def load_lists
-    scope = ServiceDefinition.matching(@query)
-    @to_define = scope.to_define.order(:service_name, :service_id).to_a
-    @defined = scope.where.not(id: @to_define.map(&:id)).order(:service_name, :service_id).to_a
-    @active_counts = active_counts((@to_define + @defined).map(&:service_id))
-  end
+    definitions = ServiceDefinition.matching(@query).order(:service_name, :service_id).to_a
+    definitions.map! { |d| @edited&.fetch(d.id, nil) || d }
 
-  def active_counts(service_ids)
-    FliipService.active.where(service_id: service_ids).group(:service_id).count
+    # By the saved values, so a queue entry that failed to save stays in the queue.
+    @to_define, defined = definitions.partition(&:to_define_in_database?)
+    @families = defined.group_by(&:family).sort_by { |family, _| ServiceDefinition::FAMILY_ORDER.index(family) || 99 }
+    @defined_count = defined.size
+    @active_counts = FliipService.active.where(service_id: definitions.map(&:service_id)).group(:service_id).count
   end
 end

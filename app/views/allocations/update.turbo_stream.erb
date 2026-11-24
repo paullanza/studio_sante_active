@@ -1,9 +1,0 @@
-<%# Leaving « à définir » moves the row down: both sections are re-rendered first. %>
-<% if @moved %>
-  <%= turbo_stream.replace "allocation-sections" do %>
-    <%= render "sections", to_define: @to_define, defined: @defined, active_counts: @active_counts, query: @query %>
-  <% end %>
-<% end %>
-<%= turbo_stream.replace dom_id(@definition) do %>
-  <%= render "row", definition: @definition, active_count: @active_count, query: @query, saved: true %>
-<% end %>
