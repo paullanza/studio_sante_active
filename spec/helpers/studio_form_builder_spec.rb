@@ -108,6 +108,14 @@ RSpec.describe StudioFormBuilder, type: :helper do
       expect(html.at_css("input[type=radio][value=employee]")["checked"]).to be_nil
     end
 
+    it "checks a boolean's option when the values are 1 and 0" do
+      user.active = false
+      html = form_for_user { |f| f.segmented(:active, [ [ "Oui", "1" ], [ "Non", "0" ] ], label: "Actif") }
+
+      expect(html.at_css("input[type=radio][value='0']")["checked"]).to eq("checked")
+      expect(html.at_css("input[type=radio][value='1']")["checked"]).to be_nil
+    end
+
     it "shows an error under the options" do
       user.errors.add(:role, "doit être indiqué")
       html = form_for_user { |f| f.segmented(:role, [ [ "Employé·e", "employee" ] ], label: "Rôle") }
@@ -153,6 +161,13 @@ RSpec.describe StudioFormBuilder, type: :helper do
       html = form_for_user(&:base_errors)
 
       expect(html.at_css(".flash--alert[role=alert] li").text).to eq("Indiquez un téléphone ou un courriel.")
+    end
+
+    it "adds the full messages of attributes named in also" do
+      user.errors.add(:first_name, "ne peut pas être vide")
+      html = form_for_user { |f| f.base_errors(also: [ :first_name ]) }
+
+      expect(html.at_css(".flash--alert li").text).to eq("Prénom ne peut pas être vide")
     end
 
     it "renders nothing without base errors" do

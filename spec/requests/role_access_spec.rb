@@ -115,8 +115,6 @@ RSpec.describe "Role-based access", type: :request do
         "S3 GET /sessions/:id/edit (other)"  => [ADMINS, -> { get edit_session_path(session_record) }],
         "S3 PATCH /sessions/:id (other)"     => [ADMINS, -> { patch session_path(session_record), params: session_edit }],
         "S4 GET /sessions/:id/row"           => [ALL, -> { get row_session_path(session_record) }],
-        "S5 GET /sessions/services_table"    => [ALL, -> { get services_table_sessions_path(fliip_user_id: service.fliip_user_id) }],
-        "S5 GET /sessions/preview_type"      => [ALL, -> { get "/sessions/preview_type", params: { fliip_service_id: service.id } }],
         "S6 POST /refresh_clients"           => [ALL, -> { post refresh_clients_path }],
         "C3 GET /consultations/:id/edit (other)" => [ADMINS, -> { get edit_consultation_path(consultation) }],
         "C3 PATCH /consultations/:id (other)"    => [ADMINS, -> { patch consultation_path(consultation), params: consult_edit }],

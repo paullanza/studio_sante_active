@@ -136,6 +136,21 @@ Buttons must not look like Bootstrap: no rounded boxes in a row. Labels are Barl
 
 A service's status badge comes from `service_status_badge(svc)` (`ServiceBadgesHelper`): « Retiré de Fliip » when the service or its client is removed from Fliip, « Toutes les séances utilisées » when a set allocation is used up, else the Fliip status (Actif `--chargee`, Planifié `--absence`, Suspendu `--moins24`, others `--neutral`). `contract_status_badge(contract)` does the same for an abonnement.
 
+### Alerts
+
+```erb
+<div class="alert alert--moins24" role="alert">
+  <%= icon_svg(LayoutHelper::WARNING_ICON, size: 22) %>
+  <strong>Aucune absence restante : cette séance sera déduite du forfait (-24h).</strong>
+</div>
+```
+
+A warning that can't be missed, full width in a status's badge colours (`.alert--moins24`: the -24h colours as background and border), with an icon and bold text. `role="alert"` makes screen readers announce it when it appears; toggle it with `hidden`. For errors use the flash (`.flash--alert`) instead.
+
+### Confirm dialog
+
+A native `<dialog class="dialog">` (`.dialog__title`, `.dialog__body`, `.dialog__actions`) opened with `showModal()`, its buttons as text (`.btn--ghost` to cancel, `.btn--secondary` to go on). `confirm_dialog_controller.js` uses it on Saisir to confirm a séance dated outside its service.
+
 ### Cards and stat tiles
 
 ```erb
@@ -244,6 +259,15 @@ The search bar stacks on a phone and sits beside its button from 768 px. Its fie
 - `.facts`: short label-over-value facts in two columns (`.facts--3` for three); `.facts__wide` spans the row.
 - Phones always go through `format_phone(raw)` and `phone_href(raw)` (`PhoneHelper`): « (514) 555-0142 », « +33 6 12 34 56 78 », other countries as « +44 7700900123 ». Something that isn't a phone number (« us ») shows as stored, with no link.
 - `format_count(1.5)` (`CountsHelper`) shows séance and absence counts: « 1,5 », « 12 », never « 12.0 ».
+
+### Saisir
+
+`bookings/new` (`BookingPage` concern, shared with the create actions that re-render it). The client is a URL param (`new_seance_path(fliip_user_id:, fliip_service_id:)`): the client field (`client_search_controller.js`) fetches `.suggestion` links into the `client_suggestions` frame, and the chosen client shows as a `.chosen-client` card with « Changer ».
+
+- `bookings/_service_option` (`service:`, `checked:`): a service as a `.service-option` radio card (name, séances and absences left, end date, IDs), or `.service-option--blocked` with `booking_block_reason`. Two columns from 768 px (`.service-options`).
+- `.seance-outcome`: « Cette séance sera enregistrée comme » and the outcome badge, with the absence line; then the `.alert--moins24` block. `seance_outcome_preview(session)` (`SessionsHelper`) renders the state on the server and `seance_outcome_controller.js` updates it as the service, presence and duration change.
+- `bookings/_recent_session`: a séance as a compact `.recent-seance` row linking to its Service page. From 1024 px the recent list is a sticky column beside the form (`.saisir--with-recent`).
+- `segmented` can take `"1"`/`"0"` values for a boolean; `base_errors(also: [:occurred_at])` adds the full messages of attributes the form has no field for.
 
 ### Progress bars
 

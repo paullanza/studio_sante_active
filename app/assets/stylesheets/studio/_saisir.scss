@@ -1,0 +1,338 @@
+// « Saisir » (bookings/new): the form, then the recent séances. From 1024 px
+// the recent séances sit in a sticky column beside the form.
+.saisir {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.saisir__main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.saisir__recent {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.saisir__subtitle {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+@media (min-width: 1024px) {
+  .saisir--with-recent {
+    grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr);
+    gap: 40px;
+  }
+
+  .saisir__recent {
+    position: sticky;
+    top: calc(var(--safe-top) + 88px);
+  }
+}
+
+// Client field and its suggestions.
+.client-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.suggestions {
+  gap: 4px;
+}
+
+.suggestion {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: var(--touch-target);
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.suggestion:hover,
+.suggestion:focus-visible {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.suggestion:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.suggestion__name {
+  font-weight: 700;
+}
+
+// The chosen client: avatar, name and IDs, « Changer ».
+.chosen-client {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px 14px;
+  border-color: var(--border-strong);
+}
+
+.chosen-client__who {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.chosen-client__name {
+  color: var(--text);
+  font-size: 18px;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.chosen-client__name:hover {
+  color: var(--brand-light);
+}
+
+// The client's services as radio cards; a blocked one is greyed out with
+// its reason. Two columns from 768 px.
+.service-choice {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.service-choice__legend {
+  margin-bottom: 12px;
+  padding: 0;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.service-options {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+@media (min-width: 768px) {
+  .service-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.service-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.service-option:hover {
+  border-color: var(--border-strong);
+}
+
+.service-option:has(.service-option__input:checked) {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.service-option:has(.service-option__input:focus-visible) {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.service-option__input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+}
+
+.service-option__mark {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+
+.service-option__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.service-option__name {
+  font-weight: 700;
+}
+
+.service-option__counts {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.service-option--blocked {
+  border-style: dashed;
+  background: var(--bg);
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.service-option--blocked:hover {
+  border-color: var(--border);
+}
+
+.service-option__reason {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+// « Cette séance sera enregistrée comme » and the outcome badge.
+.seance-outcome {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.seance-outcome__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.seance-outcome__row .badge {
+  font-size: 13px;
+}
+
+.seance-outcome__absence {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--badge-absence-fg);
+}
+
+.seance-outcome__none {
+  margin: 0;
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.seance-outcome__absence[hidden],
+.seance-outcome__none[hidden] {
+  display: none;
+}
+
+// The recent séances: compact rows linking to the Service page.
+.recent-seance {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.recent-seance:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.recent-seance--absence { border-left: 4px solid var(--badge-absence-fg); }
+.recent-seance--moins24 { border-left: 4px solid var(--badge-moins24-fg); }
+
+.recent-seance__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.recent-seance__client {
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
+.recent-seance__when {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+// A warning that can't be missed (docs/ui.md « Alerts »).
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 2px solid;
+  border-radius: var(--radius-card);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.alert[hidden] {
+  display: none;
+}
+
+.alert svg {
+  flex: none;
+}
+
+.alert--moins24 {
+  border-color: var(--badge-moins24-fg);
+  background: var(--badge-moins24-bg);
+  color: var(--badge-moins24-fg);
+}
+
+// A native <dialog> asking to confirm (confirm_dialog_controller.js).
+.dialog {
+  width: min(440px, calc(100vw - 32px));
+  padding: 20px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.dialog::backdrop {
+  background: rgb(0 0 0 / 60%);
+}
+
+.dialog__title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.dialog__body {
+  margin: 10px 0 16px;
+}
+
+.dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+}

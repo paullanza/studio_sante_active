@@ -1,0 +1,34 @@
+<%# Saisir's consultation tab: the consultation form, ported unchanged
+    (ENG-197 changes its rules). %>
+<%= form_with model: @consultation, url: consultations_path, builder: StudioFormBuilder, class: "form" do |f| %>
+  <%= f.base_errors(also: %i[occurred_at]) %>
+
+  <section class="form-section" aria-labelledby="consultation-prospect">
+    <header class="form-section__head"><h2 id="consultation-prospect">Prospect</h2></header>
+    <div class="form-grid">
+      <%= f.field :first_name, label: "Prénom", autocomplete: "off" %>
+      <%= f.field :last_name, label: "Nom", autocomplete: "off" %>
+      <%= f.field :email, label: "Courriel", as: :email, inputmode: "email", autocomplete: "off" %>
+      <%= f.field :phone_number, label: "Téléphone", as: :tel, inputmode: "tel", autocomplete: "off" %>
+    </div>
+  </section>
+
+  <section class="form-section" aria-labelledby="consultation-details">
+    <header class="form-section__head"><h2 id="consultation-details">Consultation</h2></header>
+    <div class="form-grid">
+      <% if @staff.any? %>
+        <%= f.select_field :user_id, @staff.map { |u| [ u.full_name, u.id ] }, label: "Entraîneur·e",
+              include_blank: (@owner_required ? "Choisir un·e employé·e" : "Moi (#{current_user.full_name})"),
+              required: @owner_required, field_class: "form-grid__wide" %>
+      <% end %>
+      <%= f.field :date, label: "Date", as: :date,
+            value: params.dig(:consultation, :date).presence || @consultation.occurred_at&.to_date&.iso8601 || Time.zone.today.iso8601 %>
+      <%= f.field :time, label: "Heure", as: :time, step: 1800,
+            value: params.dig(:consultation, :time).presence || @consultation.occurred_at&.strftime("%H:%M") || "09:00" %>
+      <div class="form-grid__wide"><%= f.check :present, label: "Présent·e" %></div>
+      <%= f.field :note, label: "Note", as: :textarea, rows: 3, field_class: "form-grid__wide" %>
+    </div>
+  </section>
+
+  <div class="form-actions"><%= f.submit "Enregistrer la consultation" %></div>
+<% end %>

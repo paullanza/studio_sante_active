@@ -136,24 +136,15 @@ Rails.application.routes.draw do
   # =====================================================================
   # SESSIONS — BOOKING / CREATION FLOW
   # ---------------------------------------------------------------------
-  # New/Create/Destroy/Edit/Update for session records. Member `row`
-  # renders a partial for dynamic table updates. Collection helpers power
-  # the booking UI: `services_table` renders a table partial; `service_select`
-  # is the step to choose a client service before creating a session.
-  # `preview_type` supports client-side previews of session types.
+  # Create/Destroy/Edit/Update for session records (the form lives on the
+  # booking page, seances/new). Member `row` renders a partial for dynamic
+  # table updates.
   # =====================================================================
   resources :sessions, only: [:create, :destroy, :edit, :update] do
     member do
       get :row
     end
-
-    collection do
-      get :services_table
-      get :service_select
-    end
   end
-
-  get "sessions/preview_type", to: "sessions#preview_type"
 
   # =====================================================================
   # CONSULTATIONS — CREATION & ASSOCIATION FLOW

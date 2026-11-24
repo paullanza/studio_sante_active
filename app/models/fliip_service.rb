@@ -212,19 +212,6 @@ class FliipService < ApplicationRecord
   end
 
   # -----------------------------------------
-  # Booking Logic
-  # -----------------------------------------
-  def next_session_type
-    return "free" if remaining_free_sessions.to_f > 0.0
-    return "paid" if remaining_paid_sessions.to_f > 0.0
-    nil
-  end
-
-  def can_book_session?
-    next_session_type.present?
-  end
-
-  # -----------------------------------------
   # Progress Percentages
   # -----------------------------------------
   def paid_progress_percent

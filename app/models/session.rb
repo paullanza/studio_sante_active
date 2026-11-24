@@ -40,8 +40,9 @@ class Session < ApplicationRecord
   # Validations
   # -----------------------------------------
 
-  # Duration must be a positive number if present (e.g., 0.5 for 30 min, 1.0 for 1 hour).
-  validates :duration, numericality: { greater_than: 0 }, allow_nil: true
+  # A séance lasts 1 h or 30 min (GLOSSARY.md).
+  DURATIONS = [ 0.5, 1.0 ].freeze
+  validates :duration, inclusion: { in: DURATIONS, message: "doit être 1 h ou 30 min" }
 
   # These fields must always be provided when creating a session.
   validates :fliip_user_id, :fliip_service_id, :created_by_id, :occurred_at, presence: true

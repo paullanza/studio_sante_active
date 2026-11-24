@@ -176,6 +176,15 @@ RSpec.describe Session, type: :model do
       expect(session).not_to be_valid
       expect(session.errors[:duration]).to be_present
     end
+
+    it "accepts only 1 h or 30 min" do
+      expect(build_session(duration: 1.0)).to be_valid
+      expect(build_session(duration: 0.5)).to be_valid
+
+      session = build_session(duration: 2.0)
+      expect(session).not_to be_valid
+      expect(session.errors[:duration]).to include("doit être 1 h ou 30 min")
+    end
   end
 
   describe "status and ordering scopes" do

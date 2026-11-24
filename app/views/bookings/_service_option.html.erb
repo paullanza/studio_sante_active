@@ -1,0 +1,41 @@
+<%# A client's service as a choice on Saisir: a radio card, or a greyed-out
+    card with the reason it can't be booked.
+    Locals: service, checked. The data attributes feed seance_outcome_controller.js
+    (counts) and confirm_dialog_controller.js (dates). %>
+<% reason = service.booking_block_reason %>
+<% counts = capture do %>
+  <% if service.allocation_to_define? %>
+    Allocation à définir
+  <% else %>
+    <% paid_left = service.remaining_paid_sessions.to_f %>
+    <% free_left = service.remaining_free_sessions.to_f %>
+    <%= format_count(paid_left) %> <%= paid_left < 2 ? "séance" : "séances" %> ·
+    <%= format_count(free_left) %> <%= free_left < 2 ? "absence restante" : "absences restantes" %>
+  <% end %>
+  <% if service.expire_date %> · jusqu'au <%= l(service.expire_date) %><% end %>
+<% end %>
+<% ids = "Serv# #{service.id} · Achat# #{service.remote_purchase_id} · DefID #{service.service_id || '—'}" %>
+
+<% if reason %>
+  <div class="service-option service-option--blocked">
+    <span class="service-option__mark" aria-hidden="true"></span>
+    <span class="service-option__body">
+      <span class="service-option__name"><%= service.service_name.presence || "Service" %></span>
+      <span class="service-option__reason"><%= reason %></span>
+      <% if service.allocation_to_define? %><span class="text-small">Allocation à définir</span><% end %>
+    </span>
+  </div>
+<% else %>
+  <label class="service-option">
+    <%= radio_button_tag "session[fliip_service_id]", service.id, checked,
+          id: "session_fliip_service_id_#{service.id}", class: "service-option__input",
+          data: { paid_remaining: (service.service_definition ? service.remaining_paid_sessions.to_f : ""),
+                  free_remaining: (service.service_definition ? service.remaining_free_sessions.to_f : 0),
+                  start_date: service.start_date&.iso8601, end_date: service.expire_date&.iso8601 } %>
+    <span class="service-option__body">
+      <span class="service-option__name"><%= service.service_name.presence || "Service" %></span>
+      <span class="service-option__counts"><%= counts %></span>
+      <span class="text-small text-muted numeric"><%= ids %></span>
+    </span>
+  </label>
+<% end %>

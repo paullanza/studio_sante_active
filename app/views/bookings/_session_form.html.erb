@@ -1,0 +1,118 @@
+<%# Saisir's séance tab: the client, then (once chosen) the séance form. %>
+<section class="form-section" aria-labelledby="saisir-client">
+  <header class="form-section__head"><h2 id="saisir-client">Client·e</h2></header>
+
+  <% if @client %>
+    <div class="card chosen-client">
+      <%= client_avatar(@client) %>
+      <div class="chosen-client__who">
+        <%= link_to @client.full_name.presence || "—", fliip_user_path(@client), class: "client-name chosen-client__name" %>
+        <span class="text-muted text-small numeric">ID <%= @client.id %> · FliipUserID <%= @client.remote_id %></span>
+      </div>
+      <% if @client.missing_from_fliip? %><span class="badge badge--retire">Retiré de Fliip</span><% end %>
+      <%= link_to "Changer", new_seance_path, class: "btn btn--secondary btn--small chosen-client__change" %>
+    </div>
+  <% else %>
+    <div class="client-picker" data-controller="client-search" data-action="focusout->client-search#leave keydown.esc->client-search#clear">
+      <div class="field field--compact">
+        <label class="field__box" for="client_search_input">
+          <span class="field__label visually-hidden">Client·e</span>
+          <input id="client_search_input" type="search" class="field__input" autocomplete="off"
+                 placeholder="Nom, courriel ou téléphone"
+                 aria-describedby="client_search_hint" aria-controls="client_suggestions"
+                 data-client-search-target="input"
+                 data-action="input->client-search#search keydown.enter->client-search#pickFirst">
+        </label>
+        <p class="field__hint" id="client_search_hint">Les suggestions apparaissent dès 2 caractères.</p>
+      </div>
+      <%= turbo_frame_tag "client_suggestions", target: "_top", class: "client-picker__suggestions" %>
+    </div>
+  <% end %>
+</section>
+
+<% if @client %>
+  <% preview = seance_outcome_preview(@session) %>
+  <% service_error = @session.errors[:fliip_service_id].first || @session.errors[:fliip_service].first %>
+  <%= form_with model: @session, url: sessions_path, builder: StudioFormBuilder, class: "form saisir-form",
+        data: { controller: "seance-outcome confirm-dialog",
+                action: "change->seance-outcome#update submit->confirm-dialog#check" } do |f| %>
+    <%= f.base_errors(also: %i[occurred_at fliip_user_id created_by]) %>
+    <%= f.hidden_field :fliip_user_id %>
+
+    <fieldset class="form-section service-choice" aria-describedby="<%= 'session_fliip_service_id_error' if service_error %>">
+      <legend class="service-choice__legend">Service</legend>
+      <% if @services.any? %>
+        <div class="service-options">
+          <% @services.each do |service| %>
+            <%= render "bookings/service_option", service: service, checked: service.id == @session.fliip_service_id %>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="empty-state">Aucun service pour ce·tte client·e.</p>
+      <% end %>
+      <% if service_error %>
+        <p class="field__error" id="session_fliip_service_id_error">Service : <%= service_error %></p>
+      <% end %>
+    </fieldset>
+
+    <section class="form-section" aria-labelledby="saisir-seance">
+      <header class="form-section__head"><h2 id="saisir-seance">Séance</h2></header>
+      <div class="form-grid">
+        <% if @staff.any? %>
+          <%= f.select_field :user_id, @staff.map { |u| [ u.full_name, u.id ] }, label: "Entraîneur·e",
+                include_blank: (@owner_required ? "Choisir un·e employé·e" : "Moi (#{current_user.full_name})"),
+                required: @owner_required, field_class: "form-grid__wide" %>
+        <% end %>
+        <%= f.field :date, label: "Date", as: :date, required: true,
+              value: params.dig(:session, :date).presence || @session.occurred_at&.to_date&.iso8601 || Time.zone.today.iso8601,
+              data: { confirm_dialog_target: "date" } %>
+        <%= f.field :time, label: "Heure", as: :time, required: true, step: 1800,
+              value: params.dig(:session, :time).presence || @session.occurred_at&.strftime("%H:%M") || default_time_slot_str %>
+        <%= f.segmented :present, [ [ "Présent·e", "1" ], [ "Absent·e", "0" ] ], label: "Présence" %>
+        <%= f.segmented :duration, [ [ "1 h", "1.0" ], [ "30 min", "0.5" ] ], label: "Durée" %>
+        <%= f.field :note, label: "Note", as: :textarea, rows: 3, field_class: "form-grid__wide" %>
+      </div>
+    </section>
+
+    <div class="seance-outcome">
+      <div class="seance-outcome__row" aria-live="polite">
+        <span class="text-muted">Cette séance sera enregistrée comme</span>
+        <span class="badge <%= SessionsHelper::OUTCOME_BADGE_CLASSES.fetch(preview[:outcome], "badge--neutral") %>"
+              data-seance-outcome-target="badge">
+          <%= Session::OUTCOME_LABELS.fetch(preview[:outcome], "Choisissez un service") %>
+        </span>
+      </div>
+      <p class="seance-outcome__absence" data-seance-outcome-target="absenceLine" <%= "hidden" unless preview[:outcome] == :absence %>>
+        <%= absence_use_line(preview[:duration], preview[:absences_after]) if preview[:outcome] == :absence %>
+      </p>
+    </div>
+
+    <div class="alert alert--moins24" role="alert" data-seance-outcome-target="moins24Alert" <%= "hidden" unless preview[:outcome] == :moins24 %>>
+      <%= icon_svg(LayoutHelper::WARNING_ICON, size: 22) %>
+      <strong>Aucune absence restante : cette séance sera déduite du forfait (-24h).</strong>
+    </div>
+
+    <p class="seance-outcome__none" data-seance-outcome-target="noneLeft" <%= "hidden" unless preview[:none_left] %>>
+      Plus de séances disponibles sur ce service.
+    </p>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn--primary" data-seance-outcome-target="submit" <%= "disabled" if preview[:none_left] %>>
+        <span data-seance-outcome-target="submitLabel"><%= preview[:submit_label] %></span><%= button_arrow %>
+      </button>
+    </div>
+
+    <dialog class="dialog" data-confirm-dialog-target="dialog" aria-labelledby="confirm-dialog-title"
+            data-before-start-title="<%= sessions_modal_before_start_title %>"
+            data-before-start-body="<%= sessions_modal_before_start_body %>"
+            data-after-end-title="<%= sessions_modal_after_end_title %>"
+            data-after-end-body="<%= sessions_modal_after_end_body %>">
+      <h2 id="confirm-dialog-title" class="dialog__title" data-confirm-dialog-target="title"></h2>
+      <p class="dialog__body" data-confirm-dialog-target="body"></p>
+      <div class="dialog__actions">
+        <button type="button" class="btn btn--ghost" data-action="confirm-dialog#cancel"><%= sessions_modal_secondary_label %></button>
+        <button type="button" class="btn btn--secondary" data-action="confirm-dialog#confirm"><%= sessions_modal_primary_label %></button>
+      </div>
+    </dialog>
+  <% end %>
+<% end %>

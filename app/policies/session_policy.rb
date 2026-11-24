@@ -3,7 +3,7 @@
 # Sessions are the record of trainer work. Everyone logs their own; admins
 # manage all of them, confirmed or not.
 class SessionPolicy < ApplicationPolicy
-  BASE_ATTRIBUTES = [:fliip_user_id, :fliip_service_id, :present, :note].freeze
+  BASE_ATTRIBUTES = [:fliip_user_id, :fliip_service_id, :present, :duration, :note].freeze
 
   def create?
     user.present?
@@ -19,18 +19,6 @@ class SessionPolicy < ApplicationPolicy
   end
 
   def row?
-    user.present?
-  end
-
-  def services_table?
-    user.present?
-  end
-
-  def service_select?
-    user.present?
-  end
-
-  def preview_type?
     user.present?
   end
 

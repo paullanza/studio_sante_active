@@ -24,6 +24,42 @@ module SessionsHelper
     tag.span(label, class: "text-muted")
   end
 
+  SUBMIT_LABELS = { moins24: "Enregistrer : -24h, séance déduite" }.freeze
+
+  # What the booking form shows above its button for the chosen service,
+  # presence and duration: the outcome, the absences left after this one, and
+  # whether the service has run out of what this séance needs. Mirrors
+  # Session#set_session_type_and_duration and respect_quota_limits;
+  # seance_outcome_controller.js does the same in the browser. Nil outcome
+  # without a service.
+  def seance_outcome_preview(session)
+    service = session.fliip_service
+    return { outcome: nil, duration: 1.0, absences_after: nil, none_left: false, submit_label: "Enregistrer la séance" } unless service
+
+    duration = Session::DURATIONS.include?(session.duration.to_f) ? session.duration.to_f : 1.0
+    free_left = service.service_definition ? service.remaining_free_sessions.to_f : 0.0
+    outcome =
+      if session.present then :chargee
+      elsif free_left >= duration then :absence
+      else :moins24
+      end
+    needed_left = outcome == :absence ? free_left : service.remaining_paid_sessions.to_f
+
+    {
+      outcome: outcome,
+      duration: duration,
+      absences_after: (free_left - duration if outcome == :absence),
+      none_left: service.service_definition.present? && needed_left < duration,
+      submit_label: SUBMIT_LABELS.fetch(outcome, "Enregistrer la séance")
+    }
+  end
+
+  # « Utilise 1 absence · 1 restante après celle-ci ».
+  def absence_use_line(duration, absences_after)
+    left = absences_after.to_f
+    "Utilise #{format_count(duration)} absence · #{format_count(left)} #{left < 2 ? 'restante' : 'restantes'} après celle-ci"
+  end
+
   def default_time_slot_str(now: Time.zone.now)
     now   = now.change(sec: 0)
     mins  = now.min >= 30 ? 30 : 0
@@ -44,22 +80,6 @@ module SessionsHelper
 
   def sessions_modal_secondary_label
     "Annuler"
-  end
-
-  def sessions_modal_absence_free_title
-    "Confirmer l’absence"
-  end
-
-  def sessions_modal_absence_free_body
-    "Procéder à l’utilisation d’une absence sans frais?"
-  end
-
-  def sessions_modal_absence_paid_title
-    "Confirmer l’absence"
-  end
-
-  def sessions_modal_absence_paid_body
-    "Solde d’absences sans frais épuisé. Procéder à la déduction d’une séance de son forfait?"
   end
 
   def sessions_modal_before_start_title

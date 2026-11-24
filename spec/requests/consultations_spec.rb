@@ -32,7 +32,8 @@ RSpec.describe "Consultations", type: :request do
       expect { post consultations_path, params: consultation_params(phone_number: "") }
         .not_to change(Consultation, :count)
       expect(response).to have_http_status(:unprocessable_content)
-      expect(flash[:alert]).to be_present
+      # The error shows on the field, only visible in the markup.
+      expect(Nokogiri::HTML(response.body).at_css("#consultation_phone_number_error")).to be_present
     end
   end
 
@@ -86,7 +87,8 @@ RSpec.describe "Consultations", type: :request do
       sign_in super_admin
 
       expect { post consultations_path, params: consultation_params }.not_to change(Consultation, :count)
-      expect(flash[:alert]).to include("Veuillez choisir un·e employé·e.")
+      # The error shows above the form, only visible in the markup.
+      expect(response.body).to include("Veuillez choisir un·e employé·e.")
 
       post consultations_path, params: consultation_params(user_id: employee.id)
       expect(Consultation.last).to have_attributes(user: employee, created_by: super_admin)

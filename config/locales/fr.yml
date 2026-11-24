@@ -21,6 +21,24 @@ fr:
         address: "Adresse"
         birthday: "Date de naissance"
         signup_code_token: "Code d'inscription"
+      session:
+        occurred_at: "Date et heure"
+        fliip_user: "Client·e"
+        fliip_user_id: "Client·e"
+        fliip_service: "Service"
+        fliip_service_id: "Service"
+        user: "Entraîneur·e"
+        duration: "Durée"
+        note: "Note"
+      consultation:
+        first_name: "Prénom"
+        last_name: "Nom"
+        email: "Courriel"
+        phone_number: "Téléphone"
+        occurred_at: "Date et heure"
+        user: "Entraîneur·e"
+        user_id: "Entraîneur·e"
+        note: "Note"
 
   errors:
     format: "%{attribute} %{message}"

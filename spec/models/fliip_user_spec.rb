@@ -215,7 +215,8 @@ RSpec.describe FliipUser, type: :model do
 
     it "counts active services still in Fliip and sums their séances left" do
       active = create(:fliip_service, fliip_user: client, service_definition: definition)
-      create(:session, fliip_service: active, duration: 1.5)
+      create(:session, fliip_service: active, duration: 1.0, occurred_at: 2.hours.ago.change(sec: 0))
+      create(:session, fliip_service: active, duration: 0.5, occurred_at: 1.hour.ago.change(sec: 0))
       create(:fliip_service, fliip_user: client, service_definition: definition, purchase_status: "I")
       create(:fliip_service, :missing_from_fliip, fliip_user: client, service_definition: definition)
       create(:fliip_service, :without_definition, fliip_user: client)

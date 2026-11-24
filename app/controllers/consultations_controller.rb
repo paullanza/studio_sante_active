@@ -1,4 +1,6 @@
 class ConsultationsController < ApplicationController
+  include BookingPage
+
   before_action :authenticate_user!
   before_action :set_consultation, only: [:edit, :update, :destroy, :row, :association, :associate, :service_select, :disassociate]
   before_action :load_staff,       only: [:create, :edit, :update]
@@ -20,27 +22,8 @@ class ConsultationsController < ApplicationController
     else
       @consultation.errors.add(:base, OWNER_REQUIRED_MESSAGE) if @consultation.user.nil?
 
-      # Rehydrate everything bookings/new needs, on the consultation tab
-      @active_tab = "consultation"
-      @session    = Session.new
-      @services   = []
-      load_fliip_users
-      @sessions = Session
-                    .where(user_id: current_user.id)
-                    .unconfirmed
-                    .with_associations
-                    .order_by_occurred_at_desc
-                    .limit(25)
-      @consultations = Consultation
-        .unconfirmed
-        .by_employee(current_user.id)
-        .order_by_occurred_at_desc
-        .includes(:user)
-        .limit(25)
-
-      flash.now[:alert] = @consultation.errors.full_messages.to_sentence.presence ||
-                          "Un problème est survenu lors de la création de la consultation."
-      render "bookings/new", status: :unprocessable_content
+      prepare_booking_page(client_id: nil, tab: "consultation")
+      render "bookings/new", layout: "studio", status: :unprocessable_content
     end
   end
 
@@ -244,16 +227,6 @@ class ConsultationsController < ApplicationController
     rescue ArgumentError
       record.occurred_at ||= Time.zone.now
     end
-  end
-
-  # Matches SessionsController#load_fliip_users
-  def load_fliip_users
-    service_user_ids = FliipService.distinct.pluck(:fliip_user_id)
-    @fliip_users = FliipUser
-      .where(id: service_user_ids)
-      .sort_by do |u|
-        I18n.transliterate("#{u.user_lastname.to_s.strip} #{u.user_firstname.to_s.strip}").downcase
-      end
   end
 
   def consultation_cutoff_date(consultation)

@@ -107,12 +107,15 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
   end
 
   # Radio buttons styled as a toggle. `choices` is a list of [label, value].
+  # A boolean attribute can use "1"/"0" values: the option matching the
+  # current value is checked either way.
   def segmented(attribute, choices, label:)
     error = error_for(attribute)
+    current = object.public_send(attribute) if object.respond_to?(attribute)
     options = choices.map do |text, value|
       @template.tag.label(class: "segmented__option") do
         @template.safe_join([
-          radio_button(attribute, value, class: "segmented__input"),
+          radio_button(attribute, value, class: "segmented__input", checked: segmented_checked?(current, value)),
           @template.tag.span(text, class: "segmented__text")
         ])
       end
@@ -138,9 +141,10 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
     button(options.merge(type: "submit", name: nil, class: classes)) { content }
   end
 
-  # Errors on :base, shown above the fields.
-  def base_errors
-    messages = object.respond_to?(:errors) ? object.errors[:base] : []
+  # Errors on :base, shown above the fields. `also` adds the full messages of
+  # attributes the form has no field for (occurred_at behind date and time).
+  def base_errors(also: [])
+    messages = object.respond_to?(:errors) ? object.errors[:base] + also.flat_map { |attr| object.errors.full_messages_for(attr) } : []
     return if messages.empty?
 
     @template.tag.div(class: "flash flash--alert", role: "alert") do
@@ -151,6 +155,13 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
   end
 
   private
+
+  def segmented_checked?(current, value)
+    return false if current.nil?
+    return ActiveModel::Type::Boolean.new.cast(value.to_s) == current if current == true || current == false
+
+    current.to_s == value.to_s
+  end
 
   def error_for(attribute)
     return unless object.respond_to?(:errors)
