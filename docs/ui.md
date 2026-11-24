@@ -227,6 +227,18 @@ The search bar stacks on a phone and sits beside its button from 768 px. Its fie
 - `fliip_services/_bars`: the two thin bars, Temps and Séances, each with its label and percentage above.
 - `fliip_contracts/_card` (abonnement) and `consultations/_client_card` (a consultation on the Client page).
 - `.card-grid`: a list of cards, one column, two from 1280 px. `.empty-state`: a tab or list with nothing in it.
+- `.card-grid--wide` on a full-width page (`content_for :page_wide, true`, as on Mes services): two columns from 768 px, three from 1280 px.
+- `.filter-toggles`: checkbox toggles that filter a list, in a GET form that submits on change (`data-controller="autosubmit"`, `data-action="change->autosubmit#submit"`), each a hand-written `label.checkbox` › `.checkbox__input` + `.checkbox__label`. Put it in the `.list-toolbar` beside the count.
+
+```erb
+<%= form_with url: my_services_path, method: :get, class: "filter-toggles",
+      data: { controller: "autosubmit", action: "change->autosubmit#submit" } do %>
+  <label class="checkbox">
+    <%= check_box_tag :inactifs, "1", @show_inactive, class: "checkbox__input" %>
+    <span class="checkbox__label">Inactifs</span>
+  </label>
+<% end %>
+```
 - `.facts`: short label-over-value facts in two columns; `.facts__wide` spans both.
 - Phones always go through `format_phone(raw)` and `phone_href(raw)` (`PhoneHelper`): « (514) 555-0142 », « +33 6 12 34 56 78 », other countries as « +44 7700900123 ». Something that isn't a phone number (« us ») shows as stored, with no link.
 - `format_count(1.5)` (`CountsHelper`) shows séance and absence counts: « 1,5 », « 12 », never « 12.0 ».

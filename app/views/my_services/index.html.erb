@@ -1,0 +1,34 @@
+<% content_for :nav_section, "mes_services" %>
+<% content_for :title, "Mes services" %>
+<% content_for :page_wide, true %>
+
+<div class="stack">
+  <div class="page-header">
+    <h1>Mes services</h1>
+  </div>
+
+  <div class="list-toolbar">
+    <p class="text-muted text-small numeric"><%= pluralize(@services.size, "service") %></p>
+
+    <%= form_with url: my_services_path, method: :get, class: "filter-toggles",
+          data: { controller: "autosubmit", action: "change->autosubmit#submit", turbo_action: "replace" } do %>
+      <label class="checkbox">
+        <%= check_box_tag :inactifs, "1", @show_inactive, class: "checkbox__input" %>
+        <span class="checkbox__label">Inactifs</span>
+      </label>
+      <label class="checkbox">
+        <%= check_box_tag :annules, "1", @show_cancelled, class: "checkbox__input" %>
+        <span class="checkbox__label">Annulés</span>
+      </label>
+      <noscript><button type="submit" class="btn btn--secondary btn--small">Filtrer</button></noscript>
+    <% end %>
+  </div>
+
+  <% if @services.any? %>
+    <ul class="list card-grid card-grid--wide">
+      <%= render partial: "fliip_services/card", collection: @services, as: :service, locals: { show_client: true } %>
+    </ul>
+  <% else %>
+    <p class="empty-state">Aucun service pour l'instant. Vos services apparaissent ici dès votre première séance.</p>
+  <% end %>
+</div>

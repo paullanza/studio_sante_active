@@ -30,6 +30,12 @@ class FliipService < ApplicationRecord
     statuses.present? ? where(purchase_status: statuses) : all
   }
 
+  # Mes services: every service with a séance or an adjustment attributed to the staff member.
+  scope :worked_on_by, ->(user) {
+    where(id: Session.where(user_id: user.id).select(:fliip_service_id))
+      .or(where(id: ServiceUsageAdjustment.where(user_id: user.id).select(:fliip_service_id)))
+  }
+
   scope :current, -> {
     where(purchase_status: "A")
       .where("start_date IS NULL OR start_date <= ?", Date.current)

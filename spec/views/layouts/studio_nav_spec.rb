@@ -21,6 +21,12 @@ RSpec.describe "layouts/_studio_nav", type: :view do
       .to eq([ "Dashboard", "Clients", "Saisir", "Mes services", "Plus" ])
   end
 
+  it "links « Mes services » to the Mes services page" do
+    tab = render_nav_for(create(:user)).css(".top-nav__inner > .nav-tab").find { |t| t.text.strip == "Mes services" }
+
+    expect(tab["href"]).to eq(my_services_path)
+  end
+
   it "gives an employee only their profile and sign out" do
     expect(plus_items(render_nav_for(create(:user)))).to eq([ "Mon profil", "Se déconnecter" ])
   end

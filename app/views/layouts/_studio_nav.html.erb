@@ -4,7 +4,7 @@
     <%= nav_tab_to "Dashboard", dashboard_path_for(current_user), :dashboard %>
     <%= nav_tab_to "Clients", fliip_users_path, :clients %>
     <%= nav_tab_to "Saisir", new_seance_path, :saisir %>
-    <%= nav_tab_to "Mes services", user_path(current_user), :mes_services %>
+    <%= nav_tab_to "Mes services", my_services_path, :mes_services %>
 
     <details class="nav-more">
       <summary class="<%= class_names("nav-tab", "is-active" => nav_section_active?(:plus)) %>">

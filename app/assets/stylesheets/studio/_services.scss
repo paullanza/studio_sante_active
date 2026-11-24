@@ -85,3 +85,23 @@
 .service-bar .progress {
   height: 8px;
 }
+
+// A full-width page of cards (Mes services): two columns from 768 px, three from 1280 px.
+@media (min-width: 768px) {
+  .card-grid--wide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .card-grid--wide {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+// Checkbox toggles that filter a list, submitted on change (autosubmit_controller.js).
+.filter-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 20px;
+}
