@@ -226,8 +226,7 @@ The search bar stacks on a phone and sits beside its button from 768 px. Its fie
 - `fliip_services/_card`: a service as a card linking to its Service page (name, `service_status_badge`, dates with the overrun, bars, counts, IDs). `show_client: true` makes the client's name the card's title, with the service name under it (lists scanned by client: Mes services, Échéances). A service removed from Fliip shows « historique seulement » and no bars or counts; an allocation not set yet shows « Allocation à définir » and no Séances bar.
 - `fliip_services/_bars`: the two thin bars, Temps and Séances, each with its label and percentage above.
 - `fliip_contracts/_card` (abonnement) and `consultations/_client_card` (a consultation on the Client page).
-- `.card-grid`: a list of cards, one column, two from 1280 px. `.empty-state`: a tab or list with nothing in it.
-- `.card-grid--wide` on a full-width page (`content_for :page_wide, true`, as on Mes services): two columns from 768 px, three from 1280 px.
+- `.card-grid`: a list of cards in one column. Service, abonnement and consultation cards are cards on a phone and rows from 1024 px (the service row: title, service and IDs; status; dates; bars and counts), so a list reads like the Clients list on desktop. `.empty-state`: a tab or list with nothing in it.
 - `.filter-toggles`: checkbox toggles that filter a list, in a GET form that submits on change (`data-controller="autosubmit"`, `data-action="change->autosubmit#submit"`), each a hand-written `label.checkbox` › `.checkbox__input` + `.checkbox__label`. Put it in the `.list-toolbar` beside the count.
 
 ```erb

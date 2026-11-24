@@ -1,16 +1,12 @@
 // Service, abonnement and consultation cards (Client page, Mes services).
 // A service card is a link to the Service page; its two thin bars, Temps and
 // Séances, carry their label and percentage above them.
+// A list of cards: one column on every width. Service, abonnement and
+// consultation cards lay themselves out as rows from 1024 px.
 .card-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 10px;
-}
-
-@media (min-width: 1280px) {
-  .card-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 .service-card {
@@ -91,16 +87,89 @@
   height: 8px;
 }
 
-// A full-width page of cards (Mes services): two columns from 768 px, three from 1280 px.
-@media (min-width: 768px) {
-  .card-grid--wide {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+// From 1024 px a card becomes a row: who (title, service, IDs), status,
+// dates, then the bars and counts. The head's name and badge become grid
+// cells of the row (display: contents).
+@media (min-width: 1024px) {
+  .service-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) 170px 200px minmax(0, 1fr);
+    grid-template-areas:
+      "name     status dates usage"
+      "service  status dates usage"
+      "trainers status dates usage"
+      "ids      status dates usage";
+    column-gap: 24px;
+    row-gap: 2px;
+    align-items: start;
+    padding: 12px 16px;
+  }
+
+  // The two bars side by side keep the row short.
+  .service-card__usage .service-bars {
+    flex-direction: row;
+    gap: 16px;
+  }
+
+  .service-card__usage .service-bar {
+    flex: 1;
+  }
+
+  // The overrun on its own line under the dates.
+  .service-card__overrun {
+    display: block;
+    color: var(--badge-moins24-fg);
+    font-size: 13px;
+  }
+
+  .service-card__sep {
+    display: none;
+  }
+
+  .service-card .service-card__head {
+    display: contents;
+  }
+
+  .service-card .service-card__name { grid-area: name; }
+  .service-card .service-card__head .badge { grid-area: status; justify-self: start; }
+  .service-card .service-card__service { grid-area: service; margin-top: 0; }
+  .service-card .service-card__trainers { grid-area: trainers; }
+  .service-card .service-card__ids { grid-area: ids; }
+  .service-card .service-card__dates { grid-area: dates; }
+  .service-card .service-card__usage { grid-area: usage; display: flex; flex-direction: column; gap: 6px; }
+
+  // Abonnement and consultation rows: the same columns on every row.
+  .contract-card,
+  .consultation-card {
+    display: grid;
+    align-items: center;
+    column-gap: 24px;
+  }
+
+  .contract-card {
+    grid-template-columns: minmax(0, 1.3fr) 130px minmax(0, 1fr) 160px;
+  }
+
+  .consultation-card {
+    grid-template-columns: 240px 130px minmax(0, 1fr);
+  }
+
+  .contract-card .service-card__head,
+  .consultation-card .service-card__head {
+    display: contents;
+  }
+
+  .contract-card .badge,
+  .consultation-card .badge {
+    justify-self: start;
   }
 }
 
-@media (min-width: 1280px) {
-  .card-grid--wide {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+@media (max-width: 1023.98px) {
+  .service-card__usage {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 }
 

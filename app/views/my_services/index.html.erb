@@ -25,7 +25,7 @@
   </div>
 
   <% if @services.any? %>
-    <ul class="list card-grid card-grid--wide">
+    <ul class="list card-grid">
       <%= render partial: "fliip_services/card", collection: @services, as: :service, locals: { show_client: true } %>
     </ul>
   <% else %>

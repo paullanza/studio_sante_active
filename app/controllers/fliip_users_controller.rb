@@ -26,13 +26,17 @@ class FliipUsersController < ApplicationController
 
   def show
     # Usage totals are summed in SQL, so séances and adjustments aren't preloaded.
-    @fliip_user = FliipUser.includes(:fliip_contracts, fliip_services: :service_definition).find(params[:id])
+    @fliip_user = FliipUser.includes(:fliip_contracts, :fliip_services).find(params[:id])
     authorize @fliip_user
 
     @tab = CLIENT_TABS.include?(params[:tab]) ? params[:tab] : "services"
     @services = @fliip_user.fliip_services.sort_by do |s|
       [ SERVICE_STATUS_ORDER.index(s.purchase_status) || SERVICE_STATUS_ORDER.size, -(s.expire_date || Date.new(0)).jd ]
     end
+    # Allocations only where the page reads them: every card on the services
+    # tab, else the active services the top card counts.
+    allocation_readers = @tab == "services" ? @services : @services.select { |s| s.purchase_status == "A" && !s.removed_from_fliip? }
+    ActiveRecord::Associations::Preloader.new(records: allocation_readers, associations: :service_definition).call
     @contracts = @fliip_user.fliip_contracts.sort_by { |c| [ c.end_date ? 1 : 0, -(c.end_date&.jd || 0) ] }
     @consultations = @fliip_user.consultations.with_associations.order_by_occurred_at_desc
   end
