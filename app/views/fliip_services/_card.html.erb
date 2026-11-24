@@ -9,7 +9,7 @@
     <% service_name = service.service_name.presence || "Service" %>
     <% client_title = local_assigns[:show_client] && service.fliip_user %>
     <div class="service-card__head">
-      <span class="service-card__name"><%= client_title ? service.fliip_user.full_name : service_name %></span>
+      <span class="<%= class_names("service-card__name", "service-card__name--client" => client_title) %>"><%= client_title ? service.fliip_user.full_name : service_name %></span>
       <%= service_status_badge(service) %>
     </div>
     <% if client_title %>
