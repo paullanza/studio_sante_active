@@ -223,7 +223,7 @@ The search bar stacks on a phone and sits beside its button from 768 px. Its fie
 
 - `.page-bar`: the back link on the left, a page action on the right (`.btn--small` is a 13 px text button).
 - `.client-page`: the top card, then the tabs; from 1024 px the top card is a sticky 360 px column beside them.
-- `fliip_services/_card`: a service as a card linking to its Service page (name, `service_status_badge`, dates with the overrun, bars, counts, IDs). `show_client: true` adds the client's name above it. A service removed from Fliip shows « historique seulement » and no bars or counts; an allocation not set yet shows « Allocation à définir » and no Séances bar.
+- `fliip_services/_card`: a service as a card linking to its Service page (name, `service_status_badge`, dates with the overrun, bars, counts, IDs). `show_client: true` adds the client's name above it; `trainers: [names]` adds an « Entraîneur·e·s : … » line (« — » when the list is empty; leave it out to show no line). A service removed from Fliip shows « historique seulement » and no bars or counts; an allocation not set yet shows « Allocation à définir » and no Séances bar.
 - `fliip_services/_bars`: the two thin bars, Temps and Séances, each with its label and percentage above.
 - `fliip_contracts/_card` (abonnement) and `consultations/_client_card` (a consultation on the Client page).
 - `.card-grid`: a list of cards, one column, two from 1280 px. `.empty-state`: a tab or list with nothing in it.

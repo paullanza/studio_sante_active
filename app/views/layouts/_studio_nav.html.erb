@@ -23,6 +23,9 @@
         <% if policy(Consultation).associations? %>
           <%= link_to "Lier les consultations", associations_consultations_path, class: "nav-more__item" %>
         <% end %>
+        <% if policy(:oversight).echeances? %>
+          <%= link_to "Échéances", echeances_path, class: "nav-more__item" %>
+        <% end %>
         <% if policy(:admin).services? %>
           <%= link_to "Allocations", admin_services_path, class: "nav-more__item" %>
         <% end %>

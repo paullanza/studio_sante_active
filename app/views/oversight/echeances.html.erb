@@ -1,0 +1,29 @@
+<% content_for :nav_section, "plus" %>
+<% content_for :title, "Échéances" %>
+<% content_for :page_wide, true %>
+
+<div class="stack">
+  <div class="page-header">
+    <h1>Échéances</h1>
+  </div>
+
+  <nav class="tabs" aria-label="Échéances">
+    <% [ [ "bientot", "Se terminent bientôt" ], [ "recents", "Terminés récemment" ] ].each do |key, label| %>
+      <%= link_to "#{label} (#{@counts[key]})", echeances_path(tab: key), class: "tabs__tab",
+            aria: { current: (@tab == key ? "page" : nil) } %>
+    <% end %>
+  </nav>
+
+  <% if @services.any? %>
+    <ul class="list card-grid">
+      <% @services.each do |service| %>
+        <%= render "fliip_services/card", service: service, show_client: true,
+              trainers: @trainers_by_service_id.fetch(service.id, []) %>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="empty-state">
+      <%= @tab == "recents" ? "Aucun service terminé dans les 30 derniers jours." : "Aucun service actif ne se termine dans les 30 prochains jours." %>
+    </p>
+  <% end %>
+</div>

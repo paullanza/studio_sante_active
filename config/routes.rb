@@ -102,6 +102,13 @@ Rails.application.routes.draw do
   post "manager/signup_codes",  to: "manager#create_signup_code", as: :manager_signup_codes
 
   # =====================================================================
+  # OVERSIGHT — FOLLOW-UP PAGES FOR MANAGERS AND ABOVE (« Plus » menu)
+  # ---------------------------------------------------------------------
+  # Échéances: services ending soon or ended recently, for renewals.
+  # =====================================================================
+  get "echeances", to: "oversight#echeances", as: :echeances
+
+  # =====================================================================
   # MON PROFIL — THE SIGNED-IN USER'S OWN DETAILS AND PASSWORD
   # ---------------------------------------------------------------------
   # Always the current user, so there is no id in the URL.

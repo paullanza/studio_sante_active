@@ -1,5 +1,6 @@
-<%# A service as a card (Client page, Mes services). The whole card opens the Service page.
-    Locals: service, show_client (default false: the client's name above the service). %>
+<%# A service as a card (Client page, Mes services, Échéances). The whole card opens the Service page.
+    Locals: service, show_client (default false: the client's name above the service),
+    trainers (default none: staff names, shown as « Entraîneur·e·s : … » when given). %>
 <% removed = service.removed_from_fliip? %>
 <li>
   <%= link_to fliip_service_path(service), class: "card service-card" do %>
@@ -30,6 +31,10 @@
           <%= format_count(service.free_used_total) %> / <%= format_count(service.free_allowed_total) %> absences
         <% end %>
       </div>
+    <% end %>
+
+    <% if local_assigns.key?(:trainers) %>
+      <div class="text-small">Entraîneur·e·s : <%= trainers.presence&.join(", ") || "—" %></div>
     <% end %>
 
     <div class="text-muted text-small numeric">
