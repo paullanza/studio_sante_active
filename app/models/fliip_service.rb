@@ -306,6 +306,23 @@ class FliipService < ApplicationRecord
     "[#{format('%.1f', free_used_total)}/#{free_allowed_total} absences]"
   end
 
+  # The service's séances, oldest first, each with its number, returned newest
+  # first: [[session, number], …]. The number is the séance's position among all
+  # of this service's séances (every outcome counts), plus the séances and
+  # absences that adjustments created at or before it recorded as used (imported
+  # clients started mid-service, see docs/adr/0002). Two queries, then Ruby.
+  def numbered_sessions
+    ordered = sessions.order(:occurred_at, :id).to_a
+    adjustments = service_usage_adjustments.pluck(:created_at, :paid_used_delta, :free_used_delta)
+
+    ordered.each_with_index.map do |session, index|
+      offset = adjustments.sum do |created_at, paid, free|
+        session.occurred_at && created_at <= session.occurred_at ? paid.to_f + free.to_f : 0.0
+      end
+      [ session, index + 1 + offset ]
+    end.reverse
+  end
+
   # -----------------------------------------
   # Booking constraints helpers
   # -----------------------------------------

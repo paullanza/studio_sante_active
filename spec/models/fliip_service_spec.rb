@@ -293,4 +293,39 @@ RSpec.describe FliipService, type: :model do
       expect(build(:fliip_service, service_definition: build(:service_definition, paid_sessions: 0, free_sessions: 2))).not_to be_allocation_to_define
     end
   end
+
+  describe "#numbered_sessions" do
+    let(:roomy) { create(:fliip_service, service_definition: create(:service_definition, paid_sessions: 20, free_sessions: 5)) }
+
+    before { travel_to Time.zone.local(2026, 11, 20, 12, 0) }
+
+    it "numbers every séance in occurred_at order and returns them newest first" do
+      first  = create(:session, fliip_service: roomy, occurred_at: Time.zone.local(2026, 11, 10, 9, 0))
+      absence = create(:session, fliip_service: roomy, present: false, occurred_at: Time.zone.local(2026, 11, 12, 9, 0))
+      third  = create(:session, fliip_service: roomy, occurred_at: Time.zone.local(2026, 11, 14, 9, 0))
+
+      expect(absence).to be_free
+      expect(roomy.numbered_sessions).to eq([ [ third, 3 ], [ absence, 2 ], [ first, 1 ] ])
+    end
+
+    it "breaks ties on occurred_at by id" do
+      at = Time.zone.local(2026, 11, 10, 9, 0)
+      first  = create(:session, fliip_service: roomy, occurred_at: at)
+      second = create(:session, fliip_service: roomy, occurred_at: at + 1.hour)
+      second.update_columns(occurred_at: at) # the uniqueness check only runs through validations
+
+      expect(roomy.numbered_sessions.map(&:first)).to eq([ second, first ])
+    end
+
+    it "adds the séances and absences used by adjustments created at or before each séance" do
+      early = create(:service_usage_adjustment, fliip_service: roomy, paid_used_delta: 2, free_used_delta: 0.5)
+      early.update_columns(created_at: Time.zone.local(2026, 11, 1, 9, 0))
+      late = create(:service_usage_adjustment, fliip_service: roomy, paid_used_delta: 3)
+      late.update_columns(created_at: Time.zone.local(2026, 11, 13, 9, 0))
+      first  = create(:session, fliip_service: roomy, occurred_at: Time.zone.local(2026, 11, 10, 9, 0))
+      second = create(:session, fliip_service: roomy, occurred_at: Time.zone.local(2026, 11, 13, 9, 0))
+
+      expect(roomy.numbered_sessions).to eq([ [ second, 7.5 ], [ first, 3.5 ] ])
+    end
+  end
 end

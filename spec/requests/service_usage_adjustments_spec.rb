@@ -76,7 +76,7 @@ RSpec.describe "Service usage adjustments", type: :request do
     sign_in create(:user, :manager)
     get fliip_service_path(service)
 
-    expect(response.body).to include("pane-adjustments")
+    expect(response.body).to include("tab=adjustments")
     expect(response.body).not_to include("Ajouter un ajustement")
   end
 
@@ -84,6 +84,23 @@ RSpec.describe "Service usage adjustments", type: :request do
     sign_in create(:user)
     get fliip_service_path(service)
 
-    expect(response.body).not_to include("pane-adjustments")
+    expect(response.body).not_to include("tab=adjustments")
+  end
+
+  it "sends the admin back to the adjustments tab after each change" do
+    sign_in create(:user, :admin)
+    adjustments_tab = fliip_service_path(service, tab: "adjustments")
+
+    post fliip_service_service_usage_adjustments_path(service), params: adjustment_params
+    expect(response).to redirect_to(adjustments_tab)
+
+    post fliip_service_service_usage_adjustments_path(service), params: adjustment_params(bonus_sessions: 0)
+    expect(response).to redirect_to(adjustments_tab)
+
+    patch fliip_service_service_usage_adjustment_path(service, adjustment), params: adjustment_params(bonus_sessions: 3)
+    expect(response).to redirect_to(adjustments_tab)
+
+    delete fliip_service_service_usage_adjustment_path(service, adjustment)
+    expect(response).to redirect_to(adjustments_tab)
   end
 end

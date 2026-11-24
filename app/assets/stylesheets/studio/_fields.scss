@@ -285,3 +285,13 @@ textarea.field__input {
   display: block;
   width: 100%;
 }
+
+// A select in a tile (StudioFormBuilder#select_field).
+select.field__input {
+  cursor: pointer;
+}
+
+select.field__input option {
+  background: var(--surface-2);
+  color: var(--text);
+}

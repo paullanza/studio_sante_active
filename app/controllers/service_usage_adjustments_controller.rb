@@ -9,9 +9,9 @@ class ServiceUsageAdjustmentsController < ApplicationController
     adj.assign_attributes(permitted_attributes(adj))
 
     if selectable_employee?(adj) && adj.save
-      redirect_to fliip_service_path(@service), notice: "Adjustment added."
+      redirect_to fliip_service_path(@service, tab: "adjustments"), notice: "Adjustment added."
     else
-      redirect_to fliip_service_path(@service), alert: adj.errors.full_messages.to_sentence
+      redirect_to fliip_service_path(@service, tab: "adjustments"), alert: adj.errors.full_messages.to_sentence
     end
   end
 
@@ -24,7 +24,7 @@ class ServiceUsageAdjustmentsController < ApplicationController
     @adjustment.assign_attributes(permitted_attributes(@adjustment))
 
     if selectable_employee?(@adjustment) && @adjustment.save
-      redirect_to fliip_service_path(@service), notice: "Adjustment updated."
+      redirect_to fliip_service_path(@service, tab: "adjustments"), notice: "Adjustment updated."
     else
       render :edit, status: :unprocessable_content
     end
@@ -33,7 +33,7 @@ class ServiceUsageAdjustmentsController < ApplicationController
   def destroy
     authorize @adjustment
     @adjustment.destroy
-    redirect_to fliip_service_path(@service), notice: "Adjustment deleted."
+    redirect_to fliip_service_path(@service, tab: "adjustments"), notice: "Adjustment deleted."
   end
 
   private

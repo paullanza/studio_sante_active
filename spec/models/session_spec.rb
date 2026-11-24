@@ -311,4 +311,24 @@ RSpec.describe Session, type: :model do
       expect(build(:session, occurred_at: nil).sequence_label).to be_nil
     end
   end
+
+  describe "#outcome and #outcome_label" do
+    it "is Chargée when present, -24h when charged while absent, Absence when an absence was used" do
+      expect(build_session(session_type: :paid, present: true).outcome).to eq(:chargee)
+      expect(build_session(session_type: :paid, present: false).outcome).to eq(:moins24)
+      expect(build_session(session_type: :free, present: false).outcome).to eq(:absence)
+
+      expect(build_session(session_type: :paid, present: true).outcome_label).to eq("Chargée")
+      expect(build_session(session_type: :paid, present: false).outcome_label).to eq("-24h")
+      expect(build_session(session_type: :free, present: false).outcome_label).to eq("Absence")
+    end
+  end
+
+  describe "#duration_short" do
+    it "shows hours and minutes" do
+      expect(build_session(duration: 1.0).duration_short).to eq("1 h")
+      expect(build_session(duration: 0.5).duration_short).to eq("30 min")
+      expect(build_session(duration: 1.5).duration_short).to eq("1 h 30")
+    end
+  end
 end

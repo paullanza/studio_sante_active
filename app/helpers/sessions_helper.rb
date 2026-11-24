@@ -1,4 +1,29 @@
 module SessionsHelper
+  OUTCOME_BADGE_CLASSES = { chargee: "badge--chargee", moins24: "badge--moins24", absence: "badge--absence" }.freeze
+
+  # The badge modifier for a séance's outcome (Chargée, -24h, Absence).
+  def outcome_badge_class(session)
+    OUTCOME_BADGE_CLASSES.fetch(session.outcome)
+  end
+
+  # « ven. 13/11/2026 · 17 h 00 », with French day names from config/locales/fr.yml.
+  def seance_datetime(time)
+    return "—" unless time
+
+    l(time, format: "%a %d/%m/%Y · %H h %M")
+  end
+
+  # « Non confirmée » for a séance or consultation awaiting payroll, else
+  # « Confirmée le dd/mm/yyyy ».
+  def confirmation_status(record)
+    unless record.confirmed
+      return tag.span("Non confirmée", class: "text-unconfirmed")
+    end
+
+    label = record.confirmed_at ? "Confirmée le #{l(record.confirmed_at.to_date)}" : "Confirmée"
+    tag.span(label, class: "text-muted")
+  end
+
   def default_time_slot_str(now: Time.zone.now)
     now   = now.change(sec: 0)
     mins  = now.min >= 30 ? 30 : 0
