@@ -113,6 +113,19 @@ RSpec.describe FliipService, type: :model do
     end
   end
 
+  describe ".worked_on_by" do
+    it "lists services with a séance or an adjustment by the staff member, not others' séances" do
+      me = create(:user)
+      by_session = create(:session, user: me).fliip_service
+      by_adjustment = create(:service_usage_adjustment, user: me).fliip_service
+      someone_elses = create(:session).fliip_service
+      create(:session, user: me, fliip_service: by_session, occurred_at: 2.days.ago.change(min: 0))
+
+      expect(described_class.worked_on_by(me)).to contain_exactly(by_session, by_adjustment)
+      expect(described_class.worked_on_by(me)).not_to include(someone_elses)
+    end
+  end
+
   describe "status scopes and names" do
     it "filters by purchase status" do
       by_code = %w[A I P C S].index_with { |code| create(:fliip_service, purchase_status: code) }
@@ -337,6 +350,19 @@ RSpec.describe FliipService, type: :model do
       second = create(:session, fliip_service: roomy, occurred_at: Time.zone.local(2026, 11, 13, 9, 0))
 
       expect(roomy.numbered_sessions).to eq([ [ second, 7.5 ], [ first, 3.5 ] ])
+    end
+  end
+
+  describe ".ending_soonest_first" do
+    it "orders running services by end date, then ended ones most recent first" do
+      today = Date.new(2026, 11, 24)
+      soon = create(:fliip_service, expire_date: Date.new(2026, 12, 1))
+      later = create(:fliip_service, expire_date: Date.new(2027, 6, 1))
+      undated = create(:fliip_service, expire_date: nil)
+      ended_lately = create(:fliip_service, expire_date: Date.new(2026, 11, 20))
+      ended_long_ago = create(:fliip_service, expire_date: Date.new(2026, 1, 1))
+
+      expect(described_class.ending_soonest_first(today).to_a).to eq([ soon, later, undated, ended_lately, ended_long_ago ])
     end
   end
 end

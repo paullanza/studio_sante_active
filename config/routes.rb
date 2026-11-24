@@ -179,6 +179,9 @@ Rails.application.routes.draw do
   # =====================================================================
   get "seances/new", to: "bookings#new", as: :new_seance
 
+  # Mes services: the services the signed-in staff member works on.
+  get "mes-services", to: "my_services#index", as: :my_services
+
   # =====================================================================
   # ASYNC HELPERS — BOOKING/IMPORT FLOWS
   # ---------------------------------------------------------------------

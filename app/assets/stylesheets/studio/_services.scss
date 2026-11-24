@@ -41,6 +41,18 @@
   font-weight: 600;
 }
 
+// On lists scanned by client, the client's name is the bigger title.
+.service-card__name--client {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.service-card__service {
+  margin-top: -4px;
+  color: var(--text-muted);
+}
+
 .service-card__dates,
 .consultation-card__when {
   font-size: 14px;
@@ -271,4 +283,129 @@
   .adjustment-card .adjustment-card__actions {
     margin-left: auto;
   }
+}
+
+// A service's state at a glance (ServiceBadgesHelper#service_row_state): a
+// stripe for active (green), planned (blue) or suspended (orange) services;
+// finished ones (inactive, cancelled, ended, used up, removed) sit flat on
+// the page, muted, with grey bars.
+.service-card--active { border-left: 4px solid var(--brand-light); }
+.service-card--planned { border-left: 4px solid var(--badge-absence-fg); }
+.service-card--suspended { border-left: 4px solid var(--badge-moins24-fg); }
+
+.service-card--done {
+  border-style: dashed;
+  background: var(--bg);
+  color: var(--text-muted);
+}
+
+.service-card--done .service-card__name,
+.service-card--done .service-card__dates {
+  color: var(--text-muted);
+}
+
+.service-card--done .progress-bar {
+  filter: grayscale(1);
+}
+
+// From 1024 px a card becomes a row: who (title with its badge, service,
+// IDs), dates, then the two bars stacked, each on one line (label, bar, %).
+@media (min-width: 1024px) {
+  .service-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 200px minmax(280px, 0.9fr);
+    grid-template-areas:
+      "head     dates usage"
+      "service  dates usage"
+      "trainers dates usage"
+      "ids      dates usage";
+    column-gap: 28px;
+    row-gap: 1px;
+    align-items: start;
+    padding: 10px 16px;
+  }
+
+  .service-card .service-card__head {
+    grid-area: head;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .service-card .service-card__service { grid-area: service; margin-top: 0; }
+  .service-card .service-card__trainers { grid-area: trainers; }
+  .service-card .service-card__ids { grid-area: ids; }
+  .service-card .service-card__dates { grid-area: dates; }
+  .service-card .service-card__usage { grid-area: usage; display: flex; flex-direction: column; gap: 3px; }
+
+  .service-card__usage .service-bars {
+    gap: 3px;
+  }
+
+  .service-card__usage .service-bar {
+    display: grid;
+    grid-template-columns: 58px minmax(0, 1fr) 42px;
+    align-items: center;
+    column-gap: 8px;
+  }
+
+  .service-card__usage .service-bar__label {
+    display: contents;
+  }
+
+  .service-card__usage .service-bar__label > span:first-child { grid-column: 1; }
+  .service-card__usage .service-bar .progress { grid-column: 2; grid-row: 1; }
+  .service-card__usage .service-bar__pct { grid-column: 3; grid-row: 1; text-align: right; }
+
+  // The overrun on its own line under the dates.
+  .service-card__overrun {
+    display: block;
+    color: var(--badge-moins24-fg);
+    font-size: 13px;
+  }
+
+  .service-card__sep {
+    display: none;
+  }
+
+  // Abonnement and consultation rows: the same columns on every row.
+  .contract-card,
+  .consultation-card {
+    display: grid;
+    align-items: center;
+    column-gap: 24px;
+  }
+
+  .contract-card {
+    grid-template-columns: minmax(0, 1.3fr) 130px minmax(0, 1fr) 160px;
+  }
+
+  .consultation-card {
+    grid-template-columns: 240px 130px minmax(0, 1fr);
+  }
+
+  .contract-card .service-card__head,
+  .consultation-card .service-card__head {
+    display: contents;
+  }
+
+  .contract-card .badge,
+  .consultation-card .badge {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 1023.98px) {
+  .service-card__usage {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+// Checkbox toggles that filter a list, submitted on change (autosubmit_controller.js).
+.filter-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 20px;
 }

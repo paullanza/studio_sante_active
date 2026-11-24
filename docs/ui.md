@@ -223,14 +223,25 @@ The search bar stacks on a phone and sits beside its button from 768 px. Its fie
 
 - `.page-bar`: the back link on the left, a page action on the right (`.btn--small` is a 13 px text button).
 - `.client-page`: the top card, then the tabs; from 1024 px the top card is a sticky 360 px column beside them.
-- `fliip_services/_card`: a service as a card linking to its Service page (name, `service_status_badge`, dates with the overrun, bars, counts, IDs). `show_client: true` adds the client's name above it. A service removed from Fliip shows « historique seulement » and no bars or counts; an allocation not set yet shows « Allocation à définir » and no Séances bar.
+- `fliip_services/_card`: a service as a card linking to its Service page (name, `service_status_badge`, dates with the overrun, bars, counts, IDs). `show_client: true` makes the client's name the card's title, with the service name under it (lists scanned by client: Mes services, Échéances). A service removed from Fliip shows « historique seulement » and no bars or counts; an allocation not set yet shows « Allocation à définir » and no Séances bar.
 - `fliip_services/_bars`: the two thin bars, Temps and Séances, each with its label and percentage above.
 - `service_bar(label, percent, colour_class, aside: nil)` (`FliipServicesHelper`) renders one of those bars. With `aside`, the label row reads « Séances · 17 % » on the left and the aside (« 2 / 12 · 10 restantes ») on the right; `.service-bars--detail` makes them thicker (the Service page).
 - The Service page: `.service-page__side` holds the top card (`.service-top__*`) and the gold « Saisir une séance » button, or `.service-page__blocked` with `booking_block_reason`, in the `.client-page` left column.
 - `sessions/_card` (locals `session:`, `number:`): a séance as a `.seance-card`, « Séance #N », `seance_datetime(time)` (« ven. 13/11/2026 · 17 h 00 »), `duration_short`, the outcome badge (`outcome_badge_class(session)` and `session.outcome_label`), presence, trainer, « Saisie par » when someone else entered it, and `confirmation_status(record)` (« Non confirmée » in `.text-unconfirmed`, or « Confirmée le … » muted; works for consultations too). It's a card on a phone and a row from 1024 px, number and outcome first. `.seance-card--absence` and `.seance-card--moins24` (from `session.outcome`) add a stripe and tint in the badge's colours so exceptions stand out. `consultations/_service_card` is a consultation in the same style; an absent prospect gets the Absence stripe.
 - `fliip_contracts/_card` (abonnement) and `consultations/_client_card` (a consultation on the Client page).
-- `.card-grid`: a list of cards, one column, two from 1280 px. `.empty-state`: a tab or list with nothing in it.
-- `.facts`: short label-over-value facts in two columns; `.facts__wide` spans both.
+- `.card-grid`: a list of cards in one column. Service, abonnement and consultation cards are cards on a phone and rows from 1024 px (the service row: title, service and IDs; status; dates; bars and counts), so a list reads like the Clients list on desktop. `.empty-state`: a tab or list with nothing in it.
+- `.filter-toggles`: checkbox toggles that filter a list, in a GET form that submits on change (`data-controller="autosubmit"`, `data-action="change->autosubmit#submit"`), each a hand-written `label.checkbox` › `.checkbox__input` + `.checkbox__label`. Put it in the `.list-toolbar` beside the count.
+
+```erb
+<%= form_with url: my_services_path, method: :get, class: "filter-toggles",
+      data: { controller: "autosubmit", action: "change->autosubmit#submit" } do %>
+  <label class="checkbox">
+    <%= check_box_tag :inactifs, "1", @show_inactive, class: "checkbox__input" %>
+    <span class="checkbox__label">Inactifs</span>
+  </label>
+<% end %>
+```
+- `.facts`: short label-over-value facts in two columns (`.facts--3` for three); `.facts__wide` spans the row.
 - Phones always go through `format_phone(raw)` and `phone_href(raw)` (`PhoneHelper`): « (514) 555-0142 », « +33 6 12 34 56 78 », other countries as « +44 7700900123 ». Something that isn't a phone number (« us ») shows as stored, with no link.
 - `format_count(1.5)` (`CountsHelper`) shows séance and absence counts: « 1,5 », « 12 », never « 12.0 ».
 

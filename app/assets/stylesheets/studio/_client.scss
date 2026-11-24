@@ -92,6 +92,10 @@
   font-size: 14px;
 }
 
+.facts--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .facts__wide {
   grid-column: 1 / -1;
 }
