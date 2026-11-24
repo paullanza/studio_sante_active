@@ -24,6 +24,7 @@ RSpec.describe "Consultations", type: :request do
 
       expect(Consultation.last.user).to eq(employee)
       expect(response).to redirect_to(new_seance_path(tab: "consultation"))
+      expect(flash[:notice]).to eq("Consultation enregistrée.")
     end
 
     it "re-renders the booking page when a required field is missing" do
