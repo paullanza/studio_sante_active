@@ -3,11 +3,11 @@
 <% if adjustments.any? %>
   <ul class="list card-grid">
     <% adjustments.each do |adj| %>
-      <li class="card seance-card">
+      <li class="card seance-card adjustment-card">
         <div class="service-card__head">
           <span class="seance-card__when numeric"><%= adj.created_at.strftime("%d/%m/%Y %H:%M") %></span>
         </div>
-        <div class="text-small">Entraîneur·e : <%= adj.user&.full_name.presence || "—" %></div>
+        <div class="seance-card__trainer text-small">Entraîneur·e : <%= adj.user&.full_name.presence || "—" %></div>
         <dl class="facts">
           <% [ [ "Séances utilisées", adj.paid_used_delta ], [ "Absences utilisées", adj.free_used_delta ],
                [ "Séances bonus", adj.bonus_sessions ] ].each do |label, value| %>

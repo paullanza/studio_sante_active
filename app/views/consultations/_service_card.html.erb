@@ -1,5 +1,5 @@
 <%# A consultation linked to a service, on the Service page. Local: consultation. %>
-<li class="card seance-card">
+<li class="card seance-card seance-card--consultation">
   <div class="service-card__head">
     <span class="seance-card__when numeric">
       <%= consultation.occurred_at ? consultation.occurred_at.strftime("%d/%m/%Y · %H h %M") : "—" %>
@@ -10,9 +10,9 @@
       <span class="badge badge--absence">Absent·e</span>
     <% end %>
   </div>
-  <div class="text-small">Entraîneur·e : <%= consultation.user&.full_name.presence || "—" %></div>
+  <div class="seance-card__trainer text-small">Entraîneur·e : <%= consultation.user&.full_name.presence || "—" %></div>
   <% if consultation.created_by_id != consultation.user_id %>
-    <div class="text-muted text-small">Saisie par <%= consultation.created_by&.full_name.presence || "—" %></div>
+    <div class="seance-card__by text-muted text-small">Saisie par <%= consultation.created_by&.full_name.presence || "—" %></div>
   <% end %>
   <div class="seance-card__foot text-small">
     <span class="text-muted numeric">créée : <%= consultation.created_at.strftime("%d/%m/%Y %H:%M") %></span>

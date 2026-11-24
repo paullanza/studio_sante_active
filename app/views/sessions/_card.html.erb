@@ -1,6 +1,6 @@
 <%# A séance as a card (Service page; milestone 2 reuses it).
     Locals: session, number (its number in the service, FliipService#numbered_sessions). %>
-<li class="card seance-card">
+<li class="card seance-card seance-card--session">
   <div class="service-card__head">
     <span class="seance-card__title">Séance #<%= format_count(number) %></span>
     <span class="seance-card__badges">
@@ -9,9 +9,9 @@
     </span>
   </div>
   <div class="seance-card__when numeric"><%= seance_datetime(session.occurred_at) %> · <%= session.duration_short %></div>
-  <div class="text-small">Entraîneur·e : <%= session.user&.full_name.presence || "—" %></div>
+  <div class="seance-card__trainer text-small">Entraîneur·e : <%= session.user&.full_name.presence || "—" %></div>
   <% if session.created_by_id != session.user_id %>
-    <div class="text-muted text-small">Saisie par <%= session.created_by&.full_name.presence || "—" %></div>
+    <div class="seance-card__by text-muted text-small">Saisie par <%= session.created_by&.full_name.presence || "—" %></div>
   <% end %>
   <div class="seance-card__foot text-small">
     <span class="text-muted numeric">créée : <%= session.created_at.strftime("%d/%m/%Y %H:%M") %></span>

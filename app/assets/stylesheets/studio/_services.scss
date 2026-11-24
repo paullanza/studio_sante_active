@@ -1,16 +1,12 @@
 // Service, abonnement and consultation cards (Client page, Mes services).
 // A service card is a link to the Service page; its two thin bars, Temps and
 // Séances, carry their label and percentage above them.
+// A list of cards: one column on every width. Service, abonnement and
+// consultation cards lay themselves out as rows from 1024 px.
 .card-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 10px;
-}
-
-@media (min-width: 1280px) {
-  .card-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 .service-card {
@@ -216,4 +212,62 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+// From 1024 px séance, consultation and adjustment cards on the Service page
+// become rows; the head's parts become cells of the row (display: contents).
+@media (min-width: 1024px) {
+  .seance-card--session,
+  .seance-card--consultation {
+    display: grid;
+    align-items: center;
+    column-gap: 24px;
+    row-gap: 2px;
+  }
+
+  .seance-card--session {
+    grid-template-columns: 100px 230px minmax(0, 1fr) 190px 230px;
+    grid-template-areas:
+      "title when trainer badges foot"
+      "title when by      badges foot";
+  }
+
+  .seance-card--consultation {
+    grid-template-columns: 230px 130px minmax(0, 1fr) 230px;
+    grid-template-areas:
+      "when badges trainer foot"
+      "when badges by      foot";
+  }
+
+  .seance-card--session .service-card__head,
+  .seance-card--consultation .service-card__head {
+    display: contents;
+  }
+
+  .seance-card__title { grid-area: title; }
+  .seance-card--session .seance-card__badges,
+  .seance-card--consultation .badge { grid-area: badges; justify-self: start; }
+  .seance-card--session .seance-card__when,
+  .seance-card--consultation .seance-card__when { grid-area: when; }
+  .seance-card__trainer { grid-area: trainer; }
+  .seance-card__by { grid-area: by; }
+  .seance-card--session .seance-card__foot,
+  .seance-card--consultation .seance-card__foot { grid-area: foot; justify-content: flex-end; }
+
+  .adjustment-card {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 24px;
+  }
+
+  .adjustment-card .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 24px;
+  }
+
+  .adjustment-card .adjustment-card__actions {
+    margin-left: auto;
+  }
 }
