@@ -66,6 +66,47 @@ RSpec.describe "Bookings", type: :request do
       end
     end
 
+    describe "the side list of latest séances" do
+      let(:trainer) { create(:user) }
+      let(:other)   { create(:user) }
+      let(:service) { create(:fliip_service) }
+
+      before do
+        create(:session, fliip_service: service, user: trainer, occurred_at: 2.days.ago.change(min: 0))
+        create(:session, fliip_service: service, user: other, occurred_at: 1.day.ago.change(min: 0))
+      end
+
+      def listed_trainer_sessions
+        Nokogiri::HTML(response.body).css("#recent_sessions .recent-seance").size
+      end
+
+      it "shows the signed-in trainer's séances, never the client's" do
+        sign_in trainer
+
+        get new_seance_path(fliip_user_id: service.fliip_user_id)
+
+        expect(listed_trainer_sessions).to eq(1)
+        expect(response.body).to include("Mes 10 dernières séances")
+      end
+
+      it "shows the trainer an admin picked" do
+        sign_in create(:user, :admin)
+
+        get new_seance_path(fliip_user_id: service.fliip_user_id, trainer_id: other.id)
+
+        expect(listed_trainer_sessions).to eq(1)
+        expect(Nokogiri::HTML(response.body).at_css("#session_user_id option[selected]")["value"]).to eq(other.id.to_s)
+      end
+
+      it "ignores trainer_id from an employee" do
+        sign_in create(:user)
+
+        get new_seance_path(fliip_user_id: service.fliip_user_id, trainer_id: other.id)
+
+        expect(listed_trainer_sessions).to eq(0)
+      end
+    end
+
     it "offers admins every selectable employee but never the super admin" do
       employee    = create(:user)
       super_admin = create(:user, :super_admin)

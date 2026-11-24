@@ -34,7 +34,8 @@
   <% preview = seance_outcome_preview(@session) %>
   <% service_error = @session.errors[:fliip_service_id].first || @session.errors[:fliip_service].first %>
   <%= form_with model: @session, url: sessions_path, builder: StudioFormBuilder, class: "form saisir-form",
-        data: { controller: "seance-outcome confirm-dialog",
+        data: { controller: "seance-outcome confirm-dialog recent-trainer",
+                recent_trainer_url_value: new_seance_path(fliip_user_id: @client.id),
                 action: "change->seance-outcome#update submit->confirm-dialog#check" } do |f| %>
     <%= f.base_errors(also: %i[occurred_at fliip_user_id created_by]) %>
     <%= f.hidden_field :fliip_user_id %>
@@ -58,18 +59,26 @@
     <section class="form-section" aria-labelledby="saisir-seance">
       <header class="form-section__head"><h2 id="saisir-seance">Séance</h2></header>
       <div class="form-grid">
+        <%# Absence changes the outcome, so presence comes first and big. %>
+        <div class="presence-choice form-grid__wide">
+          <%= f.segmented :present, [ [ safe_join([ icon_svg(LayoutHelper::CHECK_ICON, size: 22, stroke_width: 2.4), "Présent·e" ]), "1" ],
+                                      [ safe_join([ icon_svg(LayoutHelper::CROSS_ICON, size: 22, stroke_width: 2.4), "Absent·e" ]), "0" ] ],
+                label: "Présence" %>
+        </div>
         <% if @staff.any? %>
           <%= f.select_field :user_id, @staff.map { |u| [ u.full_name, u.id ] }, label: "Entraîneur·e",
                 include_blank: (@owner_required ? "Choisir un·e employé·e" : "Moi (#{current_user.full_name})"),
-                required: @owner_required, field_class: "form-grid__wide" %>
+                required: @owner_required, field_class: "form-grid__wide",
+                data: { action: "change->recent-trainer#reload" } %>
         <% end %>
         <%= f.field :date, label: "Date", as: :date, required: true,
               value: params.dig(:session, :date).presence || @session.occurred_at&.to_date&.iso8601 || Time.zone.today.iso8601,
               data: { confirm_dialog_target: "date" } %>
-        <%= f.field :time, label: "Heure", as: :time, required: true, step: 1800,
-              value: params.dig(:session, :time).presence || @session.occurred_at&.strftime("%H:%M") || default_time_slot_str %>
-        <%= f.segmented :present, [ [ "Présent·e", "1" ], [ "Absent·e", "0" ] ], label: "Présence" %>
-        <%= f.segmented :duration, [ [ "1 h", "1.0" ], [ "30 min", "0.5" ] ], label: "Durée" %>
+        <div class="time-duration">
+          <%= f.field :time, label: "Heure", as: :time, required: true, step: 1800,
+                value: params.dig(:session, :time).presence || @session.occurred_at&.strftime("%H:%M") || default_time_slot_str %>
+          <%= f.segmented :duration, [ [ "1 h", "1.0" ], [ "30 min", "0.5" ] ], label: "Durée" %>
+        </div>
         <%= f.field :note, label: "Note", as: :textarea, rows: 3, field_class: "form-grid__wide" %>
       </div>
     </section>

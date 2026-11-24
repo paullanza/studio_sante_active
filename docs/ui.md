@@ -264,9 +264,10 @@ The search bar stacks on a phone and sits beside its button from 768 px. Its fie
 
 `bookings/new` (`BookingPage` concern, shared with the create actions that re-render it). The client is a URL param (`new_seance_path(fliip_user_id:, fliip_service_id:)`): the client field (`client_search_controller.js`) fetches `.suggestion` links into the `client_suggestions` frame, and the chosen client shows as a `.chosen-client` card with « Changer ».
 
-- `bookings/_service_option` (`service:`, `checked:`): a service as a `.service-option` radio card (name, séances and absences left, end date, IDs), or `.service-option--blocked` with `booking_block_reason`. Two columns from 768 px (`.service-options`).
+- `bookings/_service_option` (`service:`, `checked:`): a service as a `.service-option` radio card (name, séances and absences left, end date, IDs), or `.service-option--blocked` with `booking_block_reason`. One per row on every width (`.service-options`).
+- The Séance section starts with presence: `.presence-choice` makes the `segmented` toggle full width and 64 px tall, Absent·e checked in the Absence colours. Heure and Durée share one cell (`.time-duration`), so the row reads Date | Heure + Durée.
 - `.seance-outcome`: « Cette séance sera enregistrée comme » and the outcome badge, with the absence line; then the `.alert--moins24` block. `seance_outcome_preview(session)` (`SessionsHelper`) renders the state on the server and `seance_outcome_controller.js` updates it as the service, presence and duration change.
-- `bookings/_recent_session`: a séance as a compact `.recent-seance` row linking to its Service page. From 1024 px the recent list is a sticky column beside the form (`.saisir--with-recent`).
+- `bookings/_recent_session`: a séance as a compact `.recent-seance` row linking to its Service page. The side list is the trainer's 10 latest séances (the admin's trainer choice, else the signed-in user), never the client's; it is the `recent_sessions` Turbo frame, which `recent_trainer_controller.js` reloads with `?trainer_id=` when an admin changes the trainer. From 1024 px it is a sticky column beside the form (`.saisir--with-recent`).
 - `segmented` can take `"1"`/`"0"` values for a boolean; `base_errors(also: [:occurred_at])` adds the full messages of attributes the form has no field for.
 
 ### Progress bars

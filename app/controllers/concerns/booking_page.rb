@@ -9,15 +9,18 @@ module BookingPage
   private
 
   # Keeps an @session or @consultation the caller already built (a failed
-  # save), so its values and errors show again.
-  def prepare_booking_page(client_id:, tab:, service_id: nil)
+  # save), so its values and errors show again. `trainer_id` is the admin's
+  # trainer choice; the side list shows that trainer's latest séances.
+  def prepare_booking_page(client_id:, tab:, service_id: nil, trainer_id: nil)
     @tab = BOOKING_TABS.include?(tab) ? tab : "session"
+    chosen_trainer = chosen_booking_trainer(trainer_id)
     @client = client_id.present? ? FliipUser.find_by(id: client_id) : nil
     @services = @client ? @client.fliip_services.includes(:service_definition).order(Arel.sql("expire_date DESC NULLS LAST")).to_a : []
     @bookable = @services.reject(&:booking_blocked?)
-    @session ||= Session.new(fliip_user: @client, fliip_service_id: chosen_service_id(service_id), duration: 1.0, present: true)
-    @recent_sessions = (@client ? @client.sessions : Session.where(user: current_user))
-                         .with_associations.order_by_occurred_at_desc.limit(10)
+    @session ||= Session.new(fliip_user: @client, fliip_service_id: chosen_service_id(service_id), duration: 1.0, present: true,
+                             user: chosen_trainer)
+    @trainer = @session.user || current_user
+    @recent_sessions = Session.where(user: @trainer).with_associations.order_by_occurred_at_desc.limit(10)
     @consultation ||= Consultation.new
     load_booking_staff
   end
@@ -28,6 +31,13 @@ module BookingPage
     return requested.id if requested
 
     @bookable.size == 1 ? @bookable.first.id : nil
+  end
+
+  # The trainer an admin picked (selectable staff only); nil otherwise.
+  def chosen_booking_trainer(trainer_id)
+    return nil if trainer_id.blank? || !policy(Session).change_owner?
+
+    User.selectable.find_by(id: trainer_id)
   end
 
   # Admins pick the trainer. The super admin is not selectable, so must pick

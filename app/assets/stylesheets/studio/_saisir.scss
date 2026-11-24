@@ -14,11 +14,16 @@
   min-width: 0;
 }
 
+// The trainer's latest séances: a Turbo frame (recent_sessions) holding the list.
 .saisir__recent {
+  display: block;
+  min-width: 0;
+}
+
+.saisir__recent-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-width: 0;
 }
 
 .saisir__subtitle {
@@ -105,8 +110,8 @@
   color: var(--brand-light);
 }
 
-// The client's services as radio cards; a blocked one is greyed out with
-// its reason. Two columns from 768 px.
+// The client's services as radio cards, one per row on every width; a
+// blocked one is greyed out with its reason.
 .service-choice {
   min-width: 0;
   margin: 0;
@@ -126,12 +131,6 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 8px;
-}
-
-@media (min-width: 768px) {
-  .service-options {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 .service-option {
@@ -203,6 +202,57 @@
 .service-option__reason {
   font-size: 13px;
   font-weight: 700;
+}
+
+// Présent·e / Absent·e: full width and tall, so absence can't be missed.
+// Checked absent takes the Absence colours instead of the brand green.
+.presence-choice .segmented {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-self: stretch;
+  border-width: 2px;
+  border-radius: var(--radius-card);
+}
+
+.presence-choice .segmented__text,
+.time-duration .segmented__text {
+  flex: 1;
+}
+
+.presence-choice .segmented__text {
+  justify-content: center;
+  gap: 10px;
+  min-height: 64px;
+  font-family: var(--font-heading);
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.presence-choice .segmented__option:last-child .segmented__input:checked + .segmented__text {
+  background: var(--badge-absence-bg);
+  color: var(--badge-absence-fg);
+  box-shadow: inset 0 0 0 2px var(--badge-absence-fg);
+}
+
+// Heure and Durée share one cell: Date | Heure + Durée from 768 px, and one
+// row under the date on a phone.
+.time-duration {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 10px;
+}
+
+.time-duration .segmented {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-self: stretch;
+}
+
+.time-duration .segmented__text {
+  justify-content: center;
+  min-height: 50px;
+  padding: 0 8px;
 }
 
 // « Cette séance sera enregistrée comme » and the outcome badge.

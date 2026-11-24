@@ -9,6 +9,7 @@ class BookingsController < ApplicationController
   def new
     authorize :booking
 
-    prepare_booking_page(client_id: params[:fliip_user_id], tab: params[:tab], service_id: params[:fliip_service_id])
+    prepare_booking_page(client_id: params[:fliip_user_id], tab: params[:tab],
+                         service_id: params[:fliip_service_id], trainer_id: params[:trainer_id])
   end
 end
