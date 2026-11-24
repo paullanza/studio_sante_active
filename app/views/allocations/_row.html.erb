@@ -1,0 +1,29 @@
+<%# One allocation, edited in place: the form posts as a turbo stream that replaces this frame.
+    Locals: definition, active_count, query, saved (default false: shows « Enregistrée »). %>
+<%= turbo_frame_tag dom_id(definition), class: "allocation-row-frame" do %>
+  <%= form_with model: definition, url: allocation_path(definition), builder: StudioFormBuilder,
+        namespace: dom_id(definition), class: "card allocation-row" do |f| %>
+    <%= hidden_field_tag :q, query, id: nil if query.present? %>
+
+    <div class="allocation-row__name">
+      <%= link_to definition.service_name.presence || "Service #{definition.service_id}",
+            allocation_path(definition), class: "allocation-row__link", data: { turbo_frame: "_top" } %>
+    </div>
+    <div class="allocation-row__defid text-muted text-small numeric"><span class="allocation-row__inline-label">DefID </span><%= definition.service_id %></div>
+    <div class="allocation-row__active text-small numeric">
+      <%= active_count %><span class="allocation-row__inline-label"> <%= active_count < 2 ? "service actif" : "services actifs" %></span>
+    </div>
+
+    <%= f.field :paid_sessions, label: "Séances", as: :number, min: 0, step: 1, inputmode: "numeric",
+          field_class: "allocation-row__paid" %>
+    <%= f.field :free_sessions, label: "Absences", as: :number, min: 0, step: 1, inputmode: "numeric",
+          field_class: "allocation-row__free" %>
+
+    <div class="allocation-row__actions">
+      <%= f.submit "Enregistrer", variant: :secondary %>
+      <% if local_assigns[:saved] %>
+        <span class="allocation-row__saved text-small" role="status">Enregistrée</span>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>

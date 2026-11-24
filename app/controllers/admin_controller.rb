@@ -58,30 +58,6 @@ class AdminController < ApplicationController
     end
   end
 
-  def services
-    @services = ServiceDefinition.order(:service_id).index_by(&:service_id)
-  end
-
-  def update_service
-    definition = ServiceDefinition.find(params[:id])
-    definition.update!(paid_sessions: params[:paid_sessions].to_i,
-                       free_sessions: params[:free_sessions].to_i
-                      )
-    redirect_to admin_services_path, notice: "Service definition updated."
-  end
-
-  def service_show
-    @definition = ServiceDefinition.find(params[:id])
-
-    @services = FliipService
-      .where(service_id: @definition.service_id)
-      .includes(:fliip_user, :service_definition, :service_usage_adjustments)
-      .order(Arel.sql("expire_date NULLS LAST"), :service_name)
-
-    @active_count = @services.select { |s| s.purchase_status == "A" }.size
-    @total_count  = @services.size
-  end
-
   # Unconfirmed Sessions
   def unconfirmed_sessions
     @filter_params = permitted_session_filters

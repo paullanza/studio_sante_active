@@ -20,7 +20,7 @@ RSpec.describe FliipApi::UserSyncer do
   end
 
   context "with a user new to the app" do
-    it "creates the user, services, contracts and a 0/0 definition" do
+    it "creates the user, services, contracts and an « à définir » definition" do
       stub_fliip(services: [ service_row(1) ], contracts: [ contract_row(2) ])
 
       result = syncer.call(row)
@@ -28,7 +28,7 @@ RSpec.describe FliipApi::UserSyncer do
       user = FliipUser.find_by!(remote_id: 500)
       expect(user.fliip_services.pluck(:remote_purchase_id)).to eq([ 1 ])
       expect(user.fliip_contracts.pluck(:remote_contract_id)).to eq([ 2 ])
-      expect(ServiceDefinition.find_by!(service_id: 444)).to have_attributes(service_name: "Privé", paid_sessions: 0)
+      expect(ServiceDefinition.find_by!(service_id: 444)).to have_attributes(service_name: "Privé", paid_sessions: nil, free_sessions: nil)
       expect(result).to have_attributes(user_change: :created, definitions_created: 1)
       expect(result.services).to include(created: 1, flagged: 0)
       expect(result).to be_changed
@@ -100,7 +100,7 @@ RSpec.describe FliipApi::UserSyncer do
       stub_fliip(services: [ service_row(1) ])
       syncer.call(row)
       service = FliipService.find_by!(remote_purchase_id: 1)
-      service.service_definition.update!(paid_sessions: 10)
+      service.service_definition.update!(paid_sessions: 10, free_sessions: 0)
       create(:session, fliip_service: service, occurred_at: 1.day.ago)
       stub_fliip(services: [])
 

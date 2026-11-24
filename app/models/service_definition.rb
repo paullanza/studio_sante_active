@@ -17,25 +17,52 @@ class ServiceDefinition < ApplicationRecord
   # `service_id` must be present and unique (maps to external service identifier).
   validates :service_id, presence: true, uniqueness: true
 
-  # `paid_sessions` and `free_sessions`:
+  # `paid_sessions` (séances) and `free_sessions` (absences):
   #   - Must be integers >= 0
-  #   - Can be nil if not yet defined
+  #   - Are nil while the allocation is « à définir » (new kinds of service)
+  #   - Saving an allocation (an update) requires both
   validates :paid_sessions, :free_sessions,
             numericality: { greater_than_or_equal_to: 0, only_integer: true },
             allow_nil: true
+  validates :paid_sessions, :free_sessions, presence: true, on: :update
+
+  # -----------------------------------------
+  # Scopes
+  # -----------------------------------------
+  # Allocations an admin hasn't set yet (« à définir »).
+  scope :to_define, -> { where(paid_sessions: nil).or(where(free_sessions: nil)) }
+
+  # Name contains the query (ILIKE: any case, exact accents), or the DefID
+  # is the query when it is a number.
+  scope :matching, ->(query) {
+    query = query.to_s.strip
+    next all if query.blank?
+
+    by_name = where("service_name ILIKE ?", "%#{sanitize_sql_like(query)}%")
+    query.match?(/\A\d+\z/) ? by_name.or(where(service_id: query.to_i)) : by_name
+  }
 
   # -----------------------------------------
   # Class Methods
   # -----------------------------------------
-  # Creates a 0/0 definition, named after the service, for each service type
-  # among these services that has none. Admins set the allowance later.
+  # Creates an « à définir » definition (nil/nil), named after the service, for
+  # each service type among these services that has none. Its services can't
+  # be booked until an admin sets the allocation.
   def self.ensure_for!(fliip_services)
     by_type = fliip_services.reject { |s| s.service_id.blank? }.index_by(&:service_id)
     missing = by_type.keys - where(service_id: by_type.keys).pluck(:service_id)
     missing.each do |service_id|
-      create!(service_id: service_id, service_name: by_type[service_id].service_name, paid_sessions: 0, free_sessions: 0)
+      create!(service_id: service_id, service_name: by_type[service_id].service_name, paid_sessions: nil, free_sessions: nil)
     end
     missing.size
+  end
+
+  # -----------------------------------------
+  # Instance Methods
+  # -----------------------------------------
+  # The allocation hasn't been set yet.
+  def to_define?
+    paid_sessions.nil? || free_sessions.nil?
   end
 
   # -----------------------------------------

@@ -1,0 +1,184 @@
+// Allocations: one row per kind of service, edited in place. A card on a
+// phone; from 768 px the rows share the columns of .allocation-list__head
+// (subgrid), card-like rows rather than a table, since each row is a form
+// inside its own turbo-frame.
+.allocation-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.allocation-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+.allocation-section__head h2 {
+  font-size: 20px;
+}
+
+// The to-do section: a highlighted card with the « Non confirmée » colours.
+.allocation-section--to-define {
+  padding: 16px;
+  border: 1px solid var(--badge-unconfirmed-bg);
+  border-left: 4px solid var(--badge-unconfirmed-fg);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.allocation-section--to-define .allocation-section__head h2 {
+  color: var(--badge-unconfirmed-fg);
+}
+
+.allocation-section--to-define .allocation-row {
+  background: var(--bg);
+}
+
+.allocation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.allocation-list__head {
+  display: none;
+}
+
+.allocation-row-frame {
+  display: block;
+}
+
+.allocation-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-areas:
+    "name name"
+    "defid active"
+    "paid free"
+    "actions actions";
+  gap: 8px 12px;
+  padding: 14px;
+}
+
+.allocation-row__name { grid-area: name; }
+.allocation-row__defid { grid-area: defid; }
+.allocation-row__active { grid-area: active; text-align: right; }
+.allocation-row__paid { grid-area: paid; }
+.allocation-row__free { grid-area: free; }
+.allocation-row__actions { grid-area: actions; }
+
+.allocation-row__link {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.allocation-row__link:hover {
+  color: var(--brand-light);
+}
+
+.allocation-row__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.allocation-row__saved {
+  color: var(--brand-light);
+  font-weight: 700;
+}
+
+// Number inputs: no spinners, the keyboard is numeric.
+.allocation-row .field__input {
+  -moz-appearance: textfield;
+}
+
+.allocation-row .field__input::-webkit-inner-spin-button,
+.allocation-row .field__input::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.allocation-top__name {
+  font-size: 22px;
+}
+
+@media (min-width: 768px) {
+  .allocation-list {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) 104px 104px 110px 210px;
+    column-gap: 16px;
+    row-gap: 8px;
+  }
+
+  .allocation-list__head,
+  .allocation-row-frame,
+  .allocation-row {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+  }
+
+  .allocation-list__head {
+    padding: 0 15px 0;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .allocation-row {
+    grid-template-areas: none;
+    align-items: start;
+    padding: 6px 14px;
+  }
+
+  .allocation-row__defid { grid-area: auto; grid-column: 1; grid-row: 1; }
+  .allocation-row__name { grid-area: auto; grid-column: 2; grid-row: 1; }
+  .allocation-row__paid { grid-area: auto; grid-column: 3; grid-row: 1; }
+  .allocation-row__free { grid-area: auto; grid-column: 4; grid-row: 1; }
+  .allocation-row__active { grid-area: auto; grid-column: 5; grid-row: 1; text-align: left; }
+  .allocation-row__actions { grid-area: auto; grid-column: 6; grid-row: 1; min-height: var(--control-height); }
+
+  // Text cells sit on the inputs' line.
+  .allocation-row__defid,
+  .allocation-row__name,
+  .allocation-row__active {
+    display: flex;
+    align-items: center;
+    min-height: var(--control-height);
+  }
+
+  .allocation-row__defid {
+    color: var(--text);
+    font-size: 15px;
+  }
+
+  // The column head names the cells: labels and suffixes are for screen readers.
+  .allocation-row__inline-label,
+  .allocation-row .field__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .allocation-row .field__box {
+    justify-content: center;
+    min-height: var(--control-height);
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .allocation-row__active {
+    font-size: 15px;
+  }
+}

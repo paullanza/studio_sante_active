@@ -1,0 +1,30 @@
+<% content_for :nav_section, "plus" %>
+<% content_for :title, "Allocations" %>
+<% content_for :page_wide, true %>
+
+<div class="stack">
+  <div class="page-header">
+    <h1>Allocations</h1>
+    <p class="text-muted text-small">Séances et absences permises pour chaque type de service.</p>
+  </div>
+
+  <%= form_with url: allocations_path, method: :get, class: "search-form", role: "search" do %>
+    <div class="field field--compact search-form__field">
+      <label class="field__box" for="q">
+        <span class="field__label visually-hidden">Nom ou DefID</span>
+        <%= search_field_tag :q, @query, id: "q", class: "field__input",
+              placeholder: "Nom ou DefID", autocomplete: "off", spellcheck: false %>
+      </label>
+    </div>
+    <button type="submit" class="btn btn--primary">Rechercher</button>
+  <% end %>
+
+  <% if @query.present? %>
+    <p class="text-muted text-small">
+      <%= pluralize(@to_define.size + @defined.size, "allocation") %> pour « <%= @query %> » ·
+      <%= link_to "Toutes les allocations", allocations_path %>
+    </p>
+  <% end %>
+
+  <%= render "sections", to_define: @to_define, defined: @defined, active_counts: @active_counts, query: @query %>
+</div>

@@ -177,6 +177,8 @@ Server-rendered links with a `?tab=` param:
 
 `.until-tablet` shows only below 768 px and `.from-tablet` only from 768 px: when a page needs both, render the cards with one and the table with the other.
 
+A list whose rows are edited in place can't be a `<table>` (each row is a form in its own `turbo-frame`). Allocations (`allocations/_list`, `studio/_allocations.scss`) instead renders each row once: a card on a phone, and from 768 px a card-like row in the columns of `.allocation-list__head` (subgrid), with the field labels visually hidden since the head names them.
+
 ### Search pages and client cards
 
 ```erb

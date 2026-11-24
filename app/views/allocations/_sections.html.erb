@@ -1,0 +1,26 @@
+<%# Both lists of the Allocations page, replaced together when an allocation leaves « à définir ».
+    Locals: to_define, defined, active_counts, query. %>
+<div id="allocation-sections" class="stack allocation-sections">
+  <section class="allocation-section allocation-section--to-define" aria-labelledby="a-definir">
+    <header class="allocation-section__head">
+      <h2 id="a-definir">À définir (<%= to_define.size %>)</h2>
+      <span class="text-muted text-small">Leurs services ne peuvent pas être réservés tant que l'allocation n'est pas définie.</span>
+    </header>
+    <% if to_define.any? %>
+      <%= render "list", definitions: to_define, active_counts: active_counts, query: query %>
+    <% else %>
+      <p class="empty-state">Aucune allocation à définir.</p>
+    <% end %>
+  </section>
+
+  <section class="allocation-section" aria-labelledby="definies">
+    <header class="allocation-section__head">
+      <h2 id="definies">Définies (<%= defined.size %>)</h2>
+    </header>
+    <% if defined.any? %>
+      <%= render "list", definitions: defined, active_counts: active_counts, query: query %>
+    <% else %>
+      <p class="empty-state"><%= query.present? ? "Aucune allocation définie ne correspond à « #{query} »." : "Aucune allocation définie." %></p>
+    <% end %>
+  </section>
+</div>
