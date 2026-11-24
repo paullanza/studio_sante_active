@@ -30,30 +30,6 @@ RSpec.describe FliipServicesHelper, type: :helper do
     end
   end
 
-  describe "#svc_time_progress_percent" do
-    it "uses the purchase date when there is no start date" do
-      travel_to Date.new(2026, 1, 6) do
-        svc = build(:fliip_service, start_date: nil, purchase_date: Time.zone.local(2026, 1, 1), expire_date: Date.new(2026, 1, 11))
-
-        expect(helper.svc_time_progress_percent(svc)).to eq(50)
-      end
-    end
-
-    it "is 0 without a usable range" do
-      expect(helper.svc_time_progress_percent(build(:fliip_service, expire_date: nil))).to eq(0)
-    end
-  end
-
-  describe "#progress_color_classes" do
-    it "goes from grey to green, yellow, orange and red" do
-      expect(helper.progress_color_classes(0)).to eq(%w[bg-secondary text-white])
-      expect(helper.progress_color_classes(49)).to eq(%w[bg-success text-white])
-      expect(helper.progress_color_classes(50)).to eq(%w[bg-warning text-dark])
-      expect(helper.progress_color_classes(75)).to eq(%w[bg-orange text-dark])
-      expect(helper.progress_color_classes(95)).to eq(%w[bg-danger text-white])
-    end
-  end
-
   describe "#fmt1" do
     it "formats with one decimal" do
       expect(helper.fmt1(2)).to eq("2.0")
@@ -83,6 +59,24 @@ RSpec.describe FliipServicesHelper, type: :helper do
 
     it "is never complete without an allowance" do
       expect(helper.paid_progress_complete?(create(:fliip_service, :without_definition), 100)).to be false
+    end
+  end
+
+  describe "#service_bar" do
+    it "puts the label and percentage above a bar capped at 100 %" do
+      html = Nokogiri::HTML.fragment(helper.service_bar("Séances", 120, "bg-secondary"))
+
+      expect(html.at_css(".service-bar__label").text).to eq("Séances120 %")
+      expect(html.at_css(".progress")["aria-valuenow"]).to eq("120")
+      expect(html.at_css(".progress-bar")["class"]).to eq("progress-bar bg-secondary")
+      expect(html.at_css(".progress-bar")["style"]).to eq("width: 100%")
+    end
+
+    it "puts « label · % » on the left and the aside on the right" do
+      html = Nokogiri::HTML.fragment(helper.service_bar("Temps", 5, "bg-primary", aside: "362 jours restants"))
+      spans = html.css(".service-bar__label > span")
+
+      expect(spans.map(&:text)).to eq([ "Temps · 5 %", "362 jours restants" ])
     end
   end
 end

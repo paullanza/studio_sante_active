@@ -5,6 +5,7 @@
 #   form_with model: @user, builder: StudioFormBuilder do |f|
 #     f.field :email, label: "Courriel", as: :email, autocomplete: "email"
 #     f.code :signup_code_token, label: "Code d'inscription", length: 8
+#     f.select_field :user_id, staff.map { |u| [ u.full_name, u.id ] }, label: "Entraîneur·e"
 #     f.segmented :present, [ [ "Présent·e", true ], [ "Absent·e", false ] ], label: "Présence"
 #     f.submit "Enregistrer"
 #   end
@@ -39,6 +40,25 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
     @template.tag.div(class: [ field_classes(error), field_class ].compact.join(" ")) do
       @template.safe_join([
         @template.tag.div(@template.safe_join([ label_row(attribute, label, label_aside), input ]), class: "field__box"),
+        hint_tag(attribute, hint),
+        error_tag(attribute, error)
+      ].compact)
+    end
+  end
+
+  # A labelled <select> in the same tile as `field`. `choices` is what
+  # `options_for_select` takes ([[label, value], …]).
+  def select_field(attribute, choices, label:, hint: nil, field_class: nil, include_blank: false, **input_options)
+    error = error_for(attribute)
+
+    input = select(attribute, choices, { include_blank: include_blank }, input_options.merge(
+      class: [ "field__input", input_options[:class] ].compact.join(" "),
+      aria: input_aria(attribute, hint:, error:).merge(input_options.fetch(:aria, {}))
+    ))
+
+    @template.tag.div(class: [ field_classes(error), field_class ].compact.join(" ")) do
+      @template.safe_join([
+        @template.tag.div(@template.safe_join([ label(attribute, label, class: "field__label"), input ]), class: "field__box"),
         hint_tag(attribute, hint),
         error_tag(attribute, error)
       ].compact)

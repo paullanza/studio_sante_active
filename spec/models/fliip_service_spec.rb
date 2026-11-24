@@ -259,28 +259,39 @@ RSpec.describe FliipService, type: :model do
     end
   end
 
+  describe "#planned_months" do
+    it "reads Fliip's duration, else « N mois » in the name" do
+      expect(build(:fliip_service, duration: "12 Mois").planned_months).to eq(12)
+      expect(build(:fliip_service, duration: "3 Mois").planned_months).to eq(3)
+      expect(build(:fliip_service, duration: "Indéfini", service_name: "EP sur 12 mois - 1x/sem").planned_months).to eq(12)
+      expect(build(:fliip_service, duration: "Indéfini", service_name: "À la carte (60 min.)").planned_months).to be_nil
+    end
+  end
+
   describe "#overrun_days and #overrun_label" do
-    def spanning(days)
-      build(:fliip_service, start_date: Date.new(2026, 10, 26), expire_date: Date.new(2026, 10, 26) + days)
+    def twelve_months(start, finish)
+      build(:fliip_service, duration: "12 Mois", start_date: start, expire_date: finish)
     end
 
-    it "measures spans over 365 days against 12 months" do
-      service = build(:fliip_service, start_date: Date.new(2026, 10, 26), expire_date: Date.new(2027, 11, 12))
+    it "counts the days past start + the planned length" do
+      service = twelve_months(Date.new(2026, 10, 26), Date.new(2027, 11, 12))
 
       expect(service.overrun_days).to eq(17)
       expect(service.overrun_label).to eq("12 mois + 17 j")
-      expect(spanning(366).overrun_label).to eq("12 mois + 1 j")
+      three = build(:fliip_service, duration: "3 Mois", start_date: Date.new(2026, 1, 1), expire_date: Date.new(2026, 4, 11))
+      expect(three.overrun_label).to eq("3 mois + 10 j")
     end
 
-    it "measures spans over 90 days against 3 months" do
-      expect(spanning(100).overrun_days).to eq(10)
-      expect(spanning(100).overrun_label).to eq("3 mois + 10 j")
+    it "shows nothing for a service that ends on time, a day early, or up to 2 days late" do
+      expect(twelve_months(Date.new(2026, 7, 6), Date.new(2027, 7, 5)).overrun_label).to be_nil
+      expect(twelve_months(Date.new(2026, 7, 6), Date.new(2027, 7, 6)).overrun_label).to be_nil
+      expect(twelve_months(Date.new(2026, 7, 6), Date.new(2027, 7, 8)).overrun_label).to be_nil
+      expect(twelve_months(Date.new(2026, 7, 6), Date.new(2027, 7, 9)).overrun_label).to eq("12 mois + 3 j")
     end
 
-    it "is nil for a span of 90 days or less, or a missing date" do
-      expect(spanning(90).overrun_days).to be_nil
-      expect(spanning(90).overrun_label).to be_nil
-      expect(build(:fliip_service, start_date: nil).overrun_label).to be_nil
+    it "is nil without a planned length or a date" do
+      expect(build(:fliip_service, duration: "Indéfini", service_name: "À la carte").overrun_label).to be_nil
+      expect(build(:fliip_service, duration: "12 Mois", start_date: nil).overrun_label).to be_nil
     end
   end
 
@@ -304,6 +315,41 @@ RSpec.describe FliipService, type: :model do
     it "is false once either count is set" do
       expect(build(:fliip_service, service_definition: build(:service_definition, paid_sessions: 12, free_sessions: 0))).not_to be_allocation_to_define
       expect(build(:fliip_service, service_definition: build(:service_definition, paid_sessions: 0, free_sessions: 2))).not_to be_allocation_to_define
+    end
+  end
+
+  describe "#numbered_sessions" do
+    let(:roomy) { create(:fliip_service, service_definition: create(:service_definition, paid_sessions: 20, free_sessions: 5)) }
+
+    before { travel_to Time.zone.local(2026, 11, 20, 12, 0) }
+
+    it "numbers every séance in occurred_at order and returns them newest first" do
+      first  = create(:session, fliip_service: roomy, occurred_at: Time.zone.local(2026, 11, 10, 9, 0))
+      absence = create(:session, fliip_service: roomy, present: false, occurred_at: Time.zone.local(2026, 11, 12, 9, 0))
+      third  = create(:session, fliip_service: roomy, occurred_at: Time.zone.local(2026, 11, 14, 9, 0))
+
+      expect(absence).to be_free
+      expect(roomy.numbered_sessions).to eq([ [ third, 3 ], [ absence, 2 ], [ first, 1 ] ])
+    end
+
+    it "breaks ties on occurred_at by id" do
+      at = Time.zone.local(2026, 11, 10, 9, 0)
+      first  = create(:session, fliip_service: roomy, occurred_at: at)
+      second = create(:session, fliip_service: roomy, occurred_at: at + 1.hour)
+      second.update_columns(occurred_at: at) # the uniqueness check only runs through validations
+
+      expect(roomy.numbered_sessions.map(&:first)).to eq([ second, first ])
+    end
+
+    it "adds the séances and absences used by adjustments created at or before each séance" do
+      early = create(:service_usage_adjustment, fliip_service: roomy, paid_used_delta: 2, free_used_delta: 0.5)
+      early.update_columns(created_at: Time.zone.local(2026, 11, 1, 9, 0))
+      late = create(:service_usage_adjustment, fliip_service: roomy, paid_used_delta: 3)
+      late.update_columns(created_at: Time.zone.local(2026, 11, 13, 9, 0))
+      first  = create(:session, fliip_service: roomy, occurred_at: Time.zone.local(2026, 11, 10, 9, 0))
+      second = create(:session, fliip_service: roomy, occurred_at: Time.zone.local(2026, 11, 13, 9, 0))
+
+      expect(roomy.numbered_sessions).to eq([ [ second, 7.5 ], [ first, 3.5 ] ])
     end
   end
 end

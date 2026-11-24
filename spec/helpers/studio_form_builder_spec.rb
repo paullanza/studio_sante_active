@@ -159,4 +159,27 @@ RSpec.describe StudioFormBuilder, type: :helper do
       expect(form_for_user(&:base_errors).at_css(".flash")).to be_nil
     end
   end
+
+  describe "#select_field" do
+    it "renders a select in a labelled tile with the current value chosen" do
+      user.role = "manager"
+      html = form_for_user do |f|
+        f.select_field(:role, [ [ "Employé·e", "employee" ], [ "Gestionnaire", "manager" ] ], label: "Rôle")
+      end
+      select = html.at_css(".field .field__box select#user_role")
+
+      expect(html.at_css("label.field__label[for=user_role]").text).to eq("Rôle")
+      expect(select["class"]).to eq("field__input")
+      expect(select.at_css("option[selected]").text).to eq("Gestionnaire")
+    end
+
+    it "shows the attribute's error" do
+      user.errors.add(:role, "est invalide")
+      html = form_for_user { |f| f.select_field(:role, [ [ "Employé·e", "employee" ] ], label: "Rôle") }
+
+      expect(html.at_css(".field")["class"].split).to include("field--invalid")
+      expect(html.at_css("select")["aria-invalid"]).to eq("true")
+      expect(html.at_css(".field__error").text).to eq("est invalide")
+    end
+  end
 end
