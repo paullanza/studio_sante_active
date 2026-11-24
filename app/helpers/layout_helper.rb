@@ -12,6 +12,9 @@ module LayoutHelper
   BACK_ICON = "M15 18l-6-6 6-6".freeze
   NEXT_ICON = "M9 18l6-6-6-6".freeze
   ARROW_ICON = "M5 12h14M13 6l6 6-6 6".freeze
+  REFRESH_ICON = "M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5".freeze
+  PHONE_ICON = "M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z".freeze
+  MAIL_ICON = "M4 4h16v16H4zM4 6l8 7 8-7".freeze
 
   # Where the GEKO brand links: the user's landing page, or sign in.
   def home_path

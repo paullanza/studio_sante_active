@@ -208,4 +208,31 @@ RSpec.describe FliipUser, type: :model do
       expect(build(:fliip_user, user_role: nil)).not_to be_staff
     end
   end
+
+  describe "top card totals" do
+    let(:client) { create(:fliip_user) }
+    let(:definition) { create(:service_definition, paid_sessions: 10, free_sessions: 2) }
+
+    it "counts active services still in Fliip and sums their séances left" do
+      active = create(:fliip_service, fliip_user: client, service_definition: definition)
+      create(:session, fliip_service: active, duration: 1.5)
+      create(:fliip_service, fliip_user: client, service_definition: definition, purchase_status: "I")
+      create(:fliip_service, :missing_from_fliip, fliip_user: client, service_definition: definition)
+      create(:fliip_service, :without_definition, fliip_user: client)
+
+      client.reload
+      expect(client.active_services_count).to eq(2)
+      expect(client.remaining_sessions_total).to eq(8.5)
+    end
+
+    it "#last_session_at is the latest séance's time" do
+      service = create(:fliip_service, fliip_user: client, service_definition: definition)
+      latest = 1.hour.ago.change(sec: 0)
+      create(:session, fliip_service: service, occurred_at: 2.days.ago)
+      create(:session, fliip_service: service, occurred_at: latest)
+
+      expect(client.last_session_at).to eq(latest)
+      expect(create(:fliip_user).last_session_at).to be_nil
+    end
+  end
 end

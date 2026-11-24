@@ -136,6 +136,24 @@ RSpec.describe FliipApi::UserSyncer do
     end
   end
 
+  describe "synced_at" do
+    it "records when a sync succeeded" do
+      stub_fliip
+      travel_to Time.zone.local(2026, 11, 24, 10, 0) do
+        syncer.call(row)
+        expect(FliipUser.find_by!(remote_id: 500).synced_at).to eq(Time.current)
+      end
+    end
+
+    it "is left alone when Fliip doesn't know the user" do
+      user = create(:fliip_user, remote_id: 500)
+      allow(client).to receive(:services).with(500).and_raise(FliipApi::NotFound, "400")
+
+      expect { syncer.call(row) }.to raise_error(FliipApi::NotFound)
+      expect(user.reload.synced_at).to be_nil
+    end
+  end
+
   describe "#call_by_remote_id" do
     it "syncs a client from their details" do
       allow(client).to receive(:client).with(500).and_return(row)

@@ -1,0 +1,11 @@
+<%# An abonnement, for reference only: nothing is booked against it. Local: contract. %>
+<li class="card contract-card">
+  <div class="service-card__head">
+    <span class="service-card__name"><%= contract.membership_name.presence || "Abonnement" %></span>
+    <%= contract_status_badge(contract) %>
+  </div>
+  <span class="text-muted text-small numeric">
+    <%= contract.start_date ? l(contract.start_date) : "?" %> → <%= contract.end_date ? l(contract.end_date) : "sans fin" %><% if contract.payment_terms.present? %> · <%= contract.payment_terms %><% end %>
+  </span>
+  <span class="text-muted text-small numeric">Contrat# <%= contract.remote_contract_id %></span>
+</li>

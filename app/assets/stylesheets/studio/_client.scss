@@ -1,0 +1,118 @@
+// The Client page: the top card, then the tabs. From 1024 px the top card is
+// a sticky column on the left and the tabs take the rest of the width.
+.page-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.btn--small {
+  font-size: 13px;
+}
+
+.client-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.client-page__tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.client-top__who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.client-top__who .avatar {
+  width: 56px;
+  height: 56px;
+}
+
+.client-top__name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.client-top__name h1 {
+  font-size: 30px;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.contact-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.contact-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--touch-target);
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.contact-link svg {
+  flex: none;
+}
+
+.contact-link__text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+// Short facts in two columns: label above value.
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+  margin: 0;
+}
+
+.facts dt {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.facts dd {
+  margin: 0;
+  font-size: 14px;
+}
+
+.facts__wide {
+  grid-column: 1 / -1;
+}
+
+.empty-state {
+  margin: 0;
+  padding: 24px 16px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-card);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+@media (min-width: 1024px) {
+  .client-page {
+    grid-template-columns: 360px minmax(0, 1fr);
+    gap: 32px;
+  }
+
+  .client-page__top {
+    position: sticky;
+    top: calc(var(--safe-top) + 88px);
+  }
+}

@@ -245,4 +245,52 @@ RSpec.describe FliipService, type: :model do
       expect(service.paid_usage_compact_str).to eq("0.0/10.0")
     end
   end
+
+  describe "#overrun_days and #overrun_label" do
+    def spanning(days)
+      build(:fliip_service, start_date: Date.new(2026, 10, 26), expire_date: Date.new(2026, 10, 26) + days)
+    end
+
+    it "measures spans over 365 days against 12 months" do
+      service = build(:fliip_service, start_date: Date.new(2026, 10, 26), expire_date: Date.new(2027, 11, 12))
+
+      expect(service.overrun_days).to eq(17)
+      expect(service.overrun_label).to eq("12 mois + 17 j")
+      expect(spanning(366).overrun_label).to eq("12 mois + 1 j")
+    end
+
+    it "measures spans over 90 days against 3 months" do
+      expect(spanning(100).overrun_days).to eq(10)
+      expect(spanning(100).overrun_label).to eq("3 mois + 10 j")
+    end
+
+    it "is nil for a span of 90 days or less, or a missing date" do
+      expect(spanning(90).overrun_days).to be_nil
+      expect(spanning(90).overrun_label).to be_nil
+      expect(build(:fliip_service, start_date: nil).overrun_label).to be_nil
+    end
+  end
+
+  describe "#days_left" do
+    it "counts the days to the end date, floored at 0" do
+      service = build(:fliip_service, expire_date: Date.new(2026, 12, 1))
+
+      expect(service.days_left(Date.new(2026, 11, 24))).to eq(7)
+      expect(service.days_left(Date.new(2026, 12, 10))).to eq(0)
+      expect(build(:fliip_service, expire_date: nil).days_left).to be_nil
+    end
+  end
+
+  describe "#allocation_to_define?" do
+    it "is true without an allocation, or with 0/0 or nil/nil" do
+      expect(build(:fliip_service, :without_definition)).to be_allocation_to_define
+      expect(build(:fliip_service, service_definition: build(:service_definition, paid_sessions: 0, free_sessions: 0))).to be_allocation_to_define
+      expect(build(:fliip_service, service_definition: build(:service_definition, paid_sessions: nil, free_sessions: nil))).to be_allocation_to_define
+    end
+
+    it "is false once either count is set" do
+      expect(build(:fliip_service, service_definition: build(:service_definition, paid_sessions: 12, free_sessions: 0))).not_to be_allocation_to_define
+      expect(build(:fliip_service, service_definition: build(:service_definition, paid_sessions: 0, free_sessions: 2))).not_to be_allocation_to_define
+    end
+  end
 end

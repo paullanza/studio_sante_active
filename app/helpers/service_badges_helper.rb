@@ -7,6 +7,11 @@ module ServiceBadgesHelper
     "S" => "badge--moins24"
   }.freeze
 
+  CONTRACT_STATUS_BADGES = {
+    "A" => "badge--chargee",
+    "S" => "badge--moins24"
+  }.freeze
+
   def service_status_badge(svc)
     if svc.removed_from_fliip?
       status_badge("Retiré de Fliip", "badge--retire")
@@ -21,7 +26,7 @@ module ServiceBadgesHelper
     if contract.missing_from_fliip? || contract.fliip_user&.missing_from_fliip?
       status_badge("Retiré de Fliip", "badge--retire")
     else
-      status_badge(contract.status_name, contract.status == "A" ? "badge--chargee" : "badge--neutral")
+      status_badge(contract.status_name, CONTRACT_STATUS_BADGES.fetch(contract.status, "badge--neutral"))
     end
   end
 

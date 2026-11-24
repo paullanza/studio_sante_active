@@ -1,209 +1,113 @@
-<!-- app/views/fliip_users/show.html.erb -->
-<div class="container my-4 fliip-user-show">
-  <%# local helpers %>
-  <% full_name     = [@fliip_user.user_firstname, @fliip_user.user_lastname].compact_blank.join(" ") %>
-  <% full_address  = [@fliip_user.user_address, @fliip_user.user_city, @fliip_user.user_zipcode].compact_blank.join(", ") %>
-  <% primary_phone = @fliip_user.user_phone1.presence %>
-  <% email         = @fliip_user.user_email.presence %>
-  <% gender        = @fliip_user.user_gender.presence %>
-  <% status        = @fliip_user.user_status.presence %>
-  <% member_since  = @fliip_user.member_since&.strftime("%d/%m/%Y") %>
+<% content_for :nav_section, "clients" %>
+<% content_for :title, @fliip_user.full_name %>
+<% content_for :page_wide, true %>
 
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="mb-0 fw-bold"><%= full_name.presence || "—" %></h1>
-    <div class="d-flex gap-2">
-      <%= button_to "⟳ Rafraîchir depuis l’API",
-                    refresh_fliip_user_path(@fliip_user.remote_id),
-                    method: :post,
-                    form_class: "d-inline",
-                    class: "btn btn-outline-secondary btn-sm",
-                    data: { turbo: false } %>
-      <%= link_to "← Retour à la liste", fliip_users_path, class: "btn btn-secondary btn-sm" %>
-    </div>
-  </div>
+<div class="page-bar">
+  <%= back_link_to "Clients", fliip_users_path %>
+  <%= button_to refresh_fliip_user_path(@fliip_user.remote_id), class: "btn btn--secondary btn--small" do %>
+    <%= icon_svg(LayoutHelper::REFRESH_ICON, size: 16) %>
+    Rafraîchir
+  <% end %>
+</div>
 
-  <div class="row g-4">
-    <!-- LEFT: Compact profile (unchanged) -->
-    <div class="col-12 col-lg-3">
-      <div class="card shadow-sm stretch-card">
-        <div class="card-body p-3 text-center">
-          <% if @fliip_user.user_image.present? && !@fliip_user.user_image.split("/images/user_image/").last.to_s.include?("/") %>
-            <%= image_tag @fliip_user.user_image, class: "img-thumbnail rounded-circle mb-2", style: "max-width:100px;" %>
-          <% else %>
-            <div class="bg-light border rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width:100px;height:100px;">
-              <span class="text-muted fw-semibold fs-4"><%= "#{@fliip_user.user_firstname.to_s.first}#{@fliip_user.user_lastname.to_s.first}".upcase.presence || "?" %></span>
-            </div>
-          <% end %>
-
-          <div class="fw-semibold"><%= full_name.presence || "—" %></div>
-          <div class="small text-muted">ID: <%= @fliip_user.id %></div>
-          <div class="small text-muted mb-3">FliipUserID: <%= @fliip_user.remote_id || "—" %></div>
-
-          <div class="text-start">
-            <div class="mb-2">
-              <div class="text-muted small">Genre</div>
-              <div><%= gender || "–" %></div>
-            </div>
-
-            <div class="mb-2">
-              <div class="text-muted small">Statut</div>
-              <div><span class="badge bg-light text-dark"><%= status || "–" %></span> <%= missing_from_fliip_badge(@fliip_user) %></div>
-            </div>
-
-            <div class="mb-2">
-              <div class="text-muted small">Membre depuis</div>
-              <div><%= member_since || "–" %></div>
-            </div>
-
-            <div class="mb-2">
-              <div class="text-muted small">Courriel</div>
-              <div><%= email ? mail_to(email) : "–" %></div>
-            </div>
-
-            <div class="mb-2">
-              <div class="text-muted small">Téléphone</div>
-              <div><%= primary_phone ? link_to(primary_phone, "tel:#{primary_phone}") : "–" %></div>
-            </div>
-
-            <div class="">
-              <div class="text-muted small">Adresse</div>
-              <div><%= full_address.presence || "–" %></div>
-            </div>
-          </div>
-        </div>
+<div class="client-page">
+  <section class="card card--top client-page__top" aria-labelledby="client-name">
+    <div class="client-top__who">
+      <%= client_avatar(@fliip_user) %>
+      <div class="client-top__name">
+        <h1 id="client-name"><%= @fliip_user.full_name.presence || "—" %></h1>
+        <span class="text-muted text-small numeric">ID <%= @fliip_user.id %> · FliipUserID <%= @fliip_user.remote_id %></span>
       </div>
     </div>
 
-    <!-- RIGHT: Tabs header + Card with tab content -->
-    <div class="col-12 col-lg-9">
-      <div class="tab-header" data-controller="tabs">
-        <nav>
-          <div class="nav nav-tabs" id="client-tablist" role="tablist">
-            <button
-              class="nav-link active"
-              id="tab-client-services"
-              type="button"
-              role="tab"
-              aria-controls="pane-client-services"
-              aria-selected="true"
-              data-bs-target="#pane-client-services"
-              data-action="click->tabs#activate">
-              Services
-            </button>
+    <% if @fliip_user.missing_from_fliip? %>
+      <div><span class="badge badge--retire">Retiré de Fliip</span></div>
+    <% end %>
 
-            <button
-              class="nav-link"
-              id="tab-client-contracts"
-              type="button"
-              role="tab"
-              aria-controls="pane-client-contracts"
-              aria-selected="false"
-              data-bs-target="#pane-client-contracts"
-              data-action="click->tabs#activate">
-              Abonnements
-            </button>
+    <% phones = [ @fliip_user.user_phone1, @fliip_user.user_phone2 ].compact_blank.uniq %>
+    <% if phones.any? || @fliip_user.user_email.present? %>
+      <div class="contact-links">
+        <% phones.each do |phone| %>
+          <%= link_to "tel:#{phone.gsub(/[^\d+]/, '')}", class: "contact-link numeric" do %>
+            <%= icon_svg(LayoutHelper::PHONE_ICON, size: 18) %><span class="contact-link__text"><%= phone %></span>
+          <% end %>
+        <% end %>
+        <% if @fliip_user.user_email.present? %>
+          <%= mail_to @fliip_user.user_email, class: "contact-link" do %>
+            <%= icon_svg(LayoutHelper::MAIL_ICON, size: 18) %><span class="contact-link__text"><%= @fliip_user.user_email %></span>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
 
-            <!-- NEW: Consultations tab -->
-            <button
-              class="nav-link"
-              id="tab-client-consultations"
-              type="button"
-              role="tab"
-              aria-controls="pane-client-consultations"
-              aria-selected="false"
-              data-bs-target="#pane-client-consultations"
-              data-action="click->tabs#activate">
-              Consultations
-            </button>
-          </div>
-        </nav>
-
-        <div class="card shadow-sm stretch-card">
-          <div class="card-body p-3 scrollable-card-body">
-            <div id="client-tabcontent">
-              <!-- Services (default) -->
-              <section id="pane-client-services" role="tabpanel" aria-labelledby="tab-client-services">
-                <% if @fliip_user.fliip_services.any? %>
-                  <div class="table-scroll">
-                    <%= render "fliip_services/shared/services_table",
-                          services: @fliip_user.fliip_services.order(expire_date: :desc) %>
-                  </div>
-                <% else %>
-                  <p class="text-muted small mb-2">Aucun service trouvé pour cet·te utilisateur·trice.</p>
-                <% end %>
-              </section>
-
-              <!-- Abonnements -->
-              <section class="d-none" id="pane-client-contracts" role="tabpanel" aria-labelledby="tab-client-contracts">
-                <% if @fliip_user.fliip_contracts.any? %>
-                  <div class="table-scroll">
-                    <% fmt_date = ->(d) { d.present? ? d.strftime("%d/%m/%Y") : "—" } %>
-                    <% status_badge = ->(code) do
-                         case code.to_s.strip.upcase
-                         when "A" then ["Actif",     "bg-success"]
-                         when "I" then ["Inactif",   "bg-secondary"]
-                         when "C" then ["Annulé",    "bg-danger"]
-                         when "S" then ["Suspendu",  "bg-warning text-dark"]
-                         when "P" then ["Planifié",  "bg-info text-dark"]
-                         else           ["—",        "bg-secondary"]
-                         end
-                       end %>
-                    <table class="table table-hover align-middle">
-                      <thead class="table-light">
-                        <tr>
-                          <th class="text-nowrap">Abonnement #</th>
-                          <th class="text-nowrap">Statut</th>
-                          <th class="text-nowrap">Début</th>
-                          <th class="text-nowrap">Fin</th>
-                          <th class="text-nowrap">Abonnement</th>
-                          <th class="text-nowrap">Durée</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <% @fliip_user.fliip_contracts.order(end_date: :desc).each do |c| %>
-                          <% label, color = status_badge.call(c.status) %>
-                          <tr>
-                            <td class="text-nowrap"><%= c.remote_contract_id || "—" %></td>
-                            <td class="text-nowrap"><span class="badge <%= color %>"><%= label %></span> <%= missing_from_fliip_badge(c) %></td>
-                            <td class="text-nowrap">
-                              <div><%= fmt_date.call(c.start_date) %></div>
-                              <% if c.stop_date.present? %>
-                                <div class="text-muted small">Suspendu le : <%= fmt_date.call(c.stop_date) %></div>
-                              <% end %>
-                            </td>
-                            <td class="text-nowrap">
-                              <div><%= fmt_date.call(c.end_date) %></div>
-                              <% if c.cancel_date.present? %>
-                                <div class="text-muted small">Annulé le : <%= fmt_date.call(c.cancel_date) %></div>
-                              <% end %>
-                            </td>
-                            <td class="text-wrap">
-                              <%= c.membership_name.presence || "—" %>
-                            </td>
-                            <td class="text-nowrap"><%= c.duration.presence || "—" %></td>
-                          </tr>
-                        <% end %>
-                      </tbody>
-                    </table>
-                  </div>
-                <% else %>
-                  <p class="text-muted small mb-2">Aucun abonnement trouvé pour cet·te utilisateur·trice.</p>
-                <% end %>
-              </section>
-
-              <section class="d-none" id="pane-client-consultations" role="tabpanel" aria-labelledby="tab-client-consultations">
-                <% if @consultations.any? %>
-                  <div class="table-scroll">
-                    <%= render "consultations/shared/consultations_table", consultations: @consultations %>
-                  </div>
-                <% else %>
-                  <p class="text-muted small mb-2">Aucune consultation trouvée pour cet·te utilisateur·trice.</p>
-                <% end %>
-              </section>
-            </div>
-          </div>
-        </div>
-      </div><!-- /tabs controller scope -->
+    <div class="stats">
+      <% active = @fliip_user.active_services_count %>
+      <div class="stat">
+        <span class="stat__value"><%= active %></span>
+        <span class="stat__label"><%= active == 1 ? "service actif" : "services actifs" %></span>
+      </div>
+      <div class="stat">
+        <span class="stat__value"><%= format_count(@fliip_user.remaining_sessions_total) %></span>
+        <span class="stat__label">séances restantes</span>
+      </div>
+      <div class="stat">
+        <% last = @fliip_user.last_session_at %>
+        <span class="stat__value numeric"><%= last ? last.strftime("%d/%m") : "—" %></span>
+        <span class="stat__label">dernière séance</span>
+      </div>
     </div>
+
+    <% address = [ @fliip_user.user_address, @fliip_user.user_city, @fliip_user.user_zipcode ].compact_blank.join(", ") %>
+    <dl class="facts">
+      <div><dt>Membre depuis</dt><dd class="numeric"><%= @fliip_user.member_since ? l(@fliip_user.member_since) : "—" %></dd></div>
+      <div><dt>Statut Fliip</dt><dd><%= @fliip_user.user_status.presence || "—" %></dd></div>
+      <div><dt>Genre</dt><dd><%= @fliip_user.user_gender.presence || "—" %></dd></div>
+      <div class="facts__wide"><dt>Adresse</dt><dd><%= address.presence || "—" %></dd></div>
+    </dl>
+
+    <p class="text-muted text-small">
+      <% if @fliip_user.synced_at %>
+        <time datetime="<%= @fliip_user.synced_at.iso8601 %>" title="<%= l(@fliip_user.synced_at) %>">Synchronisé avec Fliip il y a <%= time_ago_in_words(@fliip_user.synced_at) %></time>
+      <% else %>
+        Jamais synchronisé depuis l'app
+      <% end %>
+    </p>
+  </section>
+
+  <div class="client-page__tabs">
+    <nav class="tabs" aria-label="Sections">
+      <% [ [ "services", "Services", @services.size ], [ "contracts", "Abonnements", @contracts.size ],
+           [ "consultations", "Consultations", @consultations.size ] ].each do |key, label, count| %>
+        <%= link_to "#{label} (#{count})", fliip_user_path(@fliip_user, tab: key), class: "tabs__tab",
+              aria: { current: (@tab == key ? "page" : nil) } %>
+      <% end %>
+    </nav>
+
+    <% case @tab %>
+    <% when "services" %>
+      <% if @services.any? %>
+        <ul class="list card-grid">
+          <%= render partial: "fliip_services/card", collection: @services, as: :service, locals: { show_client: false } %>
+        </ul>
+      <% else %>
+        <p class="empty-state">Aucun service.</p>
+      <% end %>
+    <% when "contracts" %>
+      <% if @contracts.any? %>
+        <ul class="list card-grid">
+          <%= render partial: "fliip_contracts/card", collection: @contracts, as: :contract %>
+        </ul>
+      <% else %>
+        <p class="empty-state">Aucun abonnement.</p>
+      <% end %>
+    <% when "consultations" %>
+      <% if @consultations.any? %>
+        <ul class="list card-grid">
+          <%= render partial: "consultations/client_card", collection: @consultations, as: :consultation %>
+        </ul>
+      <% else %>
+        <p class="empty-state">Aucune consultation.</p>
+      <% end %>
+    <% end %>
   </div>
 </div>
