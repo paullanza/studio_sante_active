@@ -234,17 +234,29 @@ class FliipService < ApplicationRecord
     pct.round
   end
 
-  # Overrun (GLOSSARY.md): the days the start-to-end span runs past its
-  # expected length, 12 months for spans over 365 days, 3 months over 90.
-  OVERRUN_BASES = [ [ 365, "12 mois" ], [ 90, "3 mois" ] ].freeze
+  # Overrun (GLOSSARY.md): the days the end date runs past the planned end,
+  # start date + the planned length in months. Up to 2 days past is how the
+  # calendar falls, not an overrun.
+  OVERRUN_TOLERANCE_DAYS = 2
+
+  # The planned length in months: Fliip's duration (« 12 Mois »), else
+  # « N mois » in the service name (duration « Indéfini »). Nil when unknown.
+  def planned_months
+    months = duration.to_s[/\A\s*(\d+)\s*mois/i, 1] || service_name.to_s[/(\d+)\s*mois/i, 1]
+    months.to_i if months.to_i.positive?
+  end
 
   def overrun_days
-    overrun&.first
+    months = planned_months
+    return nil if months.nil? || start_date.blank? || expire_date.blank?
+
+    days = (expire_date - (start_date >> months)).to_i
+    days if days > OVERRUN_TOLERANCE_DAYS
   end
 
   def overrun_label
-    days, base_label = overrun
-    "#{base_label} + #{days} j" if days
+    days = overrun_days
+    "#{planned_months} mois + #{days} j" if days
   end
 
   # Days until the end date, floored at 0; nil without an end date.
@@ -360,15 +372,5 @@ class FliipService < ApplicationRecord
 
   def booking_blocked?(reference_date = Date.current)
     booking_block_reason(reference_date).present?
-  end
-
-  private
-
-  def overrun
-    return nil if start_date.blank? || expire_date.blank?
-
-    days = (expire_date - start_date).to_i
-    base, label = OVERRUN_BASES.find { |limit, _| days > limit }
-    [ days - base, label ] if base
   end
 end

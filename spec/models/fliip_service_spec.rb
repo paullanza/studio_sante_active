@@ -246,28 +246,39 @@ RSpec.describe FliipService, type: :model do
     end
   end
 
+  describe "#planned_months" do
+    it "reads Fliip's duration, else « N mois » in the name" do
+      expect(build(:fliip_service, duration: "12 Mois").planned_months).to eq(12)
+      expect(build(:fliip_service, duration: "3 Mois").planned_months).to eq(3)
+      expect(build(:fliip_service, duration: "Indéfini", service_name: "EP sur 12 mois - 1x/sem").planned_months).to eq(12)
+      expect(build(:fliip_service, duration: "Indéfini", service_name: "À la carte (60 min.)").planned_months).to be_nil
+    end
+  end
+
   describe "#overrun_days and #overrun_label" do
-    def spanning(days)
-      build(:fliip_service, start_date: Date.new(2026, 10, 26), expire_date: Date.new(2026, 10, 26) + days)
+    def twelve_months(start, finish)
+      build(:fliip_service, duration: "12 Mois", start_date: start, expire_date: finish)
     end
 
-    it "measures spans over 365 days against 12 months" do
-      service = build(:fliip_service, start_date: Date.new(2026, 10, 26), expire_date: Date.new(2027, 11, 12))
+    it "counts the days past start + the planned length" do
+      service = twelve_months(Date.new(2026, 10, 26), Date.new(2027, 11, 12))
 
       expect(service.overrun_days).to eq(17)
       expect(service.overrun_label).to eq("12 mois + 17 j")
-      expect(spanning(366).overrun_label).to eq("12 mois + 1 j")
+      three = build(:fliip_service, duration: "3 Mois", start_date: Date.new(2026, 1, 1), expire_date: Date.new(2026, 4, 11))
+      expect(three.overrun_label).to eq("3 mois + 10 j")
     end
 
-    it "measures spans over 90 days against 3 months" do
-      expect(spanning(100).overrun_days).to eq(10)
-      expect(spanning(100).overrun_label).to eq("3 mois + 10 j")
+    it "shows nothing for a service that ends on time, a day early, or up to 2 days late" do
+      expect(twelve_months(Date.new(2026, 7, 6), Date.new(2027, 7, 5)).overrun_label).to be_nil
+      expect(twelve_months(Date.new(2026, 7, 6), Date.new(2027, 7, 6)).overrun_label).to be_nil
+      expect(twelve_months(Date.new(2026, 7, 6), Date.new(2027, 7, 8)).overrun_label).to be_nil
+      expect(twelve_months(Date.new(2026, 7, 6), Date.new(2027, 7, 9)).overrun_label).to eq("12 mois + 3 j")
     end
 
-    it "is nil for a span of 90 days or less, or a missing date" do
-      expect(spanning(90).overrun_days).to be_nil
-      expect(spanning(90).overrun_label).to be_nil
-      expect(build(:fliip_service, start_date: nil).overrun_label).to be_nil
+    it "is nil without a planned length or a date" do
+      expect(build(:fliip_service, duration: "Indéfini", service_name: "À la carte").overrun_label).to be_nil
+      expect(build(:fliip_service, duration: "12 Mois", start_date: nil).overrun_label).to be_nil
     end
   end
 
