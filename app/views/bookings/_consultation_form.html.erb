@@ -1,0 +1,45 @@
+<%# Saisir's consultation tab, main column: the consultation form as grouped
+    rows, ported with its current rules (ENG-197 changes them). Its button is in
+    bookings/_consultation_ticket (form="consultation_form"). %>
+<%= form_with model: @consultation, url: consultations_path, id: "consultation_form", builder: StudioFormBuilder, class: "form" do |f| %>
+  <%= f.base_errors(also: %i[occurred_at]) %>
+
+  <section class="form-section" aria-labelledby="consultation-prospect">
+    <header class="form-section__head"><h2 id="consultation-prospect">Prospect</h2></header>
+    <div class="form-grid">
+      <%= f.field :first_name, label: "Prénom", autocomplete: "off" %>
+      <%= f.field :last_name, label: "Nom", autocomplete: "off" %>
+      <%= f.field :email, label: "Courriel", as: :email, inputmode: "email", autocomplete: "off", icon: LayoutHelper::MAIL_ICON %>
+      <%= f.field :phone_number, label: "Téléphone", as: :tel, inputmode: "tel", autocomplete: "off", icon: LayoutHelper::PHONE_ICON %>
+    </div>
+  </section>
+
+  <%# Présent·e by default (BookingPage builds the consultation with present: true). %>
+  <%= f.switch :present, [ [ safe_join([ icon_svg(LayoutHelper::CHECK_ICON, size: 22, stroke_width: 2.4), "Présent·e" ]), "1" ],
+                           [ safe_join([ icon_svg(LayoutHelper::CROSS_ICON, size: 22, stroke_width: 2.4), "Absent·e" ]), "0" ] ],
+        label: "Présence" %>
+
+  <% if @staff.any? %>
+    <section class="form-section" aria-labelledby="consultation-qui">
+      <header class="form-section__head"><h2 id="consultation-qui">Entraîneur·e</h2></header>
+      <div class="form-grid form-grid--single">
+        <%= f.select_field :user_id, @staff.map { |u| [ u.full_name, u.id ] }, label: "Donnée par",
+              icon: LayoutHelper::NAV_ICONS["clients"],
+              include_blank: (@owner_required ? "Choisir un·e employé·e" : "Moi (#{current_user.full_name})"),
+              required: @owner_required %>
+      </div>
+    </section>
+  <% end %>
+
+  <section class="form-section" aria-labelledby="consultation-quand">
+    <header class="form-section__head"><h2 id="consultation-quand">Quand</h2></header>
+    <div class="form-grid">
+      <%= f.field :date, label: "Date", as: :date, icon: LayoutHelper::CALENDAR_ICON,
+            value: params.dig(:consultation, :date).presence || @consultation.occurred_at&.to_date&.iso8601 || Time.zone.today.iso8601 %>
+      <%= f.field :time, label: "Heure", as: :time, step: 1800, icon: LayoutHelper::CLOCK_ICON,
+            value: params.dig(:consultation, :time).presence || @consultation.occurred_at&.strftime("%H:%M") || "09:00" %>
+    </div>
+  </section>
+
+  <%= f.field :note, label: "Note", as: :textarea, rows: 2, placeholder: "Facultatif" %>
+<% end %>

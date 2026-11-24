@@ -1,0 +1,385 @@
+// Settings-style rows (docs/ui.md « Forms », the Saisir variant). Inside a
+// .form-rows wrapper, StudioFormBuilder's markup reads as rows: an optional
+// icon, the label on the left, the value on the right over a faint rule,
+// the whole row clickable. A .form-grid is the group's card with a line
+// between rows. Everything here is scoped, so other forms keep the filled
+// tiles of _fields.scss; each rule resets what those tiles set.
+.form-rows {
+  .form:has(> .form-section) {
+    gap: 24px;
+  }
+
+  .field {
+    gap: 0;
+  }
+
+  .field__box {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+    padding: 8px 16px;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow: inset 3px 0 0 transparent;
+  }
+
+  .field__box:focus-within {
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+
+  .field__icon {
+    display: inline-flex;
+    flex: none;
+    color: var(--brand-light);
+  }
+
+  .field__label-row {
+    flex: 0 1 auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .field__label {
+    flex: 0 1 auto;
+    max-width: 48%;
+    color: var(--text-muted);
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: normal;
+    line-height: 1.3;
+    text-transform: none;
+  }
+
+  .field__label-row .field__label {
+    max-width: none;
+  }
+
+  .field__box:focus-within .field__label {
+    color: var(--accent);
+  }
+
+  // The label covers the row and focuses its input; the input sits above.
+  .field__box > .field__label::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+
+  .field__box > .field__input,
+  .field__box .field__label-row a {
+    position: relative;
+    z-index: 1;
+  }
+
+  .field__input {
+    flex: 1 1 40%;
+    min-width: 0;
+    min-height: 28px;
+    padding: 2px 0;
+    font-weight: 700;
+    text-align: right;
+    color-scheme: dark; // native date and time icons for a dark page
+  }
+
+  .field__input::placeholder {
+    font-weight: 400;
+  }
+
+  .field__input::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+  }
+
+  // A faint rule under the value says where to type.
+  .field__box > input.field__input,
+  .field__box > select.field__input {
+    box-shadow: inset 0 -1px 0 var(--border);
+  }
+
+  .field__box > input.field__input:focus {
+    box-shadow: inset 0 -1px 0 var(--accent);
+  }
+
+  select.field__input {
+    text-align-last: right;
+  }
+
+  select.field__input option {
+    text-align: left;
+  }
+
+  // A textarea takes the whole row, its label above it.
+  .field:has(textarea) .field__box {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding-top: 12px;
+  }
+
+  .field:has(textarea) .field__label {
+    max-width: none;
+  }
+
+  textarea.field__input {
+    min-height: 72px;
+    font-weight: 400;
+    text-align: left;
+  }
+
+  .field--invalid .field__box {
+    box-shadow: inset 3px 0 0 var(--field-invalid-border);
+  }
+
+  .field__hint,
+  .field__error {
+    margin: 0;
+    padding: 6px 16px 0;
+  }
+
+  .form-grid .field__hint,
+  .form-grid .field__error {
+    padding-bottom: 10px;
+  }
+
+  // A one-line search field (the client search): its text on the left.
+  .field--compact .field__box {
+    min-height: var(--control-height);
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .field--compact .field__box > .field__input {
+    font-weight: 400;
+    text-align: left;
+    box-shadow: none;
+  }
+
+  // A short choice (segmented): the label on the left, pills on the right,
+  // the chosen one gold. A floated legend is an ordinary grid item.
+  fieldset.field:has(> .segmented) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 12px;
+    min-height: 56px;
+    padding: 8px 16px;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+  }
+
+  fieldset.field:has(> .field__icon) {
+    grid-template-columns: auto auto minmax(0, 1fr);
+  }
+
+  fieldset.field:has(> .segmented) > .field__label {
+    float: left;
+    grid-row: 1;
+    max-width: none;
+  }
+
+  fieldset.field:has(> .segmented) > .field__icon,
+  fieldset.field:has(> .segmented) > .segmented {
+    grid-row: 1;
+  }
+
+  fieldset.field:has(> .field__icon) > .field__icon { grid-column: 1; }
+  fieldset.field:has(> .field__icon) > .field__label { grid-column: 2; }
+
+  fieldset.field:has(> .segmented) > .field__error {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    padding: 6px 0 0;
+  }
+
+  .segmented {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-self: auto;
+    gap: 6px;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .segmented__text {
+    justify-content: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--text);
+  }
+
+  .segmented__option + .segmented__option .segmented__text {
+    border-left: 1px solid var(--border-strong);
+  }
+
+  // The pill is the visible part; its label keeps a 44 px tap target.
+  .segmented__option::before {
+    content: "";
+    position: absolute;
+    inset: -4px 0;
+  }
+
+  .segmented__input:checked + .segmented__text {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+
+  .segmented__input:focus-visible + .segmented__text {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+  }
+
+  // Groups: a small-caps title above a card of rows.
+  .form-section {
+    gap: 8px;
+  }
+
+  .form-section__head {
+    padding: 0 4px;
+  }
+
+  .form-section__head h2 {
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  .form-grid {
+    gap: 0;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+  }
+
+  // Each row draws the line under it and on its right; the card clips the
+  // lines on its outer edges.
+  .form-grid > * {
+    box-shadow: 0 1px 0 var(--border), 1px 0 0 var(--border);
+  }
+
+  .form-grid .field__box,
+  .form-grid fieldset.field:has(> .segmented) {
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .form-grid .field__box:focus-within {
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+
+  @media (min-width: 768px) {
+    .form-grid {
+      gap: 0;
+    }
+
+    .form-grid--single {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    // « Quand »: Date, Heure and Durée on one row.
+    .form-grid--when {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+}
+
+// The large sliding switch (StudioFormBuilder#switch): two halves and a thumb
+// that slides to the chosen one. The second option is the exception and
+// takes the Absence colours. Only Saisir uses it.
+.field--switch > .field__label {
+  margin-bottom: 8px;
+  padding: 0 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.switch {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+}
+
+.switch::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 5px;
+  width: calc(50% - 5px);
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.switch:has(.switch__option:last-child .switch__input:checked)::before {
+  transform: translateX(100%);
+  background: var(--badge-absence-fg);
+}
+
+.switch:not(:has(.switch__input:checked))::before {
+  opacity: 0;
+}
+
+.switch__option {
+  position: relative;
+  z-index: 1;
+  display: flex;
+}
+
+.switch__input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.switch__text {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 58px;
+  color: var(--text-muted);
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.switch__input:checked + .switch__text {
+  color: var(--on-brand);
+}
+
+.switch__option:last-child .switch__input:checked + .switch__text {
+  color: var(--bg);
+}
+
+.switch__input:focus-visible + .switch__text {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-pill);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch::before {
+    transition: none;
+  }
+}

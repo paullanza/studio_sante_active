@@ -31,10 +31,16 @@
   // Badges: background / text pairs
   --badge-chargee-bg: #1F3A2A;
   --badge-chargee-fg: #8FD6A9;
-  --badge-absence-bg: #2A2E3D;
-  --badge-absence-fg: #A9B8F0;
-  --badge-moins24-bg: #3D2E1A;
-  --badge-moins24-fg: #F2B66D;
+  // Séance outcomes: Absence is yellow, -24h red (Chargée green above).
+  --badge-absence-bg: #36341A;
+  --badge-absence-fg: #F2EC62;
+  --badge-moins24-bg: #451616;
+  --badge-moins24-fg: #FF6259;
+  // Service states that used to share the outcome colours.
+  --badge-planned-bg: #2A2E3D; // Planifié
+  --badge-planned-fg: #A9B8F0;
+  --badge-warning-bg: #3D2E1A; // Suspendu, overrun, Mode correction
+  --badge-warning-fg: #F2B66D;
   --badge-unconfirmed-bg: #33301A;
   --badge-unconfirmed-fg: #E6CC6A;
   --badge-retire-bg: #3A1F22;

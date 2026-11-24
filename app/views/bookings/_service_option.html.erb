@@ -1,0 +1,36 @@
+<%# A client's service as a choice on Saisir: a radio row, or a greyed-out
+    row with the reason it can't be booked (FliipService#booking_block_reason,
+    « Allocation à définir » included).
+    Locals: service, checked. The data attributes feed seance_outcome_controller.js
+    (counts) and confirm_dialog_controller.js (dates). %>
+<% reason = service.booking_block_reason %>
+<% ids = "Serv# #{service.id} · Achat# #{service.remote_purchase_id} · DefID #{service.service_id || '—'}" %>
+
+<% if reason %>
+  <div class="service-option service-option--blocked">
+    <span class="service-option__mark" aria-hidden="true"></span>
+    <span class="service-option__body">
+      <span class="service-option__name"><%= service.service_name.presence || "Service" %></span>
+      <span class="service-option__reason"><%= reason %></span>
+    </span>
+  </div>
+<% else %>
+  <% paid_left = service.remaining_paid_sessions.to_f %>
+  <% free_left = service.remaining_free_sessions.to_f %>
+  <label class="service-option">
+    <%= radio_button_tag "session[fliip_service_id]", service.id, checked,
+          id: "session_fliip_service_id_#{service.id}", class: "service-option__input",
+          data: { summary_label: service.service_name.presence || "Service",
+                  paid_remaining: paid_left, free_remaining: free_left,
+                  start_date: service.start_date&.iso8601, end_date: service.expire_date&.iso8601 } %>
+    <span class="service-option__body">
+      <span class="service-option__name"><%= service.service_name.presence || "Service" %></span>
+      <span class="service-option__counts">
+        <%= format_count(paid_left) %> <%= paid_left < 2 ? "séance" : "séances" %> ·
+        <%= format_count(free_left) %> <%= free_left < 2 ? "absence restante" : "absences restantes" %><% if service.expire_date %>
+        · jusqu'au <%= l(service.expire_date) %><% end %>
+      </span>
+      <span class="text-small text-muted numeric"><%= ids %></span>
+    </span>
+  </label>
+<% end %>

@@ -1,17 +1,20 @@
+<%# Client suggestions on Saisir (client_search_controller.js): each one a
+    link that reloads the page with that client chosen. %>
 <%= turbo_frame_tag "client_suggestions" do %>
   <% if @users.any? %>
-    <ul class="list-group shadow-sm">
+    <ul class="list suggestions" aria-label="Suggestions">
       <% @users.each do |u| %>
-        <li
-          class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-          role="option"
-          data-action="click->client-search#pick"
-          data-id="<%= u.id %>"
-          data-name="<%= "#{u.user_firstname} #{u.user_lastname}" %>">
-          <span><%= u.user_firstname %> <%= u.user_lastname %></span>
-          <small class="text-muted">#<%= u.remote_id %></small>
+        <li>
+          <%= link_to new_seance_path(fliip_user_id: u.id), class: "suggestion", data: { turbo_frame: "_top" } do %>
+            <span class="suggestion__name"><%= u.full_name %></span>
+            <span class="text-muted text-small numeric">
+              <%= [ ("FliipUserID #{u.remote_id}" if u.remote_id), u.user_email.presence, (format_phone(u.user_phone1) if u.user_phone1.present?) ].compact.join(" · ") %>
+            </span>
+          <% end %>
         </li>
       <% end %>
     </ul>
+  <% elsif @query.length >= 2 %>
+    <p class="empty-state">Aucun·e client·e trouvé·e.</p>
   <% end %>
 <% end %>

@@ -63,13 +63,10 @@ class FliipUsersController < ApplicationController
   def suggest
     authorize FliipUser
 
-    q = params[:query].to_s.strip
-    @users =
-      if q.length >= 2
-        FliipUser.search_clients(q).select(:id, :user_firstname, :user_lastname, :remote_id).order(:user_lastname).limit(20)
-      else
-        FliipUser.none
-      end
+    @query = params[:query].to_s.strip
+    @users = FliipUser.search(@query)
+               .select(:id, :user_firstname, :user_lastname, :remote_id, :user_email, :user_phone1)
+               .order(:user_lastname).limit(20)
 
     if params[:list_only].present?
       render partial: "fliip_users/suggest_list", layout: false

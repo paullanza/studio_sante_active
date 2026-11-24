@@ -1,74 +1,57 @@
 import { Controller } from "@hotwired/stimulus"
 
+// Saisir's client field: fetches suggestions (fliip_users#suggest) into the
+// client_suggestions frame as you type. Each suggestion is a link that
+// reloads the page with that client chosen.
 export default class extends Controller {
-  static targets = ["input", "hiddenId"]
+  static targets = ["input"]
 
   connect() {
     this.timer = null
     this.lastQuery = ""
   }
 
-  onInput() {
+  disconnect() {
+    clearTimeout(this.timer)
+  }
+
+  search() {
     const q = this.inputTarget.value.trim()
     if (q === this.lastQuery) return
     this.lastQuery = q
 
     clearTimeout(this.timer)
-    if (q.length < 2) { this.#clearSuggestions(); return }
+    if (q.length < 2) { this.clear(); return }
 
     this.timer = setTimeout(() => {
-      const url = `/fliip_users/suggest?query=${encodeURIComponent(q)}`
-      this.#setFrameSrc("client_suggestions", url)
+      const frame = this.#frame()
+      if (frame) frame.src = `/fliip_users/suggest?query=${encodeURIComponent(q)}`
     }, 250)
   }
 
-  onFocus() {
-    if (this.inputTarget.value.trim().length >= 2 && !this.#frameHasContent("client_suggestions")) {
-      const url = `/fliip_users/suggest?query=${encodeURIComponent(this.inputTarget.value.trim())}`
-      this.#setFrameSrc("client_suggestions", url)
-    }
-  }
-
-  onBlur() {
-    // Slight delay so clicks register
-    setTimeout(() => this.#clearSuggestions(), 150)
-  }
-
-  // Called from <li data-action="click->client-search#pick" ...>
-  pick(event) {
-    const el = event.currentTarget
-    const id = el.dataset.id
-    const name = el.dataset.name
-
-    this.hiddenIdTarget.value = id
-    this.inputTarget.value = name
-
-    this.#clearSuggestions()
-
-    // Kick both frames to server-render HTML
-    this.#setFrameSrc("services_table", `/sessions/services_table?fliip_user_id=${encodeURIComponent(id)}`)
-    this.#setFrameSrc("service_select", `/sessions/service_select?fliip_user_id=${encodeURIComponent(id)}`)
-  }
-
-  preventSubmit(event) {
+  // Enter opens the first suggestion.
+  pickFirst(event) {
     event.preventDefault()
-    event.stopPropagation()
+    this.#frame()?.querySelector("a.suggestion")?.click()
   }
 
-  // --- helpers ---
-  #clearSuggestions() {
-    const frame = document.getElementById("client_suggestions")
-    if (frame) frame.innerHTML = ""
+  // Focus left the field and its suggestions.
+  leave(event) {
+    if (this.element.contains(event.relatedTarget)) return
+    setTimeout(() => {
+      if (!this.element.contains(document.activeElement)) this.clear()
+    }, 150)
   }
 
-  #setFrameSrc(id, url) {
-    const frame = document.getElementById(id)
-    if (frame) frame.src = url
+  clear() {
+    const frame = this.#frame()
+    if (!frame) return // the page has gone (a suggestion was opened)
+    frame.removeAttribute("src")
+    frame.innerHTML = ""
+    this.lastQuery = ""
   }
 
-  #frameHasContent(id) {
-    const frame = document.getElementById(id)
-    if (!frame) return false
-    return frame.innerHTML.trim().length > 0
+  #frame() {
+    return document.getElementById("client_suggestions")
   }
 }

@@ -88,8 +88,10 @@ CSS custom properties on `:root` (`studio/_tokens.scss`). Use `var(--name)`.
 | `--danger-border` | #8C3A3A | danger button border, alert border |
 | `--field-invalid-border` | #C65B5B | invalid input border |
 | `--badge-chargee-bg` / `-fg` | #1F3A2A / #8FD6A9 | Chargée |
-| `--badge-absence-bg` / `-fg` | #2A2E3D / #A9B8F0 | Absence |
-| `--badge-moins24-bg` / `-fg` | #3D2E1A / #F2B66D | -24h, overrun |
+| `--badge-absence-bg` / `-fg` | #36341A / #F2EC62 | Absence (yellow), wherever an outcome shows |
+| `--badge-moins24-bg` / `-fg` | #451616 / #FF6259 | -24h (red), wherever an outcome shows |
+| `--badge-planned-bg` / `-fg` | #2A2E3D / #A9B8F0 | Planifié |
+| `--badge-warning-bg` / `-fg` | #3D2E1A / #F2B66D | Suspendu, overrun, Mode correction |
 | `--badge-unconfirmed-bg` / `-fg` | #33301A / #E6CC6A | Non confirmée |
 | `--badge-retire-bg` / `-fg` | #3A1F22 / #F08A8A | Retiré de Fliip |
 | `--progress-*` | #0D6EFD, #6C757D, #FFC107, #FD7E14, #DC3545 | progress bars (unchanged) |
@@ -126,15 +128,32 @@ Buttons must not look like Bootstrap: no rounded boxes in a row. Labels are Barl
 <span class="badge badge--absence">Absence</span>
 <span class="badge badge--moins24">-24h</span>
 <span class="badge badge--overrun">12 mois + 17 j</span>
+<span class="badge badge--planned">Planifié</span>
+<span class="badge badge--warning">Suspendu</span>
 <span class="badge badge--unconfirmed">Non confirmée</span>
 <span class="badge badge--retire">Retiré de Fliip</span>
 <span class="badge badge--neutral">Toutes les séances utilisées</span>
 <span class="text-unconfirmed">Non confirmée</span>
 ```
 
-`.badge--neutral` is for inactive states and « Toutes les séances utilisées ». `.text-unconfirmed` is the plain-text form.
+The outcome colours mean only the outcome: Chargée green, Absence yellow, -24h red. The yellow (hue 58) stays apart from the gold accent and from the « Non confirmée » / « à définir » sand (`--badge-unconfirmed`). Service states use their own tokens (`--planned`, `--warning`). `.badge--neutral` is for inactive states and « Toutes les séances utilisées ». `.text-unconfirmed` is the plain-text form.
 
-A service's status badge comes from `service_status_badge(svc)` (`ServiceBadgesHelper`): « Retiré de Fliip » when the service or its client is removed from Fliip, « Toutes les séances utilisées » when a set allocation is used up, else the Fliip status (Actif `--chargee`, Planifié `--absence`, Suspendu `--moins24`, others `--neutral`). `contract_status_badge(contract)` does the same for an abonnement.
+A service's status badge comes from `service_status_badge(svc)` (`ServiceBadgesHelper`): « Retiré de Fliip » when the service or its client is removed from Fliip, « Toutes les séances utilisées » when a set allocation is used up, else the Fliip status (Actif `--chargee`, Planifié `--planned`, Suspendu `--warning`, others `--neutral`). `contract_status_badge(contract)` does the same for an abonnement.
+
+### Alerts
+
+```erb
+<div class="alert alert--moins24" role="alert">
+  <%= icon_svg(LayoutHelper::WARNING_ICON, size: 22) %>
+  <strong>Aucune absence restante : cette séance sera déduite du forfait (-24h).</strong>
+</div>
+```
+
+A warning that can't be missed, full width in a status's badge colours (`.alert--moins24`: the -24h colours as background and border), with an icon and bold text. `role="alert"` makes screen readers announce it when it appears; toggle it with `hidden`. For errors use the flash (`.flash--alert`) instead.
+
+### Confirm dialog
+
+A native `<dialog class="dialog">` (`.dialog__title`, `.dialog__body`, `.dialog__actions`) opened with `showModal()`, its buttons as text (`.btn--ghost` to cancel, `.btn--secondary` to go on). `confirm_dialog_controller.js` uses it on Saisir before saving a séance. It asks one question at a time: first when the date is outside the service's dates (« Continuer » / « Annuler »), then when the client is absent (« Confirmer l'absence » / « Revenir »), stating the absence used and how many are left, or that a -24h deducts a séance.
 
 ### Cards and stat tiles
 
@@ -248,6 +267,16 @@ The search bar stacks on a phone and sits beside its button from 768 px. Its fie
 - Phones always go through `format_phone(raw)` and `phone_href(raw)` (`PhoneHelper`): « (514) 555-0142 », « +33 6 12 34 56 78 », other countries as « +44 7700900123 ». Something that isn't a phone number (« us ») shows as stored, with no link.
 - `format_count(1.5)` (`CountsHelper`) shows séance and absence counts: « 1,5 », « 12 », never « 12.0 ».
 
+### Saisir
+
+`bookings/new` (`BookingPage` concern, shared with the create actions that re-render it). The client is a URL param (`new_seance_path(fliip_user_id:, fliip_service_id:)`): the client field (`client_search_controller.js`) fetches `.suggestion` links into the `client_suggestions` frame, and the chosen client shows as a `.chosen-client` card with « Changer ».
+
+- `bookings/_service_option` (`service:`, `checked:`): a service as a `.service-option` radio card (name, séances and absences left, end date, IDs), or `.service-option--blocked` with `booking_block_reason`. One per row on every width (`.service-options`).
+- The page is in a `.form-rows` wrapper (see « Rows: the Saisir variant »). The form: the presence `switch` (Présent·e by default), the services, the trainer (admins), the « Quand » group (Date, Heure and Durée on one row from 768 px) and the note. Its gold button sits in the `.ticket` (« Récapitulatif »: the day, time and duration, client, service, trainer, the outcome badge and its warnings), beside the form from 1024 px and under it on a phone. `form_summary_controller.js` keeps the ticket in step with the form. The consultation tab has the same layout.
+- The ticket's outcome: « Enregistrée comme » with the outcome badge and the absence line, then the `.alert--moins24` block. `seance_outcome_preview(session)` (`SessionsHelper`) renders the state on the server and `seance_outcome_controller.js` updates it as the service, presence and duration change.
+- `bookings/_recent_session`: a séance as a compact `.latest-seance` row linking to its Service page (not `.recent-seance`, which is the Séances récentes page's row). The side list is the trainer's 10 latest séances (the admin's trainer choice, else the signed-in user), never the client's; it is the `recent_sessions` Turbo frame, which `recent_trainer_controller.js` reloads with `?trainer_id=` when an admin changes the trainer. It follows the ticket in the side column (`.saisir__side`).
+- `segmented` can take `"1"`/`"0"` values for a boolean; `base_errors(also: [:occurred_at])` adds the full messages of attributes the form has no field for.
+
 ### Progress bars
 
 `bar_with_label(percent:, label:, bg_class:)` and the colour helpers in `ProgressHelper` work unchanged; `studio/_progress.scss` styles their class names (`progress`, `progress-bar`, `bg-primary`, `bg-secondary`, `bg-warning`, `bg-orange`, `bg-danger`, `label-dark`, `label-light`).
@@ -310,6 +339,16 @@ Mobile first, but on desktop a form is a full-page layout, not a phone column.
 - `.form-section` groups related fields under a Barlow heading, with an optional short note on the right. Split any form of more than about five fields into sections.
 - `.form-grid` lays the fields in two columns from 768 px, in source order (the mobile order); `.form-grid__wide` spans both.
 - `.form-actions` closes the form: the button is full width on a phone, right-aligned under a rule from 768 px.
+
+### Rows: the Saisir variant
+
+Saisir (`bookings/new`) reads its fields as settings-style rows. Put the page in a `.form-rows` wrapper; the builder's markup is the same, and `studio/_form_rows.scss` restyles it only inside that wrapper. No other form uses it.
+
+- A field is a row: an optional icon (`icon:` on `field`, `select_field` and `segmented`, an SVG path from `LayoutHelper`, such as `CALENDAR_ICON`, `CLOCK_ICON` or `DURATION_ICON`), the label on the left, and the value on the right in bold over a faint rule. The whole row is the click target. A textarea takes the whole row with its label above it.
+- A `.form-grid` is the group's card, with a line between rows and a small-caps group title. `.form-grid--single` keeps one column. `.form-grid--when` puts Date, Heure and Durée on one row from 768 px and stacks them on a phone.
+- `segmented` is a row with pills on the right, the chosen one gold.
+- `switch(attr, choices, label:)`: the large two-option sliding switch, used for presence. It is full width and 58 px tall. The second option is the exception and takes the Absence colours when chosen. A label may carry an icon (`safe_join([ icon_svg(LayoutHelper::CHECK_ICON), "Présent·e" ])`).
+- The gold button lives in the page's `.ticket` (`<button form="…">`), not in `.form-actions`.
 
 ### Signed-out pages: auth split
 

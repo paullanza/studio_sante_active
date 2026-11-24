@@ -290,8 +290,8 @@
 // finished ones (inactive, cancelled, ended, used up, removed) sit flat on
 // the page, muted, with grey bars.
 .service-card--active { border-left: 4px solid var(--brand-light); }
-.service-card--planned { border-left: 4px solid var(--badge-absence-fg); }
-.service-card--suspended { border-left: 4px solid var(--badge-moins24-fg); }
+.service-card--planned { border-left: 4px solid var(--badge-planned-fg); }
+.service-card--suspended { border-left: 4px solid var(--badge-warning-fg); }
 
 .service-card--done {
   border-style: dashed;
@@ -360,7 +360,7 @@
   // The overrun on its own line under the dates.
   .service-card__overrun {
     display: block;
-    color: var(--badge-moins24-fg);
+    color: var(--badge-warning-fg);
     font-size: 13px;
   }
 

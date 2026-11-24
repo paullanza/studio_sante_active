@@ -214,6 +214,16 @@ RSpec.describe "Fliip users", type: :request do
     end
   end
 
+  it "suggests clients by phone, linking to Saisir with the client chosen" do
+    client.update!(user_phone1: "514-555-0142")
+    sign_in create(:user)
+
+    get suggest_fliip_users_path(query: "555 0142")
+
+    link = Nokogiri::HTML(response.body).at_css("a.suggestion")
+    expect(link["href"]).to eq(new_seance_path(fliip_user_id: client.id))
+  end
+
   it "serves the suggestion list on its own" do
     sign_in create(:user)
 

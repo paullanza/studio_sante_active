@@ -1,0 +1,28 @@
+<%# The consultation's ticket: what will be saved and the gold button (it
+    submits #consultation_form). form_summary_controller.js keeps it in step. %>
+<% date = params.dig(:consultation, :date).presence || @consultation.occurred_at&.to_date&.iso8601 || Time.zone.today.iso8601 %>
+<% time = params.dig(:consultation, :time).presence || @consultation.occurred_at&.strftime("%H:%M") || "09:00" %>
+<% name = [ @consultation.first_name, @consultation.last_name ].compact_blank.join(" ") %>
+<aside class="ticket" aria-labelledby="ticket-title">
+  <h2 class="ticket__title" id="ticket-title">Récapitulatif</h2>
+  <p class="ticket__when">
+    <span data-form-summary-target="output" data-summary-date="consultation_date"><%= ticket_day(date) %></span><br>
+    <span data-form-summary-target="output" data-summary-time="consultation_time"><%= ticket_time(time) %></span>
+  </p>
+  <dl class="ticket__facts">
+    <dt>Prospect</dt>
+    <dd data-form-summary-target="output" data-summary-text="consultation_first_name consultation_last_name" data-summary-empty="—"><%= name.presence || "—" %></dd>
+    <dt>Entraîneur·e</dt>
+    <% if @staff.any? %>
+      <dd data-form-summary-target="output" data-summary-select="consultation_user_id"><%= @consultation.user&.full_name || (@owner_required ? "À choisir" : "Moi") %></dd>
+    <% else %>
+      <dd>Moi</dd>
+    <% end %>
+    <dt>Présence</dt>
+    <dd data-form-summary-target="output" data-summary-radio="consultation[present]" data-summary-empty="—"><%= @consultation.present ? "Présent·e" : "Absent·e" %></dd>
+  </dl>
+  <hr class="ticket__rule">
+  <button type="submit" form="consultation_form" class="btn btn--primary btn--block">
+    <%= safe_join([ "Enregistrer la consultation", button_arrow ]) %>
+  </button>
+</aside>

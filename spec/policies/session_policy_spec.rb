@@ -6,7 +6,7 @@ RSpec.describe SessionPolicy, type: :policy do
   let(:confirmed) { create(:session, user: owner).tap { |s| s.update_columns(confirmed: true) } }
 
   # Routes open to every signed-in user.
-  let(:open_actions) { %i[create new row services_table service_select preview_type refresh_clients] }
+  let(:open_actions) { %i[create new row refresh_clients] }
 
   it "lets an owner edit their own session until it is confirmed" do
     expect(described_class.new(owner, session_record)).to permit_only_actions(*open_actions, :edit, :update, :destroy)
@@ -32,7 +32,7 @@ RSpec.describe SessionPolicy, type: :policy do
 
   describe "#permitted_attributes" do
     it "allows user_id only for admins and the super admin" do
-      base = %i[fliip_user_id fliip_service_id present note]
+      base = %i[fliip_user_id fliip_service_id present duration note]
 
       expect(described_class.new(owner, Session)).to permit_attributes(*base)
       expect(described_class.new(owner, Session)).to forbid_attribute(:user_id)

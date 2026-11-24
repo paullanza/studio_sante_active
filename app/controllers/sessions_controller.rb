@@ -1,4 +1,6 @@
 class SessionsController < ApplicationController
+  include BookingPage
+
   before_action :authenticate_user!
   before_action :set_session, only: [:destroy, :edit, :update, :row]
   before_action :load_staff,  only: [:edit, :update]
@@ -13,40 +15,15 @@ class SessionsController < ApplicationController
     @session.created_by = current_user
     @session.occurred_at = parsed_occurred_at_from_params
     @session.confirmed   = false
-    @session.present     = params[:session][:present] == "1"
-    @session.duration    = params[:half_hour] == "1" ? 0.5 : 1.0
+    @session.present     = params.dig(:session, :present) == "1"
 
     if @session.user.present? && @session.save
-      redirect_to new_seance_path, notice: "Séance créée avec succès."
+      redirect_to new_seance_path, notice: "Séance enregistrée."
     else
       @session.errors.add(:base, OWNER_REQUIRED_MESSAGE) if @session.user.nil?
 
-      # Rehydrate everything the :new template needs
-      load_fliip_users
-      load_staff
-      @sessions = Session
-                    .where(user_id: current_user.id)
-                    .unconfirmed
-                    .with_associations
-                    .order_by_occurred_at_desc
-                    .limit(25)
-
-      # If a client was selected, preload services so frames can render server-side
-      if @session.fliip_user_id.present?
-        @services = FliipService
-                      .where(fliip_user_id: @session.fliip_user_id)
-                      .includes(:fliip_user, :service_definition, :service_usage_adjustments)
-                      .order(:expire_date, :service_name)
-      else
-        @services = []
-      end
-
-      @consultation = Consultation.new
-
-      # Let the page render inline errors (422 is fine)
-      flash.now[:alert] = @session.errors.full_messages.to_sentence.presence ||
-                          "Un problème est survenu lors de la création de la séance."
-      render "bookings/new", status: :unprocessable_content
+      prepare_booking_page(client_id: @session.fliip_user_id, tab: "session")
+      render "bookings/new", layout: "studio", status: :unprocessable_content
     end
   end
 
@@ -102,52 +79,6 @@ class SessionsController < ApplicationController
     end
   end
 
-  def preview_type
-    authorize Session
-
-    fliip_service_id = params[:fliip_service_id]
-    present          = params[:present] == "1"
-    duration         = (params[:half_hour] == "1") ? 0.5 : 1.0
-
-    svc = FliipService
-            .includes(:service_definition, :service_usage_adjustments, :sessions)
-            .find_by(id: fliip_service_id)
-
-    return render json: { error: "Service introuvable" }, status: :not_found unless svc
-
-    s = Session.new(fliip_service: svc, present: present, duration: duration)
-    # Important: reuse your model’s classification logic
-    s.send(:set_session_type_and_duration)
-
-    render json: { session_type: s.session_type } # "free" or "paid"
-  end
-
-  def services_table
-    authorize Session
-
-    fliip_user_id = params.require(:fliip_user_id)
-    @services = FliipService
-                  .where(fliip_user_id: fliip_user_id)
-                  .includes(:fliip_user, :service_definition, :service_usage_adjustments)
-                  .order(expire_date: :desc, service_name: :asc)
-
-    render :services_table, layout: false
-  end
-
-  # Turbo Frame: the <select name="session[fliip_service_id]">, server-rendered
-  def service_select
-    authorize Session
-
-    fliip_user_id   = params.require(:fliip_user_id)
-    @selected_id    = params[:selected_id] # optional
-    @services = FliipService
-                  .where(fliip_user_id: fliip_user_id)
-                  .includes(:fliip_user, :service_definition, :service_usage_adjustments)
-                  .order(expire_date: :desc, service_name: :asc)
-
-    render :service_select, layout: false
-  end
-
   def refresh_clients
     authorize Session
 
@@ -190,16 +121,6 @@ class SessionsController < ApplicationController
 
   def set_session
     @session = Session.find(params[:id])
-  end
-
-  def load_fliip_users
-    service_user_ids = FliipService.distinct.pluck(:fliip_user_id)
-
-    @fliip_users = FliipUser
-      .where(id: service_user_ids)
-      .sort_by do |u|
-        I18n.transliterate("#{u.user_lastname.to_s.strip} #{u.user_firstname.to_s.strip}").downcase
-      end
   end
 
   def parsed_occurred_at_from_params

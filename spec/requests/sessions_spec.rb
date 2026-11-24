@@ -28,13 +28,61 @@ RSpec.describe "Sessions", type: :request do
       expect(session).to be_paid
       expect(session).not_to be_confirmed
       expect(response).to redirect_to(new_seance_path)
+      expect(flash[:notice]).to eq("Séance enregistrée.")
+
+      # The blank form that follows lists the new séance among the trainer's latest.
+      follow_redirect!
+      expect(Nokogiri::HTML(response.body).css("#recent_sessions .latest-seance").size).to eq(1)
     end
 
-    it "records a half-hour session" do
+    it "records a present 30 min séance as a paid half" do
       sign_in employee
-      post sessions_path, params: session_params.merge(half_hour: "1")
+      post sessions_path, params: session_params(present: "1", duration: "0.5")
 
-      expect(Session.last.duration).to eq(0.5)
+      expect(Session.last).to have_attributes(duration: 0.5, session_type: "paid")
+    end
+
+    it "uses an absence when the client was absent and one is left" do
+      sign_in employee
+      post sessions_path, params: session_params(present: "0", duration: "1.0")
+
+      expect(Session.last).to have_attributes(present: false, session_type: "free")
+    end
+
+    it "records -24h (paid) when the client was absent with no absence left" do
+      create(:service_usage_adjustment, fliip_service: service, free_used_delta: 2)
+      sign_in employee
+      post sessions_path, params: session_params(present: "0")
+
+      expect(Session.last).to have_attributes(present: false, session_type: "paid")
+    end
+
+    it "refuses a séance when the service has no séances left" do
+      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 10)
+      sign_in employee
+
+      expect { post sessions_path, params: session_params }.not_to change(Session, :count)
+      expect(response).to have_http_status(:unprocessable_content)
+      # The quota error shows above the form, only visible in the markup.
+      expect(response.body).to include("Aucune séance payante disponible pour ce service.")
+    end
+
+    it "refuses a duration other than 1 h or 30 min" do
+      sign_in employee
+
+      expect { post sessions_path, params: session_params(duration: "2.0") }.not_to change(Session, :count)
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "shows the -24h warning when re-rendering an absent séance with no absence left" do
+      create(:service_usage_adjustment, fliip_service: service, free_used_delta: 2)
+      sign_in employee
+      post sessions_path, params: session_params(present: "0", date: "")
+
+      expect(response).to have_http_status(:unprocessable_content)
+      warning = Nokogiri::HTML(response.body).at_css(".alert--moins24[role=alert]")
+      expect(warning).to be_present
+      expect(warning["hidden"]).to be_nil
     end
 
     it "ignores user_id from employees" do
@@ -131,8 +179,6 @@ RSpec.describe "Sessions", type: :request do
       expect(response).to redirect_to(new_user_session_path)
       get row_session_path(session_record)
       expect(response).to redirect_to(new_user_session_path)
-      get services_table_sessions_path(fliip_user_id: service.fliip_user_id)
-      expect(response).to redirect_to(new_user_session_path)
     end
   end
 
@@ -168,7 +214,8 @@ RSpec.describe "Sessions", type: :request do
 
       expect { post sessions_path, params: session_params }.not_to change(Session, :count)
       expect(response).to have_http_status(:unprocessable_content)
-      expect(flash[:alert]).to include("Veuillez choisir un·e employé·e.")
+      # The error shows above the form, only visible in the markup.
+      expect(response.body).to include("Veuillez choisir un·e employé·e.")
 
       post sessions_path, params: session_params(user_id: employee.id)
       expect(Session.last.user).to eq(employee)
@@ -178,7 +225,7 @@ RSpec.describe "Sessions", type: :request do
 
   describe "editing by role" do
     let(:manager)  { create(:user, :manager) }
-    let(:own)      { create(:session, fliip_service: service, user: employee, note: "original") }
+    let(:own)      { create(:session, fliip_service: service, user: employee, note: "original", occurred_at: 1.day.ago.change(hour: 10, min: 0)) }
     let(:confirmed) do
       create(:session, fliip_service: service, user: employee, occurred_at: 2.days.ago.change(min: 0)).tap do |s|
         s.update_columns(confirmed: true)
@@ -273,32 +320,12 @@ RSpec.describe "Sessions", type: :request do
     let(:session_record) { create(:session, fliip_service: service) }
 
     %i[employee manager admin super_admin].each do |role|
-      it "serve the row and booking helpers to a #{role}" do
+      it "serves the row to a #{role}" do
         sign_in(role == :employee ? create(:user) : create(:user, role))
 
         get row_session_path(session_record)
         expect(response).to have_http_status(:ok)
-        get services_table_sessions_path(fliip_user_id: service.fliip_user_id)
-        expect(response).to have_http_status(:ok)
-        get service_select_sessions_path(fliip_user_id: service.fliip_user_id)
-        expect(response).to have_http_status(:ok)
-        get "/sessions/preview_type", params: { fliip_service_id: service.id, present: "1" }
-        expect(response.parsed_body).to eq("session_type" => "paid")
       end
-    end
-
-    it "previews an absence as free while free sessions remain" do
-      sign_in employee
-      get "/sessions/preview_type", params: { fliip_service_id: service.id, present: "0" }
-
-      expect(response.parsed_body).to eq("session_type" => "free")
-    end
-
-    it "answers 404 when previewing an unknown service" do
-      sign_in employee
-      get "/sessions/preview_type", params: { fliip_service_id: 0 }
-
-      expect(response).to have_http_status(:not_found)
     end
   end
 

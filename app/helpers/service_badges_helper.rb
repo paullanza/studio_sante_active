@@ -3,13 +3,13 @@
 module ServiceBadgesHelper
   SERVICE_STATUS_BADGES = {
     "A" => "badge--chargee",
-    "P" => "badge--absence",
-    "S" => "badge--moins24"
+    "P" => "badge--planned",
+    "S" => "badge--warning"
   }.freeze
 
   CONTRACT_STATUS_BADGES = {
     "A" => "badge--chargee",
-    "S" => "badge--moins24"
+    "S" => "badge--warning"
   }.freeze
 
   def service_status_badge(svc)

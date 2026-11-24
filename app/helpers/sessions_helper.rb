@@ -24,6 +24,55 @@ module SessionsHelper
     tag.span(label, class: "text-muted")
   end
 
+  SUBMIT_LABELS = { moins24: "Enregistrer : -24h, séance déduite" }.freeze
+
+  # What the booking form shows above its button for the chosen service,
+  # presence and duration: the outcome, the absences left after this one, and
+  # whether the service has run out of what this séance needs. Mirrors
+  # Session#set_session_type_and_duration and respect_quota_limits;
+  # seance_outcome_controller.js does the same in the browser. Nil outcome
+  # without a service.
+  def seance_outcome_preview(session)
+    service = session.fliip_service
+    return { outcome: nil, duration: 1.0, absences_after: nil, none_left: false, submit_label: "Enregistrer la séance" } unless service
+
+    duration = Session::DURATIONS.include?(session.duration.to_f) ? session.duration.to_f : 1.0
+    free_left = service.allocation_to_define? ? 0.0 : service.remaining_free_sessions.to_f
+    outcome =
+      if session.present then :chargee
+      elsif free_left >= duration then :absence
+      else :moins24
+      end
+    needed_left = outcome == :absence ? free_left : service.remaining_paid_sessions.to_f
+
+    {
+      outcome: outcome,
+      duration: duration,
+      absences_after: (free_left - duration if outcome == :absence),
+      none_left: !service.allocation_to_define? && needed_left < duration,
+      submit_label: SUBMIT_LABELS.fetch(outcome, "Enregistrer la séance")
+    }
+  end
+
+  # « Utilise 1 absence · 1 restante après celle-ci ».
+  def absence_use_line(duration, absences_after)
+    left = absences_after.to_f
+    "Utilise #{format_count(duration)} absence · #{format_count(left)} #{left < 2 ? 'restante' : 'restantes'} après celle-ci"
+  end
+
+  # The ticket's day, « mar. 24 nov. », from an ISO date (form_summary_controller.js
+  # writes the same). Blank when the date can't be read.
+  def ticket_day(iso_date)
+    l(Date.iso8601(iso_date.to_s), format: "%a %-d %b")
+  rescue Date::Error
+    ""
+  end
+
+  # « 17 h 00 » from « 17:00 ».
+  def ticket_time(hhmm)
+    hhmm.to_s.sub(":", " h ")
+  end
+
   def default_time_slot_str(now: Time.zone.now)
     now   = now.change(sec: 0)
     mins  = now.min >= 30 ? 30 : 0
@@ -46,20 +95,25 @@ module SessionsHelper
     "Annuler"
   end
 
-  def sessions_modal_absence_free_title
-    "Confirmer l’absence"
+  # Asked before saving a séance where the client was absent.
+  def sessions_modal_absence_title
+    "Confirmer l'absence"
   end
 
-  def sessions_modal_absence_free_body
-    "Procéder à l’utilisation d’une absence sans frais?"
+  def sessions_modal_absence_body
+    "Cette séance sera enregistrée comme une absence."
   end
 
-  def sessions_modal_absence_paid_title
-    "Confirmer l’absence"
+  def sessions_modal_moins24_body
+    "Aucune absence restante : cette séance sera enregistrée comme -24h et déduite du forfait."
   end
 
-  def sessions_modal_absence_paid_body
-    "Solde d’absences sans frais épuisé. Procéder à la déduction d’une séance de son forfait?"
+  def sessions_modal_absence_confirm_label
+    "Confirmer l'absence"
+  end
+
+  def sessions_modal_absence_cancel_label
+    "Revenir"
   end
 
   def sessions_modal_before_start_title

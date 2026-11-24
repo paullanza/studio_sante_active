@@ -1,0 +1,49 @@
+<%# The séance's ticket: what will be saved, its outcome, and the gold button
+    (it submits #seance_form). form_summary_controller.js and
+    seance_outcome_controller.js keep it in step with the form. %>
+<% preview = seance_outcome_preview(@session) %>
+<% date = params.dig(:session, :date).presence || @session.occurred_at&.to_date&.iso8601 || Time.zone.today.iso8601 %>
+<% time = params.dig(:session, :time).presence || @session.occurred_at&.strftime("%H:%M") || default_time_slot_str %>
+<% service = @services.find { |s| s.id == @session.fliip_service_id } %>
+<aside class="ticket" aria-labelledby="ticket-title">
+  <h2 class="ticket__title" id="ticket-title">Récapitulatif</h2>
+  <p class="ticket__when">
+    <span data-form-summary-target="output" data-summary-date="session_date"><%= ticket_day(date) %></span><br>
+    <span data-form-summary-target="output" data-summary-time="session_time" data-summary-radio="session[duration]"><%= ticket_time(time) %> · <%= @session.duration_short %></span>
+  </p>
+  <dl class="ticket__facts">
+    <dt>Client·e</dt><dd><%= @client.full_name %></dd>
+    <dt>Service</dt>
+    <dd data-form-summary-target="output" data-summary-radio="session[fliip_service_id]" data-summary-empty="À choisir"><%= service&.service_name.presence || "À choisir" %></dd>
+    <dt>Entraîneur·e</dt>
+    <% if @staff.any? %>
+      <dd data-form-summary-target="output" data-summary-select="session_user_id"><%= @session.user&.full_name || (@owner_required ? "À choisir" : "Moi") %></dd>
+    <% else %>
+      <dd>Moi</dd>
+    <% end %>
+  </dl>
+  <hr class="ticket__rule">
+
+  <div class="ticket__outcome" aria-live="polite">
+    <span class="text-muted">Enregistrée comme</span>
+    <span class="badge <%= SessionsHelper::OUTCOME_BADGE_CLASSES.fetch(preview[:outcome], "badge--neutral") %>"
+          data-seance-outcome-target="badge"><%= Session::OUTCOME_LABELS.fetch(preview[:outcome], "Choisissez un service") %></span>
+  </div>
+  <p class="seance-outcome__absence" data-seance-outcome-target="absenceLine" <%= "hidden" unless preview[:outcome] == :absence %>>
+    <%= absence_use_line(preview[:duration], preview[:absences_after]) if preview[:outcome] == :absence %>
+  </p>
+
+  <div class="alert alert--moins24" role="alert" data-seance-outcome-target="moins24Alert" <%= "hidden" unless preview[:outcome] == :moins24 %>>
+    <%= icon_svg(LayoutHelper::WARNING_ICON, size: 22) %>
+    <strong>Aucune absence restante : cette séance sera déduite du forfait (-24h).</strong>
+  </div>
+
+  <p class="seance-outcome__none" data-seance-outcome-target="noneLeft" <%= "hidden" unless preview[:none_left] %>>
+    Plus de séances disponibles sur ce service.
+  </p>
+
+  <button type="submit" form="seance_form" class="btn btn--primary btn--block"
+          data-seance-outcome-target="submit" <%= "disabled" if preview[:none_left] %>>
+    <span data-seance-outcome-target="submitLabel"><%= preview[:submit_label] %></span><%= button_arrow %>
+  </button>
+</aside>

@@ -196,16 +196,10 @@ RSpec.describe FliipService, type: :model do
   end
 
   describe "booking logic" do
-    it "#next_session_type offers free first, then paid, then nothing" do
-      expect(service.next_session_type).to eq("free")
-      expect(service).to be_can_book_session
-
-      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 0, free_used_delta: 2)
-      expect(service.next_session_type).to eq("paid")
-
+    it "is blocked once its séances are used up, even with absences left" do
       create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 10)
-      expect(service.next_session_type).to be_nil
-      expect(service).not_to be_can_book_session
+
+      expect(service.remaining_free_sessions).to eq(2.0)
       expect(service).to be_booking_blocked
     end
 
