@@ -45,6 +45,11 @@
   font-weight: 600;
 }
 
+.service-card__service {
+  margin-top: -4px;
+  color: var(--text-muted);
+}
+
 .service-card__dates,
 .consultation-card__when {
   font-size: 14px;
