@@ -1,4 +1,26 @@
 module FliipServicesHelper
+  # One thin service bar (docs/ui.md « Progress bars »), the label above it.
+  # Without `aside` the label row reads « Temps … 42 % »; with it, « Temps · 42 % »
+  # on the left and the aside (« 120 jours restants ») on the right.
+  def service_bar(label, percent, color_class, aside: nil)
+    pct = percent.to_i
+    pct_tag = tag.span("#{pct} %", class: "service-bar__pct")
+    label_row = if aside
+      safe_join([ tag.span(safe_join([ label, " · ", pct_tag ])), tag.span(aside) ])
+    else
+      safe_join([ tag.span(label), pct_tag ])
+    end
+
+    tag.div(class: "service-bar") do
+      safe_join([
+        tag.div(label_row, class: "service-bar__label"),
+        tag.div(class: "progress", role: "progressbar", aria: { label: label, valuemin: 0, valuemax: 100, valuenow: pct }) do
+          tag.div(class: [ "progress-bar", color_class ], style: "width: #{pct.clamp(0, 100)}%")
+        end
+      ])
+    end
+  end
+
   def purchase_status_badge_class(status)
     case status
     when "A" then "bg-success"
@@ -24,25 +46,6 @@ module FliipServicesHelper
     return "#{sd}–?"     if sd
     return "?–#{ed}"     if ed
     "—"
-  end
-
-  def svc_time_progress_percent(svc)
-    start  = svc.start_date || svc.purchase_date&.to_date
-    finish = svc.expire_date
-    return 0 unless start && finish && finish > start
-    (((Date.current - start).to_f / (finish - start).to_f) * 100).clamp(0, 100).round
-  end
-
-  # returns a pair of classes for bg + text readability
-  def progress_color_classes(percent)
-    p = percent.to_i
-    return ["bg-secondary", "text-white"] if p <= 0
-    case p
-    when 0..49   then ["bg-success",  "text-white"]
-    when 50..74  then ["bg-warning",  "text-dark"]
-    when 75..94  then ["bg-orange",   "text-dark"]  # custom orange
-    else              ["bg-danger",   "text-white"]
-    end
   end
 
   def fmt1(n)

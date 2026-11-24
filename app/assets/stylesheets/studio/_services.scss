@@ -94,33 +94,268 @@
   height: 8px;
 }
 
-// From 1024 px a card becomes a row: who (title, service, IDs), status,
-// dates, then the bars and counts. The head's name and badge become grid
-// cells of the row (display: contents).
+// The Service page: the top card and the gold button (or the reason the
+// service can't be booked) in the left column, the tabs beside them from
+// 1024 px (.client-page).
+.service-page__side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.service-page__blocked {
+  margin: 0;
+  font-weight: 700;
+  text-align: center;
+}
+
+.service-top__client {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.service-top__client-name {
+  color: var(--text);
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.service-top__client-name:hover {
+  color: var(--brand-light);
+}
+
+.service-top__contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 15px;
+}
+
+.service-top__rule {
+  width: 100%;
+  height: 1px;
+  margin: 0;
+  border: 0;
+  background: var(--border);
+}
+
+.service-top__service {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.service-top__name {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.service-top__dates {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.service-top__range {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+// The Service page's bars: thicker, with the counts beside the label.
+.service-bars--detail {
+  gap: 12px;
+}
+
+.service-bars--detail .service-bar {
+  gap: 6px;
+}
+
+.service-bars--detail .service-bar__label {
+  font-size: 14px;
+}
+
+.service-bars--detail .service-bar__label strong {
+  color: var(--text);
+}
+
+.service-bars--detail .progress {
+  height: 12px;
+}
+
+// Séance, consultation and adjustment cards in the Service page's tabs.
+.seance-card {
+  gap: 6px;
+  padding: 12px 14px;
+}
+
+// The séance's number and outcome, together, first.
+.seance-card__tag {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.seance-card__title {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.seance-card__main,
+.seance-card__people {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.seance-card__when {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.seance-card__presence {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+// An Absence or a -24h séance (or an absent prospect) stands out: a stripe
+// and a tint in the badge's colours, and its presence in the badge colour.
+.seance-card--absence {
+  border-left: 4px solid var(--badge-absence-fg);
+  background: color-mix(in srgb, var(--badge-absence-bg) 55%, var(--surface));
+}
+
+.seance-card--moins24 {
+  border-left: 4px solid var(--badge-moins24-fg);
+  background: color-mix(in srgb, var(--badge-moins24-bg) 55%, var(--surface));
+}
+
+.seance-card--absence .seance-card__presence { color: var(--badge-absence-fg); font-weight: 700; }
+.seance-card--moins24 .seance-card__presence { color: var(--badge-moins24-fg); font-weight: 700; }
+
+.adjustment-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+// From 1024 px séance, consultation and adjustment cards on the Service page
+// become rows: number and outcome stacked on the left, as on the old tables.
+@media (min-width: 1024px) {
+  .seance-card--session {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1.2fr) minmax(0, 1fr) 190px;
+    align-items: center;
+    column-gap: 24px;
+  }
+
+  .seance-card__tag {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .seance-card__status {
+    justify-self: end;
+  }
+
+  .adjustment-card {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 24px;
+  }
+
+  .adjustment-card .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 24px;
+  }
+
+  .adjustment-card .adjustment-card__actions {
+    margin-left: auto;
+  }
+}
+
+// A service's state at a glance (ServiceBadgesHelper#service_row_state): a
+// stripe for active (green), planned (blue) or suspended (orange) services;
+// finished ones (inactive, cancelled, ended, used up, removed) sit flat on
+// the page, muted, with grey bars.
+.service-card--active { border-left: 4px solid var(--brand-light); }
+.service-card--planned { border-left: 4px solid var(--badge-absence-fg); }
+.service-card--suspended { border-left: 4px solid var(--badge-moins24-fg); }
+
+.service-card--done {
+  border-style: dashed;
+  background: var(--bg);
+  color: var(--text-muted);
+}
+
+.service-card--done .service-card__name,
+.service-card--done .service-card__dates {
+  color: var(--text-muted);
+}
+
+.service-card--done .progress-bar {
+  filter: grayscale(1);
+}
+
+// From 1024 px a card becomes a row: who (title with its badge, service,
+// IDs), dates, then the two bars stacked, each on one line (label, bar, %).
 @media (min-width: 1024px) {
   .service-card {
     display: grid;
-    grid-template-columns: minmax(0, 1.3fr) 170px 200px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) 200px minmax(280px, 0.9fr);
     grid-template-areas:
-      "name     status dates usage"
-      "service  status dates usage"
-      "trainers status dates usage"
-      "ids      status dates usage";
-    column-gap: 24px;
-    row-gap: 2px;
+      "head     dates usage"
+      "service  dates usage"
+      "trainers dates usage"
+      "ids      dates usage";
+    column-gap: 28px;
+    row-gap: 1px;
     align-items: start;
-    padding: 12px 16px;
+    padding: 10px 16px;
   }
 
-  // The two bars side by side keep the row short.
+  .service-card .service-card__head {
+    grid-area: head;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .service-card .service-card__service { grid-area: service; margin-top: 0; }
+  .service-card .service-card__trainers { grid-area: trainers; }
+  .service-card .service-card__ids { grid-area: ids; }
+  .service-card .service-card__dates { grid-area: dates; }
+  .service-card .service-card__usage { grid-area: usage; display: flex; flex-direction: column; gap: 3px; }
+
   .service-card__usage .service-bars {
-    flex-direction: row;
-    gap: 16px;
+    gap: 3px;
   }
 
   .service-card__usage .service-bar {
-    flex: 1;
+    display: grid;
+    grid-template-columns: 58px minmax(0, 1fr) 42px;
+    align-items: center;
+    column-gap: 8px;
   }
+
+  .service-card__usage .service-bar__label {
+    display: contents;
+  }
+
+  .service-card__usage .service-bar__label > span:first-child { grid-column: 1; }
+  .service-card__usage .service-bar .progress { grid-column: 2; grid-row: 1; }
+  .service-card__usage .service-bar__pct { grid-column: 3; grid-row: 1; text-align: right; }
 
   // The overrun on its own line under the dates.
   .service-card__overrun {
@@ -132,18 +367,6 @@
   .service-card__sep {
     display: none;
   }
-
-  .service-card .service-card__head {
-    display: contents;
-  }
-
-  .service-card .service-card__name { grid-area: name; }
-  .service-card .service-card__head .badge { grid-area: status; justify-self: start; }
-  .service-card .service-card__service { grid-area: service; margin-top: 0; }
-  .service-card .service-card__trainers { grid-area: trainers; }
-  .service-card .service-card__ids { grid-area: ids; }
-  .service-card .service-card__dates { grid-area: dates; }
-  .service-card .service-card__usage { grid-area: usage; display: flex; flex-direction: column; gap: 6px; }
 
   // Abonnement and consultation rows: the same columns on every row.
   .contract-card,

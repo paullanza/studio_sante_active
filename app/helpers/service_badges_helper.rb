@@ -17,9 +17,23 @@ module ServiceBadgesHelper
       status_badge("Retiré de Fliip", "badge--retire")
     elsif svc.paid_allowed_total.positive? && svc.fully_used?
       status_badge("Toutes les séances utilisées", "badge--neutral")
+    elsif svc.purchase_status == "A" && service_ended?(svc)
+      # Fliip still says active, but the end date has passed.
+      status_badge("Terminé", "badge--neutral")
     else
       status_badge(svc.status_name || "Inconnu", SERVICE_STATUS_BADGES.fetch(svc.purchase_status, "badge--neutral"))
     end
+  end
+
+  # How a service card or row looks: :active, :planned or :suspended get a
+  # coloured stripe; :done (inactive, cancelled, ended, all séances used or
+  # removed from Fliip) is muted, so finished services are easy to skip.
+  def service_row_state(svc, today: Date.current)
+    return :done if svc.removed_from_fliip? || %w[I C].include?(svc.purchase_status)
+    return :done if svc.paid_allowed_total.positive? && svc.fully_used?
+    return :done if service_ended?(svc, today: today)
+
+    { "A" => :active, "P" => :planned, "S" => :suspended }.fetch(svc.purchase_status, :done)
   end
 
   def contract_status_badge(contract)
@@ -31,6 +45,10 @@ module ServiceBadgesHelper
   end
 
   private
+
+  def service_ended?(svc, today: Date.current)
+    svc.expire_date.present? && svc.expire_date < today
+  end
 
   def status_badge(label, modifier)
     tag.span(label, class: [ "badge", modifier ])

@@ -58,7 +58,7 @@ _Avoid_: Late cancellation, charged absence
 Whether the client or prospect showed up. It is always logged, on séances and consultations alike.
 
 **Overrun** (« dépassement », shown as « 12 mois + 17 j »):
-The number of days a service's start-to-end span runs past its expected length. Spans over 365 days are measured against 12 months, and spans over 90 days against 3 months.
+The number of days a service's end date runs past its planned end: the start date plus the planned length in months, from Fliip's duration (« 12 Mois ») or, when Fliip says « Indéfini », from « N mois » in the service name. Up to 2 days past is how the calendar falls and isn't an overrun.
 _Avoid_: Extension, overtime
 
 **Complete service** (« Toutes les séances utilisées »):

@@ -45,6 +45,16 @@ RSpec.describe "Mes services", type: :request do
       expect(listed_service_ids).to eq([ sooner.id, adjusted.id, later.id ])
     end
 
+    it "puts services whose end date has passed after the running ones, most recent first" do
+      running = service_with_my_session(expire_date: 20.days.from_now.to_date)
+      ended_long_ago = service_with_my_session.tap { |s| s.update_column(:expire_date, 40.days.ago.to_date) }
+      ended_lately = service_with_my_session.tap { |s| s.update_column(:expire_date, 3.days.ago.to_date) }
+
+      get my_services_path
+
+      expect(listed_service_ids).to eq([ running.id, ended_lately.id, ended_long_ago.id ])
+    end
+
     it "shows active, planned and suspended services by default" do
       shown = %w[A P S].map { |code| service_with_my_session(purchase_status: code) }
       service_with_my_session(purchase_status: "I")

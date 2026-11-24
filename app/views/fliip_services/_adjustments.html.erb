@@ -1,0 +1,49 @@
+<%# The Ajustements tab of the Service page: the list, then (admins) the add form.
+    Locals: service, adjustments (newest first), adjustment (a new one, or nil), staff. %>
+<% if adjustments.any? %>
+  <ul class="list card-grid">
+    <% adjustments.each do |adj| %>
+      <li class="card seance-card adjustment-card">
+        <div class="service-card__head">
+          <span class="seance-card__when numeric"><%= adj.created_at.strftime("%d/%m/%Y %H:%M") %></span>
+        </div>
+        <div class="seance-card__trainer text-small">Entraîneur·e : <%= adj.user&.full_name.presence || "—" %></div>
+        <dl class="facts">
+          <% [ [ "Séances utilisées", adj.paid_used_delta ], [ "Absences utilisées", adj.free_used_delta ],
+               [ "Séances bonus", adj.bonus_sessions ] ].each do |label, value| %>
+            <% next if value.to_f.zero? %>
+            <div><dt><%= label %></dt><dd class="numeric"><%= format_count(value) %></dd></div>
+          <% end %>
+        </dl>
+        <% if policy(adj).update? || policy(adj).destroy? %>
+          <div class="adjustment-card__actions">
+            <% if policy(adj).update? %>
+              <%= link_to "Modifier", edit_fliip_service_service_usage_adjustment_path(service, adj), class: "btn btn--secondary btn--small" %>
+            <% end %>
+            <% if policy(adj).destroy? %>
+              <%= button_to "Supprimer", fliip_service_service_usage_adjustment_path(service, adj), method: :delete,
+                    class: "btn btn--danger btn--small", form: { data: { turbo_confirm: "Supprimer cet ajustement?" } } %>
+            <% end %>
+          </div>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="empty-state">Aucun ajustement sur ce service.</p>
+<% end %>
+
+<% if adjustment %>
+  <%= form_with model: adjustment, url: fliip_service_service_usage_adjustments_path(service), builder: StudioFormBuilder, class: "form" do |f| %>
+    <section class="form-section" aria-labelledby="ajout-ajustement">
+      <header class="form-section__head"><h2 id="ajout-ajustement">Ajouter un ajustement</h2></header>
+      <div class="form-grid">
+        <%= f.field :paid_used_delta, label: "Séances utilisées", as: :number, step: 0.5 %>
+        <%= f.field :free_used_delta, label: "Absences utilisées", as: :number, step: 0.5 %>
+        <%= f.field :bonus_sessions, label: "Séances bonus", as: :number, step: 0.5 %>
+        <%= f.select_field :user_id, staff.map { |u| [ u.full_name, u.id ] }, label: "Entraîneur·e" %>
+      </div>
+    </section>
+    <div class="form-actions"><%= f.submit "Ajouter", variant: :secondary %></div>
+  <% end %>
+<% end %>

@@ -5,7 +5,7 @@
     trainers (default none: staff names, shown as « Entraîneur·e·s : … » when given). %>
 <% removed = service.removed_from_fliip? %>
 <li>
-  <%= link_to fliip_service_path(service), class: "card service-card" do %>
+  <%= link_to fliip_service_path(service), class: "card service-card service-card--#{service_row_state(service)}" do %>
     <% service_name = service.service_name.presence || "Service" %>
     <% client_title = local_assigns[:show_client] && service.fliip_user %>
     <div class="service-card__head">

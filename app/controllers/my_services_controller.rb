@@ -1,5 +1,6 @@
 # Mes services: the services the signed-in staff member works on (a séance or
-# an adjustment attributed to them), soonest end date first.
+# an adjustment attributed to them): running services soonest-ending first,
+# then ended ones, most recent first.
 class MyServicesController < ApplicationController
   before_action :authenticate_user!
   layout "studio"
@@ -21,6 +22,6 @@ class MyServicesController < ApplicationController
     @services = FliipService.worked_on_by(current_user)
                             .by_statuses(statuses)
                             .includes(:fliip_user, :service_definition)
-                            .order(Arel.sql("expire_date ASC NULLS LAST"))
+                            .ending_soonest_first
   end
 end
