@@ -24,10 +24,15 @@
 // A one-line field: no label row in the tile (the label is visually hidden
 // and the placeholder says what to type), as tall as a button.
 .field--compact .field__box {
-  justify-content: center;
   min-height: var(--control-height);
   padding-top: 0;
   padding-bottom: 0;
+}
+
+.field--compact .field__box > .field__input {
+  font-weight: 400;
+  text-align: left;
+  box-shadow: none;
 }
 
 // The count on the left, page links on the right.

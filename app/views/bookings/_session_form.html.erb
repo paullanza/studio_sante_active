@@ -1,4 +1,5 @@
-<%# Saisir's séance tab: the client, then (once chosen) the séance form. %>
+<%# Saisir's séance tab, main column: the client, then (once chosen) the séance
+    form as grouped rows. Its button is in bookings/_session_ticket (form="seance_form"). %>
 <section class="form-section" aria-labelledby="saisir-client">
   <header class="form-section__head"><h2 id="saisir-client">Client·e</h2></header>
 
@@ -16,6 +17,7 @@
     <div class="client-picker" data-controller="client-search" data-action="focusout->client-search#leave keydown.esc->client-search#clear">
       <div class="field field--compact">
         <label class="field__box" for="client_search_input">
+          <span class="field__icon"><%= icon_svg(LayoutHelper::NAV_ICONS["clients"], size: 20) %></span>
           <span class="field__label visually-hidden">Client·e</span>
           <input id="client_search_input" type="search" class="field__input" autocomplete="off"
                  placeholder="Nom, courriel ou téléphone"
@@ -31,17 +33,19 @@
 </section>
 
 <% if @client %>
-  <% preview = seance_outcome_preview(@session) %>
   <% service_error = @session.errors[:fliip_service_id].first || @session.errors[:fliip_service].first %>
-  <%= form_with model: @session, url: sessions_path, builder: StudioFormBuilder, class: "form saisir-form",
-        data: { controller: "seance-outcome confirm-dialog recent-trainer",
-                recent_trainer_url_value: new_seance_path(fliip_user_id: @client.id),
-                action: "change->seance-outcome#update submit->confirm-dialog#check" } do |f| %>
+  <%= form_with model: @session, url: sessions_path, id: "seance_form", builder: StudioFormBuilder, class: "form",
+        data: { confirm_dialog_target: "form", action: "submit->confirm-dialog#check" } do |f| %>
     <%= f.base_errors(also: %i[occurred_at fliip_user_id created_by]) %>
     <%= f.hidden_field :fliip_user_id %>
 
+    <%# Absence changes the outcome, so presence comes first and big. %>
+    <%= f.switch :present, [ [ safe_join([ icon_svg(LayoutHelper::CHECK_ICON, size: 22, stroke_width: 2.4), "Présent·e" ]), "1" ],
+                             [ safe_join([ icon_svg(LayoutHelper::CROSS_ICON, size: 22, stroke_width: 2.4), "Absent·e" ]), "0" ] ],
+          label: "Présence" %>
+
     <fieldset class="form-section service-choice" aria-describedby="<%= 'session_fliip_service_id_error' if service_error %>">
-      <legend class="service-choice__legend">Service</legend>
+      <legend class="form-section__head service-choice__legend">Service</legend>
       <% if @services.any? %>
         <div class="service-options">
           <% @services.each do |service| %>
@@ -56,60 +60,31 @@
       <% end %>
     </fieldset>
 
-    <section class="form-section" aria-labelledby="saisir-seance">
-      <header class="form-section__head"><h2 id="saisir-seance">Séance</h2></header>
-      <div class="form-grid">
-        <%# Absence changes the outcome, so presence comes first and big. %>
-        <div class="presence-choice form-grid__wide">
-          <%= f.segmented :present, [ [ safe_join([ icon_svg(LayoutHelper::CHECK_ICON, size: 22, stroke_width: 2.4), "Présent·e" ]), "1" ],
-                                      [ safe_join([ icon_svg(LayoutHelper::CROSS_ICON, size: 22, stroke_width: 2.4), "Absent·e" ]), "0" ] ],
-                label: "Présence" %>
-        </div>
-        <% if @staff.any? %>
-          <%= f.select_field :user_id, @staff.map { |u| [ u.full_name, u.id ] }, label: "Entraîneur·e",
+    <% if @staff.any? %>
+      <section class="form-section" aria-labelledby="saisir-qui">
+        <header class="form-section__head"><h2 id="saisir-qui">Entraîneur·e</h2></header>
+        <div class="form-grid form-grid--single">
+          <%= f.select_field :user_id, @staff.map { |u| [ u.full_name, u.id ] }, label: "Séance donnée par",
+                icon: LayoutHelper::NAV_ICONS["clients"],
                 include_blank: (@owner_required ? "Choisir un·e employé·e" : "Moi (#{current_user.full_name})"),
-                required: @owner_required, field_class: "form-grid__wide",
-                data: { action: "change->recent-trainer#reload" } %>
-        <% end %>
-        <%= f.field :date, label: "Date", as: :date, required: true,
+                required: @owner_required, data: { action: "change->recent-trainer#reload" } %>
+        </div>
+      </section>
+    <% end %>
+
+    <section class="form-section" aria-labelledby="saisir-quand">
+      <header class="form-section__head"><h2 id="saisir-quand">Quand</h2></header>
+      <div class="form-grid form-grid--single">
+        <%= f.field :date, label: "Date", as: :date, required: true, icon: LayoutHelper::CALENDAR_ICON,
               value: params.dig(:session, :date).presence || @session.occurred_at&.to_date&.iso8601 || Time.zone.today.iso8601,
               data: { confirm_dialog_target: "date" } %>
-        <div class="time-duration">
-          <%= f.field :time, label: "Heure", as: :time, required: true, step: 1800,
-                value: params.dig(:session, :time).presence || @session.occurred_at&.strftime("%H:%M") || default_time_slot_str %>
-          <%= f.segmented :duration, [ [ "1 h", "1.0" ], [ "30 min", "0.5" ] ], label: "Durée" %>
-        </div>
-        <%= f.field :note, label: "Note", as: :textarea, rows: 3, field_class: "form-grid__wide" %>
+        <%= f.field :time, label: "Heure", as: :time, required: true, step: 1800, icon: LayoutHelper::CLOCK_ICON,
+              value: params.dig(:session, :time).presence || @session.occurred_at&.strftime("%H:%M") || default_time_slot_str %>
+        <%= f.segmented :duration, [ [ "1 h", "1.0" ], [ "30 min", "0.5" ] ], label: "Durée", icon: LayoutHelper::DURATION_ICON %>
       </div>
     </section>
 
-    <div class="seance-outcome">
-      <div class="seance-outcome__row" aria-live="polite">
-        <span class="text-muted">Cette séance sera enregistrée comme</span>
-        <span class="badge <%= SessionsHelper::OUTCOME_BADGE_CLASSES.fetch(preview[:outcome], "badge--neutral") %>"
-              data-seance-outcome-target="badge">
-          <%= Session::OUTCOME_LABELS.fetch(preview[:outcome], "Choisissez un service") %>
-        </span>
-      </div>
-      <p class="seance-outcome__absence" data-seance-outcome-target="absenceLine" <%= "hidden" unless preview[:outcome] == :absence %>>
-        <%= absence_use_line(preview[:duration], preview[:absences_after]) if preview[:outcome] == :absence %>
-      </p>
-    </div>
-
-    <div class="alert alert--moins24" role="alert" data-seance-outcome-target="moins24Alert" <%= "hidden" unless preview[:outcome] == :moins24 %>>
-      <%= icon_svg(LayoutHelper::WARNING_ICON, size: 22) %>
-      <strong>Aucune absence restante : cette séance sera déduite du forfait (-24h).</strong>
-    </div>
-
-    <p class="seance-outcome__none" data-seance-outcome-target="noneLeft" <%= "hidden" unless preview[:none_left] %>>
-      Plus de séances disponibles sur ce service.
-    </p>
-
-    <div class="form-actions">
-      <button type="submit" class="btn btn--primary" data-seance-outcome-target="submit" <%= "disabled" if preview[:none_left] %>>
-        <span data-seance-outcome-target="submitLabel"><%= preview[:submit_label] %></span><%= button_arrow %>
-      </button>
-    </div>
+    <%= f.field :note, label: "Note", as: :textarea, rows: 2, placeholder: "Facultatif" %>
 
     <dialog class="dialog" data-confirm-dialog-target="dialog" aria-labelledby="confirm-dialog-title"
             data-before-start-title="<%= sessions_modal_before_start_title %>"

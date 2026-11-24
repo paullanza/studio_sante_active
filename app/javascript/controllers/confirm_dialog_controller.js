@@ -4,7 +4,7 @@ import { Controller } from "@hotwired/stimulus"
 // dated before its service's start or after its end. The texts come from
 // SessionsHelper, as data attributes on the dialog.
 export default class extends Controller {
-  static targets = ["dialog", "title", "body", "date"]
+  static targets = ["form", "dialog", "title", "body", "date"]
 
   check(event) {
     if (this.confirmed) {
@@ -25,7 +25,8 @@ export default class extends Controller {
   confirm() {
     this.dialogTarget.close()
     this.confirmed = true
-    this.element.requestSubmit(this.submitter)
+    const form = this.hasFormTarget ? this.formTarget : this.element
+    form.requestSubmit(this.submitter)
   }
 
   cancel() {

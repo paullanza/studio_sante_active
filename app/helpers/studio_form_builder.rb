@@ -6,8 +6,12 @@
 #     f.field :email, label: "Courriel", as: :email, autocomplete: "email"
 #     f.code :signup_code_token, label: "Code d'inscription", length: 8
 #     f.select_field :user_id, staff.map { |u| [ u.full_name, u.id ] }, label: "Entraîneur·e"
-#     f.segmented :present, [ [ "Présent·e", true ], [ "Absent·e", false ] ], label: "Présence"
+#     f.segmented :duration, [ [ "1 h", "1.0" ], [ "30 min", "0.5" ] ], label: "Durée"
+#     f.switch :present, [ [ "Présent·e", "1" ], [ "Absent·e", "0" ] ], label: "Présence"
 #     f.submit "Enregistrer"
+#
+# Fields are settings-style rows (docs/ui.md « Forms »): the label on the
+# left, the value on the right, grouped in a .form-grid card.
 #   end
 class StudioFormBuilder < ActionView::Helpers::FormBuilder
   INPUTS = {
@@ -27,8 +31,9 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
 
   # One labelled input. `label_aside` is extra HTML on the label's line (for
   # example the « Mot de passe oublié? » link). `field_class` goes on the
-  # wrapper (e.g. "form-grid__wide"). Other options go to the input.
-  def field(attribute, label:, as: :text, hint: nil, label_aside: nil, field_class: nil, **input_options)
+  # wrapper (e.g. "form-grid__wide"). `icon` is an SVG path drawn before the
+  # label (LayoutHelper's *_ICON). Other options go to the input.
+  def field(attribute, label:, as: :text, hint: nil, label_aside: nil, field_class: nil, icon: nil, **input_options)
     method = INPUTS.fetch(as) { raise ArgumentError, "Unknown field type: #{as.inspect}" }
     error = error_for(attribute)
 
@@ -37,9 +42,9 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
       aria: input_aria(attribute, hint:, error:).merge(input_options.fetch(:aria, {}))
     ))
 
-    @template.tag.div(class: [ field_classes(error), field_class ].compact.join(" ")) do
+    @template.tag.div(class: [ field_classes(error), ("field--textarea" if as == :textarea), field_class ].compact.join(" ")) do
       @template.safe_join([
-        @template.tag.div(@template.safe_join([ label_row(attribute, label, label_aside), input ]), class: "field__box"),
+        @template.tag.div(@template.safe_join([ field_icon(icon), label_row(attribute, label, label_aside), input ].compact), class: "field__box"),
         hint_tag(attribute, hint),
         error_tag(attribute, error)
       ].compact)
@@ -48,7 +53,7 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
 
   # A labelled <select> in the same tile as `field`. `choices` is what
   # `options_for_select` takes ([[label, value], …]).
-  def select_field(attribute, choices, label:, hint: nil, field_class: nil, include_blank: false, **input_options)
+  def select_field(attribute, choices, label:, hint: nil, field_class: nil, include_blank: false, icon: nil, **input_options)
     error = error_for(attribute)
 
     input = select(attribute, choices, { include_blank: include_blank }, input_options.merge(
@@ -58,7 +63,7 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
 
     @template.tag.div(class: [ field_classes(error), field_class ].compact.join(" ")) do
       @template.safe_join([
-        @template.tag.div(@template.safe_join([ label(attribute, label, class: "field__label"), input ]), class: "field__box"),
+        @template.tag.div(@template.safe_join([ field_icon(icon), label(attribute, label, class: "field__label"), input ].compact), class: "field__box"),
         hint_tag(attribute, hint),
         error_tag(attribute, error)
       ].compact)
@@ -109,7 +114,7 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
   # Radio buttons styled as a toggle. `choices` is a list of [label, value].
   # A boolean attribute can use "1"/"0" values: the option matching the
   # current value is checked either way.
-  def segmented(attribute, choices, label:)
+  def segmented(attribute, choices, label:, icon: nil)
     error = error_for(attribute)
     current = object.public_send(attribute) if object.respond_to?(attribute)
     options = choices.map do |text, value|
@@ -121,10 +126,36 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
       end
     end
 
-    @template.tag.fieldset(class: field_classes(error), aria: { describedby: (error_id(attribute) if error) }) do
+    @template.tag.fieldset(class: "#{field_classes(error)} field--choice", aria: { describedby: (error_id(attribute) if error) }) do
       @template.safe_join([
         @template.tag.legend(label, class: "field__label"),
+        field_icon(icon),
         @template.tag.div(@template.safe_join(options), class: "segmented"),
+        error_tag(attribute, error)
+      ].compact)
+    end
+  end
+
+  # A large two-option sliding switch, for the choice a form can't afford to
+  # get wrong (Présent·e / Absent·e). The second option is the exception and
+  # takes the Absence colours when chosen. `choices` is [[label, value], …];
+  # a label may hold an icon (safe HTML).
+  def switch(attribute, choices, label:)
+    error = error_for(attribute)
+    current = object.public_send(attribute) if object.respond_to?(attribute)
+    options = choices.map do |text, value|
+      @template.tag.label(class: "switch__option") do
+        @template.safe_join([
+          radio_button(attribute, value, class: "switch__input", checked: segmented_checked?(current, value)),
+          @template.tag.span(text, class: "switch__text")
+        ])
+      end
+    end
+
+    @template.tag.fieldset(class: "#{field_classes(error)} field--switch", aria: { describedby: (error_id(attribute) if error) }) do
+      @template.safe_join([
+        @template.tag.legend(label, class: "field__label"),
+        @template.tag.div(@template.safe_join(options), class: "switch"),
         error_tag(attribute, error)
       ].compact)
     end
@@ -155,6 +186,10 @@ class StudioFormBuilder < ActionView::Helpers::FormBuilder
   end
 
   private
+
+  def field_icon(path)
+    @template.tag.span(@template.icon_svg(path, size: 20), class: "field__icon") if path
+  end
 
   def segmented_checked?(current, value)
     return false if current.nil?

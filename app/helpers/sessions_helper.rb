@@ -60,6 +60,19 @@ module SessionsHelper
     "Utilise #{format_count(duration)} absence · #{format_count(left)} #{left < 2 ? 'restante' : 'restantes'} après celle-ci"
   end
 
+  # The ticket's day, « mar. 24 nov. », from an ISO date (form_summary_controller.js
+  # writes the same). Blank when the date can't be read.
+  def ticket_day(iso_date)
+    l(Date.iso8601(iso_date.to_s), format: "%a %-d %b")
+  rescue Date::Error
+    ""
+  end
+
+  # « 17 h 00 » from « 17:00 ».
+  def ticket_time(hhmm)
+    hhmm.to_s.sub(":", " h ")
+  end
+
   def default_time_slot_str(now: Time.zone.now)
     now   = now.change(sec: 0)
     mins  = now.min >= 30 ? 30 : 0

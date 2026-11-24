@@ -29,7 +29,8 @@
   <label class="service-option">
     <%= radio_button_tag "session[fliip_service_id]", service.id, checked,
           id: "session_fliip_service_id_#{service.id}", class: "service-option__input",
-          data: { paid_remaining: (service.service_definition ? service.remaining_paid_sessions.to_f : ""),
+          data: { summary_label: service.service_name.presence || "Service",
+                  paid_remaining: (service.service_definition ? service.remaining_paid_sessions.to_f : ""),
                   free_remaining: (service.service_definition ? service.remaining_free_sessions.to_f : 0),
                   start_date: service.start_date&.iso8601, end_date: service.expire_date&.iso8601 } %>
     <span class="service-option__body">

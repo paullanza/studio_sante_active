@@ -1,5 +1,6 @@
-// « Saisir » (bookings/new): the form, then the recent séances. From 1024 px
-// the recent séances sit in a sticky column beside the form.
+// « Saisir » (bookings/new): the form on the left; from 1024 px a side column
+// holds the ticket and, on the séance tab, the trainer's latest séances. On a
+// phone they follow the form.
 .saisir {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -7,11 +8,16 @@
   align-items: start;
 }
 
-.saisir__main {
+.saisir__main,
+.saisir__side {
   display: flex;
   flex-direction: column;
   gap: 20px;
   min-width: 0;
+}
+
+.saisir__side {
+  gap: 28px;
 }
 
 // The trainer's latest séances: a Turbo frame (recent_sessions) holding the list.
@@ -32,15 +38,77 @@
 }
 
 @media (min-width: 1024px) {
-  .saisir--with-recent {
-    grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr);
+  .saisir {
+    grid-template-columns: minmax(0, 1fr) 380px;
     gap: 40px;
   }
+}
 
-  .saisir__recent {
-    position: sticky;
-    top: calc(var(--safe-top) + 88px);
-  }
+// The ticket: what will be saved, its outcome and the gold button, on a
+// surface with the gold button's cut corner.
+.ticket {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 20px 24px;
+  background: var(--surface-2);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%);
+}
+
+.ticket__title {
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.ticket__when {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+
+.ticket__facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 16px;
+  margin: 0;
+  font-size: 14px;
+}
+
+.ticket__facts dt {
+  color: var(--text-muted);
+}
+
+.ticket__facts dd {
+  margin: 0;
+  font-weight: 700;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.ticket__rule {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-top: 1px dashed var(--border-strong);
+}
+
+.ticket__outcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.ticket__outcome .badge {
+  font-size: 13px;
 }
 
 // Client field and its suggestions.
@@ -110,8 +178,8 @@
   color: var(--brand-light);
 }
 
-// The client's services as radio cards, one per row on every width; a
-// blocked one is greyed out with its reason.
+// The client's services as rows in one card, one per row on every width;
+// the chosen one is marked gold, a blocked one is greyed out with its reason.
 .service-choice {
   min-width: 0;
   margin: 0;
@@ -120,62 +188,81 @@
 }
 
 .service-choice__legend {
-  margin-bottom: 12px;
-  padding: 0;
-  font-family: var(--font-heading);
-  font-size: 20px;
-  font-weight: 600;
+  float: left; // a floated legend lays out like the other group titles
+  width: 100%;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 
 .service-options {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 8px;
+  clear: both;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--surface);
 }
 
 .service-option {
+  position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  background: var(--surface);
+  gap: 14px;
+  min-height: 56px;
+  padding: 12px 16px;
   cursor: pointer;
 }
 
+.service-option + .service-option {
+  border-top: 1px solid var(--border);
+}
+
 .service-option:hover {
-  border-color: var(--border-strong);
+  background: var(--surface-2);
 }
 
 .service-option:has(.service-option__input:checked) {
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 1px var(--accent);
+  background: var(--surface-2);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .service-option:has(.service-option__input:focus-visible) {
   outline: 2px solid var(--text);
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 
+// The radio, drawn as a ring that fills gold when chosen.
 .service-option__input {
   flex: none;
-  width: 20px;
-  height: 20px;
-  margin: 2px 0 0;
-  accent-color: var(--accent);
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin: 1px 0 0;
+  border: 2px solid var(--border-strong);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.service-option__input:checked {
+  border: 7px solid var(--accent);
 }
 
 .service-option__mark {
   flex: none;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
+  border: 2px dashed var(--border);
+  border-radius: 50%;
 }
 
 .service-option__body {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
 }
 
@@ -189,14 +276,12 @@
 }
 
 .service-option--blocked {
-  border-style: dashed;
-  background: var(--bg);
   color: var(--text-muted);
   cursor: default;
 }
 
 .service-option--blocked:hover {
-  border-color: var(--border);
+  background: transparent;
 }
 
 .service-option__reason {
@@ -204,80 +289,7 @@
   font-weight: 700;
 }
 
-// Présent·e / Absent·e: full width and tall, so absence can't be missed.
-// Checked absent takes the Absence colours instead of the brand green.
-.presence-choice .segmented {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-self: stretch;
-  border-width: 2px;
-  border-radius: var(--radius-card);
-}
-
-.presence-choice .segmented__text,
-.time-duration .segmented__text {
-  flex: 1;
-}
-
-.presence-choice .segmented__text {
-  justify-content: center;
-  gap: 10px;
-  min-height: 64px;
-  font-family: var(--font-heading);
-  font-size: 19px;
-  font-weight: 700;
-}
-
-.presence-choice .segmented__option:last-child .segmented__input:checked + .segmented__text {
-  background: var(--badge-absence-bg);
-  color: var(--badge-absence-fg);
-  box-shadow: inset 0 0 0 2px var(--badge-absence-fg);
-}
-
-// Heure and Durée share one cell: Date | Heure + Durée from 768 px, and one
-// row under the date on a phone.
-.time-duration {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: end;
-  gap: 10px;
-}
-
-.time-duration .segmented {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-self: stretch;
-}
-
-.time-duration .segmented__text {
-  justify-content: center;
-  min-height: 50px;
-  padding: 0 8px;
-}
-
-// « Cette séance sera enregistrée comme » and the outcome badge.
-.seance-outcome {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  background: var(--surface);
-}
-
-.seance-outcome__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 14px;
-}
-
-.seance-outcome__row .badge {
-  font-size: 13px;
-}
-
+// The outcome lines in the ticket.
 .seance-outcome__absence {
   margin: 0;
   font-size: 14px;

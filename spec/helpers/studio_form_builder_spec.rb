@@ -95,6 +95,21 @@ RSpec.describe StudioFormBuilder, type: :helper do
     end
   end
 
+  describe "row details" do
+    it "draws an icon before the label when given one" do
+      html = form_for_user { |f| f.field(:birthday, label: "Date", as: :date, icon: "M4 5h16") }
+
+      expect(html.at_css(".field__box > .field__icon svg path")["d"]).to eq("M4 5h16")
+      expect(html.at_css(".field__box > .field__icon + label.field__label")).to be_present
+    end
+
+    it "marks a textarea's field so its row stacks" do
+      html = form_for_user { |f| f.field(:address, label: "Adresse", as: :textarea) }
+
+      expect(html.at_css(".field")["class"].split).to include("field--textarea")
+    end
+  end
+
   describe "#segmented" do
     it "checks the option matching the current value" do
       user.role = "manager"
@@ -123,6 +138,26 @@ RSpec.describe StudioFormBuilder, type: :helper do
       expect(html.at_css("fieldset")["class"].split).to include("field--invalid")
       expect(html.at_css("fieldset")["aria-describedby"]).to eq("user_role_error")
       expect(html.at_css("#user_role_error").text).to eq("doit être indiqué")
+    end
+  end
+
+  describe "#switch" do
+    it "renders a two-option switch with the current value chosen" do
+      user.active = true
+      html = form_for_user { |f| f.switch(:active, [ [ "Oui", "1" ], [ "Non", "0" ] ], label: "Actif") }
+
+      expect(html.at_css("fieldset.field--switch legend.field__label").text).to eq("Actif")
+      expect(html.css(".switch .switch__text").map(&:text)).to eq([ "Oui", "Non" ])
+      expect(html.at_css("input.switch__input[value='1']")["checked"]).to eq("checked")
+      expect(html.at_css("input.switch__input[value='0']")["checked"]).to be_nil
+    end
+
+    it "shows an error under the switch" do
+      user.errors.add(:active, "doit être indiqué")
+      html = form_for_user { |f| f.switch(:active, [ [ "Oui", "1" ], [ "Non", "0" ] ], label: "Actif") }
+
+      expect(html.at_css("fieldset")["class"].split).to include("field--invalid")
+      expect(html.at_css("#user_active_error").text).to eq("doit être indiqué")
     end
   end
 

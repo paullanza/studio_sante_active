@@ -1,0 +1,6 @@
+<nav class="tabs" aria-label="Type de saisie">
+  <%= link_to "Séance", new_seance_path(tab: "session", fliip_user_id: @client&.id), class: "tabs__tab",
+        aria: { current: (@tab == "session" ? "page" : nil) } %>
+  <%= link_to "Consultation", new_seance_path(tab: "consultation", fliip_user_id: @client&.id), class: "tabs__tab",
+        aria: { current: (@tab == "consultation" ? "page" : nil) } %>
+</nav>

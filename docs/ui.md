@@ -8,7 +8,7 @@ How to build a page on the new layout. Every Total Restructure issue builds from
 - One gold button (`.btn--primary`) per screen: the page's main action.
 - No Bootstrap classes, no `simple_form`, no inline styles and no raw hex in views or component styles. Colours come from the tokens below.
 - Lists are cards on mobile. Admin lists (Confirmations, Personnel, Allocations) become tables from 768 px.
-- Touch targets are at least 44 px. Buttons, the gold button and one-line fields are 44 px (`--control-height`); a field tile with its label is 50 px. Inputs stay at 16 px text, since iOS zooms in on anything smaller.
+- Touch targets are at least 44 px. Buttons and one-line fields are 44 px (`--control-height`), the gold button 52 px, and a field row 56 px. Inputs stay at 16 px text, since iOS zooms in on anything smaller.
 - UI copy is French. Dates show as `dd/mm/yyyy`, times as `HH:MM` (`l(date)` gives `dd/mm/yyyy`).
 - Icons are inline SVG (`icon_svg`), never an icon font.
 - Never show a status with colour alone: badges always carry their label.
@@ -265,9 +265,9 @@ The search bar stacks on a phone and sits beside its button from 768 px. Its fie
 `bookings/new` (`BookingPage` concern, shared with the create actions that re-render it). The client is a URL param (`new_seance_path(fliip_user_id:, fliip_service_id:)`): the client field (`client_search_controller.js`) fetches `.suggestion` links into the `client_suggestions` frame, and the chosen client shows as a `.chosen-client` card with « Changer ».
 
 - `bookings/_service_option` (`service:`, `checked:`): a service as a `.service-option` radio card (name, séances and absences left, end date, IDs), or `.service-option--blocked` with `booking_block_reason`. One per row on every width (`.service-options`).
-- The Séance section starts with presence: `.presence-choice` makes the `segmented` toggle full width and 64 px tall, Absent·e checked in the Absence colours. Heure and Durée share one cell (`.time-duration`), so the row reads Date | Heure + Durée.
-- `.seance-outcome`: « Cette séance sera enregistrée comme » and the outcome badge, with the absence line; then the `.alert--moins24` block. `seance_outcome_preview(session)` (`SessionsHelper`) renders the state on the server and `seance_outcome_controller.js` updates it as the service, presence and duration change.
-- `bookings/_recent_session`: a séance as a compact `.recent-seance` row linking to its Service page. The side list is the trainer's 10 latest séances (the admin's trainer choice, else the signed-in user), never the client's; it is the `recent_sessions` Turbo frame, which `recent_trainer_controller.js` reloads with `?trainer_id=` when an admin changes the trainer. From 1024 px it is a sticky column beside the form (`.saisir--with-recent`).
+- The form: the presence `switch`, the services, the trainer (admins), the « Quand » group (Date, Heure, Durée rows) and the note. Its gold button sits in the `.ticket` (« Récapitulatif »: the day, time and duration, client, service, trainer, the outcome badge and its warnings), beside the form from 1024 px and under it on a phone. `form_summary_controller.js` keeps the ticket in step with the form. The consultation tab has the same layout.
+- The ticket's outcome: « Enregistrée comme » with the outcome badge and the absence line, then the `.alert--moins24` block. `seance_outcome_preview(session)` (`SessionsHelper`) renders the state on the server and `seance_outcome_controller.js` updates it as the service, presence and duration change.
+- `bookings/_recent_session`: a séance as a compact `.recent-seance` row linking to its Service page. The side list is the trainer's 10 latest séances (the admin's trainer choice, else the signed-in user), never the client's; it is the `recent_sessions` Turbo frame, which `recent_trainer_controller.js` reloads with `?trainer_id=` when an admin changes the trainer. It follows the ticket in the side column (`.saisir__side`).
 - `segmented` can take `"1"`/`"0"` values for a boolean; `base_errors(also: [:occurred_at])` adds the full messages of attributes the form has no field for.
 
 ### Progress bars
@@ -282,33 +282,40 @@ The search bar stacks on a phone and sits beside its button from 768 px. Its fie
 
 Forms must not look like Bootstrap: no label stacked above an outlined box, no single narrow column on desktop, no full-width bar of a button on desktop. Every form uses the pieces below. `devise/registrations/new.html.erb` is the reference page.
 
-### Fields: filled tiles
+### Fields: settings-style rows
 
 ```erb
 <%= form_with model: @user, url: profile_path, builder: StudioFormBuilder, class: "form" do |f| %>
   <%= f.base_errors %>
-  <%= f.field :email, label: "Courriel", as: :email, autocomplete: "email" %>
-  <%= f.field :password, label: "Mot de passe", as: :password, hint: "8 caractères minimum",
-        label_aside: link_to("Mot de passe oublié?", password_help_path) %>
-  <%= f.field :note, label: "Note", as: :textarea, field_class: "form-grid__wide" %>
+  <section class="form-section" aria-labelledby="partie-connexion">
+    <header class="form-section__head"><h2 id="partie-connexion">Connexion</h2></header>
+    <div class="form-grid">
+      <%= f.field :email, label: "Courriel", as: :email, autocomplete: "email", icon: LayoutHelper::MAIL_ICON %>
+      <%= f.field :password, label: "Mot de passe", as: :password, hint: "8 caractères minimum",
+            label_aside: link_to("Mot de passe oublié?", password_help_path) %>
+      <%= f.segmented :duration, [ [ "1 h", "1.0" ], [ "30 min", "0.5" ] ], label: "Durée", icon: LayoutHelper::DURATION_ICON %>
+    </div>
+  </section>
+  <%= f.switch :present, [ [ "Présent·e", "1" ], [ "Absent·e", "0" ] ], label: "Présence" %>
+  <%= f.field :note, label: "Note", as: :textarea %>
   <%= f.code :signup_code_token, label: "Code reçu de votre gestionnaire", length: 8 %>
   <%= f.check :remember_me, label: "Se souvenir de moi" %>
-  <%= f.segmented :duration, [ [ "1 h", 1.0 ], [ "30 min", 0.5 ] ], label: "Durée" %>
   <%= f.submit "Enregistrer" %>
 <% end %>
 ```
 
-A field is a filled tile (`.field__box`, `--surface-2`, no outline) holding its label in small caps and its input; the hint and error sit under the tile. Focus draws a gold underline on the tile and turns the label gold; an error draws a red underline and turns the label red.
+Fields read like a phone's settings, not like an admin form. A field is a row (`.field__box`): an optional icon, the label on the left in muted text, and the value on the right in bold, over a faint rule that says where to type. The whole row is the click target. A `.form-grid` is the group's card, with a line between rows. A field on its own (a search bar, the note) is a card by itself. Focus draws a gold bar on the row's left edge and turns the label gold; an error does the same in red and shows the message under the row.
 
-- `field(attr, label:, as:, hint:, label_aside:, field_class:, **input_options)`: `as` is `:text` (default), `:email`, `:password`, `:tel`, `:date`, `:time`, `:number`, `:search` or `:textarea`. With an error it adds `.field--invalid`, `aria-invalid="true"` and points `aria-describedby` at the hint and error. `label_aside` goes on the label's line inside the tile; `field_class` goes on the wrapper (`form-grid__wide`). Other options (`autocomplete`, `required`, `min`, `step`, …) go to the input.
-- `code(attr, label:, length:, hint:, autofocus:)`: a fixed-length code typed into one cell per character, split in two halves. `code_input_controller.js` moves between cells, takes a paste, uppercases, and joins the cells into a hidden input, the only one that submits.
-- `check(attr, label:)`: a checkbox inside its label.
-- `select_field(attr, choices, label:, hint:, field_class:, include_blank:)`: a `<select>` in the same tile; `choices` is `[[label, value], …]`.
-- `segmented(attr, choices, label:)`: radio buttons as a toggle in a `<fieldset>`; `choices` is `[[label, value], …]`. The option matching the current value is checked; the checked option uses `--brand`.
+- `field(attr, label:, as:, hint:, label_aside:, field_class:, icon:, **input_options)`: `as` is `:text` (default), `:email`, `:password`, `:tel`, `:date`, `:time`, `:number`, `:search` or `:textarea`. A textarea takes the whole row with its label above (`.field--textarea`). With an error it adds `.field--invalid`, `aria-invalid="true"` and points `aria-describedby` at the hint and error. `label_aside` goes under the label (the « Mot de passe oublié? » link); `field_class` goes on the wrapper (`form-grid__wide`); `icon` is an SVG path from `LayoutHelper` (`CALENDAR_ICON`, `CLOCK_ICON`, `DURATION_ICON`, `MAIL_ICON`, `PHONE_ICON`, …). Other options (`autocomplete`, `required`, `min`, `step`, `placeholder`, …) go to the input.
+- `select_field(attr, choices, label:, hint:, field_class:, include_blank:, icon:)`: a `<select>` in a row, its value on the right; `choices` is `[[label, value], …]`.
+- `segmented(attr, choices, label:, icon:)`: a short choice as a row, with the options as pills on the right and the chosen one gold (`.field--choice`). `choices` is `[[label, value], …]`; a boolean can use `"1"`/`"0"`.
+- `switch(attr, choices, label:)`: the large two-option sliding switch, for the one choice a form can't afford to get wrong (presence). It is full width and 58 px tall; the second option is the exception and takes the Absence colours when chosen. A label may carry an icon (`safe_join([ icon_svg(LayoutHelper::CHECK_ICON), "Présent·e" ])`).
+- `code(attr, label:, length:, hint:, autofocus:)`: a fixed-length code typed into one cell per character, split in two halves. `code_input_controller.js` moves between cells, takes a paste, uppercases, and joins the cells into a hidden input, which is the only one that submits.
+- `check(attr, label:)`: a checkbox inside its label; inside a `.form-grid` it is a row.
 - `submit(label, variant: :primary, block: false)`: a `<button type="submit">` with `.btn--{variant}` (`:primary`, `:secondary`, `:ghost`, `:danger`).
-- `base_errors`: errors on `:base` as a `.flash--alert` list above the fields.
+- `base_errors(also: [])`: errors on `:base` as a `.flash--alert` list above the fields; `also` adds the full messages of attributes the form has no field for.
 
-For a field the builder can't render (the Mapbox address box), write the tile by hand: `.field` (plus `.field--invalid` with an error) › `.field__box` › `.field__label` and the control, then `.field__error` after the box. For the address, put `data-controller="address-autocomplete"` and the `MAPBOX_API_KEY` value on the `.field__box`, with a hidden `address` input as the controller's `address` target; the controller inserts `<mapbox-search-box>` after it, borderless on the tile's background.
+For a field the builder can't render (the Mapbox address box), write the row by hand: `.field` (plus `.field--invalid` with an error) › `.field__box` › `.field__label` and the control, then `.field__error` after the box. For the address, put `data-controller="address-autocomplete"` and the `MAPBOX_API_KEY` value on the `.field__box`, with a hidden `address` input as the controller's `address` target; the controller inserts `<mapbox-search-box>` after it, where it takes the rest of the row.
 
 ### Form layout
 
@@ -328,10 +335,10 @@ Mobile first, but on desktop a form is a full-page layout, not a phone column.
 <% end %>
 ```
 
-- `.form` stacks its children 16 px apart, 28 px when they are sections.
-- `.form-section` groups related fields under a Barlow heading, with an optional short note on the right. Split any form of more than about five fields into sections.
-- `.form-grid` lays the fields in two columns from 768 px, in source order (the mobile order); `.form-grid__wide` spans both.
-- `.form-actions` closes the form: the button is full width on a phone, right-aligned under a rule from 768 px.
+- `.form` stacks its children 16 px apart, and 24 px apart when they are sections.
+- `.form-section` is a titled group: its title is a small-caps label above the card, with an optional short note on the right. Split any form of more than about five fields into groups.
+- `.form-grid` is the group's card. Its rows sit in two columns from 768 px, in source order (the mobile order), with a line between columns; `.form-grid__wide` spans both. `.form-grid--single` keeps one column, for a short group or a form with a side column (Saisir).
+- `.form-actions` closes the form: the button is full width on a phone, and right-aligned under a rule from 768 px. A form with a ticket (Saisir) puts its gold button in the ticket instead (`<button form="…">`).
 
 ### Signed-out pages: auth split
 

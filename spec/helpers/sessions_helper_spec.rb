@@ -84,4 +84,12 @@ RSpec.describe SessionsHelper, type: :helper do
       expect(helper.absence_use_line(0.5, 2.5)).to eq("Utilise 0,5 absence · 2,5 restantes après celle-ci")
     end
   end
+
+  describe "#ticket_day and #ticket_time" do
+    it "shows the day and time the way the ticket reads them" do
+      expect(helper.ticket_day("2026-11-24")).to eq("mar. 24 nov.")
+      expect(helper.ticket_day("pas une date")).to eq("")
+      expect(helper.ticket_time("17:00")).to eq("17 h 00")
+    end
+  end
 end
