@@ -24,6 +24,24 @@ class OversightController < ApplicationController
     @trainers_by_service_id = trainer_names_by_service_id(@services)
   end
 
+  # The latest séances across the studio, 50 at a time, newest first;
+  # « Voir plus » is the next page. Future séances are left out.
+  def recent_sessions
+    authorize :oversight, :recent_sessions?
+
+    @employee_id = params[:employee_id].presence
+    # A deactivated trainer stays in the list while their filter is on.
+    @trainers = User.selectable.or(User.where(id: @employee_id)).order(:first_name, :last_name)
+
+    sessions = Session.where(occurred_at: ..Time.current)
+      .by_employee(@employee_id)
+      .includes(:user, :fliip_user, :fliip_service)
+      .order_by_occurred_at_desc
+      .order(id: :desc)
+    # Countless: no COUNT query; it only checks whether a next page exists.
+    @pagy, @sessions = pagy(:countless, sessions, limit: 50)
+  end
+
   private
 
   # Staff who logged a séance or an adjustment on each service, by name.

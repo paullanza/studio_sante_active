@@ -70,4 +70,77 @@ RSpec.describe "Oversight", type: :request do
       end
     end
   end
+
+  describe "GET /seances-recentes" do
+    it "redirects to sign-in when signed out" do
+      get recent_sessions_path
+
+      expect(response).to redirect_to(new_user_session_path)
+    end
+
+    %i[manager admin super_admin].each do |role|
+      it "shows the page to a#{'n' if role == :admin} #{role}" do
+        sign_in user_for(role)
+
+        get recent_sessions_path
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    it "refuses an employee" do
+      sign_in create(:user)
+
+      get recent_sessions_path
+
+      expect(response).to redirect_to(authenticated_root_path)
+      expect(flash[:alert]).to eq("Non autorisé·e.")
+    end
+
+    context "with séances" do
+      before { travel_to Time.zone.local(2026, 11, 24, 10) }
+
+      let(:trainer) { create(:user, first_name: "Ysolde", last_name: "Brisebois") }
+      let(:other_trainer) { create(:user, first_name: "Aline", last_name: "Côté") }
+      let(:service) { create(:fliip_service, service_name: "Entraînement duo") }
+      let!(:older) { create(:session, fliip_service: service, user: trainer, occurred_at: 2.days.ago) }
+      let!(:newer) { create(:session, fliip_service: service, user: other_trainer, occurred_at: 1.hour.ago) }
+      let!(:future) { create(:session, fliip_service: service, user: trainer, occurred_at: 1.day.from_now) }
+
+      before { sign_in create(:user, :manager) }
+
+      def rows
+        Nokogiri::HTML(response.body).css("a.recent-seance")
+      end
+
+      it "lists past séances newest first, each linking to its service, and leaves out future ones" do
+        get recent_sessions_path
+
+        expect(rows.size).to eq(2)
+        expect(rows.map { |row| row["href"] }.uniq).to eq([ fliip_service_path(service) ])
+        expect(rows.first.text).to include("Aline Côté", service.fliip_user.full_name, "Entraînement duo", "Chargée", "1 h", "Non confirmée")
+        expect(rows.last.text).to include("Ysolde Brisebois")
+      end
+
+      it "filters by trainer" do
+        get recent_sessions_path(employee_id: trainer.id)
+
+        expect(rows.size).to eq(1)
+        expect(rows.first.text).to include("Ysolde Brisebois")
+      end
+
+      it "shows 50 séances, then the next ones on page 2" do
+        big_service = create(:fliip_service, service_definition: create(:service_definition, paid_sessions: 100))
+        50.times { |n| create(:session, fliip_service: big_service, user: trainer, occurred_at: (3 + n).hours.ago) }
+
+        get recent_sessions_path
+        expect(rows.size).to eq(50)
+        expect(Nokogiri::HTML(response.body).at_css("a[rel=next]")["href"]).to eq(recent_sessions_path(page: 2))
+
+        get recent_sessions_path(page: 2)
+        expect(rows.size).to eq(2)
+        expect(Nokogiri::HTML(response.body).at_css("a[rel=next]")).to be_nil
+      end
+    end
+  end
 end
