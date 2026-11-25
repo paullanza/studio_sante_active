@@ -1,12 +1,13 @@
 <%# « Modifier » and « Supprimer » on a séance, inside its Turbo frame. `context`
     ("saisir") and `trainer_id` tell the controller which list to draw again.
-    Locals: session, context (optional), trainer_id (optional). %>
+    `stacked: true` puts them one above the other (the Service page card).
+    Locals: session, context (optional), trainer_id (optional), stacked (optional). %>
 <% context = local_assigns[:context] %>
 <% trainer_id = local_assigns[:trainer_id] %>
 <% can_edit = policy(session).update? %>
 <% can_delete = policy(session).destroy? %>
 <% if can_edit || can_delete %>
-  <div class="seance-card__actions">
+  <div class="seance-card__actions<%= " seance-card__actions--stacked" if local_assigns[:stacked] %>">
     <% if can_edit %>
       <%= link_to "Modifier", edit_session_path(session, context: context, trainer_id: trainer_id),
             class: "btn btn--secondary btn--small" %>

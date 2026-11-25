@@ -15,6 +15,8 @@
       <span class="seance-card__presence"><%= session.present ? "Présent·e" : "Absent·e" %></span>
     </div>
     <div class="text-muted text-small numeric">créée : <%= session.created_at.strftime("%d/%m/%Y %H:%M") %></div>
+    <%# « Non confirmée » until payroll, then « Confirmée le … » in the same place. %>
+    <div class="seance-card__status text-small"><%= confirmation_status(session) %></div>
   </div>
   <div class="seance-card__people text-small">
     <span>Entraîneur·e : <%= session.user&.full_name.presence || "—" %></span>
@@ -22,6 +24,5 @@
       <span class="text-muted">Saisie par <%= session.created_by&.full_name.presence || "—" %></span>
     <% end %>
   </div>
-  <div class="seance-card__status text-small"><%= confirmation_status(session) %></div>
-  <%= render "sessions/card_actions", session: session %>
+  <%= render "sessions/card_actions", session: session, stacked: true %>
 </article>

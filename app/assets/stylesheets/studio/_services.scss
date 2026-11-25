@@ -253,6 +253,11 @@
   gap: 8px;
 }
 
+.seance-card__actions--stacked {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 // A séance being edited in place (sessions/_edit_card). Its layout follows
 // its own width: wide on the Service page, narrow in Saisir's side column.
 .seance-edit {
@@ -265,47 +270,78 @@
   gap: 10px;
 }
 
-// Date, heure, présence and durée inline: two per line in a narrow card, one
-// line from 600 px of card. The toggles fill their cell so the line stays even.
-.seance-edit__when {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  align-items: end;
-}
-
-.seance-edit__when .segmented {
+// The edit card's rows (Saisir's .form-rows, packed). Date, heure, présence
+// and durée: one per line in a narrow card, two from 420 px of card, one line
+// from 760 px. Trainer and note side by side from 560 px. Labels of the
+// short rows give way to their icons when space is tight.
+.seance-edit__rows {
   display: flex;
-  align-self: stretch;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.seance-edit__when .segmented__option {
-  flex: 1;
+.seance-edit__rows .form-grid {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.seance-edit__when .segmented__text {
-  flex: 1;
-  justify-content: center;
-  padding: 0 6px;
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-// The note is one line to start; it can be dragged taller.
-.seance-edit textarea.field__input {
-  min-height: 0;
-}
-
-@container (min-width: 600px) {
-  .seance-edit__when {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
+.seance-edit__rows .field__box,
+.seance-edit__rows fieldset.field:has(> .segmented) {
+  min-height: 48px;
+  padding: 6px 12px;
+  column-gap: 10px;
 }
 
 // « Absent·e » takes the Absence colours when chosen, as Saisir's switch does.
 .seance-edit .segmented__input[name$="[present]"][value="0"]:checked + .segmented__text {
+  border-color: var(--badge-absence-fg);
   background: var(--badge-absence-fg);
   color: var(--bg);
+}
+
+.seance-edit__rows .segmented__text {
+  min-height: 32px;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+@container (min-width: 420px) {
+  .seance-edit__rows .seance-edit__when {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (min-width: 560px) {
+  .seance-edit__rows .seance-edit__more {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .seance-edit__rows .seance-edit__more--single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container (min-width: 760px) {
+  .seance-edit__rows .seance-edit__when {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto auto;
+  }
+
+  // The pills speak for themselves on one line: no icon beside them.
+  .seance-edit__when fieldset.field > .field__icon {
+    display: none;
+  }
+
+  .seance-edit__when fieldset.field:has(> .field__icon) {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .seance-edit__when .field__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 .seance-edit .form-actions.seance-edit__actions {
@@ -343,8 +379,8 @@
     justify-self: end;
   }
 
-  .seance-card--session .seance-card__actions {
-    grid-column: 1 / -1;
+  .seance-card__main .seance-card__status {
+    justify-self: auto;
   }
 
   .seance-edit .seance-card__tag {

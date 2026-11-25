@@ -32,19 +32,25 @@
       <%= hidden_field_tag :context, context, id: nil if context.present? %>
       <%= hidden_field_tag :trainer_id, trainer_id, id: nil if trainer_id.present? %>
 
-      <%# Date, heure, présence and durée inline (two per line on a phone). %>
-      <div class="seance-edit__when">
-        <%= f.field :date, label: "Date", as: :date, required: true,
-              value: params.dig(:session, :date).presence || session.occurred_at&.to_date&.iso8601 %>
-        <%= f.field :time, label: "Heure", as: :time, required: true, step: 1800,
-              value: params.dig(:session, :time).presence || session.occurred_at&.strftime("%H:%M") %>
-        <%= f.segmented :present, [ [ "Présent·e", "1" ], [ "Absent·e", "0" ] ], label: "Présence" %>
-        <%= f.segmented :duration, [ [ "1 h", "1.0" ], [ "30 min", "0.5" ] ], label: "Durée" %>
+      <%# Saisir's rows (.form-rows), packed: date, heure, présence and durée on
+          one line, then the trainer (admins) and the note. %>
+      <div class="form-rows seance-edit__rows">
+        <div class="form-grid seance-edit__when">
+          <%= f.field :date, label: "Date", as: :date, required: true, icon: LayoutHelper::CALENDAR_ICON,
+                value: params.dig(:session, :date).presence || session.occurred_at&.to_date&.iso8601 %>
+          <%= f.field :time, label: "Heure", as: :time, required: true, step: 1800, icon: LayoutHelper::CLOCK_ICON,
+                value: params.dig(:session, :time).presence || session.occurred_at&.strftime("%H:%M") %>
+          <%= f.segmented :present, [ [ "Présent·e", "1" ], [ "Absent·e", "0" ] ], label: "Présence" %>
+          <%= f.segmented :duration, [ [ "1 h", "1.0" ], [ "30 min", "0.5" ] ], label: "Durée", icon: LayoutHelper::DURATION_ICON %>
+        </div>
+        <div class="form-grid seance-edit__more<%= " seance-edit__more--single" if staff.empty? %>">
+          <% if staff.any? %>
+            <%= f.select_field :user_id, staff.map { |u| [ u.full_name, u.id ] }, label: "Entraîneur·e",
+                  icon: LayoutHelper::NAV_ICONS["clients"] %>
+          <% end %>
+          <%= f.field :note, label: "Note", placeholder: "Facultatif" %>
+        </div>
       </div>
-      <% if staff.any? %>
-        <%= f.select_field :user_id, staff.map { |u| [ u.full_name, u.id ] }, label: "Entraîneur·e" %>
-      <% end %>
-      <%= f.field :note, label: "Note", as: :textarea, rows: 1, placeholder: "Facultatif" %>
 
       <p class="seance-outcome__absence" data-seance-outcome-target="absenceLine" <%= "hidden" unless preview[:outcome] == :absence %>>
         <%= absence_use_line(preview[:duration], preview[:absences_after]) if preview[:outcome] == :absence %>
