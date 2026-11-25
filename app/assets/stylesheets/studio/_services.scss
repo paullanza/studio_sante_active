@@ -395,7 +395,8 @@
 
   // A séance row: number and outcome, duration, date, trainer, buttons.
   .seance-card--timed {
-    grid-template-columns: 90px 64px 210px minmax(0, 1fr) auto;
+    grid-template-columns: 84px 68px 184px minmax(0, 1fr) auto;
+    column-gap: 12px;
   }
 
   .seance-card__duration {
@@ -591,7 +592,7 @@
 @media (min-width: 1024px) {
   @container (min-width: 860px) {
     .seance-card--timed:has(.seance-card__note) {
-      grid-template-columns: 90px 64px 210px minmax(180px, 250px) minmax(0, 1fr) auto;
+      grid-template-columns: 84px 68px 184px minmax(180px, 240px) minmax(0, 1fr) auto;
     }
 
     .seance-card--timed .seance-card__note {
