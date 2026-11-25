@@ -31,11 +31,71 @@ RSpec.describe Consultation, type: :model do
 
     it { is_expected.to validate_presence_of(:first_name) }
     it { is_expected.to validate_presence_of(:last_name) }
-    it { is_expected.to validate_presence_of(:phone_number) }
     it { is_expected.to validate_presence_of(:occurred_at) }
     it { is_expected.to validate_length_of(:note).is_at_most(10_000) }
     it { is_expected.to belong_to(:fliip_user).optional }
     it { is_expected.to belong_to(:fliip_service).optional }
+  end
+
+  describe "phone and email" do
+    it "stores any common phone format as 10 digits" do
+      [ "(514) 555-0142", "514.555.0142", "1 514 555 0142", "514 555 0142" ].each do |typed|
+        consultation = create(:consultation, phone_number: typed)
+        expect(consultation.phone_number).to eq("5145550142"), "from #{typed.inspect}"
+      end
+    end
+
+    it "refuses 9 digits, and 11 digits not starting with 1" do
+      [ "514 555 014", "25145550142", "abc" ].each do |typed|
+        consultation = build(:consultation, phone_number: typed)
+        expect(consultation).not_to be_valid, "from #{typed.inspect}"
+        expect(consultation.errors[:phone_number]).to include("doit contenir 10 chiffres")
+      end
+    end
+
+    it "needs a phone or an email" do
+      consultation = build(:consultation, phone_number: " ", email: "")
+
+      expect(consultation).not_to be_valid
+      expect(consultation.errors[:base]).to include("Indiquez un téléphone ou un courriel.")
+    end
+
+    it "is valid with an email only, stored stripped and lower case" do
+      consultation = create(:consultation, phone_number: nil, email: " Prospect@Exemple.CA ")
+
+      expect(consultation.email).to eq("prospect@exemple.ca")
+    end
+
+    it "refuses an invalid email" do
+      consultation = build(:consultation, email: "pas un courriel")
+
+      expect(consultation).not_to be_valid
+      expect(consultation.errors[:email]).to include("est invalide")
+    end
+
+    it "lets an existing consultation with an odd phone change its note" do
+      consultation = create(:consultation)
+      consultation.update_column(:phone_number, "555-12")
+
+      expect(consultation.update(note: "Rappeler")).to be(true)
+      expect(consultation.reload.phone_number).to eq("555-12")
+    end
+  end
+
+  describe "presence" do
+    it "is required on a new consultation" do
+      consultation = build(:consultation, present: nil)
+
+      expect(consultation).not_to be_valid
+      expect(consultation.errors[:present]).to include("doit être indiqué")
+    end
+
+    it "lets an existing consultation without presence change its note" do
+      consultation = create(:consultation)
+      consultation.update_column(:present, nil)
+
+      expect(consultation.update(note: "Rappeler")).to be(true)
+    end
   end
 
   describe "status scopes" do

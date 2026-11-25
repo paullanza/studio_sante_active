@@ -22,6 +22,8 @@ module BookingPage
     @trainer = @session.user || current_user
     @recent_sessions = Session.where(user: @trainer).with_associations.order_by_occurred_at_desc.limit(10)
     @consultation ||= Consultation.new(present: true)
+    # The consultation tab lists my latest consultations under its ticket.
+    @recent_consultations = @tab == "consultation" ? Consultation.where(user: current_user).order_by_occurred_at_desc.limit(10) : Consultation.none
     load_booking_staff
   end
 
