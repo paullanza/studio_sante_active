@@ -50,7 +50,7 @@ RSpec.describe "Fliip services", type: :request do
 
       expect(current_tab).to eq("Séances (1)")
       expect(page.at_css(".seance-card__title").text).to eq("Séance #1")
-      expect(page.at_css(".seance-card .badge--chargee").text).to eq("Chargée")
+      expect(page.at_css(".seance-card .badge--chargee").text).to eq("Présent·e")
     end
 
     it "lists the linked consultation" do

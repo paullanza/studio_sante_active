@@ -221,13 +221,9 @@
   font-weight: 700;
 }
 
-.seance-card__presence {
-  font-weight: 400;
-  color: var(--text-muted);
-}
 
 // An Absence or a -24h séance (or an absent prospect) stands out: a stripe
-// and a tint in the badge's colours, and its presence in the badge colour.
+// and a tint in the badge's colours.
 .seance-card--absence {
   border-left: 4px solid var(--badge-absence-fg);
   background: color-mix(in srgb, var(--badge-absence-bg) 55%, var(--surface));
@@ -238,8 +234,6 @@
   background: color-mix(in srgb, var(--badge-moins24-bg) 55%, var(--surface));
 }
 
-.seance-card--absence .seance-card__presence { color: var(--badge-absence-fg); font-weight: 700; }
-.seance-card--moins24 .seance-card__presence { color: var(--badge-moins24-fg); font-weight: 700; }
 
 // A séance's Turbo frame (sessions/_card_frame, _recent_frame): the card or
 // its edit form fills the list item.
@@ -364,9 +358,9 @@
 @media (min-width: 1024px) {
   .seance-card--session {
     display: grid;
-    grid-template-columns: 120px minmax(0, 1.2fr) minmax(0, 1fr) 190px;
+    grid-template-columns: 96px 250px minmax(0, 1fr) auto;
     align-items: center;
-    column-gap: 24px;
+    column-gap: 20px;
   }
 
   .seance-card__tag {
