@@ -216,8 +216,8 @@
   gap: 2px;
 }
 
-// A séance's note, only when it has one: a muted line at the bottom, across
-// the whole row on desktop.
+// A séance's note, only when it has one: a muted line at the bottom, or its
+// own column between the people and the buttons in a wide row (end of file).
 .seance-card__note {
   margin: 0;
   padding-top: 8px;
@@ -252,9 +252,10 @@
 
 
 // A séance's Turbo frame (sessions/_card_frame, _recent_frame): the card or
-// its edit form fills the list item.
+// its edit form fills the list item. Its width decides where the note goes.
 .seance-frame {
   display: block;
+  container-type: inline-size;
 }
 
 .seance-card__actions {
@@ -561,4 +562,27 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0 20px;
+}
+
+// A wide séance row: the note fills the room between the people and the
+// buttons instead of a line underneath.
+@media (min-width: 1024px) {
+  @container (min-width: 860px) {
+    .seance-card--session:has(.seance-card__note) {
+      grid-template-columns: 96px 250px minmax(180px, 260px) minmax(0, 1fr) auto;
+    }
+
+    .seance-card--session .seance-card__note {
+      grid-row: 1;
+      grid-column: 4;
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .seance-card--session .seance-card__actions {
+      grid-row: 1;
+      grid-column: 5;
+    }
+  }
 }
