@@ -53,6 +53,16 @@ RSpec.describe "Fliip services", type: :request do
       expect(page.at_css(".seance-card .badge--chargee").text).to eq("Présent·e")
     end
 
+    it "links the trainer to their staff page for managers, not for other employees" do
+      sign_in create(:user, :manager)
+      get fliip_service_path(service)
+      expect(page.at_css(".seance-card__people a")&.[]("href")).to eq(user_path(trainer))
+
+      sign_in create(:user)
+      get fliip_service_path(service)
+      expect(page.at_css(".seance-card__people a")).to be_nil
+    end
+
     it "lists the linked consultation" do
       sign_in create(:user)
 

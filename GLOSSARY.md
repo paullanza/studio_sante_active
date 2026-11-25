@@ -42,9 +42,9 @@ _Avoid_: Session (in the UI), booking, appointment
 A séance time shared by 2 to 4 clients. It counts as one séance for each client.
 _Avoid_: Group séance, duo
 
-**Chargée**:
-A séance where the client was present. It uses one of the service's séances.
-_Avoid_: Paid session (in the UI)
+**Présent·e** (outcome):
+A séance where the client was present. It uses one of the service's séances. The code calls this outcome `chargee`.
+_Avoid_: Chargée, paid session (in the UI)
 
 **Absence**:
 A séance where the client was absent and the service still had an absence left. It uses an absence, not a séance.

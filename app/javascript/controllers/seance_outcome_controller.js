@@ -1,6 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Saisir: shows what the séance will be recorded as (Chargée, Absence or
+// Saisir: shows what the séance will be recorded as (Présent·e, Absence or
 // -24h) as the service, presence and duration change. Mirrors
 // SessionsHelper#seance_outcome_preview, which renders the same state on the
 // server; the server still validates. In a séance's edit card there is no
@@ -10,7 +10,7 @@ export default class extends Controller {
   static targets = ["badge", "absenceLine", "moins24Alert", "noneLeft", "submit", "submitLabel"]
   static values = { freeRemaining: Number, paidRemaining: Number, submitLabel: String }
 
-  static LABELS = { chargee: "Chargée", absence: "Absence", moins24: "-24h" }
+  static LABELS = { chargee: "Présent·e", absence: "Absence", moins24: "-24h" }
   static SUBMIT = "Enregistrer la séance"
   static SUBMIT_MOINS24 = "Enregistrer : -24h, séance déduite"
 

@@ -7,8 +7,7 @@
 <article class="card seance-card seance-card--session seance-card--<%= session.outcome %>">
   <div class="seance-card__tag">
     <span class="seance-card__title">Séance #<%= format_count(number) %></span>
-    <%# Présent·e for a charged séance; Absence or -24h say the client was absent. %>
-    <span class="badge <%= outcome_badge_class(session) %>"><%= session.present ? "Présent·e" : session.outcome_label %></span>
+    <span class="badge <%= outcome_badge_class(session) %>"><%= session.outcome_label %></span>
   </div>
   <div class="seance-card__main">
     <div class="seance-card__when numeric">
@@ -18,8 +17,10 @@
     <%# « Non confirmée » until payroll, then « Confirmée le … » in the same place. %>
     <div class="seance-card__status text-small"><%= confirmation_status(session) %></div>
   </div>
-  <div class="seance-card__people text-small">
-    <span>Entraîneur·e : <%= session.user&.full_name.presence || "—" %></span>
+  <%# The trainer links to their staff page when the viewer may open it. %>
+  <div class="seance-card__people">
+    <% trainer = session.user %>
+    <span>Entraîneur·e : <%= trainer ? link_to_if(policy(trainer).show?, trainer.full_name.presence || "—", user_path(trainer)) : "—" %></span>
     <% if session.created_by_id != session.user_id %>
       <span class="text-muted">Saisie par <%= session.created_by&.full_name.presence || "—" %></span>
     <% end %>

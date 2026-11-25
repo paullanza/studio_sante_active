@@ -201,9 +201,9 @@ class Session < ApplicationRecord
     end
   end
 
-  # The séance's outcome (GLOSSARY.md): Chargée when the client was present,
+  # The séance's outcome (GLOSSARY.md): Présent·e when the client was present,
   # -24h when absent with no absence left, Absence when an absence was used.
-  OUTCOME_LABELS = { chargee: "Chargée", moins24: "-24h", absence: "Absence" }.freeze
+  OUTCOME_LABELS = { chargee: "Présent·e", moins24: "-24h", absence: "Absence" }.freeze
 
   def outcome
     return :absence if free?

@@ -1,7 +1,7 @@
 module SessionsHelper
   OUTCOME_BADGE_CLASSES = { chargee: "badge--chargee", moins24: "badge--moins24", absence: "badge--absence" }.freeze
 
-  # The badge modifier for a séance's outcome (Chargée, -24h, Absence).
+  # The badge modifier for a séance's outcome (Présent·e, -24h, Absence).
   def outcome_badge_class(session)
     OUTCOME_BADGE_CLASSES.fetch(session.outcome)
   end

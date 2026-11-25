@@ -87,7 +87,7 @@ CSS custom properties on `:root` (`studio/_tokens.scss`). Use `var(--name)`.
 | `--danger` | #F08A8A | errors, destructive text |
 | `--danger-border` | #8C3A3A | danger button border, alert border |
 | `--field-invalid-border` | #C65B5B | invalid input border |
-| `--badge-chargee-bg` / `-fg` | #1F3A2A / #8FD6A9 | Chargée |
+| `--badge-chargee-bg` / `-fg` | #1F3A2A / #8FD6A9 | Présent·e |
 | `--badge-absence-bg` / `-fg` | #36341A / #F2EC62 | Absence (yellow), wherever an outcome shows |
 | `--badge-moins24-bg` / `-fg` | #451616 / #FF6259 | -24h (red), wherever an outcome shows |
 | `--badge-planned-bg` / `-fg` | #2A2E3D / #A9B8F0 | Planifié |
@@ -124,7 +124,7 @@ Buttons must not look like Bootstrap: no rounded boxes in a row. Labels are Barl
 ### Badges
 
 ```erb
-<span class="badge badge--chargee">Chargée</span>
+<span class="badge badge--chargee">Présent·e</span>
 <span class="badge badge--absence">Absence</span>
 <span class="badge badge--moins24">-24h</span>
 <span class="badge badge--overrun">12 mois + 17 j</span>
@@ -136,7 +136,7 @@ Buttons must not look like Bootstrap: no rounded boxes in a row. Labels are Barl
 <span class="text-unconfirmed">Non confirmée</span>
 ```
 
-The outcome colours mean only the outcome: Chargée green, Absence yellow, -24h red. The yellow (hue 58) stays apart from the gold accent and from the « Non confirmée » / « à définir » sand (`--badge-unconfirmed`). Service states use their own tokens (`--planned`, `--warning`). `.badge--neutral` is for inactive states and « Toutes les séances utilisées ». `.text-unconfirmed` is the plain-text form.
+The outcome colours mean only the outcome: Présent·e green, Absence yellow, -24h red. The yellow (hue 58) stays apart from the gold accent and from the « Non confirmée » / « à définir » sand (`--badge-unconfirmed`). Service states use their own tokens (`--planned`, `--warning`). `.badge--neutral` is for inactive states and « Toutes les séances utilisées ». `.text-unconfirmed` is the plain-text form.
 
 A service's status badge comes from `service_status_badge(svc)` (`ServiceBadgesHelper`): « Retiré de Fliip » when the service or its client is removed from Fliip, « Toutes les séances utilisées » when a set allocation is used up, else the Fliip status (Actif `--chargee`, Planifié `--planned`, Suspendu `--warning`, others `--neutral`). `contract_status_badge(contract)` does the same for an abonnement.
 
@@ -248,7 +248,7 @@ The search bar stacks on a phone and sits beside its button from 768 px. Its fie
 - `fliip_services/_bars`: the two thin bars, Temps and Séances, each with its label and percentage above.
 - `service_bar(label, percent, colour_class, aside: nil)` (`FliipServicesHelper`) renders one of those bars. With `aside`, the label row reads « Séances · 17 % » on the left and the aside (« 2 / 12 · 10 restantes ») on the right; `.service-bars--detail` makes them thicker (the Service page).
 - The Service page: `.service-page__side` holds the top card (`.service-top__*`) and the gold « Saisir une séance » button, or `.service-page__blocked` with `booking_block_reason`, in the `.client-page` left column.
-- `sessions/_card` (locals `session:`, `number:`): a séance as a `.seance-card`, « Séance #N », `seance_datetime(time)` (« ven. 13/11/2026 · 17 h 00 »), `duration_short`, the outcome badge in the outcome's colour (`outcome_badge_class(session)`), reading « Présent·e » for a charged séance and `session.outcome_label` (Absence, -24h) otherwise, so there is no separate presence text; trainer, « Saisie par » when someone else entered it, and `confirmation_status(record)` under the created date (« Non confirmée » in `.text-unconfirmed`, or « Confirmée le … » muted, in the same place; works for consultations too). « Modifier » and « Supprimer » sit one above the other in the card's last column (`stacked: true`). It's a card on a phone and a row from 1024 px, number and outcome first. `.seance-card--absence` and `.seance-card--moins24` (from `session.outcome`) add a stripe and tint in the badge's colours so exceptions stand out. `consultations/_service_card` is a consultation in the same style; an absent prospect gets the Absence stripe.
+- `sessions/_card` (locals `session:`, `number:`): a séance as a `.seance-card`, « Séance #N », `seance_datetime(time)` (« ven. 13/11/2026 · 17 h 00 »), `duration_short`, the outcome badge in the outcome's colour (`outcome_badge_class(session)`), reading `session.outcome_label` (Présent·e, Absence or -24h), so there is no separate presence text; trainer, « Saisie par » when someone else entered it, and `confirmation_status(record)` under the created date (« Non confirmée » in `.text-unconfirmed`, or « Confirmée le … » muted, in the same place; works for consultations too). « Modifier » and « Supprimer » sit one above the other in the card's last column (`stacked: true`). It's a card on a phone and a row from 1024 px, number and outcome first. `.seance-card--absence` and `.seance-card--moins24` (from `session.outcome`) add a stripe and tint in the badge's colours so exceptions stand out. `consultations/_service_card` is a consultation in the same style; an absent prospect gets the Absence stripe.
 - Editing a séance in place: on the Service page each card sits in its own Turbo frame (`sessions/_card_frame`, `dom_id(session)`, `.seance-frame`), and Saisir's rows do the same (`sessions/_recent_frame`). `sessions/_card_actions` shows « Modifier » (`.btn--secondary.btn--small`) and « Supprimer » (`.btn--danger.btn--small`, with `turbo_confirm`) when `policy(session).update?` / `destroy?` allow; pass `context: "saisir"` and `trainer_id:` from Saisir. « Modifier » swaps in `sessions/_edit_card` (`.seance-card.seance-edit`), kept compact in Saisir's row style (`.form-rows` inside the card, packed): date, heure, présence and durée on one line, then the trainer (admins) and the note side by side, by container queries on the card so it fits the Service page and Saisir's side column alike. « Absent·e » takes the Absence colours. Then the same outcome preview as Saisir (`seance_outcome_controller.js` with this séance's usage given back as values) and the same « Confirmer l'absence » dialog (`sessions/_confirm_dialog`) when the edit makes a present séance absent. « Enregistrer » is secondary: the page's gold button stays its main action. `SessionsController` answers saves and deletes with Turbo Streams that replace the Service page's top column (`fliip_services/_summary`, `dom_id(service, :summary)`), its séance list (`fliip_services/_sessions`, `dom_id(service, :sessions)`) and the tab count, or Saisir's `recent_sessions` frame (`bookings/_recent_sessions`).
 - `fliip_contracts/_card` (abonnement) and `consultations/_client_card` (a consultation on the Client page).
 - `.card-grid`: a list of cards in one column. Service, abonnement and consultation cards are cards on a phone and rows from 1024 px (the service row: title, service and IDs; status; dates; bars and counts), so a list reads like the Clients list on desktop. `.empty-state`: a tab or list with nothing in it.

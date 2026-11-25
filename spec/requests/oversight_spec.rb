@@ -118,7 +118,7 @@ RSpec.describe "Oversight", type: :request do
 
         expect(rows.size).to eq(2)
         expect(rows.map { |row| row["href"] }.uniq).to eq([ fliip_service_path(service) ])
-        expect(rows.first.text).to include("Aline Côté", service.fliip_user.full_name, "Entraînement duo", "Chargée", "1 h", "Non confirmée")
+        expect(rows.first.text).to include("Aline Côté", service.fliip_user.full_name, "Entraînement duo", "Présent·e", "1 h", "Non confirmée")
         expect(rows.last.text).to include("Ysolde Brisebois")
       end
 

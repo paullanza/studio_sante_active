@@ -51,7 +51,7 @@ RSpec.describe SessionsHelper, type: :helper do
       helper.seance_outcome_preview(Session.new(fliip_service: service, present: true, duration: 1.0, **attrs))
     end
 
-    it "is Chargée when the client is present" do
+    it "is Présent·e when the client is present" do
       expect(preview).to include(outcome: :chargee, none_left: false, submit_label: "Enregistrer la séance")
     end
 
