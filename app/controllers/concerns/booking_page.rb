@@ -20,11 +20,20 @@ module BookingPage
     @session ||= Session.new(fliip_user: @client, fliip_service_id: chosen_service_id(service_id), duration: 1.0, present: true,
                              user: chosen_trainer)
     @trainer = @session.user || current_user
-    @recent_sessions = Session.where(user: @trainer).with_associations.order_by_occurred_at_desc.limit(10)
+    @recent_sessions = latest_sessions_of(@trainer)
     @consultation ||= Consultation.new(present: true)
     # The consultation tab lists my latest consultations under its ticket.
     @recent_consultations = @tab == "consultation" ? Consultation.where(user: current_user).order_by_occurred_at_desc.limit(10) : Consultation.none
     load_booking_staff
+  end
+
+  # Saisir's side list: the trainer's 10 latest séances, each showing its
+  # service's usage, counted for the whole list at once.
+  def latest_sessions_of(trainer)
+    sessions = Session.where(user: trainer).includes(:fliip_user, fliip_service: %i[service_definition fliip_user])
+                      .order_by_occurred_at_desc.limit(10).to_a
+    FliipService.preload_usage(sessions.map(&:fliip_service))
+    sessions
   end
 
   # The requested service when it can be booked, else the only bookable one.

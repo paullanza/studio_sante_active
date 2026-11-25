@@ -141,26 +141,59 @@ class FliipService < ApplicationRecord
   # Adjustment sums (converted to float for safety)
   # -----------------------------------------
   def bonus_sessions_total
-    service_usage_adjustments.sum(:bonus_sessions).to_f
+    @preloaded_usage ? @preloaded_usage[:bonus] : service_usage_adjustments.sum(:bonus_sessions).to_f
   end
 
   def paid_used_adjustment
-    service_usage_adjustments.sum(:paid_used_delta).to_f
+    @preloaded_usage ? @preloaded_usage[:paid_delta] : service_usage_adjustments.sum(:paid_used_delta).to_f
   end
 
   def free_used_adjustment
-    service_usage_adjustments.sum(:free_used_delta).to_f
+    @preloaded_usage ? @preloaded_usage[:free_delta] : service_usage_adjustments.sum(:free_used_delta).to_f
   end
 
   # -----------------------------------------
   # Usage Totals (sessions + adjustments)
   # -----------------------------------------
   def paid_used_total
-    paid_sessions.sum(:duration).to_f + paid_used_adjustment
+    (@preloaded_usage ? @preloaded_usage[:paid_duration] : paid_sessions.sum(:duration).to_f) + paid_used_adjustment
   end
 
   def free_used_total
-    free_sessions.sum(:duration).to_f + free_used_adjustment
+    (@preloaded_usage ? @preloaded_usage[:free_duration] : free_sessions.sum(:duration).to_f) + free_used_adjustment
+  end
+
+  # Counts the séances and adjustments of many services in two grouped
+  # queries, so a list of them doesn't sum per service. The usage methods
+  # above read these sums; a service that wasn't preloaded queries its own.
+  # Sums are taken once: call it again after a change to recount.
+  def self.preload_usage(services)
+    services = services.compact.uniq
+    return services if services.empty?
+
+    ids = services.map(&:id)
+    durations = Session.where(fliip_service_id: ids).group(:fliip_service_id, :session_type).sum(:duration)
+    adjustments = ServiceUsageAdjustment.where(fliip_service_id: ids).group(:fliip_service_id)
+                                        .pluck(:fliip_service_id, Arel.sql("SUM(bonus_sessions)"),
+                                               Arel.sql("SUM(paid_used_delta)"), Arel.sql("SUM(free_used_delta)"))
+                                        .to_h { |id, *sums| [ id, sums ] }
+
+    services.each do |service|
+      bonus, paid_delta, free_delta = adjustments.fetch(service.id, [])
+      service.preloaded_usage = {
+        paid_duration: durations[[ service.id, "paid" ]].to_f,
+        free_duration: durations[[ service.id, "free" ]].to_f,
+        bonus: bonus.to_f, paid_delta: paid_delta.to_f, free_delta: free_delta.to_f
+      }
+    end
+  end
+
+  # Set by .preload_usage; a reload drops it so the counts come from SQL again.
+  attr_writer :preloaded_usage
+
+  def reload(*)
+    @preloaded_usage = nil
+    super
   end
 
   # -----------------------------------------

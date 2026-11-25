@@ -139,23 +139,36 @@
     background: var(--surface);
   }
 
-  body:has(.top-nav) .masthead .brand-bar {
-    display: flex;
-    align-items: center;
-    padding: 0;
-    border: 0;
+  // The bar's wrappers step aside so the brand, the tabs and the name each
+  // take one of the three columns.
+  body:has(.top-nav) .masthead .brand-bar,
+  body:has(.top-nav) .masthead .brand-bar__inner {
+    display: contents;
   }
 
   // On a narrow desktop « par Studio Santé Active » wraps under GEKO.
   body:has(.top-nav) .masthead .brand {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
     row-gap: 2px;
     margin: 0;
     padding: 0;
   }
 
   .masthead .top-nav {
+    grid-column: 2;
+    grid-row: 1;
     position: static;
     border-bottom: 0;
+  }
+
+  .masthead .signed-in-as {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: center;
+    justify-self: end;
+    max-width: 100%;
   }
 
   .masthead .top-nav__inner {

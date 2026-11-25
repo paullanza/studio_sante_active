@@ -66,6 +66,49 @@ RSpec.describe FliipService, type: :model do
     end
   end
 
+  describe ".preload_usage" do
+    let(:other) { create(:fliip_service) }
+
+    def totals(record)
+      [ record.paid_used_total, record.free_used_total, record.paid_allowed_total, record.free_allowed_total,
+        record.remaining_paid_sessions, record.remaining_free_sessions ]
+    end
+
+    before do
+      create(:session, fliip_service: service, present: true, duration: 0.5)
+      create(:session, fliip_service: service, present: false, duration: 1.0, occurred_at: 1.day.ago)
+      create(:session, fliip_service: other, present: true, duration: 1.0)
+      create(:service_usage_adjustment, fliip_service: service, bonus_sessions: 3, paid_used_delta: 2, free_used_delta: 0.5)
+      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: -1)
+    end
+
+    it "gives the same totals as counting each service alone" do
+      preloaded = described_class.where(id: [ service.id, other.id ]).to_a
+      described_class.preload_usage(preloaded)
+
+      preloaded.each { |record| expect(totals(record)).to eq(totals(described_class.find(record.id))) }
+      expect(totals(preloaded.find { |record| record.id == service.id })).to eq([ 1.5, 1.5, 13.0, 2.0, 11.5, 0.5 ])
+    end
+
+    it "reads the preloaded sums without querying again" do
+      services = described_class.includes(:service_definition).where(id: [ service.id, other.id ]).to_a
+      described_class.preload_usage(services)
+
+      queries = []
+      counter = ->(*, payload) { queries << payload[:sql] unless payload[:name] == "SCHEMA" || payload[:cached] }
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { services.each { |record| totals(record) } }
+
+      expect(queries).to be_empty
+    end
+
+    it "counts from SQL again after a reload" do
+      described_class.preload_usage([ service ])
+      create(:session, fliip_service: service, present: true, duration: 1.0, occurred_at: 2.days.ago)
+
+      expect(service.reload.paid_used_total).to eq(2.5)
+    end
+  end
+
   describe "#booking_block_reason" do
     it "is nil for a current active service with sessions left" do
       expect(service.booking_block_reason).to be_nil

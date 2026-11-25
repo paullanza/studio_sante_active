@@ -7,6 +7,9 @@
       <span class="latest-seance__client"><%= session.fliip_user&.full_name.presence || "—" %></span>
       <span class="latest-seance__when numeric"><%= seance_datetime(session.occurred_at) %> · <%= session.duration_short %></span>
       <span class="text-muted text-small"><%= session.fliip_service&.service_name.presence || "Service" %></span>
+      <% if (service = session.fliip_service) && !service.removed_from_fliip? %>
+        <span class="latest-seance__usage text-muted text-small numeric"><%= render "fliip_services/usage_line", service: service %></span>
+      <% end %>
     </span>
     <span class="badge <%= outcome_badge_class(session) %>"><%= session.outcome_label %></span>
   <% end %>

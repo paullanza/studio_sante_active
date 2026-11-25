@@ -144,9 +144,8 @@ class SessionsController < ApplicationController
   def refreshed_lists
     if saisir_context?
       trainer = recent_trainer
-      recent = Session.where(user: trainer).with_associations.order_by_occurred_at_desc.limit(10)
       return turbo_stream.replace("recent_sessions", partial: "bookings/recent_sessions",
-                                                     locals: { trainer: trainer, sessions: recent })
+                                                     locals: { trainer: trainer, sessions: latest_sessions_of(trainer) })
     end
 
     service = FliipService.includes(:service_definition, :service_usage_adjustments).find(@session.fliip_service_id)

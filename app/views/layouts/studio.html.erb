@@ -26,10 +26,19 @@
     <%# Brand bar above the tabs on a phone; beside them from 1024 px. %>
     <div class="masthead">
       <header class="brand-bar">
-        <%= link_to home_path, class: "brand", aria: { label: "GEKO par Studio Santé Active, accueil" } do %>
-          <span class="brand__name">GEKO</span>
-          <span class="brand__by">par Studio Santé Active</span>
-        <% end %>
+        <div class="brand-bar__inner">
+          <%= link_to home_path, class: "brand", aria: { label: "GEKO par Studio Santé Active, accueil" } do %>
+            <span class="brand__name">GEKO</span>
+            <span class="brand__by">par Studio Santé Active</span>
+          <% end %>
+          <% if user_signed_in? %>
+            <%# Who is signed in: right of the brand on a phone, right of the tabs from 1024 px. %>
+            <p class="signed-in-as">
+              <span class="visually-hidden">Connecté·e :</span>
+              <span class="signed-in-as__name"><%= current_user.full_name.strip.presence || current_user.email %></span>
+            </p>
+          <% end %>
+        </div>
       </header>
 
       <%= render "layouts/studio_nav" if user_signed_in? %>

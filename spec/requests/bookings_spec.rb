@@ -119,6 +119,34 @@ RSpec.describe "Bookings", type: :request do
 
         expect(listed_trainer_sessions).to eq(0)
       end
+
+      it "shows each séance's service usage, as on the Service page" do
+        create(:session, fliip_service: service, user: trainer, present: false, occurred_at: 3.days.ago.change(min: 0))
+        sign_in trainer
+
+        get new_seance_path
+
+        usage = Nokogiri::HTML(response.body).at_css("#recent_sessions .latest-seance__usage").text.squish
+        # Counts the whole service, other trainers included.
+        expect(usage).to eq("2 / 10 séances · 1 / 2 absences")
+      end
+
+      it "counts the usage in the same number of queries for 2 or 6 services" do
+        sign_in trainer
+        count_queries = lambda do
+          queries = 0
+          counter = ->(*, payload) { queries += 1 unless payload[:name] == "SCHEMA" || payload[:cached] }
+          ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { get new_seance_path }
+          queries
+        end
+
+        create(:session, user: trainer, occurred_at: 3.days.ago.change(min: 0))
+        get new_seance_path # the first request loads a few things once
+        with_two = count_queries.call
+        4.times { |n| create(:session, user: trainer, occurred_at: (4 + n).days.ago.change(min: 0)) }
+
+        expect(count_queries.call).to eq(with_two)
+      end
     end
 
     it "offers admins every selectable employee but never the super admin" do
