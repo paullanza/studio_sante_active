@@ -241,6 +241,43 @@
 .seance-card--absence .seance-card__presence { color: var(--badge-absence-fg); font-weight: 700; }
 .seance-card--moins24 .seance-card__presence { color: var(--badge-moins24-fg); font-weight: 700; }
 
+// A séance's Turbo frame (sessions/_card_frame, _recent_frame): the card or
+// its edit form fills the list item.
+.seance-frame {
+  display: block;
+}
+
+.seance-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+// A séance being edited in place (sessions/_edit_card).
+.seance-edit {
+  gap: 10px;
+  border-color: var(--border-strong);
+}
+
+.seance-edit__form {
+  gap: 12px;
+}
+
+// « Absent·e » takes the Absence colours when chosen, as Saisir's switch does.
+.seance-edit .segmented__input[name$="[present]"][value="0"]:checked + .segmented__text {
+  background: var(--badge-absence-fg);
+  color: var(--bg);
+}
+
+.seance-edit .form-actions.seance-edit__actions {
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 0;
+}
+
 .adjustment-card__actions {
   display: flex;
   justify-content: flex-end;
@@ -265,6 +302,15 @@
 
   .seance-card__status {
     justify-self: end;
+  }
+
+  .seance-card--session .seance-card__actions {
+    grid-column: 1 / -1;
+  }
+
+  .seance-edit .seance-card__tag {
+    flex-direction: row;
+    align-items: center;
   }
 
   .adjustment-card {

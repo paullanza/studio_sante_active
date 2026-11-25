@@ -316,6 +316,100 @@ RSpec.describe "Sessions", type: :request do
     end
   end
 
+  describe "editing in place (Service page and Saisir)" do
+    let(:stream) { { "Accept" => "text/vnd.turbo-stream.html, text/html, application/xhtml+xml" } }
+    let(:service) { create(:fliip_service, service_definition: create(:service_definition, paid_sessions: 2, free_sessions: 1)) }
+    let!(:own) { create(:session, fliip_service: service, user: employee, note: "original", occurred_at: 1.day.ago.change(hour: 10, min: 0)) }
+
+    def update_params(**overrides)
+      { session: { note: "updated", present: "1", duration: "1.0", date: 1.day.ago.to_date.iso8601, time: "10:00" }.merge(overrides) }
+    end
+
+    it "opens the edit card in the séance's frame" do
+      sign_in employee
+      get edit_session_path(own), headers: { "Turbo-Frame" => "session_#{own.id}" }
+
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "gives the card back on « Annuler », for both lists" do
+      sign_in employee
+      get row_session_path(own), headers: { "Turbo-Frame" => "session_#{own.id}" }
+      expect(response).to have_http_status(:ok)
+
+      get row_session_path(own, context: "saisir"), headers: { "Turbo-Frame" => "session_#{own.id}" }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "lets the owner update an unconfirmed séance, answering with streams" do
+      sign_in employee
+      patch session_path(own), params: update_params, headers: stream
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+      expect(own.reload.note).to eq("updated")
+    end
+
+    it "answers Saisir's edits with streams too" do
+      sign_in employee
+      patch session_path(own), params: update_params.merge(context: "saisir", trainer_id: employee.id), headers: stream
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+    end
+
+    it "refuses the owner once the séance is confirmed" do
+      own.update_columns(confirmed: true)
+      sign_in employee
+      patch session_path(own), params: update_params, headers: stream
+
+      expect(response).to have_http_status(:forbidden)
+      expect(own.reload.note).to eq("original")
+    end
+
+    it "refuses another employee" do
+      sign_in create(:user)
+      patch session_path(own), params: update_params, headers: stream
+
+      expect(response).to have_http_status(:forbidden)
+      expect(own.reload.note).to eq("original")
+    end
+
+    it "lets an admin update a confirmed séance" do
+      own.update_columns(confirmed: true)
+      sign_in create(:user, :admin)
+      patch session_path(own), params: update_params, headers: stream
+
+      expect(response).to have_http_status(:ok)
+      expect(own.reload.note).to eq("updated")
+    end
+
+    it "makes the séance an absence when presence changes and one is left" do
+      sign_in employee
+      patch session_path(own), params: update_params(present: "0"), headers: stream
+
+      expect(own.reload).to be_free
+    end
+
+    it "refuses an edit that needs a séance the service doesn't have" do
+      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 1.5)
+      own.update_columns(duration: 0.5)
+      sign_in employee
+      patch session_path(own), params: update_params(duration: "1.0"), headers: stream
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(own.reload.duration).to eq(0.5)
+    end
+
+    it "deletes with streams" do
+      sign_in employee
+
+      expect { delete session_path(own), headers: stream }.to change(Session, :count).by(-1)
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+    end
+  end
+
   describe "routes open to every signed-in user" do
     let(:session_record) { create(:session, fliip_service: service) }
 

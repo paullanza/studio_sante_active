@@ -6,103 +6,22 @@
 <%= back_link_to "Client·e", fliip_user_path(client) %>
 
 <div class="client-page">
-  <div class="service-page__side client-page__top">
-    <section class="card card--top" aria-labelledby="service-name">
-      <div class="service-top__client">
-        <%= link_to client.full_name.presence || "—", fliip_user_path(client), class: "service-top__client-name" %>
-        <% phones = [ client.user_phone1, client.user_phone2 ].compact_blank.uniq %>
-        <% if phones.any? || client.user_email.present? %>
-          <div class="service-top__contact">
-            <% phones.each do |phone| %>
-              <% if (href = phone_href(phone)) %>
-                <%= link_to format_phone(phone), href, class: "numeric" %>
-              <% else %>
-                <span class="numeric"><%= phone %></span>
-              <% end %>
-            <% end %>
-            <%= mail_to client.user_email if client.user_email.present? %>
-          </div>
-        <% end %>
-        <span class="text-muted text-small numeric">ID <%= client.id %> · FliipUserID <%= client.remote_id %></span>
-      </div>
-
-      <hr class="service-top__rule">
-
-      <div class="service-top__service">
-        <div class="service-card__head">
-          <h1 id="service-name" class="service-top__name"><%= @service.service_name.presence || "Service" %></h1>
-          <%= service_status_badge(@service) %>
-        </div>
-        <div class="service-top__dates">
-          <span class="service-top__range numeric">
-            <%= [ @service.start_date ? l(@service.start_date) : "?", @service.expire_date ? l(@service.expire_date) : "?" ].join(" → ") %>
-          </span>
-          <% if (overrun = @service.overrun_label) %>
-            <span class="badge badge--overrun"><%= overrun %></span>
-          <% end %>
-        </div>
-      </div>
-
-      <% time_pct = @service.time_progress_percent || 0 %>
-      <% days_left = @service.days_left %>
-      <div class="service-bars service-bars--detail">
-        <%= service_bar("Temps", time_pct, progress_base_color(time_pct),
-              aside: (days_left ? "#{days_left} #{days_left < 2 ? 'jour restant' : 'jours restants'}" : "—")) %>
-        <% if @service.allocation_to_define? %>
-          <p class="text-muted text-small">Allocation à définir</p>
-        <% else %>
-          <% paid_pct = @service.paid_progress_percent || 0 %>
-          <% paid_left = @service.remaining_paid_sessions.to_f %>
-          <% free_left = @service.remaining_free_sessions.to_f %>
-          <%= service_bar("Séances", paid_pct, progress_usage_color(paid_pct, time_pct),
-                aside: safe_join([ tag.strong("#{format_count(@service.paid_used_total)} / #{format_count(@service.paid_allowed_total)}"),
-                                   " · #{format_count(paid_left)} #{paid_left < 2 ? 'restante' : 'restantes'}" ])) %>
-          <%# Absences have no bar (mockup): the counts only. %>
-          <div class="service-bar">
-            <div class="service-bar__label">
-              <span>Absences</span>
-              <span><%= tag.strong("#{format_count(@service.free_used_total)} / #{format_count(@service.free_allowed_total)}") %> · <%= format_count(free_left) %> <%= free_left < 2 ? "restante" : "restantes" %></span>
-            </div>
-          </div>
-        <% end %>
-      </div>
-
-      <p class="text-muted text-small numeric">
-        Acheté le <%= @service.purchase_date ? l(@service.purchase_date.to_date) : "—" %> ·
-        Serv# <%= @service.id %> · Achat# <%= @service.remote_purchase_id %> · DefID <%= @service.service_id || "—" %>
-      </p>
-    </section>
-
-    <% if @service.booking_blocked? %>
-      <p class="service-page__blocked text-muted"><%= @service.booking_block_reason %></p>
-    <% else %>
-      <%= link_to new_seance_path(fliip_user_id: @service.fliip_user_id, fliip_service_id: @service.id), class: "btn btn--primary btn--block" do %>
-        <%= safe_join([ "Saisir une séance", button_arrow ]) %>
-      <% end %>
-    <% end %>
-  </div>
+  <%= render "fliip_services/summary", service: @service %>
 
   <div class="client-page__tabs">
     <% tabs = [ [ "sessions", "Séances", @numbered_sessions.size ], [ "consultations", "Consultations", @consultations.size ] ] %>
     <% tabs << [ "adjustments", "Ajustements", @adjustments.size ] if policy(ServiceUsageAdjustment).index? %>
     <nav class="tabs" aria-label="Sections">
       <% tabs.each do |key, label, count| %>
-        <%= link_to "#{label} (#{count})", fliip_service_path(@service, tab: key), class: "tabs__tab",
-              aria: { current: (@tab == key ? "page" : nil) } %>
+        <%# The séance count is refreshed alone after an edit or a delete. %>
+        <%= link_to safe_join([ "#{label} (", tag.span(count, id: (dom_id(@service, :sessions_count) if key == "sessions")), ")" ]),
+              fliip_service_path(@service, tab: key), class: "tabs__tab", aria: { current: (@tab == key ? "page" : nil) } %>
       <% end %>
     </nav>
 
     <% case @tab %>
     <% when "sessions" %>
-      <% if @numbered_sessions.any? %>
-        <ul class="list card-grid">
-          <% @numbered_sessions.each do |session, number| %>
-            <%= render "sessions/card", session: session, number: number %>
-          <% end %>
-        </ul>
-      <% else %>
-        <p class="empty-state">Aucune séance.</p>
-      <% end %>
+      <%= render "fliip_services/sessions", service: @service, numbered_sessions: @numbered_sessions %>
     <% when "consultations" %>
       <% if @consultations.any? %>
         <ul class="list card-grid">

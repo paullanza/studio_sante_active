@@ -30,22 +30,7 @@
     <div class="saisir__side">
       <%= render "bookings/session_ticket" if session_ready %>
 
-      <%# Reloaded alone (Turbo frame) when an admin changes the trainer. %>
-      <%= turbo_frame_tag "recent_sessions", class: "saisir__recent" do %>
-        <section class="saisir__recent-list" aria-labelledby="recent-title">
-          <div class="list-toolbar">
-            <h2 id="recent-title" class="saisir__subtitle"><%= @trainer == current_user ? "Mes 10 dernières séances" : "10 dernières séances" %></h2>
-            <% if @trainer != current_user %><span class="text-muted text-small"><%= @trainer.full_name %></span><% end %>
-          </div>
-          <% if @recent_sessions.any? %>
-            <ul class="list">
-              <%= render partial: "bookings/recent_session", collection: @recent_sessions, as: :session %>
-            </ul>
-          <% else %>
-            <p class="empty-state">Aucune séance.</p>
-          <% end %>
-        </section>
-      <% end %>
+      <%= render "bookings/recent_sessions", trainer: @trainer, sessions: @recent_sessions %>
     </div>
   </div>
 <% else %>

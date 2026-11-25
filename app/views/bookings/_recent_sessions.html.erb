@@ -1,0 +1,20 @@
+<%# Saisir's side list: the trainer's 10 latest séances, in the "recent_sessions"
+    frame. It reloads alone when an admin changes the trainer, and is replaced
+    after one of its séances is edited or deleted. Locals: trainer, sessions. %>
+<%= turbo_frame_tag "recent_sessions", class: "saisir__recent" do %>
+  <section class="saisir__recent-list" aria-labelledby="recent-title">
+    <div class="list-toolbar">
+      <h2 id="recent-title" class="saisir__subtitle"><%= trainer == current_user ? "Mes 10 dernières séances" : "10 dernières séances" %></h2>
+      <% if trainer != current_user %><span class="text-muted text-small"><%= trainer.full_name %></span><% end %>
+    </div>
+    <% if sessions.any? %>
+      <ul class="list">
+        <% sessions.each do |session| %>
+          <li><%= render "sessions/recent_frame", session: session, trainer_id: trainer.id %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="empty-state">Aucune séance.</p>
+    <% end %>
+  </section>
+<% end %>

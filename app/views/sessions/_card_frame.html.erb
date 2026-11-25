@@ -1,0 +1,5 @@
+<%# A Service page séance card in its Turbo frame, where « Modifier » swaps in
+    sessions/_edit_card. Locals: session, number. %>
+<%= turbo_frame_tag dom_id(session), class: "seance-frame" do %>
+  <%= render "sessions/card", session: session, number: number %>
+<% end %>

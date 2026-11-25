@@ -31,27 +31,41 @@ module SessionsHelper
   # whether the service has run out of what this séance needs. Mirrors
   # Session#set_session_type_and_duration and respect_quota_limits;
   # seance_outcome_controller.js does the same in the browser. Nil outcome
-  # without a service.
-  def seance_outcome_preview(session)
+  # without a service. `editing: true` (the edit card) gives the séance's own
+  # usage back, as Session#recalculate_type does.
+  def seance_outcome_preview(session, editing: false)
     service = session.fliip_service
     return { outcome: nil, duration: 1.0, absences_after: nil, none_left: false, submit_label: "Enregistrer la séance" } unless service
 
     duration = Session::DURATIONS.include?(session.duration.to_f) ? session.duration.to_f : 1.0
-    free_left = service.allocation_to_define? ? 0.0 : service.remaining_free_sessions.to_f
+    free_left, paid_left = seance_left(session, editing:)
     outcome =
       if session.present then :chargee
       elsif free_left >= duration then :absence
       else :moins24
       end
-    needed_left = outcome == :absence ? free_left : service.remaining_paid_sessions.to_f
+    needed_left = outcome == :absence ? free_left : paid_left
 
     {
       outcome: outcome,
       duration: duration,
+      free_left: free_left,
+      paid_left: paid_left,
       absences_after: (free_left - duration if outcome == :absence),
       none_left: !service.allocation_to_define? && needed_left < duration,
-      submit_label: SUBMIT_LABELS.fetch(outcome, "Enregistrer la séance")
+      submit_label: SUBMIT_LABELS.fetch(outcome, editing ? "Enregistrer" : "Enregistrer la séance")
     }
+  end
+
+  # [absences left, paid séances left] for the preview. With the allocation
+  # still « à définir » there are no absences and no paid limit (the model
+  # charges the séance and skips the quota check).
+  def seance_left(session, editing:)
+    service = session.fliip_service
+    return [ 0.0, Float::INFINITY ] if service.allocation_to_define?
+    return [ session.free_left_excluding_self, session.paid_left_excluding_self ] if editing
+
+    [ service.remaining_free_sessions.to_f, service.remaining_paid_sessions.to_f ]
   end
 
   # « Utilise 1 absence · 1 restante après celle-ci ».

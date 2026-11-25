@@ -1,0 +1,23 @@
+<%# The question asked before saving a séance (confirm_dialog_controller.js):
+    a date outside the service's dates, or an absence. Used by Saisir's form
+    and by the edit card. Local: title_id (optional, unique on the page). %>
+<% title_id = local_assigns.fetch(:title_id, "confirm-dialog-title") %>
+<dialog class="dialog" data-confirm-dialog-target="dialog" aria-labelledby="<%= title_id %>"
+        data-before-start-title="<%= sessions_modal_before_start_title %>"
+        data-before-start-body="<%= sessions_modal_before_start_body %>"
+        data-after-end-title="<%= sessions_modal_after_end_title %>"
+        data-after-end-body="<%= sessions_modal_after_end_body %>"
+        data-continue-label="<%= sessions_modal_primary_label %>"
+        data-cancel-label="<%= sessions_modal_secondary_label %>"
+        data-absence-title="<%= sessions_modal_absence_title %>"
+        data-absence-body="<%= sessions_modal_absence_body %>"
+        data-moins24-body="<%= sessions_modal_moins24_body %>"
+        data-absence-confirm-label="<%= sessions_modal_absence_confirm_label %>"
+        data-absence-cancel-label="<%= sessions_modal_absence_cancel_label %>">
+  <h2 id="<%= title_id %>" class="dialog__title" data-confirm-dialog-target="title"></h2>
+  <p class="dialog__body" data-confirm-dialog-target="body"></p>
+  <div class="dialog__actions">
+    <button type="button" class="btn btn--ghost" data-confirm-dialog-target="cancelButton" data-action="confirm-dialog#cancel"><%= sessions_modal_secondary_label %></button>
+    <button type="button" class="btn btn--secondary" data-confirm-dialog-target="confirmButton" data-action="confirm-dialog#confirm"><%= sessions_modal_primary_label %></button>
+  </div>
+</dialog>
