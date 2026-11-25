@@ -14,6 +14,14 @@ RSpec.describe "Sign in and sign out", type: :request do
     expect(response.body).to include("/assets/studio-")
   end
 
+  it "puts « Mot de passe oublié? » after « Se connecter », so Tab reaches it last" do
+    get new_user_session_path
+
+    form = Nokogiri::HTML(response.body).at_css("form.auth-split__form")
+    order = form.css("button[type=submit], a[href='#{password_help_path}']").map(&:name)
+    expect(order).to eq(%w[button a])
+  end
+
   it "sends admins to the admin dashboard" do
     sign_in_with_form(email: create(:user, :admin).email)
 

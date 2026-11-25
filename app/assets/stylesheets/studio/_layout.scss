@@ -133,6 +133,28 @@ body:has(.top-nav) .brand-bar {
   grid-area: form;
 }
 
+// The gold button with a quiet text link under it (« Mot de passe oublié? »).
+.auth-submit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.auth-submit .btn {
+  align-self: stretch;
+}
+
+// Beside the « Créer un compte » card, the button keeps its one-line width.
+.form-actions .auth-submit {
+  flex: none;
+}
+
+.auth-submit__link {
+  font-size: 13px;
+  font-weight: 700;
+}
+
 // The way to the other auth page, in the form's actions: a card with a line
 // of context and a secondary button, so it reads as a real next step, not
 // fine print. Under the gold button on a phone; beside it, on its left, from
