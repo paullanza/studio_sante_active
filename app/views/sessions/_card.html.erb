@@ -26,4 +26,7 @@
     <% end %>
   </div>
   <%= render "sessions/card_actions", session: session, stacked: true %>
+  <% if session.note.present? %>
+    <p class="seance-card__note"><span class="seance-card__note-label">Note :</span> <%= session.note %></p>
+  <% end %>
 </article>

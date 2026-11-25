@@ -216,6 +216,22 @@
   gap: 2px;
 }
 
+// A séance's note, only when it has one: a muted line at the bottom, across
+// the whole row on desktop.
+.seance-card__note {
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.seance-card__note-label {
+  color: var(--text);
+  font-weight: 700;
+}
+
 .seance-card__when {
   font-size: 15px;
   font-weight: 700;
@@ -247,9 +263,10 @@
   gap: 8px;
 }
 
+// Side by side on a phone (left); one above the other in the desktop row.
 .seance-card__actions--stacked {
-  flex-direction: column;
-  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 20px;
 }
 
 // A séance being edited in place (sessions/_edit_card). Its layout follows
@@ -377,9 +394,16 @@
     justify-self: auto;
   }
 
+  .seance-card--session .seance-card__note {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+  }
+
   // Stacked buttons in the row: packed, so the row is no taller than the
   // date column (a mouse needs no 44 px target).
   .seance-card__actions--stacked {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 4px;
   }
 

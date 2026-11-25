@@ -63,6 +63,16 @@ RSpec.describe "Fliip services", type: :request do
       expect(page.at_css(".seance-card__people a")).to be_nil
     end
 
+    it "shows a séance's note only when it has one" do
+      sign_in create(:user)
+      get fliip_service_path(service)
+      expect(page.at_css(".seance-card__note")).to be_nil
+
+      seance.update_columns(note: "Arrivé en retard")
+      get fliip_service_path(service)
+      expect(page.at_css(".seance-card__note").text).to include("Arrivé en retard")
+    end
+
     it "lists the linked consultation" do
       sign_in create(:user)
 
