@@ -51,7 +51,7 @@ RSpec.describe SessionsHelper, type: :helper do
       helper.seance_outcome_preview(Session.new(fliip_service: service, present: true, duration: 1.0, **attrs))
     end
 
-    it "is Chargée when the client is present" do
+    it "is Présent·e when the client is present" do
       expect(preview).to include(outcome: :chargee, none_left: false, submit_label: "Enregistrer la séance")
     end
 
@@ -75,6 +75,19 @@ RSpec.describe SessionsHelper, type: :helper do
 
     it "has no outcome without a service" do
       expect(helper.seance_outcome_preview(Session.new(present: true))).to include(outcome: nil, none_left: false)
+    end
+
+    it "gives an edited séance its own absence back" do
+      absence = create(:session, fliip_service: service, present: false)
+
+      expect(helper.seance_outcome_preview(absence, editing: true)).to include(outcome: :absence, free_left: 1.0, submit_label: "Enregistrer")
+      expect(helper.seance_outcome_preview(absence)).to include(outcome: :moins24)
+    end
+
+    it "sets no paid limit while the allocation is « à définir »" do
+      service.service_definition.update_columns(paid_sessions: nil, free_sessions: nil)
+
+      expect(preview(present: false)).to include(outcome: :moins24, none_left: false, paid_left: Float::INFINITY)
     end
   end
 

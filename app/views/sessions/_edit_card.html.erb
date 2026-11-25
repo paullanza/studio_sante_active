@@ -1,0 +1,76 @@
+<%# A séance being edited, in place of its card (Service page) or its row (Saisir),
+    in the same Turbo frame. The outcome preview gives this séance's own usage
+    back (seance_outcome_preview editing: true), and making a present séance
+    absent asks « Confirmer l'absence » first, as on Saisir. SessionsController
+    answers « Enregistrer » and « Supprimer » with Turbo Streams.
+    Locals: session, context ("saisir" or nil), trainer_id (Saisir's list trainer). %>
+<% preview = seance_outcome_preview(session, editing: true) %>
+<% staff = @staff.to_a %>
+<% staff += [ session.user ] if staff.any? && session.user && staff.exclude?(session.user) %>
+<% was_absent = session.persisted? && session.attribute_in_database(:present) == false %>
+<% cancel_path = row_session_path(session, context: context, trainer_id: trainer_id) %>
+<%= turbo_frame_tag dom_id(session), class: "seance-frame" do %>
+  <article class="card seance-card seance-edit"
+           data-controller="seance-outcome confirm-dialog"
+           data-seance-outcome-free-remaining-value="<%= preview[:free_left] %>"
+           data-seance-outcome-paid-remaining-value="<%= preview[:paid_left] %>"
+           data-seance-outcome-submit-label-value="Enregistrer"
+           data-confirm-dialog-fixed-service-value="true"
+           data-confirm-dialog-was-absent-value="<%= was_absent %>"
+           data-action="change->seance-outcome#update">
+    <div class="seance-card__tag">
+      <span class="seance-card__title">Modifier la séance</span>
+      <span class="badge <%= SessionsHelper::OUTCOME_BADGE_CLASSES.fetch(preview[:outcome], "badge--neutral") %>"
+            data-seance-outcome-target="badge"><%= Session::OUTCOME_LABELS.fetch(preview[:outcome], "—") %></span>
+    </div>
+    <p class="text-muted text-small"><%= session.fliip_user&.full_name.presence || "—" %> · <%= session.fliip_service&.service_name.presence || "Service" %></p>
+
+    <%= form_with model: session, url: session_path(session), method: :patch, builder: StudioFormBuilder,
+          namespace: dom_id(session), class: "form seance-edit__form",
+          data: { confirm_dialog_target: "form", action: "submit->confirm-dialog#check" } do |f| %>
+      <%= f.base_errors(also: %i[occurred_at user created_by]) %>
+      <%= hidden_field_tag :context, context, id: nil if context.present? %>
+      <%= hidden_field_tag :trainer_id, trainer_id, id: nil if trainer_id.present? %>
+
+      <%# Saisir's rows (.form-rows), packed: date, heure, présence and durée on
+          one line, then the trainer (admins) and the note. %>
+      <div class="form-rows seance-edit__rows">
+        <div class="form-grid seance-edit__when">
+          <%= f.field :date, label: "Date", as: :date, required: true, icon: LayoutHelper::CALENDAR_ICON,
+                value: params.dig(:session, :date).presence || session.occurred_at&.to_date&.iso8601 %>
+          <%= f.field :time, label: "Heure", as: :time, required: true, step: 1800, icon: LayoutHelper::CLOCK_ICON,
+                value: params.dig(:session, :time).presence || session.occurred_at&.strftime("%H:%M") %>
+          <%= f.segmented :present, [ [ "Présent·e", "1" ], [ "Absent·e", "0" ] ], label: "Présence" %>
+          <%= f.segmented :duration, [ [ "1 h", "1.0" ], [ "30 min", "0.5" ] ], label: "Durée", icon: LayoutHelper::DURATION_ICON %>
+        </div>
+        <div class="form-grid seance-edit__more<%= " seance-edit__more--single" if staff.empty? %>">
+          <% if staff.any? %>
+            <%= f.select_field :user_id, staff.map { |u| [ u.full_name, u.id ] }, label: "Entraîneur·e",
+                  icon: LayoutHelper::NAV_ICONS["clients"] %>
+          <% end %>
+          <%= f.field :note, label: "Note", placeholder: "Facultatif" %>
+        </div>
+      </div>
+
+      <p class="seance-outcome__absence" data-seance-outcome-target="absenceLine" <%= "hidden" unless preview[:outcome] == :absence %>>
+        <%= absence_use_line(preview[:duration], preview[:absences_after]) if preview[:outcome] == :absence %>
+      </p>
+      <div class="alert alert--moins24" role="alert" data-seance-outcome-target="moins24Alert" <%= "hidden" unless preview[:outcome] == :moins24 %>>
+        <%= icon_svg(LayoutHelper::WARNING_ICON, size: 22) %>
+        <strong>Aucune absence restante : cette séance sera déduite du forfait (-24h).</strong>
+      </div>
+      <p class="seance-outcome__none" data-seance-outcome-target="noneLeft" <%= "hidden" unless preview[:none_left] %>>
+        Plus de séances disponibles sur ce service.
+      </p>
+
+      <div class="form-actions seance-edit__actions">
+        <%= link_to "Annuler", cancel_path, class: "btn btn--ghost btn--small" %>
+        <button type="submit" class="btn btn--secondary btn--small" data-seance-outcome-target="submit" <%= "disabled" if preview[:none_left] %>>
+          <span data-seance-outcome-target="submitLabel"><%= preview[:submit_label] %></span><%= button_arrow %>
+        </button>
+      </div>
+
+      <%= render "sessions/confirm_dialog", title_id: dom_id(session, :confirm_title) %>
+    <% end %>
+  </article>
+<% end %>

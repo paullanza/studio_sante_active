@@ -331,14 +331,72 @@ RSpec.describe Session, type: :model do
   end
 
   describe "#outcome and #outcome_label" do
-    it "is Chargée when present, -24h when charged while absent, Absence when an absence was used" do
+    it "is Présent·e when present, -24h when charged while absent, Absence when an absence was used" do
       expect(build_session(session_type: :paid, present: true).outcome).to eq(:chargee)
       expect(build_session(session_type: :paid, present: false).outcome).to eq(:moins24)
       expect(build_session(session_type: :free, present: false).outcome).to eq(:absence)
 
-      expect(build_session(session_type: :paid, present: true).outcome_label).to eq("Chargée")
+      expect(build_session(session_type: :paid, present: true).outcome_label).to eq("Présent·e")
       expect(build_session(session_type: :paid, present: false).outcome_label).to eq("-24h")
       expect(build_session(session_type: :free, present: false).outcome_label).to eq("Absence")
+    end
+  end
+
+  describe "editing a séance" do
+    # definition: 2 paid séances, 1 absence.
+    it "keeps a 1 h absence free when cut to 30 min, though no other absence is left" do
+      session = create(:session, fliip_service: service, present: false)
+      session.update!(duration: 0.5)
+
+      expect(session).to be_free
+    end
+
+    it "turns a present séance into an absence when one is left" do
+      session = create(:session, fliip_service: service, present: true)
+      session.update!(present: false)
+
+      expect(session).to be_free
+    end
+
+    it "turns a present séance into a -24h when no absence is left" do
+      create(:session, fliip_service: service, present: false, occurred_at: 2.days.ago.change(min: 0))
+      session = create(:session, fliip_service: service, present: true)
+      session.update!(present: false)
+
+      expect(session).to be_paid
+      expect(session.outcome).to eq(:moins24)
+    end
+
+    it "allows 30 min → 1 h when exactly 30 min is left" do
+      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 1.0)
+      session = create(:session, fliip_service: service, duration: 0.5)
+
+      expect(session.update(duration: 1.0)).to be(true)
+    end
+
+    it "refuses 30 min → 1 h when nothing is left" do
+      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 1.5)
+      session = create(:session, fliip_service: service, duration: 0.5)
+
+      expect(session.update(duration: 1.0)).to be(false)
+      expect(session.errors[:base]).to include("Aucune séance payante disponible pour ce service.")
+    end
+
+    it "gives the séance's own usage back in what is left" do
+      absence = create(:session, fliip_service: service, present: false)
+      paid = create(:session, fliip_service: service, present: true, occurred_at: 2.days.ago.change(min: 0))
+
+      expect(absence.free_left_excluding_self).to eq(1.0)
+      expect(absence.paid_left_excluding_self).to eq(1.0)
+      expect(paid.paid_left_excluding_self).to eq(2.0)
+    end
+
+    it "doesn't recalculate on a note-only change" do
+      session = create(:session, fliip_service: service, present: false)
+      definition.update!(free_sessions: 0)
+
+      expect(session.update(note: "Nouvelle note")).to be(true)
+      expect(session.reload).to be_free
     end
   end
 

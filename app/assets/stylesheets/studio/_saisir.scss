@@ -308,19 +308,27 @@
   display: none;
 }
 
-// The recent séances: compact rows linking to the Service page.
+// The recent séances: compact rows whose main part links to the Service page,
+// with « Modifier » and « Supprimer » under it when allowed.
 .latest-seance {
-  flex-direction: row;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.latest-seance__link {
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 12px;
   color: var(--text);
   text-decoration: none;
 }
 
-.latest-seance:hover {
+.latest-seance:has(.latest-seance__link:hover) {
   border-color: var(--border-strong);
+}
+
+.latest-seance__link:hover {
   color: var(--text);
 }
 

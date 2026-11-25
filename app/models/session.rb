@@ -67,6 +67,8 @@ class Session < ApplicationRecord
   validate :allocation_defined, on: :create
   validate :service_present_in_fliip, on: :create
   validate :service_within_booking_window, on: :create
+  # - On edit, the same quota check without counting this séance against itself
+  validate :respect_quota_limits_on_update, on: :update, if: :usage_changed?
 
   # Ensures that the chosen service actually belongs to the selected client.
   validate :service_matches_client
@@ -78,6 +80,9 @@ class Session < ApplicationRecord
   #   - Determine whether this session is "free" or "paid"
   #   - Set default duration if not provided
   before_validation :set_session_type_and_duration, on: :create
+
+  #   - On edit, choose the type again when presence or duration changed
+  before_validation :recalculate_type, on: :update, if: -> { will_save_change_to_present? || will_save_change_to_duration? }
 
   #   - Default created_by to the responsible user when not explicitly set
   before_validation :default_created_by, on: :create
@@ -196,9 +201,9 @@ class Session < ApplicationRecord
     end
   end
 
-  # The séance's outcome (GLOSSARY.md): Chargée when the client was present,
+  # The séance's outcome (GLOSSARY.md): Présent·e when the client was present,
   # -24h when absent with no absence left, Absence when an absence was used.
-  OUTCOME_LABELS = { chargee: "Chargée", moins24: "-24h", absence: "Absence" }.freeze
+  OUTCOME_LABELS = { chargee: "Présent·e", moins24: "-24h", absence: "Absence" }.freeze
 
   def outcome
     return :absence if free?
@@ -300,6 +305,16 @@ class Session < ApplicationRecord
     "#{type} ##{formatted}"
   end
 
+  # What the service has left for this séance when it is edited: the absences
+  # (or paid séances) remaining, plus what this séance used as last saved.
+  def free_left_excluding_self
+    fliip_service.remaining_free_sessions.to_f + own_saved_usage("free")
+  end
+
+  def paid_left_excluding_self
+    fliip_service.remaining_paid_sessions.to_f + own_saved_usage("paid")
+  end
+
   private
 
   # -----------------------------------------
@@ -333,6 +348,28 @@ class Session < ApplicationRecord
     self.session_type = free_remaining >= duration ? :free : :paid
   end
 
+  # Same rules as on create, with this séance's own usage (as last saved)
+  # given back, so it doesn't count against itself.
+  def recalculate_type
+    self.duration = (duration.presence || 1.0).to_f
+    return if fliip_service.nil?
+
+    self.session_type =
+      if present || fliip_service.allocation_to_define?
+        :paid
+      else
+        free_left_excluding_self >= duration ? :free : :paid
+      end
+  end
+
+  def own_saved_usage(type)
+    attribute_in_database(:session_type) == type ? attribute_in_database(:duration).to_f : 0.0
+  end
+
+  def usage_changed?
+    will_save_change_to_session_type? || will_save_change_to_present? || will_save_change_to_duration?
+  end
+
   # Default creator fallback
   def default_created_by
     if created_by_id.blank?
@@ -361,6 +398,16 @@ class Session < ApplicationRecord
       if remaining < duration.to_f
         errors.add(:base, "Aucune absence gratuite disponible pour ce service.")
       end
+    end
+  end
+
+  def respect_quota_limits_on_update
+    return if fliip_service.blank? || fliip_service.allocation_to_define?
+
+    if paid? && paid_left_excluding_self < duration.to_f
+      errors.add(:base, "Aucune séance payante disponible pour ce service.")
+    elsif free? && free_left_excluding_self < duration.to_f
+      errors.add(:base, "Aucune absence gratuite disponible pour ce service.")
     end
   end
 

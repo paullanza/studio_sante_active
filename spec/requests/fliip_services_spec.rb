@@ -50,7 +50,27 @@ RSpec.describe "Fliip services", type: :request do
 
       expect(current_tab).to eq("Séances (1)")
       expect(page.at_css(".seance-card__title").text).to eq("Séance #1")
-      expect(page.at_css(".seance-card .badge--chargee").text).to eq("Chargée")
+      expect(page.at_css(".seance-card .badge--chargee").text).to eq("Présent·e")
+    end
+
+    it "links the trainer to their staff page for managers, not for other employees" do
+      sign_in create(:user, :manager)
+      get fliip_service_path(service)
+      expect(page.at_css(".seance-card__people a")&.[]("href")).to eq(user_path(trainer))
+
+      sign_in create(:user)
+      get fliip_service_path(service)
+      expect(page.at_css(".seance-card__people a")).to be_nil
+    end
+
+    it "shows a séance's note only when it has one" do
+      sign_in create(:user)
+      get fliip_service_path(service)
+      expect(page.at_css(".seance-card__note")).to be_nil
+
+      seance.update_columns(note: "Arrivé en retard")
+      get fliip_service_path(service)
+      expect(page.at_css(".seance-card__note").text).to include("Arrivé en retard")
     end
 
     it "lists the linked consultation" do

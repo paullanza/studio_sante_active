@@ -1,0 +1,14 @@
+<%# The Séances tab's list, newest first. Replaced as a whole after a séance is
+    edited or deleted (a new date can reorder it and renumber the cards).
+    Locals: service, numbered_sessions (FliipService#numbered_sessions). %>
+<div id="<%= dom_id(service, :sessions) %>">
+  <% if numbered_sessions.any? %>
+    <ul class="list card-grid">
+      <% numbered_sessions.each do |session, number| %>
+        <li><%= render "sessions/card_frame", session: session, number: number %></li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="empty-state">Aucune séance.</p>
+  <% end %>
+</div>

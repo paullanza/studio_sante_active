@@ -5,8 +5,11 @@ import { Controller } from "@hotwired/stimulus"
 // client is absent (an absence is used, or -24h: a séance is deducted). The
 // texts come from SessionsHelper, as data attributes on the dialog; the
 // absence wording is read from the ticket so it matches what it shows.
+// In a séance's edit card (fixedService) only the absence is asked, and only
+// when the edit makes a present séance absent (wasAbsent false).
 export default class extends Controller {
   static targets = ["form", "dialog", "title", "body", "confirmButton", "cancelButton", "date"]
+  static values = { fixedService: Boolean, wasAbsent: Boolean }
 
   check(event) {
     if (this.confirmed) {
@@ -64,7 +67,11 @@ export default class extends Controller {
 
   #absence() {
     if (this.#checked("session[present]")?.value !== "0") return null
-    if (!this.#checked("session[fliip_service_id]")) return null
+    if (this.fixedServiceValue) {
+      if (this.wasAbsentValue) return null
+    } else if (!this.#checked("session[fliip_service_id]")) {
+      return null
+    }
 
     const d = this.dialogTarget.dataset
     const moins24 = this.element.querySelector("[data-seance-outcome-target='moins24Alert']")
