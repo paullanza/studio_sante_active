@@ -232,6 +232,18 @@
   font-weight: 700;
 }
 
+// The séance's length (« 1 h », « 30 min »), set apart so it stands out.
+.seance-card__duration {
+  align-self: flex-start;
+  padding: 2px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .seance-card__when {
   font-size: 15px;
   font-weight: 700;
@@ -378,7 +390,17 @@
     display: grid;
     grid-template-columns: 96px 250px minmax(0, 1fr) auto;
     align-items: center;
-    column-gap: 20px;
+    column-gap: 14px;
+  }
+
+  // A séance row: number and outcome, duration, date, trainer, buttons.
+  .seance-card--timed {
+    grid-template-columns: 90px 64px 210px minmax(0, 1fr) auto;
+  }
+
+  .seance-card__duration {
+    align-self: center;
+    justify-self: start;
   }
 
   .seance-card__tag {
@@ -568,21 +590,21 @@
 // buttons instead of a line underneath.
 @media (min-width: 1024px) {
   @container (min-width: 860px) {
-    .seance-card--session:has(.seance-card__note) {
-      grid-template-columns: 96px 250px minmax(180px, 260px) minmax(0, 1fr) auto;
+    .seance-card--timed:has(.seance-card__note) {
+      grid-template-columns: 90px 64px 210px minmax(180px, 250px) minmax(0, 1fr) auto;
     }
 
-    .seance-card--session .seance-card__note {
+    .seance-card--timed .seance-card__note {
       grid-row: 1;
-      grid-column: 4;
+      grid-column: 5;
       margin-top: 0;
       padding-top: 0;
       border-top: 0;
     }
 
-    .seance-card--session .seance-card__actions {
+    .seance-card--timed .seance-card__actions {
       grid-row: 1;
-      grid-column: 5;
+      grid-column: 6;
     }
   }
 }

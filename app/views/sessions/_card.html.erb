@@ -4,14 +4,15 @@
     « Modifier » and « Supprimer » show when the policy allows; they work in the
     card's Turbo frame (sessions/_card_frame).
     Locals: session, number (its number in the service, FliipService#numbered_sessions). %>
-<article class="card seance-card seance-card--session seance-card--<%= session.outcome %>">
+<article class="card seance-card seance-card--session seance-card--timed seance-card--<%= session.outcome %>">
   <div class="seance-card__tag">
     <span class="seance-card__title">Séance #<%= format_count(number) %></span>
     <span class="badge <%= outcome_badge_class(session) %>"><%= session.outcome_label %></span>
   </div>
+  <div class="seance-card__duration numeric"><%= session.duration_short %></div>
   <div class="seance-card__main">
     <div class="seance-card__when numeric">
-      <%= seance_datetime(session.occurred_at) %> · <%= session.duration_short %>
+      <%= seance_datetime(session.occurred_at) %>
     </div>
     <div class="text-muted text-small numeric">créée : <%= session.created_at.strftime("%d/%m/%Y %H:%M") %></div>
     <%# « Non confirmée » until payroll, then « Confirmée le … » in the same place. %>
