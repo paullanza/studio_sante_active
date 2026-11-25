@@ -253,14 +253,53 @@
   gap: 8px;
 }
 
-// A séance being edited in place (sessions/_edit_card).
+// A séance being edited in place (sessions/_edit_card). Its layout follows
+// its own width: wide on the Service page, narrow in Saisir's side column.
 .seance-edit {
+  container-type: inline-size;
   gap: 10px;
   border-color: var(--border-strong);
 }
 
 .seance-edit__form {
-  gap: 12px;
+  gap: 10px;
+}
+
+// Date, heure, présence and durée inline: two per line in a narrow card, one
+// line from 600 px of card. The toggles fill their cell so the line stays even.
+.seance-edit__when {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  align-items: end;
+}
+
+.seance-edit__when .segmented {
+  display: flex;
+  align-self: stretch;
+}
+
+.seance-edit__when .segmented__option {
+  flex: 1;
+}
+
+.seance-edit__when .segmented__text {
+  flex: 1;
+  justify-content: center;
+  padding: 0 6px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+// The note is one line to start; it can be dragged taller.
+.seance-edit textarea.field__input {
+  min-height: 0;
+}
+
+@container (min-width: 600px) {
+  .seance-edit__when {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 // « Absent·e » takes the Absence colours when chosen, as Saisir's switch does.

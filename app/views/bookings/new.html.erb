@@ -16,13 +16,13 @@
 
 <% if @tab == "session" %>
   <% session_ready = @client.present? %>
-  <div class="saisir form-rows"
+  <div class="saisir"
        <% if session_ready %>
          data-controller="seance-outcome confirm-dialog recent-trainer form-summary"
          data-recent-trainer-url-value="<%= new_seance_path(fliip_user_id: @client.id) %>"
          data-action="change->seance-outcome#update change->form-summary#update input->form-summary#update"
        <% end %>>
-    <div class="saisir__main">
+    <div class="saisir__main form-rows">
       <%= render "bookings/tabs" %>
       <%= render "bookings/session_form" %>
     </div>
@@ -34,9 +34,9 @@
     </div>
   </div>
 <% else %>
-  <div class="saisir form-rows" data-controller="form-summary"
+  <div class="saisir" data-controller="form-summary"
        data-action="change->form-summary#update input->form-summary#update">
-    <div class="saisir__main">
+    <div class="saisir__main form-rows">
       <%= render "bookings/tabs" %>
       <%= render "bookings/consultation_form" %>
     </div>
