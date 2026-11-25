@@ -1,6 +1,6 @@
 <%# Saisir's consultation tab, main column: the consultation form as grouped
-    rows, ported with its current rules (ENG-197 changes them). Its button is in
-    bookings/_consultation_ticket (form="consultation_form"). %>
+    rows. A phone or an email is required; Consultation stores the phone as
+    10 digits. Its button is in bookings/_consultation_ticket (form="consultation_form"). %>
 <%= form_with model: @consultation, url: consultations_path, id: "consultation_form", builder: StudioFormBuilder, class: "form" do |f| %>
   <%= f.base_errors(also: %i[occurred_at]) %>
 
@@ -12,6 +12,7 @@
       <%= f.field :email, label: "Courriel", as: :email, inputmode: "email", autocomplete: "off", icon: LayoutHelper::MAIL_ICON %>
       <%= f.field :phone_number, label: "Téléphone", as: :tel, inputmode: "tel", autocomplete: "off", icon: LayoutHelper::PHONE_ICON %>
     </div>
+    <p class="field__hint">Téléphone ou courriel requis</p>
   </section>
 
   <%# Présent·e by default (BookingPage builds the consultation with present: true). %>

@@ -72,7 +72,7 @@ _Avoid_: Correction, bonus, override
 ## Consultations
 
 **Prospect** (« prospect »):
-Someone who isn't a client yet. Their details are typed into the consultation by hand.
+Someone who isn't a client yet. Their details are typed into the consultation by hand, with a phone or an email to reach them.
 _Avoid_: Lead, client (until they buy)
 
 **Consultation**:
