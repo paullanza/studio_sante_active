@@ -20,8 +20,18 @@ class Consultation < ApplicationRecord
   # -----------------------------------------
   # Validations
   # -----------------------------------------
-  validates :user_id, :first_name, :last_name, :phone_number, :occurred_at, presence: true
+  validates :user_id, :first_name, :last_name, :occurred_at, presence: true
   validates :note, length: { maximum: 10_000 }, allow_blank: true
+
+  # A phone or an email, to reach the prospect.
+  validate :phone_or_email_present
+  # Stored as 10 digits. Checked only when the phone changes, so older rows
+  # with an odd phone still save when other fields change.
+  validates :phone_number, format: { with: /\A\d{10}\z/, message: "doit contenir 10 chiffres" },
+                           allow_nil: true, if: :will_save_change_to_phone_number?
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "est invalide" }, allow_blank: true
+  # Always logged on new consultations; older rows can have nil and stay editable.
+  validates :present, inclusion: { in: [ true, false ], message: "doit être indiqué" }, on: :create
 
   validates :fliip_service_id,
             uniqueness: { message: "has already been associated to another consultation" },
@@ -31,6 +41,8 @@ class Consultation < ApplicationRecord
   # Callbacks
   # -----------------------------------------
   before_validation :default_created_by, on: :create
+  before_validation :normalize_phone_number, if: :will_save_change_to_phone_number?
+  before_validation :normalize_email
 
   # ⛔️ Removed name-mirroring callbacks so we keep the user-typed name
   # after_save :sync_names_from_service, if: :saved_change_to_fliip_service_id?
@@ -125,6 +137,27 @@ class Consultation < ApplicationRecord
   end
 
   private
+
+  # « (514) 555-0142 », « 514.555.0142 » and « 1 514 555 0142 » all become
+  # « 5145550142 ». Anything else keeps its digits (or, with none, what was
+  # typed) and fails the format check. Blank becomes nil.
+  def normalize_phone_number
+    return self.phone_number = nil if phone_number.blank?
+
+    digits = phone_number.gsub(/\D/, "")
+    digits = digits.delete_prefix("1") if digits.size == 11 && digits.start_with?("1")
+    self.phone_number = digits.presence || phone_number.strip
+  end
+
+  def normalize_email
+    self.email = email.to_s.strip.downcase.presence if email
+  end
+
+  def phone_or_email_present
+    return if phone_number.present? || email.present?
+
+    errors.add(:base, "Indiquez un téléphone ou un courriel.")
+  end
 
   def default_created_by
     self.created_by_id = user_id if self.created_by_id.blank?

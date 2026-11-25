@@ -42,6 +42,17 @@
     </div>
     <div class="saisir__side">
       <%= render "bookings/consultation_ticket" %>
+
+      <section class="saisir__recent saisir__recent-list" aria-labelledby="recent-consultations-title">
+        <h2 id="recent-consultations-title" class="saisir__subtitle">Mes 10 dernières consultations</h2>
+        <% if @recent_consultations.any? %>
+          <ul class="list">
+            <%= render partial: "bookings/recent_consultation", collection: @recent_consultations, as: :consultation %>
+          </ul>
+        <% else %>
+          <p class="empty-state">Aucune consultation.</p>
+        <% end %>
+      </section>
     </div>
   </div>
 <% end %>

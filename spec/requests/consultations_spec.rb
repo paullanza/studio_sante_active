@@ -30,11 +30,56 @@ RSpec.describe "Consultations", type: :request do
     it "re-renders the booking page when a required field is missing" do
       sign_in employee
 
-      expect { post consultations_path, params: consultation_params(phone_number: "") }
+      expect { post consultations_path, params: consultation_params(first_name: "") }
         .not_to change(Consultation, :count)
       expect(response).to have_http_status(:unprocessable_content)
       # The error shows on the field, only visible in the markup.
-      expect(Nokogiri::HTML(response.body).at_css("#consultation_phone_number_error")).to be_present
+      expect(Nokogiri::HTML(response.body).at_css("#consultation_first_name_error")).to be_present
+    end
+
+    it "saves with an email only" do
+      sign_in employee
+
+      expect { post consultations_path, params: consultation_params(phone_number: "", email: "jo@exemple.ca") }
+        .to change(Consultation, :count).by(1)
+      expect(Consultation.last).to have_attributes(phone_number: nil, email: "jo@exemple.ca")
+    end
+
+    it "refuses a consultation with neither phone nor email" do
+      sign_in employee
+
+      expect { post consultations_path, params: consultation_params(phone_number: "", email: "") }
+        .not_to change(Consultation, :count)
+      expect(response).to have_http_status(:unprocessable_content)
+      # The error shows above the form, only visible in the markup.
+      expect(response.body).to include("Indiquez un téléphone ou un courriel.")
+    end
+
+    it "stores the phone as 10 digits" do
+      sign_in employee
+      post consultations_path, params: consultation_params(phone_number: "1 (514) 555-0142")
+
+      expect(Consultation.last.phone_number).to eq("5145550142")
+    end
+
+    it "refuses a consultation without presence" do
+      sign_in employee
+      params = consultation_params
+      params[:consultation].delete(:present)
+
+      expect { post consultations_path, params: params }.not_to change(Consultation, :count)
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "lists my latest consultations on the consultation tab" do
+      create(:consultation, user: employee, first_name: "Récente")
+      sign_in employee
+
+      get new_seance_path(tab: "consultation")
+
+      expect(response).to have_http_status(:ok)
+      # The list is only visible in the markup.
+      expect(Nokogiri::HTML(response.body).css(".latest-consultation").size).to eq(1)
     end
   end
 
