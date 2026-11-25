@@ -126,7 +126,7 @@ RSpec.describe "Bookings", type: :request do
 
         get new_seance_path
 
-        usage = Nokogiri::HTML(response.body).at_css("#recent_sessions .latest-seance__usage").text.squish
+        usage = Nokogiri::HTML(response.body).at_css("#recent_sessions .latest-seance__counts").text.squish
         # Counts the whole service, other trainers included.
         expect(usage).to eq("2 / 10 séances · 1 / 2 absences")
       end

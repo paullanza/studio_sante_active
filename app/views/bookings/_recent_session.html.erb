@@ -1,17 +1,29 @@
-<%# A séance in Saisir's recent list (the trainer's latest): a compact row whose
-    client and date link to its Service page, then « Modifier » and « Supprimer »
-    when allowed. Locals: session, trainer_id (the list's trainer). %>
-<div class="card latest-seance latest-seance--<%= session.outcome %>">
+<%# A séance in Saisir's recent list (the trainer's latest), a mix of the client
+    page's service card and the Service page's séance card: the client and the
+    outcome, the service, the date with the duration, then the service's bars
+    and counts. All of it links to the Service page; « Modifier » and
+    « Supprimer » sit under it when allowed. An Absence or a -24h séance gets
+    the séance card's stripe and tint. Locals: session, trainer_id (the list's trainer). %>
+<% service = session.fliip_service %>
+<article class="card latest-seance seance-card--<%= session.outcome %>">
   <%= link_to fliip_service_path(session.fliip_service_id), data: { turbo_frame: "_top" }, class: "latest-seance__link" do %>
-    <span class="latest-seance__main">
-      <span class="latest-seance__client"><%= session.fliip_user&.full_name.presence || "—" %></span>
-      <span class="latest-seance__when numeric"><%= seance_datetime(session.occurred_at) %> · <%= session.duration_short %></span>
-      <span class="text-muted text-small"><%= session.fliip_service&.service_name.presence || "Service" %></span>
-      <% if (service = session.fliip_service) && !service.removed_from_fliip? %>
-        <span class="latest-seance__usage text-muted text-small numeric"><%= render "fliip_services/usage_line", service: service %></span>
-      <% end %>
-    </span>
-    <span class="badge <%= outcome_badge_class(session) %>"><%= session.outcome_label %></span>
+    <div class="service-card__head">
+      <span class="service-card__name service-card__name--client"><%= session.fliip_user&.full_name.presence || "—" %></span>
+      <span class="badge <%= outcome_badge_class(session) %>"><%= session.outcome_label %></span>
+    </div>
+    <div class="service-card__service text-small"><%= service&.service_name.presence || "Service" %></div>
+
+    <div class="latest-seance__when">
+      <span class="seance-card__when numeric"><%= seance_datetime(session.occurred_at) %></span>
+      <span class="seance-card__duration numeric"><%= session.duration_short %></span>
+    </div>
+
+    <% if service && !service.removed_from_fliip? %>
+      <div class="latest-seance__usage">
+        <%= render "fliip_services/bars", service: service %>
+        <div class="latest-seance__counts text-muted text-small numeric"><%= render "fliip_services/usage_line", service: service %></div>
+      </div>
+    <% end %>
   <% end %>
   <%= render "sessions/card_actions", session: session, context: "saisir", trainer_id: trainer_id %>
-</div>
+</article>

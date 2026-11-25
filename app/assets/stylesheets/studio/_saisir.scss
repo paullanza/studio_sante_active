@@ -308,17 +308,18 @@
   display: none;
 }
 
-// The recent séances: compact rows whose main part links to the Service page,
-// with « Modifier » and « Supprimer » under it when allowed.
+// The recent séances: a mix of the service card (client and outcome, service,
+// bars and counts) and the séance card (date with the duration chip, the
+// Absence and -24h stripe and tint). The card's top part links to the Service
+// page; « Modifier » and « Supprimer » sit under it when allowed.
 .latest-seance {
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 10px;
+  padding: 14px;
 }
 
 .latest-seance__link {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 8px;
   color: var(--text);
   text-decoration: none;
@@ -332,24 +333,19 @@
   color: var(--text);
 }
 
-.latest-seance--absence { border-left: 4px solid var(--badge-absence-fg); }
-.latest-seance--moins24 { border-left: 4px solid var(--badge-moins24-fg); }
+.latest-seance__when {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
 
-.latest-seance__main {
+.latest-seance__usage {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.latest-seance__client {
-  font-family: var(--font-heading);
-  font-weight: 600;
-}
-
-.latest-seance__when {
-  font-size: 14px;
-  font-weight: 700;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
 }
 
 // The recent consultations (consultation tab): compact rows, not links.
