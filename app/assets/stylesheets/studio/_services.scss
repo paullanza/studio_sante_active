@@ -383,6 +383,20 @@
     justify-self: auto;
   }
 
+  // Stacked buttons in the row: packed, so the row is no taller than the
+  // date column (a mouse needs no 44 px target).
+  .seance-card__actions--stacked {
+    gap: 4px;
+  }
+
+  .seance-card__actions--stacked .btn {
+    min-height: 26px;
+  }
+
+  .seance-card__actions--stacked form {
+    display: flex;
+  }
+
   .seance-edit .seance-card__tag {
     flex-direction: row;
     align-items: center;
