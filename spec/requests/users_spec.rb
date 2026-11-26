@@ -63,7 +63,7 @@ RSpec.describe "Users", type: :request do
       it "opens each view for #{viewer}" do
         sign_in everyone[viewer]
 
-        %w[suivi tableau fiches].each do |view|
+        %w[tableau fiches].each do |view|
           get users_path(vue: view)
           expect(response).to have_http_status(:ok), view
         end
@@ -93,14 +93,14 @@ RSpec.describe "Users", type: :request do
       expect(listed_ids).to contain_exactly(user_path(manager), user_path(other_manager))
     end
 
-    it "puts someone with renewals coming up in « À suivre »" do
+    it "lists who has renewals coming up above « Tableau », its default view" do
       service = create(:fliip_service, purchase_status: "A", expire_date: 10.days.from_now.to_date)
       create(:service_usage_adjustment, fliip_service: service, user: employee)
       sign_in admin
 
       get users_path
 
-      card = Nokogiri::HTML(response.body).css(".follow-up__card").find { |c| c.text.include?("renouvellement") }
+      card = Nokogiri::HTML(response.body).at_css("section[aria-labelledby=renouvellements]")
       expect(card.css("a").map { |a| a["href"] }).to eq([ user_path(employee) ])
     end
   end

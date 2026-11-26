@@ -12,14 +12,14 @@ class UsersController < ApplicationController
   # Services tab: active, planned and suspended by default, as on Mes services.
   DEFAULT_SERVICE_STATUSES = %w[A P S].freeze
 
-  # Three views of the same figures: « À suivre » (the flags first, then the
-  # team), « Tableau » (one row each, with the trend) and « Fiches » (a card each).
-  VIEWS = %w[suivi tableau fiches].freeze
+  # Two views of the same figures: « Tableau » (the renewals to follow up,
+  # then one row each, with the trend) and « Fiches » (a card each).
+  VIEWS = %w[tableau fiches].freeze
 
   def index
     authorize User
 
-    @view = VIEWS.include?(params[:vue]) ? params[:vue] : "suivi"
+    @view = VIEWS.include?(params[:vue]) ? params[:vue] : "tableau"
     @status = STATUSES.include?(params[:statut]) ? params[:statut] : "actifs"
     @role = User.roles.key?(params[:role]) ? params[:role] : nil
     @period = PayPeriod.from_param(params[:periode])

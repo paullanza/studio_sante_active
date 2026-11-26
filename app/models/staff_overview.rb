@@ -1,7 +1,6 @@
 # What a manager sees at a glance on « Personnel », for a list of staff: each
 # person's activity in a pay period, their 8-week séance trend, their active
-# clients and upcoming renewals, and the flags that say who needs following up
-# (« À suivre »). A plain object, not stored: a fixed number of grouped queries
+# clients and upcoming renewals, and the flags that say who needs following up. A plain object, not stored: a fixed number of grouped queries
 # whatever the number of staff.
 #
 # Flags only concern people who usually log séances (REGULAR_MIN_PER_WEEK on
@@ -70,15 +69,9 @@ class StaffOverview
     { sessions: rows.sum(&:sessions), hours: rows.sum(&:hours), consultations: rows.sum(&:consultations) }
   end
 
-  # « À suivre »: the four kinds of flag, each with the people it concerns,
-  # biggest first. Kinds with nobody are kept, so the band keeps its shape.
-  def alerts
-    {
-      renewals: rows.select { |r| r.renewals.positive? }.sort_by { |r| -r.renewals },
-      inactive: rows.select { |r| r.inactive?(today) }.sort_by { |r| -(r.days_since_last(today) || Float::INFINITY) },
-      falling: rows.select(&:falling?),
-      unconfirmed: rows.select { |r| r.unconfirmed.positive? }.sort_by { |r| -r.unconfirmed }
-    }
+  # The staff with renewals coming up, most first (« Tableau »).
+  def renewals
+    rows.select { |r| r.renewals.positive? }.sort_by { |r| -r.renewals }
   end
 
   # The week starts of the trend, oldest first (Monday weeks, as Postgres counts them).

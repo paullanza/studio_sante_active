@@ -75,14 +75,14 @@ RSpec.describe StaffOverview do
     end
   end
 
-  it "lists the alerts biggest first" do
+  it "lists the staff with renewals coming up, most first" do
     other = create(:user)
     [ [ trainer, 1 ], [ other, 3 ] ].each do |user, n|
       n.times { create(:service_usage_adjustment, user: user, fliip_service: create(:fliip_service, purchase_status: "A", expire_date: 10.days.from_now.to_date)) }
     end
 
-    alerts = described_class.new([ trainer, other ], period).alerts
+    renewals = described_class.new([ trainer, other ], period).renewals
 
-    expect(alerts[:renewals].map(&:user)).to eq([ other, trainer ])
+    expect(renewals.map(&:user)).to eq([ other, trainer ])
   end
 end

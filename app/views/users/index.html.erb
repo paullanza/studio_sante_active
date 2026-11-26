@@ -1,8 +1,8 @@
 <%# « Personnel » (managers and above): the staff the viewer may see
-    (UserPolicy::Scope) and how each is doing in a pay period, in three views
-    of the same figures (StaffOverview): « À suivre » (the flags, then the
-    team), « Tableau » (one row each, with the 8-week trend) and « Fiches »
-    (a card each). The filters keep the view. %>
+    (UserPolicy::Scope) and how each is doing in a pay period, in two views of
+    the same figures (StaffOverview): « Tableau » (the renewals to follow up,
+    then one row each, with the 8-week trend) and « Fiches » (a card each).
+    The filters keep the view. %>
 <% content_for :nav_section, "plus" %>
 <% content_for :title, "Personnel" %>
 <% content_for :page_wide, true %>
@@ -20,7 +20,7 @@
 
   <div class="personnel__bar">
     <nav class="tabs" aria-label="Vues">
-      <% [ [ "suivi", "À suivre" ], [ "tableau", "Tableau" ], [ "fiches", "Fiches" ] ].each do |key, label| %>
+      <% [ [ "tableau", "Tableau" ], [ "fiches", "Fiches" ] ].each do |key, label| %>
         <%= link_to label, users_path(filters.merge(vue: key)), class: "tabs__tab", aria: { current: (@view == key ? "page" : nil) } %>
       <% end %>
     </nav>
