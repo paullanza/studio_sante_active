@@ -1,0 +1,17 @@
+<%# The column names over a list of sessions/_seance rows (Confirmations,
+    Séances récentes). Shown only when the rows are rows: it sits in a frame
+    like theirs, so the same container query lays it out on their columns.
+    Local: context. %>
+<% parts = seance_card_parts(context) %>
+<div class="seance-frame" aria-hidden="true">
+  <div class="seance-row seance-row--head seance-row--<%= context %>">
+    <% if parts[:check] %><span class="seance-row__check"></span><% end %>
+    <span class="seance-row__label seance-row__tag">Présence</span>
+    <% if parts[:client] %><span class="seance-row__label seance-row__who">Client·e et service</span><% end %>
+    <span class="seance-row__label seance-row__duration">Durée</span>
+    <span class="seance-row__label seance-row__when">Quand</span>
+    <% if parts[:trainer] %><span class="seance-row__label seance-row__people">Entraîneur·e</span><% end %>
+    <% if parts[:usage] %><span class="seance-row__label seance-row__usage">Utilisation du service</span><% end %>
+    <span class="seance-row__label seance-row__note">Note</span>
+  </div>
+</div>

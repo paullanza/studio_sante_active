@@ -1,0 +1,78 @@
+<%# A séance on every rebuilt page, in its Turbo frame (« Modifier » swaps in
+    sessions/_edit_card and gets this back). `context` picks the page and what
+    the card shows (SessionsHelper::SEANCE_CARD_PARTS): nil (the Service
+    page), "saisir", "confirmations" or "recentes".
+    The frame's width picks the layout (studio/_seance_row.scss): Saisir's card
+    when narrow (the Service page keeps its own), the Service page's row when
+    wide, always in one order: checkbox, « Séance #N » over the presence,
+    client and service, duration, when, trainer, usage, note, buttons.
+    Locals: session, context, number (its number in its service; optional),
+    trainer_id (Saisir's list trainer; optional). %>
+<% context = local_assigns[:context].presence %>
+<% parts = seance_card_parts(context) %>
+<% number = local_assigns[:number] %>
+<% service = session.fliip_service %>
+<% entered_by_other = session.created_by_id != session.user_id %>
+<%= turbo_frame_tag dom_id(session), class: "seance-frame" do %>
+  <article class="card seance-row seance-row--<%= context || "service" %><%= " seance-row--compact" if context %> seance-card--<%= session.outcome %>">
+    <% if parts[:check] %>
+      <div class="seance-row__check">
+        <label class="checkbox">
+          <input type="checkbox" name="session_ids[]" value="<%= session.id %>" form="confirm_sessions_form"
+                 class="checkbox__input" data-confirm-selection-target="item" data-group="<%= session.user_id %>">
+          <span class="visually-hidden">Sélectionner la séance du <%= seance_datetime(session.occurred_at) %></span>
+        </label>
+      </div>
+    <% end %>
+    <div class="seance-row__tag">
+      <% if number %><span class="seance-row__number">Séance #<%= format_count(number) %></span><% end %>
+      <span class="badge <%= outcome_badge_class(session) %>"><%= session.outcome_label %></span>
+    </div>
+    <% if parts[:client] %>
+      <div class="seance-row__who">
+        <%= link_to session.fliip_user&.full_name.presence || "—", fliip_service_path(session.fliip_service_id),
+              class: "seance-row__client", data: { turbo_frame: "_top" } %>
+        <span class="seance-row__service text-muted text-small"><%= service&.service_name.presence || "Service" %></span>
+      </div>
+    <% end %>
+    <span class="seance-row__duration numeric"><%= session.duration_short %></span>
+    <div class="seance-row__when numeric">
+      <span class="seance-row__date"><strong><%= seance_datetime(session.occurred_at) %></strong> <span class="seance-row__inline-duration">· <%= session.duration_short %></span></span>
+      <span class="seance-row__created text-muted text-small">créée : <%= session.created_at.strftime("%d/%m/%Y %H:%M") %></span>
+      <% if parts[:status] %>
+        <%# « Non confirmée » until payroll, then « Confirmée le … ». %>
+        <span class="seance-row__status text-small"><%= confirmation_status(session) %></span>
+      <% end %>
+      <% if entered_by_other && !parts[:trainer] %>
+        <span class="text-muted text-small">Saisie par <%= session.created_by&.full_name.presence || "—" %></span>
+      <% end %>
+    </div>
+    <% if parts[:trainer] %>
+      <%# The trainer links to their staff page when the viewer may open it. %>
+      <div class="seance-row__people">
+        <% trainer = session.user %>
+        <span>Entraîneur·e : <%= trainer ? link_to_if(policy(trainer).show?, trainer.full_name.presence || "—", user_path(trainer), data: { turbo_frame: "_top" }) : "—" %></span>
+        <% if entered_by_other %>
+          <span class="text-muted">Saisie par <%= session.created_by&.full_name.presence || "—" %></span>
+        <% end %>
+      </div>
+    <% end %>
+    <% if parts[:usage] %>
+      <div class="seance-row__usage numeric">
+        <% if service && !service.removed_from_fliip? %>
+          <%= render "fliip_services/bars", service: service %>
+          <div class="seance-row__counts text-muted">
+            <% if service.allocation_to_define? %>
+              Allocation à définir
+            <% else %>
+              <%= format_count(service.paid_used_total) %> / <%= format_count(service.paid_allowed_total) %> ·
+              abs. <%= format_count(service.free_used_total) %> / <%= format_count(service.free_allowed_total) %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+    <p class="seance-row__note"><% if session.note.present? %><span class="seance-card__note-label">Note :</span> <%= session.note %><% end %></p>
+    <%= render "sessions/card_actions", session: session, context: context, trainer_id: local_assigns[:trainer_id], stacked: true %>
+  </article>
+<% end %>

@@ -5,7 +5,7 @@
   <% if numbered_sessions.any? %>
     <ul class="list card-grid">
       <% numbered_sessions.each do |session, number| %>
-        <li><%= render "sessions/card_frame", session: session, number: number %></li>
+        <li><%= render "sessions/seance", session: session, number: number %></li>
       <% end %>
     </ul>
   <% else %>

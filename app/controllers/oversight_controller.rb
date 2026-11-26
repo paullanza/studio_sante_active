@@ -35,11 +35,13 @@ class OversightController < ApplicationController
 
     sessions = Session.where(occurred_at: ..Time.current)
       .by_employee(@employee_id)
-      .includes(:user, :fliip_user, :fliip_service)
+      .with_associations
       .order_by_occurred_at_desc
       .order(id: :desc)
     # Countless: no COUNT query; it only checks whether a next page exists.
     @pagy, @sessions = pagy(:countless, sessions, limit: 50)
+    FliipService.preload_usage(@sessions.map(&:fliip_service))
+    @numbers = Session.numbers_for(@sessions)
   end
 
   private

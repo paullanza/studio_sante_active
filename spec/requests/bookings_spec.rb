@@ -91,7 +91,7 @@ RSpec.describe "Bookings", type: :request do
       end
 
       def listed_trainer_sessions
-        Nokogiri::HTML(response.body).css("#recent_sessions .latest-seance").size
+        Nokogiri::HTML(response.body).css("#recent_sessions .seance-row").size
       end
 
       it "shows the signed-in trainer's séances, never the client's" do
@@ -126,7 +126,7 @@ RSpec.describe "Bookings", type: :request do
 
         get new_seance_path
 
-        usage = Nokogiri::HTML(response.body).at_css("#recent_sessions .latest-seance__counts").text.squish
+        usage = Nokogiri::HTML(response.body).at_css("#recent_sessions .seance-row__counts").text.squish
         # Counts the whole service, other trainers included.
         expect(usage).to eq("2 / 10 · abs. 1 / 2")
       end

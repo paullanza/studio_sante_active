@@ -21,7 +21,9 @@ class ConfirmationsController < ApplicationController
                       .sort_by { |s| [ s.occurred_at || Time.zone.at(0), s.id ] }
                       .group_by(&:user)
                       .sort_by { |trainer, _| I18n.transliterate(trainer.full_name.to_s).downcase }
-    FliipService.preload_usage(@groups.flat_map { |_, list| list.map(&:fliip_service) })
+    listed = @groups.flat_map(&:last)
+    FliipService.preload_usage(listed.map(&:fliip_service))
+    @numbers = Session.numbers_for(listed)
 
     @earlier = earlier_unconfirmed
   end

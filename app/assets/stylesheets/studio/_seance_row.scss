@@ -1,0 +1,308 @@
+// One séance on every rebuilt page (sessions/_seance). Each part has a grid
+// area; the context class picks the layout, and the frame's width (container
+// query on .seance-frame) picks between the card and the row:
+// - narrow, .seance-row--compact (Saisir, Confirmations, Séances récentes):
+//   Saisir's card. Client, service, date · duration, then the buttons on the
+//   left; the presence over the bars and counts on the right; the note last.
+//   Confirmations adds the checkbox on the left.
+// - narrow, .seance-row--service: the Service page's card, one part a line.
+// - wide: the Service page's row, the same order everywhere (checkbox,
+//   « Séance #N » over the presence, client and service, duration, when,
+//   trainer, usage, note, buttons). A page leaves out what it doesn't show.
+// Rows of one list share their column template, so they line up without a
+// subgrid; sessions/_seance_head names the columns.
+
+.seance-row {
+  display: grid;
+  gap: 2px 12px;
+  align-items: start;
+  padding: 12px 14px;
+}
+
+.seance-row__check { grid-area: check; }
+
+.seance-row__tag {
+  grid-area: tag;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.seance-row__number {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.seance-row__who {
+  grid-area: who;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.seance-row__client {
+  overflow: hidden;
+  color: var(--text);
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.seance-row__client:hover {
+  color: var(--brand-light);
+}
+
+.seance-row__service {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// The séance's length (« 1 h », « 30 min »), set apart so it stands out.
+.seance-row__duration {
+  grid-area: dur;
+  justify-self: start;
+  align-self: center;
+  padding: 2px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.seance-row__when {
+  grid-area: when;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.seance-row__date {
+  font-size: 13px;
+}
+
+.seance-row__date strong {
+  white-space: nowrap;
+}
+
+.seance-row__inline-duration {
+  white-space: nowrap;
+}
+
+.seance-row__people {
+  grid-area: people;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 14px;
+}
+
+// The service's Temps and Séances bars (fliip_services/_bars) and its counts.
+.seance-row__usage {
+  grid-area: usage;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.seance-row__usage .service-bars { gap: 4px; }
+.seance-row__usage .service-bar { gap: 2px; }
+.seance-row__usage .service-bar__label { font-size: 11px; }
+.seance-row__usage .service-bar .progress { height: 5px; }
+
+// « 1,5 / 96 · abs. 1 / 2 »: the séances, then the absences.
+.seance-row__counts {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+// The note, only when there is one: a muted line under a rule at the bottom,
+// its own column in a row.
+.seance-row__note {
+  grid-area: note;
+  margin: 4px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.seance-row__note:empty {
+  display: none;
+}
+
+.seance-row > .seance-card__actions {
+  grid-area: act;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 4px 20px;
+}
+
+.seance-row > .seance-card__actions form {
+  display: flex;
+}
+
+// --- Narrow: Saisir's card ------------------------------------------------
+.seance-row--compact {
+  grid-template-columns: minmax(0, 1fr) 124px;
+  grid-template-areas:
+    "who    tag"
+    "when   usage"
+    "people usage"
+    "act    usage"
+    "note   note";
+}
+
+.seance-row--compact .seance-row__tag { justify-self: end; }
+.seance-row--compact .seance-row__date strong { white-space: normal; }
+.seance-row--compact .seance-row__number,
+.seance-row--compact .seance-row__duration,
+.seance-row--compact .seance-row__created { display: none; }
+.seance-row--compact .seance-row__people { font-size: 13px; }
+
+.seance-row--compact > .seance-card__actions {
+  align-self: end;
+  padding-top: 6px;
+}
+
+// Beside the checkbox there is no room for the buttons: their own line.
+.seance-row--confirmations {
+  grid-template-columns: auto minmax(0, 1fr) 112px;
+  grid-template-areas:
+    "check who    tag"
+    "check when   usage"
+    "check people usage"
+    "act   act    act"
+    "note  note   note";
+}
+
+// --- Narrow: the Service page's card --------------------------------------
+.seance-row--service {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.seance-row--service .seance-row__duration { align-self: flex-start; }
+
+.seance-row--service .seance-row__tag { justify-content: space-between; }
+.seance-row--service .seance-row__inline-duration { display: none; }
+.seance-row--service .seance-row__date strong { font-size: 15px; }
+.seance-row--service .seance-row__note { order: 1; }
+
+// --- The column names (sessions/_seance_head): rows only --------------------
+.seance-row--head {
+  display: none;
+  padding: 0 15px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.seance-row--head > * {
+  padding: 0;
+  border: 0;
+  font: inherit;
+}
+
+// --- Wide: the Service page's row -------------------------------------------
+@mixin row {
+  align-items: center;
+  column-gap: 14px;
+
+  .seance-row__tag {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-self: start;
+    gap: 4px;
+  }
+
+  .seance-row__number { display: inline; }
+  .seance-row__duration { display: inline-block; }
+  .seance-row__created { display: block; }
+  .seance-row__inline-duration { display: none; }
+  .seance-row__date strong { font-size: 15px; }
+  .seance-row__people { font-size: 14px; }
+
+  .seance-row__note {
+    margin: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .seance-row__note:empty { display: block; }
+
+  // Stacked buttons: packed, so the row is no taller than the date column
+  // (a mouse needs no 44 px target).
+  > .seance-card__actions {
+    flex-direction: column;
+    align-items: flex-start;
+    align-self: center;
+    gap: 4px;
+    padding-top: 0;
+  }
+
+  > .seance-card__actions .btn { min-height: 26px; }
+
+  // One line per bar: label, bar, percentage.
+  .seance-row__usage .service-bar {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) 40px;
+    align-items: center;
+    column-gap: 8px;
+  }
+
+  .seance-row__usage .service-bar__label { display: contents; }
+  .seance-row__usage .service-bar__label > span:first-child { grid-column: 1; }
+  .seance-row__usage .service-bar .progress { grid-column: 2; grid-row: 1; }
+  .seance-row__usage .service-bar__pct { grid-column: 3; grid-row: 1; text-align: right; }
+}
+
+@container (min-width: 720px) {
+  .seance-row--service {
+    @include row;
+    display: grid;
+    grid-template-columns: 84px 68px 184px minmax(150px, 240px) minmax(0, 1fr) auto;
+    grid-template-areas: "tag dur when people note act";
+  }
+}
+
+@container (min-width: 1000px) {
+  .seance-row--confirmations {
+    @include row;
+    display: grid;
+    grid-template-columns: 22px 84px minmax(180px, 1fr) 68px 184px minmax(220px, 300px) minmax(0, 1fr) auto;
+    grid-template-areas: "check tag who dur when usage note act";
+  }
+}
+
+@container (min-width: 1080px) {
+  .seance-row--recentes {
+    @include row;
+    display: grid;
+    grid-template-columns: 84px minmax(180px, 1fr) 68px 184px 180px minmax(200px, 280px) minmax(0, 1fr) auto;
+    grid-template-areas: "tag who dur when people usage note act";
+  }
+}
+
+// The column names keep their small type in a row (after the rows' rules).
+.seance-row--head > .seance-row__label {
+  display: block;
+  padding: 0;
+  border: 0;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+}

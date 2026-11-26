@@ -87,7 +87,7 @@ class SessionsController < ApplicationController
 
     @session.destroy
     respond_to do |format|
-      format.turbo_stream { render turbo_stream: confirmations_context? ? removed_confirmation_row : refreshed_lists }
+      format.turbo_stream { render turbo_stream: removed_row_streams || refreshed_lists }
       format.json { head :no_content }
       format.html { redirect_back fallback_location: session_confirmations_path, notice: "Séance supprimée." }
     end
@@ -115,6 +115,11 @@ class SessionsController < ApplicationController
     params[:context] == "confirmations"
   end
 
+  # Pages whose séance stays one row after an edit: nothing else on them shows it.
+  def listed_context?
+    %w[confirmations recentes].include?(params[:context])
+  end
+
   # The new form sends session[duration]; the old table row sends half_hour.
   def submitted_duration
     duration = params.dig(:session, :duration)
@@ -132,25 +137,26 @@ class SessionsController < ApplicationController
     end
   end
 
-  # The séance's card in its frame: its row on Confirmations, a latest-séance
-  # row on Saisir, else the Service page card with its number.
+  # The séance's card in its frame (sessions/_seance), as its page shows it:
+  # Saisir's latest séances, Confirmations, Séances récentes, or the Service
+  # page with its number.
   def render_frame_card
-    return render partial: "confirmations/session_frame", locals: { session: @session } if confirmations_context?
+    render partial: "sessions/seance", locals: frame_card_locals
+  end
 
-    if saisir_context?
-      render partial: "sessions/recent_frame", locals: { session: @session, trainer_id: params[:trainer_id] }
-    else
-      number = @session.fliip_service.numbered_sessions.to_h { |s, n| [ s.id, n ] }.fetch(@session.id)
-      render partial: "sessions/card_frame", locals: { session: @session, number: number }
-    end
+  def frame_card_locals
+    context = params[:context].presence
+    locals = { session: @session, context: context, trainer_id: params[:trainer_id] }
+    locals[:number] = Session.numbers_for([ @session ])[@session.id] unless saisir_context?
+    locals
   end
 
   # After an edit or a delete: the lists, counts and bars that show the séance.
   # A changed date can reorder the Service page's séances and their numbers, so
   # the whole list is drawn again.
   def refreshed_lists
-    if confirmations_context?
-      return turbo_stream.replace(helpers.dom_id(@session), partial: "confirmations/session_frame", locals: { session: @session })
+    if listed_context?
+      return turbo_stream.replace(helpers.dom_id(@session), partial: "sessions/seance", locals: frame_card_locals)
     end
 
     if saisir_context?
@@ -169,9 +175,13 @@ class SessionsController < ApplicationController
     ]
   end
 
-  # A séance deleted from Confirmations: its row goes, and its trainer's
-  # count drops (the group goes with its last séance).
-  def removed_confirmation_row
+  # A séance deleted from a list that shows it alone (Confirmations, Séances
+  # récentes): its row goes. On Confirmations its trainer's count drops too,
+  # and the group goes with its last séance. Nil elsewhere.
+  def removed_row_streams
+    return turbo_stream.remove(helpers.dom_id(@session, :item)) if params[:context] == "recentes"
+    return unless confirmations_context?
+
     left = Session.unconfirmed.in_period(PayPeriod.containing(@session.occurred_at.to_date)).where(user_id: @session.user_id).count
     return turbo_stream.remove(helpers.dom_id(@session.user, :confirm_section)) if left.zero?
 
