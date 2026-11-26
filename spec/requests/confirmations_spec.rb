@@ -160,4 +160,124 @@ RSpec.describe "Confirmations", type: :request do
       expect(response).to have_http_status(:ok)
     end
   end
+
+  describe "GET /confirmations/consultations" do
+    def consultation_at(time, **attrs)
+      create(:consultation, user: trainer, occurred_at: time, **attrs)
+    end
+
+    def listed_consultation_ids
+      Nokogiri::HTML(response.body).css("input[name='consultation_ids[]']").map { |input| input["value"].to_i }
+    end
+
+    %i[employee manager].each do |role|
+      it "sends a #{role} back with the alert" do
+        sign_in(role == :employee ? create(:user) : create(:user, role))
+        get consultation_confirmations_path
+
+        expect(response).to redirect_to(authenticated_root_path)
+        expect(flash[:alert]).to eq("Non autorisé·e.")
+      end
+    end
+
+    it "lists the chosen period's unconfirmed consultations, and none across its edges" do
+      last_of_previous = consultation_at(Time.zone.local(2026, 11, 21, 18, 0))
+      first_of_current = consultation_at(Time.zone.local(2026, 11, 22, 9, 0))
+      consultation_at(Time.zone.local(2026, 11, 23, 9, 0), confirmed: true)
+      sign_in admin
+
+      get consultation_confirmations_path
+      # The list is only visible in the markup.
+      expect(listed_consultation_ids).to eq([ first_of_current.id ])
+
+      get consultation_confirmations_path(periode: "2026-11-08")
+      expect(listed_consultation_ids).to eq([ last_of_previous.id ])
+    end
+
+    it "filters by trainer and by prospect name" do
+      mine = consultation_at(Time.zone.local(2026, 11, 23, 9, 0), first_name: "Hélène", last_name: "Gagnon")
+      create(:consultation, occurred_at: Time.zone.local(2026, 11, 23, 10, 0))
+      consultation_at(Time.zone.local(2026, 11, 23, 11, 0), first_name: "Marc", last_name: "Tremblay")
+      sign_in admin
+
+      get consultation_confirmations_path(employee_id: trainer.id, q: "helene")
+
+      expect(listed_consultation_ids).to eq([ mine.id ])
+    end
+
+    it "points to the oldest earlier period that still has unconfirmed consultations" do
+      consultation_at(Time.zone.local(2026, 10, 30, 9, 0))
+      consultation_at(Time.zone.local(2026, 11, 10, 9, 0))
+      sign_in admin
+
+      get consultation_confirmations_path
+
+      expect(response.body).to include("2 consultation(s) non confirmée(s) dans des périodes précédentes")
+      expect(response.body).to include(consultation_confirmations_path(periode: "2026-10-25"))
+    end
+  end
+
+  describe "PATCH /confirmations/consultations" do
+    let(:consultation) { create(:consultation, user: trainer, occurred_at: Time.zone.local(2026, 11, 10, 9, 0)) }
+
+    it "confirms the chosen consultations, records who did, and keeps the period" do
+      sign_in admin
+
+      patch confirm_consultation_confirmations_path, params: { consultation_ids: [ consultation.id ], periode: "2026-11-08" }
+
+      expect(consultation.reload).to have_attributes(confirmed: true, confirmed_by: admin)
+      expect(response).to redirect_to(consultation_confirmations_path(periode: "2026-11-08"))
+      expect(flash[:notice]).to eq("1 consultation(s) confirmée(s).")
+    end
+
+    it "warns when nothing was chosen" do
+      sign_in admin
+      patch confirm_consultation_confirmations_path
+
+      expect(flash[:alert]).to eq("Aucune consultation sélectionnée.")
+    end
+
+    it "refuses a manager" do
+      sign_in create(:user, :manager)
+
+      patch confirm_consultation_confirmations_path, params: { consultation_ids: [ consultation.id ] }
+
+      expect(consultation.reload).not_to be_confirmed
+    end
+  end
+
+  describe "editing a consultation in place from Confirmations" do
+    let(:turbo) { { "Accept" => "text/vnd.turbo-stream.html, text/html" } }
+    let!(:consultation) { create(:consultation, user: trainer, occurred_at: Time.zone.local(2026, 11, 23, 9, 0)) }
+
+    it "gives the card back with its checkbox after a save" do
+      sign_in admin
+
+      patch consultation_path(consultation), params: { context: "confirmations",
+                                                       consultation: { note: "vu", date: "2026-11-23", time: "09:00" } },
+                                             headers: turbo
+
+      expect(consultation.reload.note).to eq("vu")
+      expect(response.body).to include(%(name="consultation_ids[]" value="#{consultation.id}"))
+    end
+
+    it "removes the card and updates the trainer's count after « Supprimer »" do
+      create(:consultation, user: trainer, occurred_at: Time.zone.local(2026, 11, 24, 9, 0))
+      sign_in admin
+
+      delete consultation_path(consultation), params: { context: "confirmations" }, headers: turbo
+
+      expect(Consultation.exists?(consultation.id)).to be(false)
+      expect(response.body).to include(%(action="remove" target="item_consultation_#{consultation.id}"))
+      expect(response.body).to include("1 consultation(s)")
+    end
+
+    it "removes the trainer's group with their last consultation" do
+      sign_in admin
+
+      delete consultation_path(consultation), params: { context: "confirmations" }, headers: turbo
+
+      expect(response.body).to include(%(target="confirm_section_user_#{trainer.id}"))
+    end
+  end
 end

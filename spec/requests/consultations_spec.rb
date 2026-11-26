@@ -309,12 +309,19 @@ RSpec.describe "Consultations", type: :request do
   describe "association" do
     let(:client)  { create(:fliip_user, user_firstname: "Léa", user_lastname: "Roy") }
     let(:service) { create(:fliip_service, fliip_user: client, purchase_date: 1.day.ago) }
+    let(:turbo)   { { "Accept" => "text/vnd.turbo-stream.html, text/html" } }
+    let(:frame)   { { "Turbo-Frame" => "consultation_#{consultation.id}" } }
     let!(:consultation) do
       create(:consultation, user: employee, first_name: "Léa", last_name: "Roy", occurred_at: Time.current, confirmed: true)
     end
 
-    def associate
-      patch associate_consultation_path(consultation), params: { fliip_user_id: client.id, fliip_service_id: service.id }
+    def associate(service_id: service.id, context: "lier")
+      patch associate_consultation_path(consultation), params: { fliip_user_id: client.id, fliip_service_id: service_id, context: context },
+                                                       headers: turbo
+    end
+
+    def listed_ids
+      Nokogiri::HTML(response.body).css(".consultation-card").map { |card| card.ancestors("turbo-frame").first["id"] }
     end
 
     it "is closed to employees, even on their own consultation" do
@@ -322,54 +329,93 @@ RSpec.describe "Consultations", type: :request do
 
       get association_consultation_path(consultation)
       expect(response).to redirect_to(new_seance_path(tab: "consultation"))
-      get service_select_consultation_path(consultation, fliip_user_id: client.id)
-      expect(response).to have_http_status(:forbidden)
       associate
       expect(consultation.reload.fliip_service).to be_nil
       get associations_consultations_path
       expect(response).to redirect_to(new_seance_path(tab: "consultation"))
     end
 
-    it "lets managers associate any consultation, confirmed or not" do
+    %i[manager admin super_admin].each do |role|
+      it "opens « Lier les consultations » for #{role}" do
+        sign_in create(:user, role)
+        get associations_consultations_path
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    it "lists the consultations without a service, filtered by trainer and dates" do
+      linked = create(:consultation, fliip_user: client, fliip_service: service)
+      other_trainer = create(:consultation, occurred_at: Time.current)
+      old = create(:consultation, user: employee, occurred_at: 2.months.ago)
       sign_in create(:user, :manager)
 
       get associations_consultations_path
+      # The list is only visible in the markup.
+      expect(listed_ids).to include("consultation_#{consultation.id}", "consultation_#{other_trainer.id}", "consultation_#{old.id}")
+      expect(listed_ids).not_to include("consultation_#{linked.id}")
+
+      get associations_consultations_path(employee_id: employee.id, consultation_date_from: 1.week.ago.to_date.iso8601)
+      expect(listed_ids).to eq([ "consultation_#{consultation.id}" ])
+    end
+
+    it "opens the link form on the best name match, or on the client asked for" do
+      service
+      other = create(:fliip_user, user_firstname: "Marc", user_lastname: "Tremblay")
+      sign_in create(:user, :manager)
+
+      get association_consultation_path(consultation, context: "lier"), headers: frame
       expect(response).to have_http_status(:ok)
-      get association_consultation_path(consultation)
-      expect(response).to have_http_status(:ok)
-      get service_select_consultation_path(consultation, fliip_user_id: client.id)
-      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(fliip_user_path(client))
+
+      get association_consultation_path(consultation, fliip_user_id: other.id, context: "lier"), headers: frame
+      expect(response.body).to include(fliip_user_path(other))
+    end
+
+    it "links a service already linked to another consultation, and removes the card from the list" do
+      create(:consultation, fliip_user: client, fliip_service: service)
+      sign_in create(:user, :manager)
 
       associate
 
       expect(consultation.reload).to have_attributes(fliip_user: client, fliip_service: service)
+      expect(response.body).to include(%(action="remove" target="item_consultation_#{consultation.id}"))
     end
 
-    it "refuses a service already linked to another consultation" do
-      create(:consultation, fliip_service: service)
+    it "refuses a service bought outside the link window with a 422" do
+      late = create(:fliip_service, fliip_user: client, purchase_date: 31.days.from_now)
       sign_in create(:user, :admin)
 
-      associate
+      associate(service_id: late.id)
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(consultation.reload.fliip_service).to be_nil
     end
 
+    it "links the client alone and keeps the card on the list" do
+      sign_in create(:user, :admin)
+
+      associate(service_id: "")
+
+      expect(consultation.reload).to have_attributes(fliip_user: client, fliip_service: nil)
+      expect(Consultation.to_link).to include(consultation)
+      expect(response.body).to include(%(action="replace" target="consultation_#{consultation.id}"))
+    end
+
     it "lets only admins and the super admin disassociate" do
       consultation.update!(fliip_user: client, fliip_service: service)
 
-      [employee, create(:user, :manager)].each do |user|
+      [ employee, create(:user, :manager) ].each do |user|
         sign_in user
-        patch disassociate_consultation_path(consultation)
+        patch disassociate_consultation_path(consultation), headers: turbo
         expect(consultation.reload.fliip_service).to eq(service)
       end
 
       sign_in create(:user, :super_admin)
-      patch disassociate_consultation_path(consultation)
+      patch disassociate_consultation_path(consultation), params: { context: "service" }, headers: turbo
 
-      expect(consultation.reload.fliip_service).to be_nil
-      expect(response).to redirect_to(new_seance_path(tab: "consultation"))
-      expect(flash[:notice]).to eq("Association retirée.")
+      expect(consultation.reload).to have_attributes(fliip_service: nil, fliip_user: nil)
+      expect(response.body).to include(%(action="replace" target="consultation_#{consultation.id}"))
     end
 
     it "leaves the super admin out of the associations employee filter" do
@@ -381,20 +427,6 @@ RSpec.describe "Consultations", type: :request do
       # The filter options are only visible in the markup.
       expect(response.body).to include(%(value="#{employee.id}"))
       expect(response.body).not_to include(%(value="#{super_admin.id}"))
-    end
-  end
-
-  describe "PATCH /admin/confirm_consultations" do
-    let!(:consultation) { create(:consultation) }
-
-    it "lets admins confirm and refuses managers" do
-      sign_in create(:user, :manager)
-      patch admin_confirm_consultations_path, params: { consultation_ids: [consultation.id] }
-      expect(consultation.reload).not_to be_confirmed
-
-      sign_in create(:user, :admin)
-      patch admin_confirm_consultations_path, params: { consultation_ids: [consultation.id] }
-      expect(consultation.reload).to be_confirmed
     end
   end
 end

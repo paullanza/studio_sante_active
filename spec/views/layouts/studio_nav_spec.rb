@@ -37,7 +37,7 @@ RSpec.describe "layouts/_studio_nav", type: :view do
   end
 
   it "adds the admin pages for an admin and the super admin" do
-    expected = [ "Mon profil", "Confirmations", "Confirmations consultations",
+    expected = [ "Mon profil", "Confirmations",
                  "Personnel", "Lier les consultations", "Échéances", "Séances récentes", "Allocations", "Tâches", "Se déconnecter" ]
 
     expect(plus_items(render_nav_for(create(:user, :admin)))).to eq(expected)

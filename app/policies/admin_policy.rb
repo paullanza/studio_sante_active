@@ -33,7 +33,8 @@ class AdminPolicy < ApplicationPolicy
     admin_or_above?
   end
 
-  def unconfirmed_consultations?
+  # Confirmations, consultations tab (ConfirmationsController).
+  def consultation_confirmations?
     admin_or_above?
   end
 

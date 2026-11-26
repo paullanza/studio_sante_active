@@ -17,9 +17,6 @@
         <% if policy(:admin).session_confirmations? %>
           <%= link_to "Confirmations", session_confirmations_path, class: "nav-more__item" %>
         <% end %>
-        <% if policy(:admin).unconfirmed_consultations? %>
-          <%= link_to "Confirmations consultations", admin_unconfirmed_consultations_path, class: "nav-more__item" %>
-        <% end %>
         <% if policy(User).index? %>
           <%= link_to "Personnel", users_path, class: "nav-more__item" %>
         <% end %>

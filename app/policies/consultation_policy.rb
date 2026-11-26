@@ -31,10 +31,6 @@ class ConsultationPolicy < ApplicationPolicy
     manager_or_above?
   end
 
-  def service_select?
-    manager_or_above?
-  end
-
   def associations?
     manager_or_above?
   end

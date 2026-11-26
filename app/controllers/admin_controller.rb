@@ -58,33 +58,6 @@ class AdminController < ApplicationController
     end
   end
 
-  # Unconfirmed Consultations
-  def unconfirmed_consultations
-    @filter_params = permitted_consultation_filters
-    @consultations = Consultation.unconfirmed
-                                 .apply_filters(@filter_params)
-                                 .with_associations
-                                 .order_by_occurred_at_desc
-
-    @staff = User.selectable.order(:first_name, :last_name)
-  end
-
-  def confirm_consultations
-    ids = Array(params[:consultation_ids]).map(&:to_i).uniq
-    if ids.empty?
-      redirect_to admin_unconfirmed_consultations_path, alert: "No consultations selected." and return
-    end
-
-    updated = Consultation.confirm(ids)
-
-    if updated.zero?
-      redirect_to admin_unconfirmed_consultations_path, alert: "Nothing to confirm (already confirmed?)."
-    else
-      redirect_to admin_unconfirmed_consultations_path,
-                  notice: "#{updated} #{'consultation'.pluralize(updated)} confirmed."
-    end
-  end
-
   # Runs in the background; a sync already running makes it wait its turn.
   def import_clients
     FliipFullSyncJob.perform_later
@@ -92,16 +65,6 @@ class AdminController < ApplicationController
   end
 
   private
-
-  def permitted_consultation_filters
-    params.permit(
-      :q,
-      :employee_id,
-      :consultation_date_from, :consultation_date_to,
-      :created_from, :created_to,
-      present: []
-    )
-  end
 
   # The query is inferred from the action name.
   def authorize_admin

@@ -16,6 +16,9 @@ class Consultation < ApplicationRecord
   belongs_to :created_by, class_name: "User"
   belongs_to :fliip_user, optional: true
   belongs_to :fliip_service, optional: true
+  # The admin who confirmed it for payroll; nil before confirmation and on
+  # confirmations made before it was recorded.
+  belongs_to :confirmed_by, class_name: "User", optional: true
 
   # -----------------------------------------
   # Validations
@@ -33,9 +36,10 @@ class Consultation < ApplicationRecord
   # Always logged on new consultations; older rows can have nil and stay editable.
   validates :present, inclusion: { in: [ true, false ], message: "doit être indiqué" }, on: :create
 
-  validates :fliip_service_id,
-            uniqueness: { message: "has already been associated to another consultation" },
-            allow_nil: true
+  # A linked service must belong to the linked client and be bought within
+  # the link window. Checked only when the link changes, so older links stay.
+  validate :service_belongs_to_client, if: :will_save_change_to_fliip_service_id?
+  validate :service_within_link_window, if: :will_save_change_to_fliip_service_id?
 
   # -----------------------------------------
   # Callbacks
@@ -53,12 +57,17 @@ class Consultation < ApplicationRecord
   # -----------------------------------------
   scope :unconfirmed,  -> { where(confirmed: [false, nil]) }
   scope :confirmed,    -> { where(confirmed: true) }
-  scope :unassociated, -> { where(fliip_user_id: nil) }
+  # « Lier les consultations »: still without a service.
+  scope :to_link, -> { where(fliip_service_id: nil) }
+  # Consultations that took place in a pay period (PayPeriod), Sunday to Saturday.
+  scope :in_period, ->(period) {
+    where(occurred_at: period.starts_on.beginning_of_day..period.ends_on.end_of_day)
+  }
 
   # -----------------------------------------
   # Eager loading & ordering
   # -----------------------------------------
-  scope :with_associations, -> { includes(:user, :created_by, fliip_service: :fliip_user) }
+  scope :with_associations, -> { includes(:user, :created_by, :fliip_user, fliip_service: :fliip_user) }
   scope :order_by_occurred_at_desc, -> {
     order(Arel.sql("occurred_at DESC NULLS LAST"), created_at: :desc)
   }
@@ -113,13 +122,16 @@ class Consultation < ApplicationRecord
   # -----------------------------------------
   # Bulk confirmation
   # -----------------------------------------
-  def self.confirm(ids)
+  # Confirms for payroll and records who did it. Idempotent: only touches
+  # unconfirmed consultations. Returns how many it confirmed.
+  def self.confirm(ids, by:)
     ids = Array(ids).map(&:to_i).uniq
     return 0 if ids.empty?
 
     where(id: ids).unconfirmed.update_all(
       confirmed: true,
-      confirmed_at: Time.current
+      confirmed_at: Time.current,
+      confirmed_by_id: by.id
     )
   end
 
@@ -130,10 +142,12 @@ class Consultation < ApplicationRecord
     [first_name, last_name].compact.join(" ").strip
   end
 
-  # Association window (−14 days, +3 months from occurred_at)
-  def association_start_window
+  # The days a linked service must have been bought in: −14 days to +30 days.
+  def link_window
+    return unless occurred_at
+
     base = occurred_at.to_date
-    (base - 14.days)..(base + 3.months)
+    (base - FliipService::LINK_WINDOW_BEFORE)..(base + FliipService::LINK_WINDOW_AFTER)
   end
 
   private
@@ -157,6 +171,19 @@ class Consultation < ApplicationRecord
     return if phone_number.present? || email.present?
 
     errors.add(:base, "Indiquez un téléphone ou un courriel.")
+  end
+
+  def service_belongs_to_client
+    return if fliip_service.nil? || fliip_service.fliip_user_id == fliip_user_id
+
+    errors.add(:fliip_service_id, "ne correspond pas au client choisi")
+  end
+
+  def service_within_link_window
+    return if fliip_service.nil? || link_window.nil?
+    return if (date = fliip_service.link_date) && link_window.cover?(date)
+
+    errors.add(:fliip_service_id, "doit avoir été acheté entre le #{I18n.l(link_window.begin)} et le #{I18n.l(link_window.end)}")
   end
 
   def default_created_by
