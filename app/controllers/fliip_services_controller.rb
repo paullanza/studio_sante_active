@@ -8,7 +8,7 @@ class FliipServicesController < ApplicationController
     # Usage totals are summed in SQL. The tab counts need the adjustments and
     # the consultation; the staff on each list are preloaded for the open tab only.
     @service = FliipService
-                 .includes(:fliip_user, :service_definition, :service_usage_adjustments, :consultation)
+                 .includes(:fliip_user, :service_definition, :service_usage_adjustments, :consultations)
                  .find(params[:id])
     authorize @service
 
@@ -17,8 +17,7 @@ class FliipServicesController < ApplicationController
     @tab = "sessions" if @tab == "adjustments" && !adjustments_visible
 
     @numbered_sessions = @service.numbered_sessions
-    # One linked consultation today (has_one); a list so it can become has_many.
-    @consultations = Array(@service.consultation)
+    @consultations = @service.consultations.sort_by { |c| c.occurred_at || Time.zone.at(0) }.reverse
     @adjustments = adjustments_visible ? @service.service_usage_adjustments.sort_by(&:created_at).reverse : []
 
     case @tab

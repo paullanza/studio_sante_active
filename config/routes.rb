@@ -80,19 +80,12 @@ Rails.application.routes.draw do
   # =====================================================================
   # CONFIRMATIONS (admins, before payroll)
   # ---------------------------------------------------------------------
-  # A pay period's unconfirmed séances: confirm them in bulk.
+  # A pay period's unconfirmed séances or consultations: confirm them in bulk.
   # =====================================================================
-  get   "confirmations/seances", to: "confirmations#sessions",         as: :session_confirmations
-  patch "confirmations/seances", to: "confirmations#confirm_sessions", as: :confirm_session_confirmations
-
-  # =====================================================================
-  # ADMIN — CONSULTATION CONFIRMATION WORKFLOW
-  # ---------------------------------------------------------------------
-  # Used during payroll cycles: list unconfirmed consultations and
-  # perform a bulk confirmation action across selected records.
-  # =====================================================================
-  get   "admin/unconfirmed_consultations", to: "admin#unconfirmed_consultations", as: :admin_unconfirmed_consultations
-  patch "admin/confirm_consultations",     to: "admin#confirm_consultations",     as: :admin_confirm_consultations
+  get   "confirmations/seances",       to: "confirmations#sessions",              as: :session_confirmations
+  patch "confirmations/seances",       to: "confirmations#confirm_sessions",      as: :confirm_session_confirmations
+  get   "confirmations/consultations", to: "confirmations#consultations",         as: :consultation_confirmations
+  patch "confirmations/consultations", to: "confirmations#confirm_consultations", as: :confirm_consultation_confirmations
 
   # =====================================================================
   # MANAGER VIEWS (READ-ONLY/REDUCED POWERS VS. ADMIN)
@@ -151,13 +144,13 @@ Rails.application.routes.draw do
   end
 
   # =====================================================================
-  # CONSULTATIONS — CREATION & ASSOCIATION FLOW
+  # CONSULTATIONS — CREATION & LINKING
   # ---------------------------------------------------------------------
   # Create/Destroy/Edit/Update for consultation records (the form lives on
-  # the booking page, seances/new?tab=consultation). Member
-  # routes support table row rendering (`row`), association UI (`association`),
-  # and persisting the selected association (`associate`). `service_select`
-  # offers a picker for linking to a client service.
+  # the booking page, seances/new?tab=consultation). `row` gives a card or
+  # an old table row back. « Lier les consultations » (`associations`) lists
+  # those without a service; `association` opens the link form in a card,
+  # `associate` saves the link and `disassociate` clears it.
   # =====================================================================
   resources :consultations, only: [:create, :destroy, :edit, :update] do
     member do
@@ -165,7 +158,6 @@ Rails.application.routes.draw do
       get  :association
       patch :associate
       patch :disassociate
-      get :service_select
     end
 
     collection do

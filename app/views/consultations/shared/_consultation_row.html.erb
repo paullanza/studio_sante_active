@@ -3,19 +3,12 @@
 <% client = c&.fliip_user %>
 
 <tr id="<%= dom_id(c) %>"
-    data-controller="consultation-row association"
+    data-controller="consultation-row"
     data-consultation-row-id-value="<%= c.id %>"
     data-consultation-row-edit-url-value="<%= edit_consultation_path(c) %>"
     data-consultation-row-row-url-value="<%= row_consultation_path(c) %>"
     data-consultation-row-update-url-value="<%= consultation_path(c) %>"
-    data-consultation-row-show-bulk-value="<%= local_assigns[:show_bulk_checkbox].present? %>"
-
-    data-association-id-value="<%= c.id %>"
-    data-association-edit-url-value="<%= association_consultation_path(c) %>"
-    data-association-row-url-value="<%= row_consultation_path(c) %>"
-    data-association-update-url-value="<%= associate_consultation_path(c) %>"
-    data-association-service-select-url-value="<%= service_select_consultation_path(c) %>"
-    data-association-show-bulk-value="<%= local_assigns[:show_bulk_checkbox].present? %>">
+    data-consultation-row-show-bulk-value="<%= local_assigns[:show_bulk_checkbox].present? %>">
 
   <%# 1) Optional bulk checkbox %>
   <% if local_assigns[:show_bulk_checkbox] %>
@@ -129,13 +122,6 @@
                       } do %>
             <i class="fa-solid fa-link-slash"></i>
           <% end %>
-        <% end %>
-      <% elsif consultation_policy.associate? %>
-        <%= link_to association_consultation_path(c),
-                    class: "btn btn-sm btn-outline-primary me-1",
-                    title: "Associer un service",
-                    data: { action: "association#edit", turbo: false } do %>
-          <i class="fa-solid fa-link"></i>
         <% end %>
       <% end %>
 
