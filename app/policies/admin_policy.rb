@@ -24,7 +24,8 @@ class AdminPolicy < ApplicationPolicy
     admin_or_above?
   end
 
-  def unconfirmed_sessions?
+  # Confirmations, séances tab (ConfirmationsController).
+  def session_confirmations?
     admin_or_above?
   end
 

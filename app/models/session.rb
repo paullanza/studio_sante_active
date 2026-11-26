@@ -36,6 +36,10 @@ class Session < ApplicationRecord
   # The specific purchased service (from Fliip) that this session uses.
   belongs_to :fliip_service
 
+  # The admin who confirmed it for payroll; nil before confirmation and on
+  # confirmations made before it was recorded.
+  belongs_to :confirmed_by, class_name: "User", optional: true
+
   # -----------------------------------------
   # Validations
   # -----------------------------------------
@@ -113,6 +117,11 @@ class Session < ApplicationRecord
   }
 
   scope :recent, -> { order(created_at: :desc) }
+
+  # Séances that took place in a pay period (PayPeriod), Sunday to Saturday.
+  scope :in_period, ->(period) {
+    where(occurred_at: period.starts_on.beginning_of_day..period.ends_on.end_of_day)
+  }
 
   # -----------------------------------------
   # Scopes (filters for server-side search)
@@ -249,15 +258,22 @@ class Session < ApplicationRecord
     paid? ? 'bg-danger' : 'bg-warning'
   end
 
-  def self.confirm(ids)
+  # Confirms for payroll and records who did it. Idempotent: only touches
+  # unconfirmed séances. Returns how many it confirmed.
+  def self.confirm(ids, by:)
     ids = Array(ids).map(&:to_i).uniq
     return 0 if ids.empty?
 
-    # Idempotent: only touch currently-unconfirmed rows.
     where(id: ids).unconfirmed.update_all(
       confirmed: true,
-      confirmed_at: Time.current
+      confirmed_at: Time.current,
+      confirmed_by_id: by.id
     )
+  end
+
+  # Back to « Non confirmée » (an admin, one séance at a time).
+  def unconfirm!
+    update_columns(confirmed: false, confirmed_at: nil, confirmed_by_id: nil)
   end
 
   # Sequence number within this FliipService & session_type (paid/free)

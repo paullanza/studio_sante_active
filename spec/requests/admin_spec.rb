@@ -12,8 +12,6 @@ RSpec.describe "Admin", type: :request do
       "import_clients"            => -> { post import_clients_path },
       "create_signup_code"        => -> { post admin_signup_codes_path },
       "deactivate_signup_code"    => -> { patch deactivate_admin_signup_code_path(signup_code) },
-      "unconfirmed_sessions"      => -> { get admin_unconfirmed_sessions_path },
-      "confirm_sessions"          => -> { patch admin_confirm_sessions_path, params: { session_ids: [session_record.id] } },
       "unconfirmed_consultations" => -> { get admin_unconfirmed_consultations_path },
       "confirm_consultations"     => -> { patch admin_confirm_consultations_path, params: { consultation_ids: [consultation.id] } }
     }
@@ -83,7 +81,7 @@ RSpec.describe "Admin", type: :request do
       expect(response.body).to include(user_path(employee))
       expect(response.body).not_to include(user_path(super_admin))
 
-      get admin_unconfirmed_sessions_path
+      get session_confirmations_path
       expect(response.body).not_to include(%(value="#{super_admin.id}"))
       get admin_unconfirmed_consultations_path
       expect(response.body).not_to include(%(value="#{super_admin.id}"))
@@ -95,7 +93,7 @@ RSpec.describe "Admin", type: :request do
       get admin_dashboard_path
       expect(response.body).to include(user_path(super_admin))
 
-      get admin_unconfirmed_sessions_path
+      get session_confirmations_path
       expect(response.body).to include(%(value="#{employee.id}"))
       expect(response.body).not_to include(%(value="#{super_admin.id}"))
     end

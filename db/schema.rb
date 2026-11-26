@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_24_202147) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_26_152216) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "unaccent"
@@ -159,6 +159,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_202147) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "occurred_at"
+    t.bigint "confirmed_by_id"
+    t.index ["confirmed_by_id"], name: "index_sessions_on_confirmed_by_id"
     t.index ["created_by_id"], name: "index_sessions_on_created_by_id"
     t.index ["fliip_service_id"], name: "index_sessions_on_fliip_service_id"
     t.index ["fliip_user_id"], name: "index_sessions_on_fliip_user_id"
@@ -328,6 +330,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_202147) do
   add_foreign_key "sessions", "fliip_services"
   add_foreign_key "sessions", "fliip_users"
   add_foreign_key "sessions", "users"
+  add_foreign_key "sessions", "users", column: "confirmed_by_id"
   add_foreign_key "sessions", "users", column: "created_by_id"
   add_foreign_key "signup_codes", "users", column: "used_by_id"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

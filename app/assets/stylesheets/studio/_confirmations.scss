@@ -1,0 +1,200 @@
+// Confirmations (confirmations/sessions): filters, then séances grouped by
+// trainer. Each séance (confirmations/_session_frame) is a card on a phone
+// and a row under .confirm-rows__head from 768 px (subgrid), so the columns
+// line up across groups. The gold « Confirmer (N) » sticks to the bottom.
+.confirmations__filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+
+.confirmations__view {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.confirmations__earlier {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--badge-warning-fg);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.confirm-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.confirm-group__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  padding-top: 8px;
+}
+
+.confirm-group__title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 18px;
+}
+
+.confirm-group__all {
+  margin-left: auto;
+}
+
+.confirm-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.confirm-rows__head {
+  display: none;
+}
+
+.confirm-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "check when    when"
+    "check who     outcome"
+    "note  note    note"
+    "act   act     act";
+  align-items: center;
+  gap: 6px 12px;
+  padding: 10px 14px;
+}
+
+.confirm-row__check { grid-area: check; align-self: start; }
+.confirm-row__when { grid-area: when; font-size: 14px; font-weight: 700; white-space: nowrap; }
+.confirm-row__who { grid-area: who; display: flex; flex-direction: column; min-width: 0; }
+.confirm-row__note { grid-area: note; color: var(--text-muted); overflow-wrap: anywhere; }
+.confirm-row__note:empty { display: none; }
+.confirm-row__note-label { color: var(--text); font-weight: 700; }
+
+.confirm-row__client {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.confirm-row__client:hover {
+  color: var(--brand-light);
+}
+
+.confirm-row__outcome {
+  grid-area: outcome;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: end;
+}
+
+.confirm-row__actions {
+  grid-area: act;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+.confirm-row__actions:not(:has(> *)) {
+  display: none;
+}
+
+.confirm-row__buttons {
+  display: flex;
+  gap: 20px;
+  margin-left: auto;
+}
+
+// The gold button stays in reach at the bottom of the screen.
+.confirmations__bar {
+  position: sticky;
+  bottom: calc(12px + var(--safe-bottom, 0px));
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (min-width: 768px) {
+  .confirmations__filters {
+    grid-template-columns: minmax(220px, 1fr) minmax(180px, 1fr) minmax(160px, 1fr) auto;
+  }
+
+  .confirm-rows {
+    display: grid;
+    grid-template-columns: 32px 190px minmax(0, 1.2fr) 150px minmax(0, 1fr) auto;
+    column-gap: 16px;
+    row-gap: 8px;
+  }
+
+  .confirm-rows__head,
+  .confirm-group,
+  .confirm-group__list,
+  .confirm-group__list > li,
+  .confirm-group__list .seance-frame,
+  .confirm-row {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+  }
+
+  .confirm-group {
+    row-gap: 8px;
+  }
+
+  .confirm-group__head {
+    grid-column: 1 / -1;
+  }
+
+  // A size container inside nested subgrids crashes Chromium's layout. The
+  // edit card is a container of its own, so its frame needn't be one.
+  .confirm-group__list .seance-frame {
+    container-type: normal;
+  }
+
+  // An edit card in a row's frame takes the row's whole width.
+  .confirm-group__list .seance-frame > .seance-edit {
+    grid-column: 1 / -1;
+  }
+
+  .confirm-rows__head {
+    padding: 0 15px;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .confirm-row {
+    grid-template-areas: none;
+    min-height: 56px;
+    padding: 8px 14px;
+  }
+
+  .confirm-row > * {
+    grid-area: auto;
+  }
+
+  .confirm-row__check { align-self: center; }
+  .confirm-row__outcome { justify-self: start; }
+  .confirm-row__note:empty { display: block; }
+
+  .confirm-row__actions {
+    justify-content: flex-end;
+    text-align: right;
+  }
+
+  .confirm-row.seance-card--absence,
+  .confirm-row.seance-card--moins24 {
+    padding-left: 11px;
+  }
+}

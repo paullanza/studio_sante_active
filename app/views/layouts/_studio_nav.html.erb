@@ -14,8 +14,8 @@
 
       <div class="nav-more__menu">
         <%= link_to "Mon profil", profile_path, class: "nav-more__item" %>
-        <% if policy(:admin).unconfirmed_sessions? %>
-          <%= link_to "Confirmations séances", admin_unconfirmed_sessions_path, class: "nav-more__item" %>
+        <% if policy(:admin).session_confirmations? %>
+          <%= link_to "Confirmations", session_confirmations_path, class: "nav-more__item" %>
         <% end %>
         <% if policy(:admin).unconfirmed_consultations? %>
           <%= link_to "Confirmations consultations", admin_unconfirmed_consultations_path, class: "nav-more__item" %>
