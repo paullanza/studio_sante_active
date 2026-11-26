@@ -138,18 +138,24 @@ class FliipService < ApplicationRecord
   end
 
   # -----------------------------------------
-  # Adjustment sums (converted to float for safety)
+  # Adjustment sums, by kind (ServiceUsageAdjustment)
   # -----------------------------------------
+  # Séances and absences added to the allocation.
   def bonus_sessions_total
-    @preloaded_usage ? @preloaded_usage[:bonus] : service_usage_adjustments.sum(:bonus_sessions).to_f
+    adjustment_sum(:paid_bonus)
   end
 
+  def free_bonus_total
+    adjustment_sum(:free_bonus)
+  end
+
+  # Séances and absences recorded as used.
   def paid_used_adjustment
-    @preloaded_usage ? @preloaded_usage[:paid_delta] : service_usage_adjustments.sum(:paid_used_delta).to_f
+    adjustment_sum(:paid_used)
   end
 
   def free_used_adjustment
-    @preloaded_usage ? @preloaded_usage[:free_delta] : service_usage_adjustments.sum(:free_used_delta).to_f
+    adjustment_sum(:free_used)
   end
 
   # -----------------------------------------
@@ -173,17 +179,13 @@ class FliipService < ApplicationRecord
 
     ids = services.map(&:id)
     durations = Session.where(fliip_service_id: ids).group(:fliip_service_id, :session_type).sum(:duration)
-    adjustments = ServiceUsageAdjustment.where(fliip_service_id: ids).group(:fliip_service_id)
-                                        .pluck(:fliip_service_id, Arel.sql("SUM(bonus_sessions)"),
-                                               Arel.sql("SUM(paid_used_delta)"), Arel.sql("SUM(free_used_delta)"))
-                                        .to_h { |id, *sums| [ id, sums ] }
+    adjustments = ServiceUsageAdjustment.where(fliip_service_id: ids).group(:fliip_service_id, :kind).sum(:amount)
 
     services.each do |service|
-      bonus, paid_delta, free_delta = adjustments.fetch(service.id, [])
       service.preloaded_usage = {
         paid_duration: durations[[ service.id, "paid" ]].to_f,
         free_duration: durations[[ service.id, "free" ]].to_f,
-        bonus: bonus.to_f, paid_delta: paid_delta.to_f, free_delta: free_delta.to_f
+        adjustments: ServiceUsageAdjustment.kinds.keys.to_h { |kind| [ kind, adjustments[[ service.id, kind ]].to_f ] }
       }
     end
   end
@@ -205,7 +207,7 @@ class FliipService < ApplicationRecord
   end
 
   def free_allowed_total
-    service_definition&.free_sessions.to_f
+    service_definition&.free_sessions.to_f + free_bonus_total
   end
 
   # -----------------------------------------
@@ -221,27 +223,6 @@ class FliipService < ApplicationRecord
     total = free_allowed_total
     return nil if total.zero? && service_definition.nil?
     [total - free_used_total, 0.0].max
-  end
-
-  # -----------------------------------------
-  # Usage Statistics (compact hash for views/API)
-  # -----------------------------------------
-  def usage_stats
-    {
-      paid: {
-        used_sessions:  paid_used_total,
-        included:       service_definition&.paid_sessions,
-        bonus:          bonus_sessions_total,
-        allowed_total:  paid_allowed_total,
-        remaining:      remaining_paid_sessions
-      },
-      free: {
-        used_sessions:  free_used_total,
-        included:       service_definition&.free_sessions,
-        allowed_total:  free_allowed_total,
-        remaining:      remaining_free_sessions
-      }
-    }
   end
 
   # -----------------------------------------
@@ -315,23 +296,6 @@ class FliipService < ApplicationRecord
     "#{start_date.strftime('%d/%m/%Y')} – #{expire_date.strftime('%d/%m/%Y')}"
   end
 
-  def paid_breakdown
-    used  = paid_used_total.to_f
-    base  = service_definition&.paid_sessions
-    bonus = bonus_sessions_total.to_f
-    allow = paid_allowed_total.to_f
-    pct   = paid_progress_percent
-
-    {
-      used: used, included: base, bonus: bonus, allowed: allow, percent: pct,
-      used_str: format('%.1f', used),
-      included_str: base.nil? ? "—" : base.to_s,
-      bonus_str: format('%.1f', bonus),
-      allowed_str: allow.positive? ? format('%.1f', allow) : "—",
-      percent_str: pct.nil? ? "—" : pct.to_s
-    }
-  end
-
   def paid_usage_compact_str
     used  = paid_used_total.to_f
     base  = service_definition&.paid_sessions.to_f
@@ -359,11 +323,11 @@ class FliipService < ApplicationRecord
   # clients started mid-service, see docs/adr/0002). Two queries, then Ruby.
   def numbered_sessions
     ordered = sessions.order(:occurred_at, :id).to_a
-    adjustments = service_usage_adjustments.pluck(:created_at, :paid_used_delta, :free_used_delta)
+    adjustments = service_usage_adjustments.where(kind: %i[paid_used free_used]).pluck(:created_at, :amount)
 
     ordered.each_with_index.map do |session, index|
-      offset = adjustments.sum do |created_at, paid, free|
-        session.occurred_at && created_at <= session.occurred_at ? paid.to_f + free.to_f : 0.0
+      offset = adjustments.sum do |created_at, amount|
+        session.occurred_at && created_at <= session.occurred_at ? amount : 0.0
       end
       [ session, index + 1 + offset ]
     end.reverse
@@ -407,5 +371,21 @@ class FliipService < ApplicationRecord
 
   def booking_blocked?(reference_date = Date.current)
     booking_block_reason(reference_date).present?
+  end
+
+  private
+
+  # One kind's total: from .preload_usage, else from the adjustments already
+  # loaded (pages include them), else in SQL. Loaded records count as saved,
+  # so an unsaved new or edited one doesn't move the totals.
+  def adjustment_sum(kind)
+    return @preloaded_usage[:adjustments][kind.to_s] if @preloaded_usage
+
+    if service_usage_adjustments.loaded?
+      saved = service_usage_adjustments.select { |a| a.persisted? && a.kind_in_database == kind.to_s }
+      return saved.sum { |a| a.amount_in_database.to_f }
+    end
+
+    service_usage_adjustments.where(kind: kind).sum(:amount).to_f
   end
 end

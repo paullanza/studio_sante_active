@@ -61,13 +61,13 @@ RSpec.describe SessionsHelper, type: :helper do
     end
 
     it "is -24h once the absences are used, with its own button label" do
-      create(:service_usage_adjustment, fliip_service: service, free_used_delta: 1)
+      create(:service_usage_adjustment, fliip_service: service, kind: :free_used, amount: 1)
 
       expect(preview(present: false)).to include(outcome: :moins24, submit_label: "Enregistrer : -24h, séance déduite")
     end
 
     it "flags a service without the séances this one needs" do
-      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 9.5)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_used, amount: 9.5)
 
       expect(preview(duration: 0.5)[:none_left]).to be(false)
       expect(preview[:none_left]).to be(true)

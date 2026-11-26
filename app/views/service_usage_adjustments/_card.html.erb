@@ -1,0 +1,30 @@
+<%# One adjustment, in its Turbo frame (« Modifier » swaps in _edit_card): the
+    change and its amount, the trainer, the note, who entered it and when.
+    Locals: service, adjustment. %>
+<% can_edit = policy(adjustment).update? %>
+<% can_delete = policy(adjustment).destroy? %>
+<%= turbo_frame_tag dom_id(adjustment), class: "seance-frame" do %>
+  <article class="card seance-card adjustment-card">
+    <div class="adjustment-card__change">
+      <span class="seance-card__title"><%= adjustment.kind_label %></span>
+      <span class="adjustment-card__amount numeric"><%= adjustment.amount_label %></span>
+    </div>
+    <div class="adjustment-card__people text-small">
+      <span>Entraîneur·e : <%= adjustment.user&.full_name.presence || "—" %></span>
+      <span class="text-muted numeric">Saisi par <%= adjustment.created_by&.full_name.presence || "—" %> · <%= adjustment.created_at.strftime("%d/%m/%Y") %></span>
+    </div>
+    <p class="seance-card__note adjustment-card__note"><span class="seance-card__note-label">Note :</span> <%= adjustment.note %></p>
+    <% if can_edit || can_delete %>
+      <div class="adjustment-card__actions">
+        <% if can_edit %>
+          <%= link_to "Modifier", edit_fliip_service_service_usage_adjustment_path(service, adjustment), class: "btn btn--secondary btn--small" %>
+        <% end %>
+        <% if can_delete %>
+          <%= button_to "Supprimer", fliip_service_service_usage_adjustment_path(service, adjustment), method: :delete,
+                class: "btn btn--danger btn--small",
+                form: { data: { turbo_confirm: "Supprimer cet ajustement? Les compteurs du service changeront." } } %>
+        <% end %>
+      </div>
+    <% end %>
+  </article>
+<% end %>

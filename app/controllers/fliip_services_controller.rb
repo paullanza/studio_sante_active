@@ -24,12 +24,11 @@ class FliipServicesController < ApplicationController
     case @tab
     when "sessions" then preload_staff(@numbered_sessions.map(&:first))
     when "consultations" then preload_staff(@consultations)
-    when "adjustments" then preload(@adjustments, :user)
+    when "adjustments" then preload(@adjustments, %i[user created_by])
     end
 
-    # Built after @adjustments so the unsaved record isn't listed.
     can_create = policy(ServiceUsageAdjustment).create?
-    @adjustment = can_create ? @service.service_usage_adjustments.new(user: current_user) : nil
+    @adjustment = can_create ? ServiceUsageAdjustment.new(fliip_service_id: @service.id, user: current_user) : nil
     @staff = can_create ? User.selectable.order(:first_name, :last_name) : []
   end
 

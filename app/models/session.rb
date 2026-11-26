@@ -270,13 +270,13 @@ class Session < ApplicationRecord
                .select(:id, Arel.sql("ROW_NUMBER() OVER (PARTITION BY fliip_service_id ORDER BY occurred_at, id) AS position"))
     positions = unscoped.from(ranked, :ranked).where(ranked: { id: sessions.map(&:id) })
                         .pluck(Arel.sql("ranked.id"), Arel.sql("ranked.position")).to_h
-    adjustments = ServiceUsageAdjustment.where(fliip_service_id: service_ids)
-                                        .pluck(:fliip_service_id, :created_at, :paid_used_delta, :free_used_delta)
+    adjustments = ServiceUsageAdjustment.where(fliip_service_id: service_ids, kind: %i[paid_used free_used])
+                                        .pluck(:fliip_service_id, :created_at, :amount)
                                         .group_by(&:first)
 
     sessions.to_h do |session|
-      offset = adjustments.fetch(session.fliip_service_id, []).sum do |_, created_at, paid, free|
-        session.occurred_at && created_at <= session.occurred_at ? paid.to_f + free.to_f : 0.0
+      offset = adjustments.fetch(session.fliip_service_id, []).sum do |_, created_at, amount|
+        session.occurred_at && created_at <= session.occurred_at ? amount : 0.0
       end
       [ session.id, positions.fetch(session.id) + offset ]
     end
@@ -321,12 +321,10 @@ class Session < ApplicationRecord
   def adjustments_used_before_self
     return 0.0 unless fliip_service_id && occurred_at
 
-    col = paid? ? :paid_used_delta : :free_used_delta
-
     ServiceUsageAdjustment
-      .where(fliip_service_id: fliip_service_id)
+      .where(fliip_service_id: fliip_service_id, kind: paid? ? :paid_used : :free_used)
       .where("created_at <= ?", occurred_at)
-      .sum(col)
+      .sum(:amount)
       .to_f
   end
 

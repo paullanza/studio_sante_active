@@ -7,6 +7,11 @@ class ServiceUsageAdjustmentPolicy < ApplicationPolicy
     manager_or_above?
   end
 
+  # One adjustment's card (« Annuler » in its edit card).
+  def show?
+    index?
+  end
+
   def create?
     admin_or_above?
   end
@@ -21,6 +26,6 @@ class ServiceUsageAdjustmentPolicy < ApplicationPolicy
 
   # Only admins reach create and update, and they choose the employee.
   def permitted_attributes
-    [:paid_used_delta, :free_used_delta, :bonus_sessions, :user_id]
+    [:kind, :amount, :note, :user_id]
   end
 end

@@ -1,55 +1,49 @@
+# An adjustment (« ajustement », GLOSSARY.md): one change to one service's
+# counts, of one kind, for a trainer, with a required note (docs/adr/0002).
+# « Séances utilisées » and « Absences utilisées » add to what is used;
+# « Séances ajoutées » and « Absences ajoutées » add to what is allowed.
+# Amounts are in half séances and may be negative.
 class ServiceUsageAdjustment < ApplicationRecord
-  # -----------------------------------------
-  # Associations
-  # -----------------------------------------
-  # The service whose usage is being adjusted.
+  KIND_LABELS = {
+    "paid_used" => "Séances utilisées",
+    "free_used" => "Absences utilisées",
+    "paid_bonus" => "Séances ajoutées",
+    "free_bonus" => "Absences ajoutées"
+  }.freeze
+
+  enum :kind, { paid_used: 0, free_used: 1, paid_bonus: 2, free_bonus: 3 }, validate: { message: "doit être choisi" }
+
+  # The service whose counts change.
   belongs_to :fliip_service, inverse_of: :service_usage_adjustments
+  # The trainer it counts for (Mes services lists the service for them).
+  belongs_to :user, inverse_of: :service_usage_adjustments
+  # The admin who entered it.
+  belongs_to :created_by, class_name: "User"
 
-  # The staff member who created or authorized the adjustment.
-  belongs_to :user,          inverse_of: :service_usage_adjustments
-
-  # Shortcut: retrieve the client associated with the service.
   has_one :fliip_user, through: :fliip_service
 
-  # -----------------------------------------
-  # Validations
-  # -----------------------------------------
-  # These fields can be nil, but if present they must be numeric:
-  #   - paid_used_delta   → Adjusts the count of paid sessions used (positive or negative)
-  #   - free_used_delta   → Adjusts the count of free sessions used (positive or negative)
-  #   - bonus_sessions    → Grants or removes bonus paid sessions
-  validates :paid_used_delta, :free_used_delta, :bonus_sessions,
-            numericality: true, allow_nil: true
+  validates :note, presence: { message: "est requise" }, length: { maximum: 1000 }
+  validates :amount, presence: { message: "est requis" }
+  validates :amount, numericality: { other_than: 0, message: "doit être différent de 0" }, allow_nil: true
+  validate :amount_in_half_seances
 
-  # Custom validation: require at least one of the adjustment fields
-  # to be non-zero so we don’t save “empty” adjustments.
-  validate :at_least_one_delta_present
+  def kind_label
+    KIND_LABELS[kind]
+  end
 
-  # -----------------------------------------
-  # Scopes
-  # -----------------------------------------
-  # Filters adjustments that modify paid session usage.
-  scope :with_paid_delta, -> { where.not(paid_used_delta: [nil, 0]) }
+  # « +2 », « -0,5 ».
+  def amount_label
+    return "" if amount.nil?
 
-  # Filters adjustments that modify free session usage.
-  scope :with_free_delta, -> { where.not(free_used_delta: [nil, 0]) }
-
-  # Filters adjustments that grant/remove bonus sessions.
-  scope :with_bonus,      -> { where.not(bonus_sessions: [nil, 0]) }
+    number = amount % 1 == 0 ? amount.abs.to_i.to_s : amount.abs.to_s.tr(".", ",")
+    "#{amount.negative? ? '-' : '+'}#{number}"
+  end
 
   private
 
-  # -----------------------------------------
-  # Validation Helper
-  # -----------------------------------------
-  # Ensures that at least one adjustment field is provided
-  # and is non-zero. Prevents creation of no-op adjustments.
-  def at_least_one_delta_present
-    p = paid_used_delta.to_f
-    f = free_used_delta.to_f
-    b = bonus_sessions.to_f
-    if p.zero? && f.zero? && b.zero?
-      errors.add(:base, "Provide at least one non-zero adjustment.")
-    end
+  def amount_in_half_seances
+    return if amount.nil? || (amount * 2) % 1 == 0
+
+    errors.add(:amount, "doit être un multiple de 0,5")
   end
 end

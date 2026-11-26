@@ -30,7 +30,7 @@ RSpec.describe "Bookings", type: :request do
       it "lists the client's services and checks the only bookable one" do
         bookable = create(:fliip_service, fliip_user: client, service_name: "Ent. privé, 12 mois")
         used_up = create(:fliip_service, fliip_user: client, service_name: "Ent. privé, 3 mois")
-        create(:service_usage_adjustment, fliip_service: used_up, paid_used_delta: 10)
+        create(:service_usage_adjustment, fliip_service: used_up, kind: :paid_used, amount: 10)
 
         get new_seance_path(fliip_user_id: client.id)
 
