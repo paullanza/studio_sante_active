@@ -56,14 +56,13 @@ class PayPeriod
     starts_on.iso8601
   end
 
-  # « 8 au 21 nov. 2026 », « 29 nov. au 12 déc. 2026 »,
-  # « 27 déc. 2026 au 9 janv. 2027 ».
+  # « 8 nov. au 21 nov. 2026 », « 29 nov. au 12 déc. 2026 »: day and month
+  # on both ends, so every period reads the same; the year once, or on both
+  # ends across a year (« 27 déc. 2026 au 9 janv. 2027 »).
   def label
-    end_text = "#{ends_on.day} #{MONTHS[ends_on.month - 1]} #{ends_on.year}"
-    start_text = starts_on.day.to_s
-    start_text += " #{MONTHS[starts_on.month - 1]}" unless starts_on.month == ends_on.month && starts_on.year == ends_on.year
+    start_text = "#{starts_on.day} #{MONTHS[starts_on.month - 1]}"
     start_text += " #{starts_on.year}" unless starts_on.year == ends_on.year
-    "#{start_text} au #{end_text}"
+    "#{start_text} au #{ends_on.day} #{MONTHS[ends_on.month - 1]} #{ends_on.year}"
   end
 
   def ==(other)

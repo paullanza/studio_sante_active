@@ -1,6 +1,8 @@
 <%# A séance on Confirmations, in its Turbo frame (« Modifier » swaps in
-    sessions/_edit_card with context "confirmations"). A card on a phone, a
-    row under .confirm-rows__head from 768 px. Unconfirmed: a checkbox for
+    sessions/_edit_card with context "confirmations"). Saisir's séance card
+    in long form: the client and service, when and how long, the outcome, the
+    service's Temps and Séances bars with its counts, the note. A card on a
+    phone, a row under .confirm-rows__head from 1100 px. Unconfirmed: a checkbox for
     #confirm_sessions_form. Confirmed: « Confirmée le … par … » and « Annuler
     la confirmation ». Locals: session. %>
 <% service = session.fliip_service %>
@@ -15,23 +17,42 @@
         </label>
       <% end %>
     </div>
-    <div class="confirm-row__when numeric"><%= seance_datetime(session.occurred_at) %></div>
     <div class="confirm-row__who">
       <%= link_to session.fliip_user&.full_name.presence || "—", fliip_service_path(session.fliip_service_id),
             class: "confirm-row__client", data: { turbo_frame: "_top" } %>
-      <span class="text-muted text-small"><%= service&.service_name.presence || "Service" %></span>
+      <span class="confirm-row__service text-muted text-small"><%= service&.service_name.presence || "Service" %></span>
+    </div>
+    <div class="confirm-row__when numeric">
+      <strong><%= seance_datetime(session.occurred_at) %></strong>
+      <span class="confirm-row__duration"><span class="confirm-row__sep">· </span><%= session.duration_short %></span>
+      <% if session.created_by_id != session.user_id %>
+        <span class="confirm-row__by text-muted">Saisie par <%= session.created_by&.full_name.presence || "—" %></span>
+      <% end %>
     </div>
     <div class="confirm-row__outcome">
       <span class="badge <%= outcome_badge_class(session) %>"><%= session.outcome_label %></span>
-      <span class="numeric text-small"><%= session.duration_short %></span>
+    </div>
+    <div class="confirm-row__usage numeric">
+      <% if service && !service.removed_from_fliip? %>
+        <%= render "fliip_services/bars", service: service %>
+        <div class="confirm-row__counts text-muted">
+          <% if service.allocation_to_define? %>
+            Allocation à définir
+          <% else %>
+            <%= format_count(service.paid_used_total) %> / <%= format_count(service.paid_allowed_total) %> ·
+            abs. <%= format_count(service.free_used_total) %> / <%= format_count(service.free_allowed_total) %>
+          <% end %>
+        </div>
+      <% end %>
     </div>
     <div class="confirm-row__note text-small">
       <% if session.note.present? %><span class="confirm-row__note-label">Note : </span><%= session.note %><% end %>
     </div>
     <div class="confirm-row__actions">
       <% if session.confirmed? %>
-        <span class="text-muted text-small">
-          Confirmée<%= " le #{l(session.confirmed_at.to_date)}" if session.confirmed_at %> par <%= session.confirmed_by&.full_name.presence || "—" %>
+        <span class="confirm-row__confirmed text-muted text-small">
+          <span>Confirmée<%= " le #{l(session.confirmed_at.to_date)}" if session.confirmed_at %></span>
+          <span>par <%= session.confirmed_by&.full_name.presence || "—" %></span>
         </span>
       <% end %>
       <div class="confirm-row__buttons">

@@ -21,8 +21,8 @@ RSpec.describe PayPeriod do
   end
 
   describe "#label" do
-    it "names the month once inside a month" do
-      expect(described_class.containing(Date.new(2026, 11, 8)).label).to eq("8 au 21 nov. 2026")
+    it "names the month on both ends inside a month" do
+      expect(described_class.containing(Date.new(2026, 11, 8)).label).to eq("8 nov. au 21 nov. 2026")
     end
 
     it "names both months across a month" do

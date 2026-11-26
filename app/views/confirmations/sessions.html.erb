@@ -1,5 +1,6 @@
 <%# « Confirmations », séances tab (admins). A pay period, the trainer and name
-    filters, then « À confirmer » (grouped by trainer, checkboxes, one gold
+    filters, then « À confirmer » (grouped by trainer, a checkbox per séance
+    and per trainer, « Tout sélectionner » when several trainers show, one gold
     « Confirmer (N) ») or « Confirmées » (« Annuler la confirmation » per row).
     The checkboxes belong to the empty #confirm_sessions_form through their
     `form` attribute, so each row's Turbo frame can hold the séance edit card
@@ -78,27 +79,29 @@
         <% end %>
         <%= hidden_field_tag :periode, @period.to_param, id: nil %>
       <% end %>
-      <label class="checkbox confirmations__all">
-        <input type="checkbox" class="checkbox__input" data-confirm-selection-target="all">
-        <span class="checkbox__label">Tout sélectionner</span>
-      </label>
+      <% if @groups.size > 1 %>
+        <label class="checkbox confirmations__all">
+          <input type="checkbox" class="checkbox__input" data-confirm-selection-target="all">
+          <span class="checkbox__label">Tout sélectionner</span>
+        </label>
+      <% end %>
     <% end %>
 
     <div class="confirm-rows">
       <div class="confirm-rows__head" aria-hidden="true">
-        <span></span><span>Date</span><span>Client·e et service</span><span>Résultat</span><span>Note</span><span><%= to_confirm ? "" : "Confirmation" %></span>
+        <span></span><span>Client·e et service</span><span>Date</span><span>Résultat</span><span>Utilisation du service</span><span>Note</span><span><%= to_confirm ? "" : "Confirmation" %></span>
       </div>
       <% @groups.each do |trainer, sessions| %>
         <section class="confirm-group" aria-labelledby="<%= dom_id(trainer, :confirm_group) %>">
           <header class="confirm-group__head">
-            <h2 id="<%= dom_id(trainer, :confirm_group) %>" class="confirm-group__title"><%= trainer.full_name %></h2>
-            <span class="text-muted text-small numeric"><%= sessions.size %> séance(s)</span>
             <% if to_confirm %>
-              <label class="checkbox confirm-group__all">
+              <label class="checkbox confirm-group__check">
                 <input type="checkbox" class="checkbox__input" data-confirm-selection-target="group" data-group="<%= trainer.id %>">
-                <span class="checkbox__label">Tout sélectionner</span>
+                <span class="visually-hidden">Sélectionner les séances de <%= trainer.full_name %></span>
               </label>
             <% end %>
+            <h2 id="<%= dom_id(trainer, :confirm_group) %>" class="confirm-group__title"><%= trainer.full_name %></h2>
+            <span class="text-muted text-small numeric"><%= sessions.size %> séance(s)</span>
           </header>
           <ul class="list confirm-group__list">
             <% sessions.each do |session| %>

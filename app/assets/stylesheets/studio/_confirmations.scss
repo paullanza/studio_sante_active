@@ -44,8 +44,8 @@
   font-size: 18px;
 }
 
-.confirm-group__all {
-  margin-left: auto;
+.confirm-group__check {
+  min-height: 0;
 }
 
 .confirm-rows {
@@ -58,22 +58,28 @@
   display: none;
 }
 
+// On a phone, Saisir's séance card with a checkbox: the client and service
+// beside the box, when under both, on one line; the outcome over the bars on the right; the note and the
+// buttons underneath.
 .confirm-row {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) 112px;
   grid-template-areas:
-    "check when    when"
     "check who     outcome"
+    "when  when    usage"
     "note  note    note"
     "act   act     act";
-  align-items: center;
-  gap: 6px 12px;
+  align-items: start;
+  gap: 4px 12px;
   padding: 10px 14px;
 }
 
-.confirm-row__check { grid-area: check; align-self: start; }
-.confirm-row__when { grid-area: when; font-size: 14px; font-weight: 700; white-space: nowrap; }
+.confirm-row__check { grid-area: check; }
 .confirm-row__who { grid-area: who; display: flex; flex-direction: column; min-width: 0; }
+.confirm-row__when { grid-area: when; display: flex; flex-wrap: wrap; column-gap: 4px; font-size: 13px; }
+.confirm-row__by { flex-basis: 100%; }
+.confirm-row__when strong,
+.confirm-row__duration { white-space: nowrap; }
 .confirm-row__note { grid-area: note; color: var(--text-muted); overflow-wrap: anywhere; }
 .confirm-row__note:empty { display: none; }
 .confirm-row__note-label { color: var(--text); font-weight: 700; }
@@ -90,12 +96,33 @@
   color: var(--brand-light);
 }
 
+.confirm-row__service {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .confirm-row__outcome {
   grid-area: outcome;
-  display: flex;
-  align-items: center;
-  gap: 8px;
   justify-self: end;
+}
+
+// The service's Temps and Séances bars and its counts (fliip_services/_bars).
+.confirm-row__usage {
+  grid-area: usage;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.confirm-row__usage .service-bars { gap: 4px; }
+.confirm-row__usage .service-bar { gap: 2px; }
+.confirm-row__usage .service-bar__label { font-size: 11px; }
+.confirm-row__usage .service-bar .progress { height: 5px; }
+
+.confirm-row__counts {
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 .confirm-row__actions {
@@ -129,10 +156,14 @@
   .confirmations__filters {
     grid-template-columns: minmax(220px, 1fr) minmax(180px, 1fr) minmax(160px, 1fr) auto;
   }
+}
 
+// From 1100 px a row per séance under .confirm-rows__head, in subgrid so the
+// columns line up across trainer groups.
+@media (min-width: 1100px) {
   .confirm-rows {
     display: grid;
-    grid-template-columns: 32px 190px minmax(0, 1.2fr) 150px minmax(0, 1fr) auto;
+    grid-template-columns: 32px minmax(0, 1.1fr) 200px 112px 210px minmax(0, 1fr) auto;
     column-gap: 16px;
     row-gap: 8px;
   }
@@ -154,6 +185,7 @@
 
   .confirm-group__head {
     grid-column: 1 / -1;
+    padding-left: 15px;
   }
 
   // A size container inside nested subgrids crashes Chromium's layout. The
@@ -176,6 +208,7 @@
 
   .confirm-row {
     grid-template-areas: none;
+    align-items: center;
     min-height: 56px;
     padding: 8px 14px;
   }
@@ -184,13 +217,56 @@
     grid-area: auto;
   }
 
-  .confirm-row__check { align-self: center; }
+  .confirm-row__when {
+    flex-direction: column;
+    font-size: 14px;
+  }
+
+  .confirm-row__sep { display: none; }
+  .confirm-row__duration { color: var(--text-muted); font-size: 13px; }
+  .confirm-row__by { font-size: 13px; }
   .confirm-row__outcome { justify-self: start; }
   .confirm-row__note:empty { display: block; }
 
+  // One line per bar: label, bar, percentage.
+  .confirm-row__usage .service-bar {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) 36px;
+    align-items: center;
+    column-gap: 8px;
+  }
+
+  .confirm-row__usage .service-bar__label { display: contents; }
+  .confirm-row__usage .service-bar__label > span:first-child { grid-column: 1; }
+  .confirm-row__usage .service-bar .progress { grid-column: 2; grid-row: 1; }
+  .confirm-row__usage .service-bar__pct { grid-column: 3; grid-row: 1; text-align: right; }
+
+  // Packed: « Confirmée le … » over « par … », beside the buttons one above
+  // the other, so the row stays one line of cells high.
   .confirm-row__actions {
+    flex-wrap: nowrap;
     justify-content: flex-end;
+    gap: 16px;
     text-align: right;
+  }
+
+  .confirm-row__confirmed {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .confirm-row__buttons {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .confirm-row__buttons .btn {
+    min-height: 26px;
+  }
+
+  .confirm-row__buttons form {
+    display: flex;
   }
 
   .confirm-row.seance-card--absence,
