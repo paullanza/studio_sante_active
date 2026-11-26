@@ -1,10 +1,15 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Saisir's client field: fetches suggestions (fliip_users#suggest) into the
-// client_suggestions frame as you type. Each suggestion is a link that
-// reloads the page with that client chosen.
+// A client field: fetches suggestions (fliip_users#suggest) into a Turbo
+// frame as you type. On Saisir (the defaults) each suggestion reloads the page
+// with that client chosen; in a consultation's link form, `url` carries the
+// consultation and `frame` names that form's own suggestions frame.
 export default class extends Controller {
   static targets = ["input"]
+  static values = {
+    url: { type: String, default: "/fliip_users/suggest" },
+    frame: { type: String, default: "client_suggestions" }
+  }
 
   connect() {
     this.timer = null
@@ -25,7 +30,10 @@ export default class extends Controller {
 
     this.timer = setTimeout(() => {
       const frame = this.#frame()
-      if (frame) frame.src = `/fliip_users/suggest?query=${encodeURIComponent(q)}`
+      if (!frame) return
+      const url = new URL(this.urlValue, window.location.origin)
+      url.searchParams.set("query", q)
+      frame.src = url.toString()
     }, 250)
   }
 
@@ -52,6 +60,6 @@ export default class extends Controller {
   }
 
   #frame() {
-    return document.getElementById("client_suggestions")
+    return document.getElementById(this.frameValue)
   }
 }

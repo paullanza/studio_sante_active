@@ -208,28 +208,24 @@ RSpec.describe FliipService, type: :model do
       expect(described_class.purchase_within_association_window(base)).to contain_exactly(inside, fallback)
     end
 
-    it ".start_within_window uses start date, then purchase date, from -14 days to +3 months" do
-      inside = create(:fliip_service, fliip_user: client, start_date: base + 3.months)
-      create(:fliip_service, fliip_user: client, start_date: base - 15)
-
-      expect(described_class.start_within_window(base)).to contain_exactly(inside)
-    end
-
-    it ".available_for_association excludes services already linked to a consultation" do
-      free_service  = create(:fliip_service, fliip_user: client, purchase_date: base)
-      taken_service = create(:fliip_service, fliip_user: client, purchase_date: base)
-      create(:consultation, fliip_service: taken_service)
+    it ".available_for_association keeps a service already linked to another consultation, inside the window only" do
+      linked_service = create(:fliip_service, fliip_user: client, purchase_date: base)
+      create(:consultation, fliip_user: client, fliip_service: linked_service, occurred_at: base.in_time_zone)
+      late_service = create(:fliip_service, fliip_user: client, purchase_date: base + 31)
       create(:fliip_service, purchase_date: base)
 
-      expect(described_class.unassociated_with_consultation).not_to include(taken_service)
-      expect(described_class.available_for_association(fliip_user_id: client.id, cutoff_date: base))
-        .to contain_exactly(free_service)
-      expect(described_class.find_available_for_association(service_id: free_service.id, fliip_user_id: client.id, cutoff_date: base))
-        .to eq(free_service)
-      expect(described_class.find_available_for_association(service_id: taken_service.id, fliip_user_id: client.id, cutoff_date: base))
-        .to be_nil
-      expect(described_class.find_available_for_association(service_id: nil, fliip_user_id: client.id, cutoff_date: base))
-        .to be_nil
+      available = described_class.available_for_association(fliip_user_id: client.id, base_date: base)
+
+      expect(available).to contain_exactly(linked_service)
+      expect(available).not_to include(late_service)
+    end
+
+    it "lets a service have several consultations" do
+      service = create(:fliip_service, fliip_user: client, purchase_date: base)
+      first  = create(:consultation, fliip_user: client, fliip_service: service, occurred_at: base.in_time_zone)
+      second = create(:consultation, fliip_user: client, fliip_service: service, occurred_at: (base + 3).in_time_zone)
+
+      expect(service.consultations).to contain_exactly(first, second)
     end
 
     it "#start_or_purchase_date prefers the start date" do

@@ -5,14 +5,18 @@
     and their contact, when, people, note, buttons (container queries in
     studio/_services.scss). An absent prospect gets the
     Absence stripe.
-    `context` ("saisir", "client", "service" or "confirmations") goes along with
-    « Modifier » so the card comes back the same; the Service page leaves out
-    « liée à », and Confirmations adds a checkbox for #confirm_consultations_form.
+    `context` ("saisir", "client", "service", "lier" or "confirmations") goes
+    along with « Modifier » so the card comes back the same; the Service page
+    leaves out « liée à ». « Lier les consultations » adds « Lier », which opens
+    the link form in this frame; a linked consultation offers « Délier » to
+    admins. Confirmations adds a checkbox for #confirm_consultations_form.
     Locals: consultation, context. %>
 <% context = local_assigns[:context] %>
 <% service = consultation.fliip_service unless context == "service" %>
 <% can_edit = policy(consultation).update? %>
 <% can_delete = policy(consultation).destroy? %>
+<% can_link = context == "lier" && policy(consultation).associate? %>
+<% can_unlink = consultation.fliip_user_id && policy(consultation).disassociate? %>
 <% check = context == "confirmations" %>
 <%= turbo_frame_tag dom_id(consultation), class: "seance-frame" do %>
   <article class="card seance-card consultation-card<%= " consultation-card--check" if check %><%= " seance-card--absence" if consultation.present == false %>">
@@ -58,11 +62,16 @@
       <% end %>
       <% if service %>
         <span>liée à <%= link_to service.service_name.presence || "Service", fliip_service_path(service), data: { turbo_frame: "_top" } %></span>
+      <% elsif consultation.fliip_user && context != "service" %>
+        <span>liée à <%= link_to consultation.fliip_user.full_name.presence || "Client·e", fliip_user_path(consultation.fliip_user), data: { turbo_frame: "_top" } %> (sans service)</span>
       <% end %>
     </div>
     <p class="seance-card__note"><% if consultation.note.present? %><span class="seance-card__note-label">Note :</span> <%= consultation.note %><% end %></p>
-    <% if can_edit || can_delete %>
+    <% if can_edit || can_delete || can_link || can_unlink %>
       <div class="seance-card__actions">
+        <% if can_link %>
+          <%= link_to "Lier", association_consultation_path(consultation, context: context), class: "btn btn--secondary btn--small" %>
+        <% end %>
         <% if can_edit %>
           <%= link_to "Modifier", edit_consultation_path(consultation, context: context), class: "btn btn--secondary btn--small" %>
         <% end %>
@@ -71,6 +80,12 @@
                 params: { context: context }.compact,
                 class: "btn btn--danger btn--small",
                 form: { data: { turbo_confirm: "Supprimer cette consultation? Cette action est irréversible." } } %>
+        <% end %>
+        <% if can_unlink %>
+          <%= button_to "Délier", disassociate_consultation_path(consultation), method: :patch,
+                params: { context: context }.compact,
+                class: "btn btn--danger btn--small",
+                form: { data: { turbo_confirm: "Délier cette consultation?" } } %>
         <% end %>
       </div>
     <% end %>

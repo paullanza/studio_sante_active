@@ -1,0 +1,93 @@
+<%# The link form, in place of a consultation's card (same Turbo frame): the
+    client (the best name match, or the one chosen) with « Changer », or a
+    client search when there is none; then that client's services bought in
+    the link window, each saying how many other consultations it already has.
+    A service is optional: « Client seulement » links the client alone.
+    Locals: consultation, client (or nil), services, counts ({ service id =>
+    other consultations }), context. %>
+<% window = consultation.link_window %>
+<% frame = dom_id(consultation) %>
+<% chosen_id = params[:fliip_service_id].presence&.to_i || consultation.fliip_service_id %>
+<%= turbo_frame_tag frame, class: "seance-frame" do %>
+  <article class="card seance-card link-form">
+    <div class="seance-card__tag">
+      <span class="seance-card__title">Lier la consultation de <%= consultation.full_name.presence || "—" %></span>
+      <span class="text-muted text-small numeric"><%= consultation.occurred_at ? seance_datetime(consultation.occurred_at) : "—" %></span>
+    </div>
+
+    <% if client %>
+      <div class="link-form__client">
+        <div class="link-form__client-name">
+          <span class="eyebrow"><%= params[:fliip_user_id].present? || consultation.fliip_user_id == client.id ? "Client·e" : "Meilleure correspondance" %></span>
+          <%= link_to client.full_name.presence || "—", fliip_user_path(client), data: { turbo_frame: "_top" } %>
+          <span class="text-muted text-small numeric">FliipUserID <%= client.remote_id %><%= " · #{client.user_email}" if client.user_email.present? %></span>
+        </div>
+        <%= link_to "Changer", association_consultation_path(consultation, context: context, change: 1), class: "btn btn--secondary btn--small" %>
+      </div>
+    <% else %>
+      <% suggest_url = suggest_fliip_users_path(consultation_id: consultation.id, context: context) %>
+      <div class="client-picker" data-controller="client-search"
+           data-client-search-url-value="<%= suggest_url %>" data-client-search-frame-value="<%= dom_id(consultation, :suggestions) %>"
+           data-action="focusout->client-search#leave keydown.esc->client-search#clear">
+        <div class="field field--compact">
+          <label class="field__box" for="<%= dom_id(consultation, :client_search) %>">
+            <span class="field__icon"><%= icon_svg(LayoutHelper::NAV_ICONS["clients"], size: 20) %></span>
+            <span class="field__label visually-hidden">Client·e</span>
+            <input id="<%= dom_id(consultation, :client_search) %>" type="search" class="field__input" autocomplete="off"
+                   placeholder="Nom, courriel ou téléphone"
+                   data-client-search-target="input"
+                   data-action="input->client-search#search keydown.enter->client-search#pickFirst">
+          </label>
+          <p class="field__hint">
+            <%= params[:change].present? ? "Cherchez un·e autre client·e." : "Aucun·e client·e ne correspond à « #{consultation.full_name} ». Cherchez-le·la ici." %>
+          </p>
+        </div>
+        <%= turbo_frame_tag dom_id(consultation, :suggestions), class: "client-picker__suggestions" %>
+      </div>
+    <% end %>
+
+    <%= form_with url: associate_consultation_path(consultation), method: :patch, class: "form link-form__form" do %>
+      <%= hidden_field_tag :context, context, id: nil if context.present? %>
+      <%= hidden_field_tag :fliip_user_id, client&.id, id: nil %>
+      <% messages = consultation.errors.full_messages %>
+      <% if messages.any? %>
+        <div class="flash flash--alert" role="alert">
+          <ul class="flash__message flash__list"><% messages.each do |message| %><li><%= message %></li><% end %></ul>
+        </div>
+      <% end %>
+
+      <% if client %>
+        <fieldset class="link-form__services">
+          <legend class="field__label">Service</legend>
+          <% if services.empty? && window %>
+            <p class="empty-state">Aucun service acheté entre le <%= window.begin.strftime("%d/%m") %> et le <%= window.end.strftime("%d/%m") %>.</p>
+          <% end %>
+          <div class="service-options">
+            <% services.each do |service| %>
+              <label class="service-option">
+                <%= radio_button_tag :fliip_service_id, service.id, chosen_id == service.id, id: dom_id(consultation, "service_#{service.id}"), class: "service-option__input" %>
+                <span class="service-option__body">
+                  <span class="service-option__name"><%= service.service_name.presence || "Service" %></span>
+                  <span class="text-small text-muted numeric">
+                    acheté le <%= service.link_date&.strftime("%d/%m/%Y") || "—" %><% if counts[service.id].to_i.positive? %> · déjà liée à <%= counts[service.id] %> consultation(s)<% end %>
+                  </span>
+                </span>
+              </label>
+            <% end %>
+            <label class="service-option">
+              <%= radio_button_tag :fliip_service_id, "", chosen_id.nil? && services.empty?, id: dom_id(consultation, :service_none), class: "service-option__input" %>
+              <span class="service-option__body"><span class="service-option__name">Client seulement, sans service</span></span>
+            </label>
+          </div>
+        </fieldset>
+      <% end %>
+
+      <div class="form-actions seance-edit__actions">
+        <%= link_to "Annuler", row_consultation_path(consultation, context: context), class: "btn btn--ghost btn--small" %>
+        <% if client %>
+          <button type="submit" class="btn btn--primary btn--small">Lier<%= button_arrow %></button>
+        <% end %>
+      </div>
+    <% end %>
+  </article>
+<% end %>

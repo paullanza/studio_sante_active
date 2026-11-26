@@ -144,13 +144,13 @@ Rails.application.routes.draw do
   end
 
   # =====================================================================
-  # CONSULTATIONS — CREATION & ASSOCIATION FLOW
+  # CONSULTATIONS — CREATION & LINKING
   # ---------------------------------------------------------------------
   # Create/Destroy/Edit/Update for consultation records (the form lives on
-  # the booking page, seances/new?tab=consultation). Member
-  # routes support table row rendering (`row`), association UI (`association`),
-  # and persisting the selected association (`associate`). `service_select`
-  # offers a picker for linking to a client service.
+  # the booking page, seances/new?tab=consultation). `row` gives a card or
+  # an old table row back. « Lier les consultations » (`associations`) lists
+  # those without a service; `association` opens the link form in a card,
+  # `associate` saves the link and `disassociate` clears it.
   # =====================================================================
   resources :consultations, only: [:create, :destroy, :edit, :update] do
     member do
@@ -158,7 +158,6 @@ Rails.application.routes.draw do
       get  :association
       patch :associate
       patch :disassociate
-      get :service_select
     end
 
     collection do

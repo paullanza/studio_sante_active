@@ -1,11 +1,14 @@
-<%# Client suggestions on Saisir (client_search_controller.js): each one a
-    link that reloads the page with that client chosen. %>
-<%= turbo_frame_tag "client_suggestions" do %>
+<%# Client suggestions (client_search_controller.js), in the frame that asked.
+    On Saisir each one reloads the page with that client chosen; with a
+    consultation_id each one opens that consultation's link form on the client. %>
+<% consultation_id = params[:consultation_id].presence&.to_i %>
+<%= turbo_frame_tag(request.headers["Turbo-Frame"].presence || "client_suggestions") do %>
   <% if @users.any? %>
     <ul class="list suggestions" aria-label="Suggestions">
       <% @users.each do |u| %>
         <li>
-          <%= link_to new_seance_path(fliip_user_id: u.id), class: "suggestion", data: { turbo_frame: "_top" } do %>
+          <% href, target = consultation_id ? [ association_consultation_path(consultation_id, fliip_user_id: u.id, context: params[:context].presence), "consultation_#{consultation_id}" ] : [ new_seance_path(fliip_user_id: u.id), "_top" ] %>
+          <%= link_to href, class: "suggestion", data: { turbo_frame: target } do %>
             <span class="suggestion__name"><%= u.full_name %></span>
             <span class="text-muted text-small numeric">
               <%= [ ("FliipUserID #{u.remote_id}" if u.remote_id), u.user_email.presence, (format_phone(u.user_phone1) if u.user_phone1.present?) ].compact.join(" · ") %>
