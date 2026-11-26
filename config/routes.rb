@@ -80,19 +80,12 @@ Rails.application.routes.draw do
   # =====================================================================
   # CONFIRMATIONS (admins, before payroll)
   # ---------------------------------------------------------------------
-  # A pay period's unconfirmed séances: confirm them in bulk.
+  # A pay period's unconfirmed séances or consultations: confirm them in bulk.
   # =====================================================================
-  get   "confirmations/seances", to: "confirmations#sessions",         as: :session_confirmations
-  patch "confirmations/seances", to: "confirmations#confirm_sessions", as: :confirm_session_confirmations
-
-  # =====================================================================
-  # ADMIN — CONSULTATION CONFIRMATION WORKFLOW
-  # ---------------------------------------------------------------------
-  # Used during payroll cycles: list unconfirmed consultations and
-  # perform a bulk confirmation action across selected records.
-  # =====================================================================
-  get   "admin/unconfirmed_consultations", to: "admin#unconfirmed_consultations", as: :admin_unconfirmed_consultations
-  patch "admin/confirm_consultations",     to: "admin#confirm_consultations",     as: :admin_confirm_consultations
+  get   "confirmations/seances",       to: "confirmations#sessions",              as: :session_confirmations
+  patch "confirmations/seances",       to: "confirmations#confirm_sessions",      as: :confirm_session_confirmations
+  get   "confirmations/consultations", to: "confirmations#consultations",         as: :consultation_confirmations
+  patch "confirmations/consultations", to: "confirmations#confirm_consultations", as: :confirm_consultation_confirmations
 
   # =====================================================================
   # MANAGER VIEWS (READ-ONLY/REDUCED POWERS VS. ADMIN)

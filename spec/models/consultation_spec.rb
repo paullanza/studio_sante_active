@@ -18,11 +18,32 @@ RSpec.describe Consultation, type: :model do
   end
 
   describe ".confirm" do
-    it "confirms unconfirmed consultations" do
-      consultation = create(:consultation)
+    let(:admin) { create(:user, :admin) }
 
-      expect(described_class.confirm([consultation.id])).to eq(1)
-      expect(consultation.reload).to be_confirmed
+    it "confirms only unconfirmed consultations, records who did it, and returns the count" do
+      first  = create(:consultation)
+      second = create(:consultation, confirmed: true)
+
+      expect(described_class.confirm([ first.id, second.id ], by: admin)).to eq(1)
+      expect(first.reload).to have_attributes(confirmed: true, confirmed_by: admin)
+      expect(first.confirmed_at).to be_present
+      expect(second.reload.confirmed_by).to be_nil
+    end
+
+    it "returns 0 for no ids" do
+      expect(described_class.confirm([], by: admin)).to eq(0)
+    end
+  end
+
+  describe ".in_period" do
+    it "keeps the consultations from Sunday 00:00 to Saturday 23:59 of the period" do
+      period = PayPeriod.containing(Date.new(2026, 11, 8))
+      create(:consultation, occurred_at: Time.zone.local(2026, 11, 7, 23, 59))
+      first        = create(:consultation, occurred_at: Time.zone.local(2026, 11, 8, 0, 0))
+      last         = create(:consultation, occurred_at: Time.zone.local(2026, 11, 21, 23, 59))
+      create(:consultation, occurred_at: Time.zone.local(2026, 11, 22, 0, 0))
+
+      expect(described_class.in_period(period)).to contain_exactly(first, last)
     end
   end
 

@@ -27,9 +27,9 @@
               <%= link_to "Séances", session_confirmations_path, class: "nav-link" %>
             </li>
           <% end %>
-          <% if policy(:admin).unconfirmed_consultations? %>
+          <% if policy(:admin).consultation_confirmations? %>
             <li class="nav-item">
-              <%= link_to "Consultations", admin_unconfirmed_consultations_path, class: "nav-link" %>
+              <%= link_to "Consultations", consultation_confirmations_path, class: "nav-link" %>
             </li>
           <% end %>
         </ul>

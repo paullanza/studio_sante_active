@@ -16,6 +16,9 @@ class Consultation < ApplicationRecord
   belongs_to :created_by, class_name: "User"
   belongs_to :fliip_user, optional: true
   belongs_to :fliip_service, optional: true
+  # The admin who confirmed it for payroll; nil before confirmation and on
+  # confirmations made before it was recorded.
+  belongs_to :confirmed_by, class_name: "User", optional: true
 
   # -----------------------------------------
   # Validations
@@ -54,6 +57,10 @@ class Consultation < ApplicationRecord
   scope :unconfirmed,  -> { where(confirmed: [false, nil]) }
   scope :confirmed,    -> { where(confirmed: true) }
   scope :unassociated, -> { where(fliip_user_id: nil) }
+  # Consultations that took place in a pay period (PayPeriod), Sunday to Saturday.
+  scope :in_period, ->(period) {
+    where(occurred_at: period.starts_on.beginning_of_day..period.ends_on.end_of_day)
+  }
 
   # -----------------------------------------
   # Eager loading & ordering
@@ -113,13 +120,16 @@ class Consultation < ApplicationRecord
   # -----------------------------------------
   # Bulk confirmation
   # -----------------------------------------
-  def self.confirm(ids)
+  # Confirms for payroll and records who did it. Idempotent: only touches
+  # unconfirmed consultations. Returns how many it confirmed.
+  def self.confirm(ids, by:)
     ids = Array(ids).map(&:to_i).uniq
     return 0 if ids.empty?
 
     where(id: ids).unconfirmed.update_all(
       confirmed: true,
-      confirmed_at: Time.current
+      confirmed_at: Time.current,
+      confirmed_by_id: by.id
     )
   end
 

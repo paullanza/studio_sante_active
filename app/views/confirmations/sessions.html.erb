@@ -11,47 +11,7 @@
 <% filters = { periode: @period.to_param, employee_id: @filter_params[:employee_id], q: @filter_params[:q] }.compact %>
 
 <div class="stack confirmations" data-controller="confirm-selection" data-action="change->confirm-selection#changed">
-  <div class="page-header">
-    <h1>Confirmations</h1>
-  </div>
-
-  <nav class="tabs" aria-label="Confirmations">
-    <%= link_to "Séances", session_confirmations_path, class: "tabs__tab", aria: { current: "page" } %>
-    <%= link_to "Consultations", admin_unconfirmed_consultations_path, class: "tabs__tab" %>
-  </nav>
-
-  <%= form_with url: session_confirmations_path, method: :get, class: "confirmations__filters",
-        data: { controller: "autosubmit", action: "change->autosubmit#submit" } do %>
-    <div class="field field--compact">
-      <label class="field__box" for="periode">
-        <span class="field__label">Période</span>
-        <%= select_tag :periode, options_for_select(@periods.map { |p| [ p.label, p.to_param ] }, @period.to_param),
-              id: "periode", class: "field__input" %>
-      </label>
-    </div>
-    <div class="field field--compact">
-      <label class="field__box" for="employee_id">
-        <span class="field__label">Entraîneur·e</span>
-        <%= select_tag :employee_id, options_for_select(@staff.map { |u| [ u.full_name, u.id ] }, @filter_params[:employee_id]),
-              include_blank: "Tous", id: "employee_id", class: "field__input" %>
-      </label>
-    </div>
-    <div class="field field--compact">
-      <label class="field__box" for="q">
-        <span class="field__label">Client·e</span>
-        <%= search_field_tag :q, @filter_params[:q], id: "q", class: "field__input", placeholder: "Nom", autocomplete: "off" %>
-      </label>
-    </div>
-    <noscript><button type="submit" class="btn btn--ghost">Filtrer</button></noscript>
-  <% end %>
-
-  <% if @earlier %>
-    <p class="confirmations__earlier">
-      <%= @earlier[:count] %> séance(s) non confirmée(s) dans des périodes précédentes.
-      <%= link_to "Voir la période du #{@earlier[:period].label}",
-            session_confirmations_path(filters.merge(periode: @earlier[:period].to_param)) %>
-    </p>
-  <% end %>
+  <%= render "confirmations/controls", tab: :sessions, noun: "séance(s)" %>
 
   <% if @groups.empty? %>
     <p class="empty-state">

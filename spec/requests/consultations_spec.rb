@@ -383,18 +383,4 @@ RSpec.describe "Consultations", type: :request do
       expect(response.body).not_to include(%(value="#{super_admin.id}"))
     end
   end
-
-  describe "PATCH /admin/confirm_consultations" do
-    let!(:consultation) { create(:consultation) }
-
-    it "lets admins confirm and refuses managers" do
-      sign_in create(:user, :manager)
-      patch admin_confirm_consultations_path, params: { consultation_ids: [consultation.id] }
-      expect(consultation.reload).not_to be_confirmed
-
-      sign_in create(:user, :admin)
-      patch admin_confirm_consultations_path, params: { consultation_ids: [consultation.id] }
-      expect(consultation.reload).to be_confirmed
-    end
-  end
 end
