@@ -23,7 +23,7 @@ module BookingPage
     @recent_sessions = latest_sessions_of(@trainer)
     @consultation ||= Consultation.new(present: true)
     # The consultation tab lists my latest consultations under its ticket.
-    @recent_consultations = @tab == "consultation" ? Consultation.where(user: current_user).order_by_occurred_at_desc.limit(10) : Consultation.none
+    @recent_consultations = @tab == "consultation" ? Consultation.where(user: current_user).includes(:user, :created_by, :fliip_service).order_by_occurred_at_desc.limit(10) : Consultation.none
     load_booking_staff
   end
 

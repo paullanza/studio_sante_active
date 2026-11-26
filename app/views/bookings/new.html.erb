@@ -47,7 +47,9 @@
         <h2 id="recent-consultations-title" class="saisir__subtitle">Mes 10 dernières consultations</h2>
         <% if @recent_consultations.any? %>
           <ul class="list">
-            <%= render partial: "bookings/recent_consultation", collection: @recent_consultations, as: :consultation %>
+            <% @recent_consultations.each do |consultation| %>
+              <li id="<%= dom_id(consultation, :item) %>"><%= render "consultations/card", consultation: consultation, context: "saisir" %></li>
+            <% end %>
           </ul>
         <% else %>
           <p class="empty-state">Aucune consultation.</p>

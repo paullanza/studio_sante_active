@@ -82,7 +82,9 @@
     <nav class="tabs" aria-label="Sections">
       <% [ [ "services", "Services", @services.size ], [ "contracts", "Abonnements", @contracts.size ],
            [ "consultations", "Consultations", @consultations.size ] ].each do |key, label, count| %>
-        <%= link_to "#{label} (#{count})", fliip_user_path(@fliip_user, tab: key), class: "tabs__tab",
+        <%# The consultation count is refreshed alone after a delete. %>
+        <%= link_to safe_join([ "#{label} (", tag.span(count, id: (dom_id(@fliip_user, :consultations_count) if key == "consultations")), ")" ]),
+              fliip_user_path(@fliip_user, tab: key), class: "tabs__tab",
               aria: { current: (@tab == key ? "page" : nil) } %>
       <% end %>
     </nav>
@@ -107,7 +109,9 @@
     <% when "consultations" %>
       <% if @consultations.any? %>
         <ul class="list card-grid">
-          <%= render partial: "consultations/client_card", collection: @consultations, as: :consultation %>
+          <% @consultations.each do |consultation| %>
+            <li id="<%= dom_id(consultation, :item) %>"><%= render "consultations/card", consultation: consultation, context: "client" %></li>
+          <% end %>
         </ul>
       <% else %>
         <p class="empty-state">Aucune consultation.</p>
