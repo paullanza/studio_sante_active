@@ -1,0 +1,62 @@
+<%# « Confirmations », consultations tab (admins). Works like the séances tab:
+    a pay period, the trainer and prospect filters, then the period's
+    unconfirmed consultations, grouped by trainer, with a checkbox per
+    consultation and per trainer, « Tout sélectionner » when several trainers
+    show, one gold « Confirmer (N) ».
+    The checkboxes belong to the empty #confirm_consultations_form through
+    their `form` attribute, so each card's Turbo frame can hold the
+    consultation edit card (its own form) without nesting forms. %>
+<% content_for :nav_section, "plus" %>
+<% content_for :title, "Confirmations" %>
+<% content_for :page_wide, true %>
+<% filters = { employee_id: @filter_params[:employee_id], q: @filter_params[:q] }.compact %>
+
+<div class="stack confirmations" data-controller="confirm-selection" data-action="change->confirm-selection#changed">
+  <%= render "confirmations/controls", tab: :consultations, noun: "consultation(s)" %>
+
+  <% if @groups.empty? %>
+    <p class="empty-state">
+      Aucune consultation à confirmer pour cette période.
+    </p>
+  <% else %>
+    <%= form_with url: confirm_consultation_confirmations_path, method: :patch, id: "confirm_consultations_form",
+          data: { turbo_confirm: "Confirmer les consultations sélectionnées?" } do %>
+      <% filters.each do |name, value| %>
+        <%= hidden_field_tag name, value, id: nil %>
+      <% end %>
+      <%= hidden_field_tag :periode, @period.to_param, id: nil %>
+    <% end %>
+    <% if @groups.size > 1 %>
+      <label class="checkbox confirmations__all">
+        <input type="checkbox" class="checkbox__input" data-confirm-selection-target="all">
+        <span class="checkbox__label">Tout sélectionner</span>
+      </label>
+    <% end %>
+
+    <div class="confirm-rows">
+      <% @groups.each do |trainer, consultations| %>
+        <section id="<%= dom_id(trainer, :confirm_section) %>" class="confirm-group" aria-labelledby="<%= dom_id(trainer, :confirm_group) %>">
+          <header class="confirm-group__head">
+            <label class="checkbox confirm-group__check">
+              <input type="checkbox" class="checkbox__input" data-confirm-selection-target="group" data-group="<%= trainer.id %>">
+              <span class="visually-hidden">Sélectionner les consultations de <%= trainer.full_name %></span>
+            </label>
+            <h2 id="<%= dom_id(trainer, :confirm_group) %>" class="confirm-group__title"><%= trainer.full_name %></h2>
+            <span id="<%= dom_id(trainer, :confirm_count) %>" class="text-muted text-small numeric"><%= consultations.size %> consultation(s)</span>
+          </header>
+          <ul class="list confirm-group__list">
+            <% consultations.each do |consultation| %>
+              <li id="<%= dom_id(consultation, :item) %>"><%= render "consultations/card", consultation: consultation, context: "confirmations" %></li>
+            <% end %>
+          </ul>
+        </section>
+      <% end %>
+    </div>
+
+    <div class="confirmations__bar">
+      <button type="submit" form="confirm_consultations_form" class="btn btn--primary" disabled data-confirm-selection-target="submit">
+        <span>Confirmer (<span data-confirm-selection-target="count">0</span>)</span><%= button_arrow %>
+      </button>
+    </div>
+  <% end %>
+</div>
