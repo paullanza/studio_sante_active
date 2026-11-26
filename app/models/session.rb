@@ -258,6 +258,30 @@ class Session < ApplicationRecord
     paid? ? 'bg-danger' : 'bg-warning'
   end
 
+  # Each séance's number in its service ({ id => number }), as
+  # FliipService#numbered_sessions counts it, for a list that mixes services:
+  # one query ranks the séances of their services, one reads the adjustments.
+  def self.numbers_for(sessions)
+    sessions = sessions.to_a
+    return {} if sessions.empty?
+
+    service_ids = sessions.map(&:fliip_service_id).uniq
+    ranked = where(fliip_service_id: service_ids)
+               .select(:id, Arel.sql("ROW_NUMBER() OVER (PARTITION BY fliip_service_id ORDER BY occurred_at, id) AS position"))
+    positions = unscoped.from(ranked, :ranked).where(ranked: { id: sessions.map(&:id) })
+                        .pluck(Arel.sql("ranked.id"), Arel.sql("ranked.position")).to_h
+    adjustments = ServiceUsageAdjustment.where(fliip_service_id: service_ids)
+                                        .pluck(:fliip_service_id, :created_at, :paid_used_delta, :free_used_delta)
+                                        .group_by(&:first)
+
+    sessions.to_h do |session|
+      offset = adjustments.fetch(session.fliip_service_id, []).sum do |_, created_at, paid, free|
+        session.occurred_at && created_at <= session.occurred_at ? paid.to_f + free.to_f : 0.0
+      end
+      [ session.id, positions.fetch(session.id) + offset ]
+    end
+  end
+
   # Confirms for payroll and records who did it. Idempotent: only touches
   # unconfirmed séances. Returns how many it confirmed.
   def self.confirm(ids, by:)

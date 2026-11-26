@@ -32,7 +32,7 @@ RSpec.describe "Sessions", type: :request do
 
       # The blank form that follows lists the new séance among the trainer's latest.
       follow_redirect!
-      expect(Nokogiri::HTML(response.body).css("#recent_sessions .latest-seance").size).to eq(1)
+      expect(Nokogiri::HTML(response.body).css("#recent_sessions .seance-row").size).to eq(1)
     end
 
     it "records a present 30 min séance as a paid half" do
@@ -339,6 +339,24 @@ RSpec.describe "Sessions", type: :request do
 
       get row_session_path(own, context: "saisir"), headers: { "Turbo-Frame" => "session_#{own.id}" }
       expect(response).to have_http_status(:ok)
+    end
+
+    it "gives Séances récentes its numbered row back after a save" do
+      sign_in create(:user, :admin)
+      patch session_path(own), params: update_params.merge(context: "recentes"), headers: stream
+
+      expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+      row = Nokogiri::HTML(response.body.match(%r{<template>(.*)</template>}m)[1])
+      expect(row.at_css(".seance-row--recentes .seance-row__number").text).to eq("Séance #1")
+      expect(row.at_css(".seance-row__note").text).to include("updated")
+    end
+
+    it "takes the row out of Séances récentes after a delete" do
+      sign_in create(:user, :admin)
+      delete session_path(own), params: { context: "recentes" }, headers: stream
+
+      expect(Session.exists?(own.id)).to be(false)
+      expect(response.body).to include(%(action="remove" target="item_session_#{own.id}"))
     end
 
     it "lets the owner update an unconfirmed séance, answering with streams" do

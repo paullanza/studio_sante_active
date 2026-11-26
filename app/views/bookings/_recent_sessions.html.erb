@@ -10,7 +10,7 @@
     <% if sessions.any? %>
       <ul class="list">
         <% sessions.each do |session| %>
-          <li><%= render "sessions/recent_frame", session: session, trainer_id: trainer.id %></li>
+          <li><%= render "sessions/seance", session: session, context: "saisir", trainer_id: trainer.id %></li>
         <% end %>
       </ul>
     <% else %>

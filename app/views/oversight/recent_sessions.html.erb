@@ -28,11 +28,11 @@
 
   <% if @sessions.any? %>
     <div class="recent-seances">
-      <div class="recent-seances__head" aria-hidden="true">
-        <span>Date</span><span>Client·e et service</span><span>Entraîneur·e</span><span>Résultat</span><span>Confirmation</span>
-      </div>
+      <%= render "sessions/seance_head", context: "recentes" %>
       <ul class="list">
-        <%= render partial: "oversight/session_row", collection: @sessions, as: :session %>
+        <% @sessions.each do |session| %>
+          <li id="<%= dom_id(session, :item) %>"><%= render "sessions/seance", session: session, context: "recentes", number: @numbers[session.id] %></li>
+        <% end %>
       </ul>
     </div>
   <% else %>

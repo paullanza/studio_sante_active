@@ -155,6 +155,26 @@ RSpec.describe Session, type: :model do
     end
   end
 
+  describe ".numbers_for" do
+    it "numbers séances across services as FliipService#numbered_sessions does" do
+      other = create(:fliip_service, service_definition: create(:service_definition, paid_sessions: 10, free_sessions: 0))
+      at = ->(svc, time) { create(:session, fliip_service: svc).tap { |s| s.update_columns(occurred_at: time) } }
+      first = at.call(service, 3.days.ago)
+      second = at.call(service, 2.days.ago)
+      elsewhere = at.call(other, 1.day.ago)
+      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 2).update_columns(created_at: 4.days.ago)
+
+      numbers = described_class.numbers_for([ second, elsewhere, first ])
+
+      expect(numbers).to eq(first.id => 3.0, second.id => 4.0, elsewhere.id => 1.0)
+      expect(numbers.values_at(first.id, second.id)).to eq(service.numbered_sessions.reverse.map(&:last))
+    end
+
+    it "returns an empty hash for no séances" do
+      expect(described_class.numbers_for([])).to eq({})
+    end
+  end
+
   describe ".confirm" do
     let(:admin) { create(:user, :admin) }
 

@@ -73,9 +73,7 @@
     <% end %>
 
     <div class="confirm-rows">
-      <div class="confirm-rows__head" aria-hidden="true">
-        <span></span><span>Client·e et service</span><span>Date</span><span>Résultat</span><span>Utilisation du service</span><span>Note</span><span></span>
-      </div>
+      <%= render "sessions/seance_head", context: "confirmations" %>
       <% @groups.each do |trainer, sessions| %>
         <section id="<%= dom_id(trainer, :confirm_section) %>" class="confirm-group" aria-labelledby="<%= dom_id(trainer, :confirm_group) %>">
           <header class="confirm-group__head">
@@ -88,7 +86,7 @@
           </header>
           <ul class="list confirm-group__list">
             <% sessions.each do |session| %>
-              <li id="<%= dom_id(session, :item) %>"><%= render "confirmations/session_frame", session: session %></li>
+              <li id="<%= dom_id(session, :item) %>"><%= render "sessions/seance", session: session, context: "confirmations", number: @numbers[session.id] %></li>
             <% end %>
           </ul>
         </section>

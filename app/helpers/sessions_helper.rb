@@ -6,6 +6,20 @@ module SessionsHelper
     OUTCOME_BADGE_CLASSES.fetch(session.outcome)
   end
 
+  # What the shared séance card (sessions/_seance) shows on each page. The
+  # Service page (no context) has the client and usage at its top; Saisir and
+  # Confirmations list one trainer's séances; only Confirmations confirms.
+  SEANCE_CARD_PARTS = {
+    "service"       => { check: false, client: false, usage: false, trainer: true,  status: true },
+    "saisir"        => { check: false, client: true,  usage: true,  trainer: false, status: false },
+    "confirmations" => { check: true,  client: true,  usage: true,  trainer: false, status: false },
+    "recentes"      => { check: false, client: true,  usage: true,  trainer: true,  status: true }
+  }.freeze
+
+  def seance_card_parts(context)
+    SEANCE_CARD_PARTS.fetch(context.presence || "service")
+  end
+
   # « ven. 13/11/2026 · 17 h 00 », with French day names from config/locales/fr.yml.
   def seance_datetime(time)
     return "—" unless time

@@ -110,15 +110,17 @@ RSpec.describe "Oversight", type: :request do
       before { sign_in create(:user, :manager) }
 
       def rows
-        Nokogiri::HTML(response.body).css("a.recent-seance")
+        Nokogiri::HTML(response.body).css(".seance-row:not(.seance-row--head)")
       end
 
-      it "lists past séances newest first, each linking to its service, and leaves out future ones" do
+      it "lists past séances newest first, the client linking to the service, and leaves out future ones" do
         get recent_sessions_path
 
         expect(rows.size).to eq(2)
-        expect(rows.map { |row| row["href"] }.uniq).to eq([ fliip_service_path(service) ])
+        expect(rows.map { |row| row.at_css("a.seance-row__client")["href"] }.uniq).to eq([ fliip_service_path(service) ])
         expect(rows.first.text).to include("Aline Côté", service.fliip_user.full_name, "Entraînement duo", "Présent·e", "1 h", "Non confirmée")
+        # Numbered in the service, as on the Service page.
+        expect(rows.map { |row| row.at_css(".seance-row__number").text }).to eq([ "Séance #2", "Séance #1" ])
         expect(rows.last.text).to include("Ysolde Brisebois")
       end
 

@@ -53,6 +53,17 @@ RSpec.describe "Confirmations", type: :request do
       expect(listed_ids).to eq([ last_of_previous.id ])
     end
 
+    it "numbers each séance in its service" do
+      seance_at(Time.zone.local(2026, 11, 10, 9, 0)).update_columns(confirmed: true)
+      listed = seance_at(Time.zone.local(2026, 11, 23, 9, 0))
+      sign_in admin
+
+      get session_confirmations_path
+
+      row = Nokogiri::HTML(response.body).at_css("#session_#{listed.id} .seance-row__number")
+      expect(row.text).to eq("Séance #2")
+    end
+
     it "filters by trainer" do
       mine = seance_at(Time.zone.local(2026, 11, 23, 9, 0))
       seance_at(Time.zone.local(2026, 11, 23, 10, 0), user: create(:user))
