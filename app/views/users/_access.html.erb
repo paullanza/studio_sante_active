@@ -1,0 +1,39 @@
+<%# « Accès », under a staff member's top card: their status, then what the
+    viewer may change (UserPolicy): deactivate or reactivate, and the role
+    among the ones the viewer may give. Nothing shows when they may change
+    nothing. Local: user. %>
+<% user_policy = policy(user) %>
+<% toggle = user.active? ? user_policy.deactivate? : user_policy.activate? %>
+<% if toggle || user_policy.update_role? %>
+  <section class="card staff-access" aria-labelledby="staff-access-title">
+    <h2 id="staff-access-title" class="section-label">Accès</h2>
+    <p class="staff-access__status">
+      <% if user.active? %>
+        <span class="badge badge--chargee">Actif·ve</span> peut se connecter.
+      <% else %>
+        <span class="badge badge--neutral">Inactif·ve</span> ne peut pas se connecter.
+      <% end %>
+    </p>
+
+    <% if user_policy.update_role? %>
+      <% roles = [ user.role, *user_policy.assignable_roles ].sort_by { |role| User.roles[role] } %>
+      <%= form_with model: user, scope: :user, url: role_user_path(user), method: :patch, builder: StudioFormBuilder,
+            class: "staff-access__role", data: { turbo_confirm: "Changer le rôle de #{user.full_name}?" } do |f| %>
+        <%= f.segmented :role, roles.map { |role| [ User::ROLE_LABELS_FR[role], role ] }, label: "Rôle" %>
+        <%= f.submit "Changer le rôle", variant: :secondary %>
+      <% end %>
+    <% end %>
+
+    <% if toggle %>
+      <div class="staff-access__toggle">
+        <% if user.active? %>
+          <%= button_to "Désactiver le compte", deactivate_user_path(user), method: :patch, class: "btn btn--danger",
+                form: { data: { turbo_confirm: "Désactiver #{user.full_name}? Le compte ne pourra plus se connecter." } } %>
+        <% else %>
+          <%= button_to "Réactiver le compte", activate_user_path(user), method: :patch, class: "btn btn--secondary",
+                form: { data: { turbo_confirm: "Réactiver #{user.full_name}? Le compte pourra se connecter de nouveau." } } %>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+<% end %>

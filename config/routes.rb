@@ -118,13 +118,11 @@ Rails.application.routes.draw do
   # PERSONNEL — THE STAFF LIST AND A PAGE PER STAFF MEMBER
   # ---------------------------------------------------------------------
   # /personnel (managers and above) and /personnel/:id, plus the old edit
-  # page and the role and activation toggles, gated by UserPolicy.
+  # page, the role change and the activation toggles, gated by UserPolicy.
   # =====================================================================
   resources :users, only: [:index, :show, :edit, :update], path: "personnel" do
     member do
-      patch :make_employee
-      patch :make_manager
-      patch :make_admin
+      patch :role
       patch :activate
       patch :deactivate
     end

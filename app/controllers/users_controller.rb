@@ -1,10 +1,11 @@
 # « Personnel » (managers and above): the staff list, and a page per staff
 # member with their details, their activity per pay period and the services
-# they work on. Every role reaches their own page. The member routes below
-# (role, active status, profile edit) keep their old pages until rebuilt.
+# they work on. Every role reaches their own page, whose « Accès » section
+# changes the role and the active status. The profile edit keeps its old
+# page until rebuilt.
 class UsersController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_user, only: [:show, :edit, :update, :make_employee, :make_manager, :make_admin, :activate, :deactivate]
+  before_action :set_user, only: [:show, :edit, :update, :role, :activate, :deactivate]
   layout "studio", only: [:index, :show]
 
   STATUSES = %w[actifs inactifs tous].freeze
@@ -72,49 +73,32 @@ class UsersController < ApplicationController
     end
   end
 
-  def make_employee
-    authorize @user
+  # PATCH /personnel/:id/role: one of the roles the viewer may give.
+  def role
+    authorize @user, :update_role?
 
-    unless @user.manager?
-      return redirect_back fallback_location: user_path(@user), alert: "Only managers can be demoted to employee."
+    role = params.dig(:user, :role).to_s
+    unless policy(@user).assignable_roles.include?(role)
+      return redirect_to user_path(@user), alert: "Ce changement de rôle n'est pas permis."
     end
-    @user.update!(role: :employee)
-    redirect_back fallback_location: user_path(@user), notice: "#{@user.first_name} is now an Employee."
-  end
 
-  def make_manager
-    authorize @user
-
-    if @user.employee? || @user.admin?
-      @user.update!(role: :manager)
-      redirect_back fallback_location: user_path(@user), notice: "#{@user.first_name} is now a Manager."
-    else
-      redirect_back fallback_location: user_path(@user), alert: "This change isn’t allowed."
-    end
-  end
-
-  def make_admin
-    authorize @user
-
-    unless @user.manager?
-      return redirect_back fallback_location: user_path(@user), alert: "Only managers can be promoted to admin."
-    end
-    @user.update!(role: :admin)
-    redirect_back fallback_location: user_path(@user), notice: "#{@user.first_name} is now an Admin."
+    @user.update!(role: role)
+    redirect_to user_path(@user), notice: "#{@user.first_name} est maintenant #{@user.translated_role.downcase}."
   end
 
   def activate
     authorize @user
 
     @user.update!(active: true)
-    redirect_back fallback_location: user_path(@user), notice: "#{@user.first_name} has been reactivated."
+    redirect_to user_path(@user), notice: "Compte réactivé."
   end
 
+  # The account is signed out on its next request (ApplicationController#logout_if_inactive).
   def deactivate
     authorize @user
 
     @user.update!(active: false)
-    redirect_back fallback_location: user_path(@user), notice: "#{@user.first_name} has been deactivated."
+    redirect_to user_path(@user), notice: "Compte désactivé."
   end
 
   private
@@ -123,21 +107,20 @@ class UsersController < ApplicationController
     @user = User.find(params[:id])
   end
 
-  # Keeps each action's existing message. Profiles the user cannot see fall
+  # Each action's own message, in French. Profiles the user cannot see fall
   # back to the default handler instead of redirecting to them.
   def user_not_authorized
     return super unless @user && policy(@user).show?
 
     case action_name
     when "edit", "update"
-      redirect_to user_path(@user), alert: "Not authorized."
-    when "make_employee", "make_manager", "make_admin"
-      alert = @user.super_admin? ? "You can't change a Super Admin." : "Not authorized."
-      redirect_back fallback_location: user_path(@user), alert: alert
+      redirect_to user_path(@user), alert: "Non autorisé·e."
+    when "role"
+      redirect_to user_path(@user), alert: "Vous ne pouvez pas changer le rôle de ce compte."
     when "activate"
-      redirect_back fallback_location: user_path(@user), alert: "Not authorized to activate this user."
+      redirect_to user_path(@user), alert: "Vous ne pouvez pas réactiver ce compte."
     when "deactivate"
-      redirect_back fallback_location: user_path(@user), alert: "Not authorized to deactivate this user."
+      redirect_to user_path(@user), alert: "Vous ne pouvez pas désactiver ce compte."
     else
       super
     end

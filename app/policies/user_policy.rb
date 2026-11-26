@@ -19,19 +19,25 @@ class UserPolicy < ApplicationPolicy
     super_admin? || (admin? && !record.super_admin?) || self?
   end
 
-  # The target's current role is checked in each action, which keeps its
-  # own message for a target that does not fit.
-  def make_employee?
-    role_change?
+  # The roles the viewer may give the record, its current one left out.
+  # Nobody changes the super admin's role or their own. The super admin
+  # gives any role but super admin; an admin switches employees and
+  # managers between the two.
+  def assignable_roles
+    return [] if user.nil? || self? || record.super_admin?
+
+    roles = if super_admin?
+      %w[employee manager admin]
+    elsif admin? && (record.employee? || record.manager?)
+      %w[employee manager]
+    else
+      []
+    end
+    roles - [ record.role ]
   end
 
-  # role_change? already limits an admin target to the super admin.
-  def make_manager?
-    role_change?
-  end
-
-  def make_admin?
-    super_admin? && role_change?
+  def update_role?
+    assignable_roles.any?
   end
 
   def activate?
@@ -65,14 +71,6 @@ class UserPolicy < ApplicationPolicy
 
   def self?
     user.present? && user == record
-  end
-
-  # Nobody changes the super admin's role, and an admin changes neither
-  # their own role nor another admin's.
-  def role_change?
-    return false if record.super_admin?
-
-    super_admin? || (admin? && !record.admin?)
   end
 
   # Nobody changes their own active status.

@@ -40,7 +40,7 @@ class User < ApplicationRecord
     "employee"    => "Employé·e",
     "manager"     => "Gestionnaire",
     "admin"       => "Admin",
-    "super_admin" => "Admin"
+    "super_admin" => "Super admin"
   }.freeze
 
   # Human-readable role in FR-CA for display
