@@ -148,11 +148,12 @@ Rails.application.routes.draw do
   # ---------------------------------------------------------------------
   # Create/Destroy/Edit/Update for consultation records (the form lives on
   # the booking page, seances/new?tab=consultation). `row` gives a card or
-  # an old table row back. « Lier les consultations » (`associations`) lists
+  # an old table row back. `index` lists the recent consultations (managers
+  # and above). « Lier les consultations » (`associations`) lists
   # those without a service; `association` opens the link form in a card,
   # `associate` saves the link and `disassociate` clears it.
   # =====================================================================
-  resources :consultations, only: [:create, :destroy, :edit, :update] do
+  resources :consultations, only: [:index, :create, :destroy, :edit, :update] do
     member do
       get  :row
       get  :association

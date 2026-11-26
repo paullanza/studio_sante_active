@@ -4,10 +4,32 @@ class ConsultationsController < ApplicationController
 
   before_action :authenticate_user!
   before_action :set_consultation, only: [:edit, :update, :destroy, :row, :association, :associate, :disassociate]
-  layout "studio", only: [:associations]
+  layout "studio", only: [:index, :associations]
   before_action :load_staff,       only: [:create, :edit, :update]
 
   OWNER_REQUIRED_MESSAGE = "Veuillez choisir un·e employé·e.".freeze
+  STATUSES = %w[to_link linked].freeze
+
+  # « Consultations » (managers and above): the last 30 days by default, with
+  # the totals by status for the other filters.
+  def index
+    authorize Consultation
+
+    @filter_params = {
+      q:                      params[:q].presence,
+      employee_id:            params[:employee_id].presence,
+      # Only when no date was sent: an emptied « Du » shows every date.
+      consultation_date_from: params.key?(:consultation_date_from) ? params[:consultation_date_from].presence : 30.days.ago.to_date.iso8601,
+      consultation_date_to:   params[:consultation_date_to].presence
+    }
+    @status = params[:status].presence_in(STATUSES)
+    # A deactivated trainer stays in the list while their filter is on.
+    @staff = User.selectable.or(User.where(id: @filter_params[:employee_id])).order(:first_name, :last_name)
+
+    filtered = Consultation.apply_filters(@filter_params)
+    @totals = { all: filtered.count, to_link: filtered.to_link.count, linked: filtered.linked.count }
+    @pagy, @consultations = pagy(filtered.by_status(@status).with_associations.order_by_occurred_at_desc, limit: 25)
+  end
 
   def create
     authorize Consultation

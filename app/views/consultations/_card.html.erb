@@ -5,17 +5,19 @@
     and their contact, when, people, note, buttons (container queries in
     studio/_services.scss). An absent prospect gets the
     Absence stripe.
-    `context` ("saisir", "client", "service", "lier" or "confirmations") goes
+    `context` ("saisir", "client", "service", "lier", "consultations" or
+    "confirmations") goes
     along with « Modifier » so the card comes back the same; the Service page
-    leaves out « liée à ». « Lier les consultations » adds « Lier », which opens
-    the link form in this frame; a linked consultation offers « Délier » to
+    leaves out « liée à ». « Lier les consultations », and the Consultations
+    list on a card without a service, add « Lier », which opens the link form
+    in this frame; a linked consultation offers « Délier » to
     admins. Confirmations adds a checkbox for #confirm_consultations_form.
     Locals: consultation, context. %>
 <% context = local_assigns[:context] %>
 <% service = consultation.fliip_service unless context == "service" %>
 <% can_edit = policy(consultation).update? %>
 <% can_delete = policy(consultation).destroy? %>
-<% can_link = context == "lier" && policy(consultation).associate? %>
+<% can_link = (context == "lier" || (context == "consultations" && consultation.fliip_service_id.nil?)) && policy(consultation).associate? %>
 <% can_unlink = consultation.fliip_user_id && policy(consultation).disassociate? %>
 <% check = context == "confirmations" %>
 <%= turbo_frame_tag dom_id(consultation), class: "seance-frame" do %>
