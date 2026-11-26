@@ -12,21 +12,24 @@ class UsersController < ApplicationController
   # Services tab: active, planned and suspended by default, as on Mes services.
   DEFAULT_SERVICE_STATUSES = %w[A P S].freeze
 
+  # Three views of the same figures: « À suivre » (the flags first, then the
+  # team), « Tableau » (one row each, with the trend) and « Fiches » (a card each).
+  VIEWS = %w[suivi tableau fiches].freeze
+
   def index
     authorize User
 
+    @view = VIEWS.include?(params[:vue]) ? params[:vue] : "suivi"
     @status = STATUSES.include?(params[:statut]) ? params[:statut] : "actifs"
     @role = User.roles.key?(params[:role]) ? params[:role] : nil
+    @period = PayPeriod.from_param(params[:periode])
+    @periods = PayPeriod.recent
+    @periods << @period unless @periods.include?(@period)
 
     users = policy_scope(User)
     users = users.where(active: @status == "actifs") unless @status == "tous"
     users = users.where(role: @role) if @role
-    @users = users.order(role: :desc, last_name: :asc, first_name: :asc).to_a
-
-    ids = @users.map(&:id)
-    @unconfirmed_sessions = Session.unconfirmed.where(user_id: ids).group(:user_id).count
-    @unconfirmed_consultations = Consultation.unconfirmed.where(user_id: ids).group(:user_id).count
-    @services_worked_on = services_worked_on(ids)
+    @overview = StaffOverview.new(users.order(role: :desc, last_name: :asc, first_name: :asc), @period)
   end
 
   def show
@@ -39,6 +42,8 @@ class UsersController < ApplicationController
       @periods << @period unless @periods.include?(@period)
       @activity = StaffActivity.new(@user, @period)
       FliipService.preload_usage(@activity.sessions.map(&:fliip_service))
+      @follow_up = StaffOverview.new([ @user ], @period).rows.first
+      @renewing = StaffOverview.renewing_services(@user).to_a
     else
       @show_inactive  = params[:inactifs] == "1"
       @show_cancelled = params[:annules] == "1"
@@ -113,14 +118,6 @@ class UsersController < ApplicationController
   end
 
   private
-
-  # Services worked on per staff member: a séance or an adjustment attributed
-  # to them, each service counted once. Two queries, then Ruby.
-  def services_worked_on(ids)
-    pairs = Session.where(user_id: ids).distinct.pluck(:user_id, :fliip_service_id) +
-            ServiceUsageAdjustment.where(user_id: ids).distinct.pluck(:user_id, :fliip_service_id)
-    pairs.uniq.group_by(&:first).transform_values(&:size)
-  end
 
   def set_user
     @user = User.find(params[:id])

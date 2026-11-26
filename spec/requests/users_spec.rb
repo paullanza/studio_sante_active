@@ -54,16 +54,19 @@ RSpec.describe "Users", type: :request do
   end
 
   describe "GET /personnel" do
-    def listed_ids
-      Nokogiri::HTML(response.body).css("table.from-tablet tbody tr a").map { |a| a["href"] }
+    def listed_ids(view = "tableau")
+      selector = view == "tableau" ? "table.personnel-table tbody tr td:first-child a" : "a.staff-card"
+      Nokogiri::HTML(response.body).css(selector).map { |a| a["href"] }
     end
 
     %i[manager admin super_admin].each do |viewer|
-      it "opens for #{viewer}" do
+      it "opens each view for #{viewer}" do
         sign_in everyone[viewer]
-        get users_path
 
-        expect(response).to have_http_status(:ok)
+        %w[suivi tableau fiches].each do |view|
+          get users_path(vue: view)
+          expect(response).to have_http_status(:ok), view
+        end
       end
     end
 
@@ -78,30 +81,27 @@ RSpec.describe "Users", type: :request do
       colleague.update!(active: false)
       sign_in manager
 
-      get users_path
+      get users_path(vue: "tableau")
       # The list is only visible in the markup.
       expect(listed_ids).to include(user_path(employee), user_path(other_manager), user_path(admin))
       expect(listed_ids).not_to include(user_path(super_admin), user_path(colleague))
 
-      get users_path(statut: "inactifs")
-      expect(listed_ids).to eq([ user_path(colleague) ])
+      get users_path(vue: "fiches", statut: "inactifs")
+      expect(listed_ids("fiches")).to eq([ user_path(colleague) ])
 
-      get users_path(statut: "tous", role: "manager")
+      get users_path(vue: "tableau", statut: "tous", role: "manager")
       expect(listed_ids).to contain_exactly(user_path(manager), user_path(other_manager))
     end
 
-    it "counts unconfirmed séances and consultations and services worked on" do
-      service = create(:fliip_service, service_definition: create(:service_definition, paid_sessions: 10, free_sessions: 2))
-      create(:session, fliip_service: service, user: employee)
-      create(:session, fliip_service: service, user: employee, occurred_at: 2.days.ago).update_columns(confirmed: true)
-      create(:consultation, user: employee)
-      create(:service_usage_adjustment, user: employee)
+    it "puts someone with renewals coming up in « À suivre »" do
+      service = create(:fliip_service, purchase_status: "A", expire_date: 10.days.from_now.to_date)
+      create(:service_usage_adjustment, fliip_service: service, user: employee)
       sign_in admin
 
-      get users_path(role: "employee")
+      get users_path
 
-      row = Nokogiri::HTML(response.body).css("table.from-tablet tbody tr").find { |tr| tr.at_css("a")["href"] == user_path(employee) }
-      expect(row.css("td.numeric").map { |td| td.text.strip }).to eq(%w[1 1 2])
+      card = Nokogiri::HTML(response.body).css(".follow-up__card").find { |c| c.text.include?("renouvellement") }
+      expect(card.css("a").map { |a| a["href"] }).to eq([ user_path(employee) ])
     end
   end
 

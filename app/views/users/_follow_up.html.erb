@@ -1,0 +1,32 @@
+<%# « À suivre » on a staff member's Activité tab: their séances per week over
+    the last weeks, their flags, and the active services of their clients that
+    end soon, each linked. Locals: row (StaffOverview::Row), renewing (services). %>
+<section class="person-follow-up card" aria-labelledby="personne-a-suivre">
+  <h2 id="personne-a-suivre" class="section-label">À suivre</h2>
+  <div class="person-follow-up__trend">
+    <%= trend_sparkline(row.trend) %>
+    <span class="text-small text-muted">Séances par semaine, <%= StaffOverview::TREND_WEEKS %> dernières · dernière séance <%= last_session_label(row) %></span>
+  </div>
+  <% flags = [] %>
+  <% flags << [ "danger", "Dernière séance #{last_session_label(row)}" ] if row.inactive? %>
+  <% flags << [ "danger", "Séances en baisse (#{row.falling_label})" ] if row.falling? %>
+  <% flags << [ "unconfirmed", "#{row.unconfirmed} non confirmée(s)" ] if row.unconfirmed.positive? %>
+  <% if flags.any? %>
+    <div class="staff-card__flags">
+      <% flags.each do |tone, text| %><span class="flag flag--<%= tone %>"><%= text %></span><% end %>
+    </div>
+  <% end %>
+  <% if renewing.any? %>
+    <p class="text-small"><span class="flag flag--warning"><%= renewing.size %> renouvellement(s)</span> d'ici 30 jours :</p>
+    <ul class="follow-up__people">
+      <% renewing.each do |service| %>
+        <li>
+          <%= link_to "#{service.fliip_user&.full_name} · #{service.service_name}", fliip_service_path(service) %>
+          <span class="text-muted numeric">fin le <%= l(service.expire_date) %></span>
+        </li>
+      <% end %>
+    </ul>
+  <% elsif flags.empty? %>
+    <p class="text-small text-muted">Rien à suivre.</p>
+  <% end %>
+</section>
