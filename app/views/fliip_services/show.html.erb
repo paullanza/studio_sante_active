@@ -13,8 +13,9 @@
     <% tabs << [ "adjustments", "Ajustements", @adjustments.size ] if policy(ServiceUsageAdjustment).index? %>
     <nav class="tabs" aria-label="Sections">
       <% tabs.each do |key, label, count| %>
-        <%# The séance count is refreshed alone after an edit or a delete. %>
-        <%= link_to safe_join([ "#{label} (", tag.span(count, id: (dom_id(@service, :sessions_count) if key == "sessions")), ")" ]),
+        <%# The séance and consultation counts are refreshed alone after an edit or a delete. %>
+        <% count_id = { "sessions" => dom_id(@service, :sessions_count), "consultations" => dom_id(@service, :consultations_count) }[key] %>
+        <%= link_to safe_join([ "#{label} (", tag.span(count, id: count_id), ")" ]),
               fliip_service_path(@service, tab: key), class: "tabs__tab", aria: { current: (@tab == key ? "page" : nil) } %>
       <% end %>
     </nav>
@@ -25,7 +26,9 @@
     <% when "consultations" %>
       <% if @consultations.any? %>
         <ul class="list card-grid">
-          <%= render partial: "consultations/service_card", collection: @consultations, as: :consultation %>
+          <% @consultations.each do |consultation| %>
+            <li id="<%= dom_id(consultation, :item) %>"><%= render "consultations/card", consultation: consultation, context: "service" %></li>
+          <% end %>
         </ul>
       <% else %>
         <p class="empty-state">Aucune consultation.</p>

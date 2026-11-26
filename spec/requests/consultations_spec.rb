@@ -79,7 +79,7 @@ RSpec.describe "Consultations", type: :request do
 
       expect(response).to have_http_status(:ok)
       # The list is only visible in the markup.
-      expect(Nokogiri::HTML(response.body).css(".latest-consultation").size).to eq(1)
+      expect(Nokogiri::HTML(response.body).css(".consultation-card").size).to eq(1)
     end
   end
 
@@ -203,6 +203,106 @@ RSpec.describe "Consultations", type: :request do
       get row_consultation_path(own)
 
       expect(response).to have_http_status(:ok)
+    end
+  end
+
+  describe "editing in place (Saisir, Client and Service pages)" do
+    let(:stream) { { "Accept" => "text/vnd.turbo-stream.html, text/html, application/xhtml+xml" } }
+    let(:client) { create(:fliip_user) }
+    let(:service) { create(:fliip_service, fliip_user: client) }
+    let!(:own) { create(:consultation, user: employee, first_name: "Avant", fliip_user: client, fliip_service: service) }
+
+    def update_params(**overrides)
+      { consultation: { first_name: "Après", last_name: "Roy", phone_number: "514-555-0100",
+                        date: Date.current.iso8601, time: "10:00", present: "0" }.merge(overrides) }
+    end
+
+    it "opens the edit card in the consultation's frame" do
+      sign_in employee
+      get edit_consultation_path(own, context: "client"), headers: { "Turbo-Frame" => "consultation_#{own.id}" }
+
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "gives the card back on « Annuler »" do
+      sign_in employee
+      get row_consultation_path(own, context: "saisir"), headers: { "Turbo-Frame" => "consultation_#{own.id}" }
+
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "lets the owner update an unconfirmed consultation, answering with a stream" do
+      sign_in employee
+      patch consultation_path(own), params: update_params.merge(context: "service"), headers: stream
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+      expect(own.reload).to have_attributes(first_name: "Après", present: false, phone_number: "5145550100")
+    end
+
+    it "refuses the owner once the consultation is confirmed" do
+      own.update_columns(confirmed: true)
+      sign_in employee
+      patch consultation_path(own), params: update_params, headers: stream
+
+      expect(response).to have_http_status(:forbidden)
+      expect(own.reload.first_name).to eq("Avant")
+    end
+
+    it "refuses another employee" do
+      sign_in create(:user)
+      patch consultation_path(own), params: update_params, headers: stream
+
+      expect(response).to have_http_status(:forbidden)
+      expect(own.reload.first_name).to eq("Avant")
+    end
+
+    it "lets an admin update a confirmed consultation" do
+      own.update_columns(confirmed: true)
+      sign_in create(:user, :admin)
+      patch consultation_path(own), params: update_params, headers: stream
+
+      expect(response).to have_http_status(:ok)
+      expect(own.reload.first_name).to eq("Après")
+    end
+
+    it "refuses a phone that isn't 10 digits" do
+      sign_in employee
+      patch consultation_path(own), params: update_params(phone_number: "555-0100"), headers: stream
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(own.reload.first_name).to eq("Avant")
+    end
+
+    it "refuses an edit with neither phone nor email" do
+      sign_in employee
+      patch consultation_path(own), params: update_params(phone_number: "", email: ""), headers: stream
+
+      expect(response).to have_http_status(:unprocessable_content)
+    end
+
+    it "deletes with a stream, from each page" do
+      other = create(:consultation, user: employee, fliip_user: client)
+      sign_in employee
+
+      expect { delete consultation_path(own), params: { context: "service" }, headers: stream }.to change(Consultation, :count).by(-1)
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("text/vnd.turbo-stream.html")
+
+      expect { delete consultation_path(other), params: { context: "client" }, headers: stream }.to change(Consultation, :count).by(-1)
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "still answers the old pages with their rows" do
+      sign_in employee
+
+      get edit_consultation_path(own)
+      expect(response).to have_http_status(:ok)
+      get row_consultation_path(own)
+      expect(response).to have_http_status(:ok)
+      patch consultation_path(own), params: update_params
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("text/html")
     end
   end
 

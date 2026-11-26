@@ -1,0 +1,48 @@
+<%# A consultation being edited, in place of its card, in the same Turbo frame.
+    Tiles like the séance edit card (sessions/_edit_card), label above value: the
+    prospect, then date, heure and présence, then the trainer (admins) and a
+    one-line note. ConsultationsController answers « Enregistrer » with a Turbo
+    Stream. Locals: consultation, context ("saisir", "client" or "service"). %>
+<% context = local_assigns[:context] %>
+<% staff = @staff.to_a %>
+<% staff += [ consultation.user ] if staff.any? && consultation.user && staff.exclude?(consultation.user) %>
+<%= turbo_frame_tag dom_id(consultation), class: "seance-frame" do %>
+  <article class="card seance-card seance-edit">
+    <div class="seance-card__tag">
+      <span class="seance-card__title">Modifier la consultation</span>
+    </div>
+
+    <%= form_with model: consultation, url: consultation_path(consultation), method: :patch, builder: StudioFormBuilder,
+          namespace: dom_id(consultation), class: "form seance-edit__form" do |f| %>
+      <%= f.base_errors(also: %i[occurred_at user created_by]) %>
+      <%= hidden_field_tag :context, context, id: nil if context.present? %>
+
+      <div class="seance-edit__rows">
+        <div class="form-grid seance-edit__who">
+          <%= f.field :first_name, label: "Prénom", autocomplete: "off" %>
+          <%= f.field :last_name, label: "Nom", autocomplete: "off" %>
+          <%= f.field :email, label: "Courriel", as: :email, inputmode: "email", autocomplete: "off" %>
+          <%= f.field :phone_number, label: "Téléphone", as: :tel, inputmode: "tel", autocomplete: "off" %>
+        </div>
+        <div class="form-grid seance-edit__when">
+          <%= f.field :date, label: "Date", as: :date, required: true,
+                value: params.dig(:consultation, :date).presence || consultation.occurred_at&.to_date&.iso8601 %>
+          <%= f.field :time, label: "Heure", as: :time, required: true, step: 1800,
+                value: params.dig(:consultation, :time).presence || consultation.occurred_at&.strftime("%H:%M") %>
+          <%= f.segmented :present, [ [ "Présent·e", "1" ], [ "Absent·e", "0" ] ], label: "Présence" %>
+        </div>
+        <div class="form-grid seance-edit__more<%= " seance-edit__more--single" if staff.empty? %>">
+          <% if staff.any? %>
+            <%= f.select_field :user_id, staff.map { |u| [ u.full_name, u.id ] }, label: "Entraîneur·e" %>
+          <% end %>
+          <%= f.field :note, label: "Note", placeholder: "Facultatif" %>
+        </div>
+      </div>
+      <div class="form-actions seance-edit__actions">
+        <p class="field__hint seance-edit__hint">Téléphone ou courriel requis</p>
+        <%= link_to "Annuler", row_consultation_path(consultation, context: context), class: "btn btn--ghost btn--small" %>
+        <button type="submit" class="btn btn--secondary btn--small">Enregistrer<%= button_arrow %></button>
+      </div>
+    <% end %>
+  </article>
+<% end %>

@@ -414,34 +414,6 @@
   white-space: nowrap;
 }
 
-// The recent consultations (consultation tab): compact rows, not links.
-.latest-consultation {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 10px 12px;
-}
-
-.latest-consultation--absence { border-left: 4px solid var(--badge-absence-fg); }
-
-.latest-consultation__main {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.latest-consultation__name {
-  font-family: var(--font-heading);
-  font-weight: 600;
-}
-
-.latest-consultation__when {
-  font-size: 14px;
-  font-weight: 700;
-}
-
 // A warning that can't be missed (docs/ui.md « Alerts »).
 .alert {
   display: flex;
