@@ -375,10 +375,20 @@
   border-top: 0;
 }
 
+// A hint on the buttons' line, on the left (the consultation edit card).
+.seance-edit__hint {
+  margin: 0 auto 0 0;
+}
+
+.seance-edit__actions:has(.seance-edit__hint) {
+  flex-wrap: wrap;
+}
+
 // A consultation (consultations/_card): stacked in a narrow frame (Saisir's
-// side column), a row in a wide one (Client and Service pages): name and
-// presence, when, contact and people, buttons stacked last. Its layout follows
-// the frame's width, not the screen's.
+// side column), a row in a wide one (Client and Service pages), in the séance
+// row's order: name and presence, when, contact, people, buttons; the note
+// on a line underneath, or its own column after the people when the row is
+// wide enough. Its layout follows the frame's width, not the screen's.
 .consultation-card .seance-card__tag {
   flex-direction: row;
   align-items: center;
@@ -396,7 +406,7 @@
 @container (min-width: 720px) {
   .consultation-card {
     display: grid;
-    grid-template-columns: minmax(160px, 240px) 184px minmax(0, 1fr) auto;
+    grid-template-columns: minmax(140px, 200px) 184px minmax(140px, 220px) minmax(0, 1fr) auto;
     align-items: center;
     column-gap: 14px;
   }
@@ -408,11 +418,14 @@
   }
 
   .consultation-card .seance-card__note {
+    grid-row: 2;
     grid-column: 1 / -1;
     margin-top: 10px;
   }
 
   .consultation-card .seance-card__actions {
+    grid-row: 1;
+    grid-column: 5;
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
@@ -424,6 +437,24 @@
 
   .consultation-card .seance-card__actions form {
     display: flex;
+  }
+}
+
+@container (min-width: 900px) {
+  .consultation-card--noted {
+    grid-template-columns: minmax(120px, 180px) 184px minmax(140px, 190px) minmax(140px, 200px) minmax(150px, 1fr) auto;
+  }
+
+  .consultation-card--noted .seance-card__note {
+    grid-row: 1;
+    grid-column: 5;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .consultation-card--noted .seance-card__actions {
+    grid-column: 6;
   }
 }
 
@@ -521,73 +552,7 @@
     gap: 4px 24px;
   }
 
-  .adjustment-card // A consultation (consultations/_card): stacked in a narrow frame (Saisir's
-// side column), a row in a wide one (Client and Service pages): name and
-// presence, when, contact and people, buttons stacked last. Its layout follows
-// the frame's width, not the screen's.
-.consultation-card .seance-card__tag {
-  flex-direction: row;
-  align-items: center;
-}
-
-.consultation-card .seance-card__actions {
-  justify-content: flex-start;
-  gap: 20px;
-}
-
-.consultation-card__email {
-  overflow-wrap: anywhere;
-}
-
-@container (min-width: 720px) {
-  .consultation-card {
-    display: grid;
-    grid-template-columns: minmax(160px, 240px) 184px minmax(0, 1fr) auto;
-    align-items: center;
-    column-gap: 14px;
-  }
-
-  .consultation-card .seance-card__tag {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .consultation-card .seance-card__note {
-    grid-column: 1 / -1;
-    margin-top: 10px;
-  }
-
-  .consultation-card .seance-card__actions {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .consultation-card .seance-card__actions .btn {
-    min-height: 26px;
-  }
-
-  .consultation-card .seance-card__actions form {
-    display: flex;
-  }
-}
-
-// The consultation edit card's prospect row: two fields a line from 420 px of
-// card, all four from 760 px.
-@container (min-width: 420px) {
-  .seance-edit__rows .seance-edit__who {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@container (min-width: 760px) {
-  .seance-edit__rows .seance-edit__who {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-.adjustment-card__actions {
+  .adjustment-card .adjustment-card__actions {
     margin-left: auto;
   }
 }

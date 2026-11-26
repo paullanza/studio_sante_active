@@ -39,9 +39,8 @@
           <%= f.field :note, label: "Note", placeholder: "Facultatif" %>
         </div>
       </div>
-      <p class="field__hint">Téléphone ou courriel requis</p>
-
       <div class="form-actions seance-edit__actions">
+        <p class="field__hint seance-edit__hint">Téléphone ou courriel requis</p>
         <%= link_to "Annuler", row_consultation_path(consultation, context: context), class: "btn btn--ghost btn--small" %>
         <button type="submit" class="btn btn--secondary btn--small">Enregistrer<%= button_arrow %></button>
       </div>
