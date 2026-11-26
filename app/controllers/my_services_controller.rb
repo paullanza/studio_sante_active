@@ -18,10 +18,12 @@ class MyServicesController < ApplicationController
     statuses << "I" if @show_inactive
     statuses << "C" if @show_cancelled
 
-    # Usage totals are summed in SQL, so séances and adjustments aren't preloaded.
+    # The cards' usage totals come from .preload_usage: two queries for the list.
     @services = FliipService.worked_on_by(current_user)
                             .by_statuses(statuses)
                             .includes(:fliip_user, :service_definition)
                             .ending_soonest_first
+                            .to_a
+    FliipService.preload_usage(@services)
   end
 end

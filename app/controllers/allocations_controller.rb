@@ -21,11 +21,12 @@ class AllocationsController < ApplicationController
     services = @definition.fliip_services
     @active_count = services.active.count
     @total_count = services.count
-    # Adjustments aren't preloaded: the cards' usage totals sum them in SQL.
+    # The cards' usage totals come from .preload_usage: two queries per page.
     @pagy, @services = pagy(
       services.includes(:fliip_user, :service_definition)
               .order(Arel.sql("expire_date DESC NULLS LAST"), :id)
     )
+    FliipService.preload_usage(@services)
   end
 
   # Saves every allocation sent in `allocations[ID][paid_sessions|free_sessions]`
