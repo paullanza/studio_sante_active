@@ -14,7 +14,7 @@ RSpec.describe UserPolicy, type: :policy do
   end
 
   context "for an employee" do
-    it "permits only viewing and editing themself" do
+    it "permits only viewing and editing themself, with no staff list" do
       expect(policy(employee, employee)).to permit_only_actions(:show, :edit, :update)
       expect(policy(employee, colleague)).to forbid_all_actions
       expect(policy(employee, manager)).to forbid_all_actions
@@ -23,14 +23,14 @@ RSpec.describe UserPolicy, type: :policy do
 
   context "for a manager" do
     it "views everyone but the super admin and edits only themself" do
-      expect(policy(manager, manager)).to permit_only_actions(:show, :edit, :update)
-      expect(policy(manager, other_manager)).to permit_only_actions(:show)
-      expect(policy(manager, admin)).to permit_only_actions(:show)
-      expect(policy(manager, super_admin)).to forbid_all_actions
+      expect(policy(manager, manager)).to permit_only_actions(:index, :show, :edit, :update)
+      expect(policy(manager, other_manager)).to permit_only_actions(:index, :show)
+      expect(policy(manager, admin)).to permit_only_actions(:index, :show)
+      expect(policy(manager, super_admin)).to permit_only_actions(:index)
     end
 
     it "activates and deactivates employees only" do
-      expect(policy(manager, employee)).to permit_only_actions(:show, :activate, :deactivate)
+      expect(policy(manager, employee)).to permit_only_actions(:index, :show, :activate, :deactivate)
     end
   end
 
@@ -38,17 +38,17 @@ RSpec.describe UserPolicy, type: :policy do
     # Role changes are allowed by actor here; each action then checks the
     # target's current role (e.g. only a manager can be made an employee).
     it "edits and manages employees and managers, but never makes admins" do
-      expect(policy(admin, employee)).to permit_only_actions(:show, :edit, :update, :make_employee, :make_manager, :activate, :deactivate)
-      expect(policy(admin, manager)).to permit_only_actions(:show, :edit, :update, :make_employee, :make_manager, :activate, :deactivate)
+      expect(policy(admin, employee)).to permit_only_actions(:index, :show, :edit, :update, :make_employee, :make_manager, :activate, :deactivate)
+      expect(policy(admin, manager)).to permit_only_actions(:index, :show, :edit, :update, :make_employee, :make_manager, :activate, :deactivate)
     end
 
     it "edits admins, themself included, without changing their role or status" do
-      expect(policy(admin, other_admin)).to permit_only_actions(:show, :edit, :update)
-      expect(policy(admin, admin)).to permit_only_actions(:show, :edit, :update)
+      expect(policy(admin, other_admin)).to permit_only_actions(:index, :show, :edit, :update)
+      expect(policy(admin, admin)).to permit_only_actions(:index, :show, :edit, :update)
     end
 
     it "cannot see or touch the super admin" do
-      expect(policy(admin, super_admin)).to forbid_all_actions
+      expect(policy(admin, super_admin)).to permit_only_actions(:index)
     end
   end
 
@@ -56,12 +56,12 @@ RSpec.describe UserPolicy, type: :policy do
     it "does everything to admins and managers, including role changes" do
       every_user_action = %i[show edit update make_employee make_manager make_admin activate deactivate]
 
-      expect(policy(super_admin, admin)).to permit_only_actions(*every_user_action)
-      expect(policy(super_admin, manager)).to permit_only_actions(*every_user_action)
+      expect(policy(super_admin, admin)).to permit_only_actions(:index, *every_user_action)
+      expect(policy(super_admin, manager)).to permit_only_actions(:index, *every_user_action)
     end
 
     it "edits themself but never changes their own role or status" do
-      expect(policy(super_admin, super_admin)).to permit_only_actions(:show, :edit, :update)
+      expect(policy(super_admin, super_admin)).to permit_only_actions(:index, :show, :edit, :update)
     end
   end
 

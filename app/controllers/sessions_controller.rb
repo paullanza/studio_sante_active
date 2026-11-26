@@ -1,5 +1,6 @@
 class SessionsController < ApplicationController
   include BookingPage
+  include StaffActivityStreams
 
   before_action :authenticate_user!
   before_action :set_session, only: [:destroy, :edit, :update, :row]
@@ -29,26 +30,18 @@ class SessionsController < ApplicationController
 
   def edit
     authorize @session
-    return render_edit_card if turbo_frame_request?
-
-    render partial: "sessions/shared/session_edit_row",
-          locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
-          layout: false
+    render_edit_card
   end
 
-  # The séance's card (« Annuler » in the edit card), or the old table row.
+  # The séance's card (« Annuler » in the edit card).
   def row
     authorize @session
-    return render_frame_card if turbo_frame_request?
-
-    render partial: "sessions/shared/session_row",
-          locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
-          layout: false
+    render_frame_card
   end
 
   # Session#recalculate_type picks the outcome again when presence or duration
-  # changed. The new pages (Service, Saisir) answer with Turbo Streams; the old
-  # admin tables still get their row partials.
+  # changed. The pages answer with Turbo Streams; a plain HTML request is sent
+  # back where it came from.
   def update
     authorize @session
 
@@ -71,14 +64,9 @@ class SessionsController < ApplicationController
 
       render turbo_stream: refreshed_lists
     elsif saved
-      render partial: "sessions/shared/session_row",
-            locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
-            layout: false
+      redirect_back fallback_location: new_seance_path, notice: "Séance modifiée."
     else
-      render partial: "sessions/shared/session_edit_row",
-            locals: { session: @session, show_bulk_checkbox: params[:show_bulk].present? },
-            status: :unprocessable_content,
-            layout: false
+      redirect_back fallback_location: new_seance_path, alert: @session.errors.full_messages.to_sentence
     end
   end
 
@@ -117,15 +105,13 @@ class SessionsController < ApplicationController
 
   # Pages whose séance stays one row after an edit: nothing else on them shows it.
   def listed_context?
-    %w[confirmations recentes].include?(params[:context])
+    %w[confirmations recentes personnel].include?(params[:context])
   end
 
-  # The new form sends session[duration]; the old table row sends half_hour.
+  # One hour unless the form sends another duration.
   def submitted_duration
     duration = params.dig(:session, :duration)
-    return duration.to_f if duration.present?
-
-    params[:half_hour] == "1" ? 0.5 : 1.0
+    duration.present? ? duration.to_f : 1.0
   end
 
   def render_edit_card(status: :ok)
@@ -147,7 +133,7 @@ class SessionsController < ApplicationController
   def frame_card_locals
     context = params[:context].presence
     locals = { session: @session, context: context, trainer_id: params[:trainer_id] }
-    locals[:number] = Session.numbers_for([ @session ])[@session.id] unless saisir_context?
+    locals[:number] = Session.numbers_for([ @session ])[@session.id] unless saisir_context? || personnel_context?
     locals
   end
 
@@ -156,7 +142,8 @@ class SessionsController < ApplicationController
   # the whole list is drawn again.
   def refreshed_lists
     if listed_context?
-      return turbo_stream.replace(helpers.dom_id(@session), partial: "sessions/seance", locals: frame_card_locals)
+      card = turbo_stream.replace(helpers.dom_id(@session), partial: "sessions/seance", locals: frame_card_locals)
+      return personnel_context? ? [ card, *activity_totals_stream(listed_trainer, listed_at) ] : card
     end
 
     if saisir_context?
@@ -180,6 +167,9 @@ class SessionsController < ApplicationController
   # and the group goes with its last séance. Nil elsewhere.
   def removed_row_streams
     return turbo_stream.remove(helpers.dom_id(@session, :item)) if params[:context] == "recentes"
+    if personnel_context?
+      return [ turbo_stream.remove(helpers.dom_id(@session, :item)), *activity_totals_stream(@session.user, @session.occurred_at) ]
+    end
     return unless confirmations_context?
 
     left = Session.unconfirmed.in_period(PayPeriod.containing(@session.occurred_at.to_date)).where(user_id: @session.user_id).count
@@ -189,6 +179,17 @@ class SessionsController < ApplicationController
       turbo_stream.remove(helpers.dom_id(@session, :item)),
       turbo_stream.update(helpers.dom_id(@session.user, :confirm_count), "#{left} séance(s)")
     ]
+  end
+
+  # The staff page the séance was listed on (only one the viewer may see), and
+  # when it was, before this edit moved it.
+  def listed_trainer
+    page_user = User.find_by(id: params[:trainer_id])
+    page_user && policy(page_user).show? ? page_user : @session.user
+  end
+
+  def listed_at
+    @session.occurred_at_before_last_save || @session.occurred_at
   end
 
   # Saisir lists one trainer's séances: an admin's chosen trainer, else mine.

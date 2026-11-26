@@ -132,7 +132,8 @@ RSpec.describe "Sessions", type: :request do
       sign_in employee
       patch session_path(session_record),
             params: { session: { note: "updated", present: "1",
-                                 date: Date.current.iso8601, time: "11:00" } }
+                                 date: Date.current.iso8601, time: "11:00" } },
+            headers: { "Accept" => "text/vnd.turbo-stream.html, text/html" }
 
       expect(response).to have_http_status(:ok)
       expect(session_record.reload.note).to eq("updated")
@@ -151,14 +152,14 @@ RSpec.describe "Sessions", type: :request do
       expect { delete session_path(session_record) }.not_to change(Session, :count)
     end
 
-    it "keeps a deactivated owner selected in the admin edit row" do
+    it "keeps a deactivated owner selected in the admin edit card" do
       employee.update!(active: false)
       sign_in create(:user, :admin)
 
-      get edit_session_path(session_record)
+      get edit_session_path(session_record), headers: { "Turbo-Frame" => "session_#{session_record.id}" }
 
       # The selected option is only visible in the markup.
-      expect(response.body).to include(%(<option value="#{employee.id}" selected>))
+      expect(Nokogiri::HTML(response.body).at_css("select[name='session[user_id]'] option[selected]")["value"]).to eq(employee.id.to_s)
     end
 
     it "lets admins delete confirmed sessions" do
@@ -279,7 +280,7 @@ RSpec.describe "Sessions", type: :request do
       other = create(:user)
       sign_in create(:user, :admin)
 
-      patch session_path(confirmed), params: update_params(user_id: other.id)
+      patch session_path(confirmed), params: update_params(user_id: other.id), headers: { "Accept" => "text/vnd.turbo-stream.html, text/html" }
 
       expect(response).to have_http_status(:ok)
       expect(confirmed.reload.user).to eq(other)
@@ -289,7 +290,7 @@ RSpec.describe "Sessions", type: :request do
       super_admin = create(:user, :super_admin)
       sign_in create(:user, :admin)
 
-      patch session_path(own), params: update_params(user_id: super_admin.id)
+      patch session_path(own), params: update_params(user_id: super_admin.id), headers: { "Accept" => "text/vnd.turbo-stream.html, text/html" }
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(own.reload.user).to eq(employee)
@@ -308,11 +309,12 @@ RSpec.describe "Sessions", type: :request do
       super_admin = create(:user, :super_admin)
       sign_in create(:user, :admin)
 
-      get edit_session_path(own)
+      get edit_session_path(own), headers: { "Turbo-Frame" => "session_#{own.id}" }
 
       # The option list is only visible in the markup.
-      expect(response.body).to include(%(<option value="#{employee.id}"))
-      expect(response.body).not_to include(%(<option value="#{super_admin.id}"))
+      values = Nokogiri::HTML(response.body).css("select[name='session[user_id]'] option").map { |o| o["value"] }
+      expect(values).to include(employee.id.to_s)
+      expect(values).not_to include(super_admin.id.to_s)
     end
   end
 

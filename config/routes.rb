@@ -122,12 +122,12 @@ Rails.application.routes.draw do
   end
 
   # =====================================================================
-  # USERS — PROFILE & ROLE MANAGEMENT
+  # PERSONNEL — THE STAFF LIST AND A PAGE PER STAFF MEMBER
   # ---------------------------------------------------------------------
-  # Show/update the user profile, plus role/activation toggles gated by
-  # authorization. Role setters promote/demote a user to the given role.
+  # /personnel (managers and above) and /personnel/:id, plus the old edit
+  # page and the role and activation toggles, gated by UserPolicy.
   # =====================================================================
-  resources :users, only: [:show, :edit, :update] do
+  resources :users, only: [:index, :show, :edit, :update], path: "personnel" do
     member do
       patch :make_employee
       patch :make_manager

@@ -13,7 +13,8 @@ module SessionsHelper
     "service"       => { check: false, client: false, usage: false, trainer: true,  status: true },
     "saisir"        => { check: false, client: true,  usage: true,  trainer: false, status: false },
     "confirmations" => { check: true,  client: true,  usage: true,  trainer: false, status: false },
-    "recentes"      => { check: false, client: true,  usage: true,  trainer: true,  status: true }
+    "recentes"      => { check: false, client: true,  usage: true,  trainer: true,  status: true },
+    "personnel"     => { check: false, client: true,  usage: true,  trainer: false, status: true }
   }.freeze
 
   def seance_card_parts(context)

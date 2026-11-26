@@ -1,5 +1,6 @@
 class ConsultationsController < ApplicationController
   include BookingPage
+  include StaffActivityStreams
 
   before_action :authenticate_user!
   before_action :set_consultation, only: [:edit, :update, :destroy, :row, :association, :associate, :service_select, :disassociate]
@@ -67,8 +68,12 @@ class ConsultationsController < ApplicationController
     if request.format.turbo_stream?
       return render_edit_card(status: :unprocessable_content) unless saved
 
-      render turbo_stream: turbo_stream.replace(helpers.dom_id(@consultation), partial: "consultations/card",
-                                                                               locals: { consultation: @consultation, context: params[:context] })
+      card = turbo_stream.replace(helpers.dom_id(@consultation), partial: "consultations/card",
+                                                                 locals: { consultation: @consultation, context: params[:context] })
+      # On a staff page, the totals of the trainer it was listed under.
+      listed_under = User.find_by(id: @consultation.user_id_before_last_save) || @consultation.user
+      totals = personnel_context? ? activity_totals_stream(listed_under, @consultation.occurred_at_before_last_save || @consultation.occurred_at) : []
+      render turbo_stream: [ card, *totals ]
     elsif saved
       render partial: "consultations/shared/consultation_row",
              locals:  { consultation: @consultation, show_bulk_checkbox: params[:show_bulk].present? },
@@ -203,6 +208,8 @@ class ConsultationsController < ApplicationController
   # follows.
   def removed_card_streams
     streams = [ turbo_stream.remove(helpers.dom_id(@consultation, :item)) ]
+    return streams + activity_totals_stream(@consultation.user, @consultation.occurred_at) if personnel_context?
+
     owner, column = case params[:context]
     when "client" then [ @consultation.fliip_user, :fliip_user_id ]
     when "service" then [ @consultation.fliip_service, :fliip_service_id ]

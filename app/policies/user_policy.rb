@@ -4,6 +4,13 @@
 class UserPolicy < ApplicationPolicy
   PROFILE_ATTRIBUTES = [:first_name, :last_name, :phone, :address, :birthday].freeze
 
+  # « Personnel »: managers and above.
+  def index?
+    manager_or_above?
+  end
+
+  # Managers and admins see everyone but the super admin (admins have
+  # clients too); the super admin sees everyone; employees see themselves.
   def show?
     super_admin? || ((admin? || manager?) && !record.super_admin?) || self?
   end

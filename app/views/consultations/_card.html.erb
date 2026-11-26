@@ -41,7 +41,8 @@
     </div>
     <div class="seance-card__people">
       <% trainer = consultation.user %>
-      <span>Entraîneur·e : <%= trainer ? link_to_if(policy(trainer).show?, trainer.full_name.presence || "—", user_path(trainer), data: { turbo_frame: "_top" }) : "—" %></span>
+      <%# A staff member's own page doesn't repeat their name. %>
+      <span<%= ' class="visually-hidden"'.html_safe if context == "personnel" %>>Entraîneur·e : <%= trainer ? link_to_if(policy(trainer).show?, trainer.full_name.presence || "—", user_path(trainer), data: { turbo_frame: "_top" }) : "—" %></span>
       <% if consultation.created_by_id != consultation.user_id %>
         <span class="text-muted">Saisie par <%= consultation.created_by&.full_name.presence || "—" %></span>
       <% end %>

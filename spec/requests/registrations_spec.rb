@@ -88,12 +88,12 @@ RSpec.describe "Sign up", type: :request do
         .to raise_error(ActionController::RoutingError)
     end
 
-    # GET /users/edit and /users/cancel fall through to users#show, whose
-    # User.find answers 404; they never reach Devise.
+    # Staff pages live under /personnel, so /users/edit and /users/cancel
+    # match no route at all; they never reach Devise.
     %w[/users/edit /users/cancel].each do |path|
       it "does not send GET #{path} to Devise" do
-        expect(Rails.application.routes.recognize_path(path, method: :get))
-          .not_to include(controller: "devise/registrations")
+        expect { Rails.application.routes.recognize_path(path, method: :get) }
+          .to raise_error(ActionController::RoutingError)
       end
     end
 

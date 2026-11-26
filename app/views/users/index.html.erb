@@ -1,0 +1,78 @@
+<%# « Personnel » (managers and above): the staff the viewer may see
+    (UserPolicy::Scope), filtered by status and role, with their unconfirmed
+    séances and consultations and the services they work on. Cards on a phone,
+    a table from 768 px. %>
+<% content_for :nav_section, "plus" %>
+<% content_for :title, "Personnel" %>
+<% content_for :page_wide, true %>
+<% role_choices = %w[employee manager admin].map { |role| [ User::ROLE_LABELS_FR[role], role ] } %>
+
+<div class="stack">
+  <div class="page-header">
+    <h1>Personnel</h1>
+  </div>
+
+  <%= form_with url: users_path, method: :get, class: "personnel-filters",
+        data: { controller: "autosubmit", action: "change->autosubmit#submit", turbo_action: "replace" } do %>
+    <div class="field field--compact">
+      <label class="field__box" for="statut">
+        <span class="field__label">Statut</span>
+        <%= select_tag :statut, options_for_select([ [ "Actifs", "actifs" ], [ "Inactifs", "inactifs" ], [ "Tous", "tous" ] ], @status),
+              id: "statut", class: "field__input" %>
+      </label>
+    </div>
+    <div class="field field--compact">
+      <label class="field__box" for="role">
+        <span class="field__label">Rôle</span>
+        <%= select_tag :role, options_for_select(role_choices, @role), include_blank: "Tous", id: "role", class: "field__input" %>
+      </label>
+    </div>
+    <noscript><button type="submit" class="btn btn--ghost">Filtrer</button></noscript>
+  <% end %>
+
+  <p class="text-muted text-small numeric"><%= pluralize(@users.size, "membre") %> du personnel</p>
+
+  <% if @users.empty? %>
+    <p class="empty-state">Personne ne correspond à ces filtres.</p>
+  <% else %>
+    <ul class="list until-tablet">
+      <% @users.each do |user| %>
+        <li>
+          <%= link_to user_path(user), class: "card staff-card" do %>
+            <span class="staff-card__head">
+              <span class="seance-card__title"><%= user.full_name.presence || user.email %></span>
+              <span class="badge <%= user.active? ? "badge--chargee" : "badge--retire" %>"><%= user.active? ? "Actif·ve" : "Inactif·ve" %></span>
+            </span>
+            <span class="text-muted text-small"><%= user.translated_role %></span>
+            <span class="staff-card__counts text-small numeric">
+              <span><%= @unconfirmed_sessions.fetch(user.id, 0) %> séance(s) non confirmée(s)</span>
+              <span><%= @unconfirmed_consultations.fetch(user.id, 0) %> consultation(s) non confirmée(s)</span>
+              <span><%= @services_worked_on.fetch(user.id, 0) %> service(s)</span>
+            </span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+
+    <table class="table from-tablet">
+      <thead>
+        <tr>
+          <th>Nom</th><th>Rôle</th><th>Statut</th>
+          <th class="numeric">Séances non confirmées</th><th class="numeric">Consultations non confirmées</th><th class="numeric">Services</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @users.each do |user| %>
+          <tr>
+            <td><%= link_to user.full_name.presence || user.email, user_path(user) %></td>
+            <td><%= user.translated_role %></td>
+            <td><span class="badge <%= user.active? ? "badge--chargee" : "badge--retire" %>"><%= user.active? ? "Actif·ve" : "Inactif·ve" %></span></td>
+            <td class="numeric"><%= @unconfirmed_sessions.fetch(user.id, 0) %></td>
+            <td class="numeric"><%= @unconfirmed_consultations.fetch(user.id, 0) %></td>
+            <td class="numeric"><%= @services_worked_on.fetch(user.id, 0) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</div>

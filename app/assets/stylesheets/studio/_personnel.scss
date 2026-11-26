@@ -1,0 +1,67 @@
+// « Personnel »: the staff list (users/index) and a staff member's page
+// (users/show).
+
+.personnel-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (min-width: 768px) {
+  .personnel-filters {
+    grid-template-columns: repeat(2, minmax(0, 240px));
+  }
+}
+
+// A staff member as a card on a phone; the whole card links to their page.
+.staff-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.staff-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.staff-card__counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  color: var(--text-muted);
+}
+
+// The Activité tab: the period picker, then the totals.
+.activity-period {
+  max-width: 320px;
+}
+
+.stats--activity {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .stats--activity {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.activity-section + .activity-section {
+  margin-top: 8px;
+}
+
+// The account actions under the top card's details.
+.staff-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.staff-actions form {
+  display: flex;
+}
