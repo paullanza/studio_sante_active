@@ -1,18 +1,12 @@
 // Confirmations (confirmations/sessions): filters, then séances grouped by
 // trainer. Each séance (confirmations/_session_frame) is a card on a phone
-// and a row under .confirm-rows__head from 768 px (subgrid), so the columns
+// and a row under .confirm-rows__head from 1100 px (subgrid), so the columns
 // line up across groups. The gold « Confirmer (N) » sticks to the bottom.
 .confirmations__filters {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   align-items: center;
-}
-
-.confirmations__view {
-  margin: 0;
-  padding: 0;
-  border: 0;
 }
 
 .confirmations__earlier {
@@ -125,23 +119,9 @@
   white-space: nowrap;
 }
 
-.confirm-row__actions {
+.confirm-row .seance-card__actions {
   grid-area: act;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px 16px;
-}
-
-.confirm-row__actions:not(:has(> *)) {
-  display: none;
-}
-
-.confirm-row__buttons {
-  display: flex;
-  gap: 20px;
-  margin-left: auto;
+  justify-content: flex-end;
 }
 
 // The gold button stays in reach at the bottom of the screen.
@@ -154,7 +134,7 @@
 
 @media (min-width: 768px) {
   .confirmations__filters {
-    grid-template-columns: minmax(220px, 1fr) minmax(180px, 1fr) minmax(160px, 1fr) auto;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -163,7 +143,7 @@
 @media (min-width: 1100px) {
   .confirm-rows {
     display: grid;
-    grid-template-columns: 32px minmax(0, 1.1fr) 200px 112px 210px minmax(0, 1fr) auto;
+    grid-template-columns: 32px minmax(180px, 280px) 190px 104px minmax(240px, 360px) minmax(0, 1fr) auto;
     column-gap: 16px;
     row-gap: 8px;
   }
@@ -231,7 +211,7 @@
   // One line per bar: label, bar, percentage.
   .confirm-row__usage .service-bar {
     display: grid;
-    grid-template-columns: 52px minmax(0, 1fr) 36px;
+    grid-template-columns: 52px minmax(0, 1fr) 40px;
     align-items: center;
     column-gap: 8px;
   }
@@ -241,32 +221,9 @@
   .confirm-row__usage .service-bar .progress { grid-column: 2; grid-row: 1; }
   .confirm-row__usage .service-bar__pct { grid-column: 3; grid-row: 1; text-align: right; }
 
-  // Packed: « Confirmée le … » over « par … », beside the buttons one above
-  // the other, so the row stays one line of cells high.
-  .confirm-row__actions {
-    flex-wrap: nowrap;
-    justify-content: flex-end;
-    gap: 16px;
-    text-align: right;
-  }
-
-  .confirm-row__confirmed {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .confirm-row__buttons {
-    flex-direction: column;
+  .confirm-row .seance-card__actions {
+    grid-area: auto;
     align-items: flex-end;
-    gap: 4px;
-  }
-
-  .confirm-row__buttons .btn {
-    min-height: 26px;
-  }
-
-  .confirm-row__buttons form {
-    display: flex;
   }
 
   .confirm-row.seance-card--absence,

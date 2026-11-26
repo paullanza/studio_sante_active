@@ -73,18 +73,6 @@ RSpec.describe "Confirmations", type: :request do
       expect(response.body).to include("2 séance(s) non confirmée(s) dans des périodes précédentes")
       expect(response.body).to include(session_confirmations_path(periode: "2026-10-25"))
     end
-
-    it "lists confirmed séances with who confirmed them, « — » when unknown" do
-      by_admin = seance_at(Time.zone.local(2026, 11, 23, 9, 0))
-      Session.confirm([ by_admin.id ], by: create(:user, :admin, first_name: "Ariane", last_name: "Gagnon"))
-      seance_at(Time.zone.local(2026, 11, 24, 9, 0)).update_columns(confirmed: true, confirmed_at: Time.current)
-      sign_in admin
-
-      get session_confirmations_path(vue: "confirmees")
-
-      expect(response.body).to include("par Ariane Gagnon")
-      expect(response.body).to include("par —")
-    end
   end
 
   describe "PATCH /confirmations/seances" do
@@ -127,6 +115,29 @@ RSpec.describe "Confirmations", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.media_type).to eq("text/vnd.turbo-stream.html")
       expect(seance.reload.note).to eq("vu")
+    end
+
+    it "removes the row and updates the trainer's count after « Supprimer »" do
+      seance = seance_at(Time.zone.local(2026, 11, 23, 9, 0))
+      seance_at(Time.zone.local(2026, 11, 24, 9, 0))
+      sign_in admin
+
+      delete session_path(seance), params: { context: "confirmations" },
+                                   headers: { "Accept" => "text/vnd.turbo-stream.html, text/html" }
+
+      expect(Session.exists?(seance.id)).to be(false)
+      expect(response.body).to include(%(action="remove" target="item_session_#{seance.id}"))
+      expect(response.body).to include("1 séance(s)")
+    end
+
+    it "removes the trainer's group with their last séance" do
+      seance = seance_at(Time.zone.local(2026, 11, 23, 9, 0))
+      sign_in admin
+
+      delete session_path(seance), params: { context: "confirmations" },
+                                   headers: { "Accept" => "text/vnd.turbo-stream.html, text/html" }
+
+      expect(response.body).to include(%(target="confirm_section_user_#{trainer.id}"))
     end
 
     it "gives the row back on « Annuler »" do

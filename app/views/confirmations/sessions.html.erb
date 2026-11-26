@@ -1,18 +1,16 @@
 <%# « Confirmations », séances tab (admins). A pay period, the trainer and name
-    filters, then « À confirmer » (grouped by trainer, a checkbox per séance
-    and per trainer, « Tout sélectionner » when several trainers show, one gold
-    « Confirmer (N) ») or « Confirmées » (« Annuler la confirmation » per row).
+    filters, then the period's unconfirmed séances, grouped by trainer: a
+    checkbox per séance and per trainer, « Tout sélectionner » when several
+    trainers show, one gold « Confirmer (N) ».
     The checkboxes belong to the empty #confirm_sessions_form through their
     `form` attribute, so each row's Turbo frame can hold the séance edit card
     (its own form) without nesting forms. %>
 <% content_for :nav_section, "plus" %>
 <% content_for :title, "Confirmations" %>
 <% content_for :page_wide, true %>
-<% to_confirm = @view == "a_confirmer" %>
 <% filters = { periode: @period.to_param, employee_id: @filter_params[:employee_id], q: @filter_params[:q] }.compact %>
 
-<div class="stack confirmations"
-     <% if to_confirm %>data-controller="confirm-selection" data-action="change->confirm-selection#changed"<% end %>>
+<div class="stack confirmations" data-controller="confirm-selection" data-action="change->confirm-selection#changed">
   <div class="page-header">
     <h1>Confirmations</h1>
   </div>
@@ -44,17 +42,6 @@
         <%= search_field_tag :q, @filter_params[:q], id: "q", class: "field__input", placeholder: "Nom", autocomplete: "off" %>
       </label>
     </div>
-    <fieldset class="confirmations__view">
-      <legend class="visually-hidden">Vue</legend>
-      <div class="segmented">
-        <% [ [ "a_confirmer", "À confirmer" ], [ "confirmees", "Confirmées" ] ].each do |value, label| %>
-          <label class="segmented__option">
-            <%= radio_button_tag :vue, value, @view == value, class: "segmented__input" %>
-            <span class="segmented__text"><%= label %>&nbsp;<span class="numeric">(<%= @counts[value] %>)</span></span>
-          </label>
-        <% end %>
-      </div>
-    </fieldset>
     <noscript><button type="submit" class="btn btn--ghost">Filtrer</button></noscript>
   <% end %>
 
@@ -68,40 +55,36 @@
 
   <% if @groups.empty? %>
     <p class="empty-state">
-      <%= to_confirm ? "Aucune séance à confirmer pour cette période." : "Aucune séance confirmée pour cette période." %>
+      Aucune séance à confirmer pour cette période.
     </p>
   <% else %>
-    <% if to_confirm %>
-      <%= form_with url: confirm_session_confirmations_path, method: :patch, id: "confirm_sessions_form",
-            data: { turbo_confirm: "Confirmer les séances sélectionnées?" } do %>
-        <% filters.except(:periode).each do |name, value| %>
-          <%= hidden_field_tag name, value, id: nil %>
-        <% end %>
-        <%= hidden_field_tag :periode, @period.to_param, id: nil %>
+    <%= form_with url: confirm_session_confirmations_path, method: :patch, id: "confirm_sessions_form",
+          data: { turbo_confirm: "Confirmer les séances sélectionnées?" } do %>
+      <% filters.except(:periode).each do |name, value| %>
+        <%= hidden_field_tag name, value, id: nil %>
       <% end %>
-      <% if @groups.size > 1 %>
-        <label class="checkbox confirmations__all">
-          <input type="checkbox" class="checkbox__input" data-confirm-selection-target="all">
-          <span class="checkbox__label">Tout sélectionner</span>
-        </label>
-      <% end %>
+      <%= hidden_field_tag :periode, @period.to_param, id: nil %>
+    <% end %>
+    <% if @groups.size > 1 %>
+      <label class="checkbox confirmations__all">
+        <input type="checkbox" class="checkbox__input" data-confirm-selection-target="all">
+        <span class="checkbox__label">Tout sélectionner</span>
+      </label>
     <% end %>
 
     <div class="confirm-rows">
       <div class="confirm-rows__head" aria-hidden="true">
-        <span></span><span>Client·e et service</span><span>Date</span><span>Résultat</span><span>Utilisation du service</span><span>Note</span><span><%= to_confirm ? "" : "Confirmation" %></span>
+        <span></span><span>Client·e et service</span><span>Date</span><span>Résultat</span><span>Utilisation du service</span><span>Note</span><span></span>
       </div>
       <% @groups.each do |trainer, sessions| %>
-        <section class="confirm-group" aria-labelledby="<%= dom_id(trainer, :confirm_group) %>">
+        <section id="<%= dom_id(trainer, :confirm_section) %>" class="confirm-group" aria-labelledby="<%= dom_id(trainer, :confirm_group) %>">
           <header class="confirm-group__head">
-            <% if to_confirm %>
-              <label class="checkbox confirm-group__check">
-                <input type="checkbox" class="checkbox__input" data-confirm-selection-target="group" data-group="<%= trainer.id %>">
-                <span class="visually-hidden">Sélectionner les séances de <%= trainer.full_name %></span>
-              </label>
-            <% end %>
+            <label class="checkbox confirm-group__check">
+              <input type="checkbox" class="checkbox__input" data-confirm-selection-target="group" data-group="<%= trainer.id %>">
+              <span class="visually-hidden">Sélectionner les séances de <%= trainer.full_name %></span>
+            </label>
             <h2 id="<%= dom_id(trainer, :confirm_group) %>" class="confirm-group__title"><%= trainer.full_name %></h2>
-            <span class="text-muted text-small numeric"><%= sessions.size %> séance(s)</span>
+            <span id="<%= dom_id(trainer, :confirm_count) %>" class="text-muted text-small numeric"><%= sessions.size %> séance(s)</span>
           </header>
           <ul class="list confirm-group__list">
             <% sessions.each do |session| %>
@@ -112,12 +95,10 @@
       <% end %>
     </div>
 
-    <% if to_confirm %>
-      <div class="confirmations__bar">
-        <button type="submit" form="confirm_sessions_form" class="btn btn--primary" disabled data-confirm-selection-target="submit">
-          <span>Confirmer (<span data-confirm-selection-target="count">0</span>)</span><%= button_arrow %>
-        </button>
-      </div>
-    <% end %>
+    <div class="confirmations__bar">
+      <button type="submit" form="confirm_sessions_form" class="btn btn--primary" disabled data-confirm-selection-target="submit">
+        <span>Confirmer (<span data-confirm-selection-target="count">0</span>)</span><%= button_arrow %>
+      </button>
+    </div>
   <% end %>
 </div>

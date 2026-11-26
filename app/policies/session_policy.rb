@@ -22,11 +22,6 @@ class SessionPolicy < ApplicationPolicy
     user.present?
   end
 
-  # Back to « Non confirmée », one séance at a time.
-  def unconfirm?
-    admin_or_above?
-  end
-
   # Pulls new clients from the Fliip API, for when a client is missing from
   # the booking form.
   def refresh_clients?

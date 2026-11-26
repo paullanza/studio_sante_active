@@ -133,7 +133,6 @@ RSpec.describe "Role-based access", type: :request do
         "A1 GET admin/dashboard"             => [ADMINS, -> { get admin_dashboard_path }],
         "A9 GET confirmations/seances"       => [ADMINS, -> { get session_confirmations_path }],
         "A10 PATCH confirmations/seances"    => [ADMINS, -> { patch confirm_session_confirmations_path, params: { session_ids: [session_record.id] } }],
-        "S7 PATCH /sessions/:id/unconfirm"   => [ADMINS, -> { patch unconfirm_session_path(session_record) }],
         "L1 GET /allocations"                => [ADMINS, -> { get allocations_path }],
         "L2 GET /allocations/:id"            => [ADMINS, -> { get allocation_path(service.service_definition) }],
         "L3 PATCH /allocations"              => [ADMINS, -> { patch bulk_update_allocations_path, params: { allocations: { service.service_definition.id => { paid_sessions: 8, free_sessions: 1 } } } }],

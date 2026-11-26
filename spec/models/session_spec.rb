@@ -174,17 +174,6 @@ RSpec.describe Session, type: :model do
     end
   end
 
-  describe "#unconfirm!" do
-    it "clears the confirmation and who made it" do
-      session = create(:session, fliip_service: service, occurred_at: 1.day.ago)
-      described_class.confirm([session.id], by: create(:user, :admin))
-
-      session.reload.unconfirm!
-
-      expect(session.reload).to have_attributes(confirmed: false, confirmed_at: nil, confirmed_by_id: nil)
-    end
-  end
-
   describe ".in_period" do
     it "keeps the séances from Sunday 00:00 to Saturday 23:59 of the period" do
       period = PayPeriod.containing(Date.new(2026, 11, 8))

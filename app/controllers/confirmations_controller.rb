@@ -1,12 +1,9 @@
 # « Confirmations » (admins): before payroll, an admin checks each séance of
-# a pay period against the signature sheet and confirms it. « À confirmer »
-# lists the period's unconfirmed séances by trainer; « Confirmées » the
-# confirmed ones, each with « Annuler la confirmation » (sessions#unconfirm).
+# a pay period against the signature sheet and confirms it. The page lists
+# the period's unconfirmed séances by trainer; confirmed ones leave the list.
 class ConfirmationsController < ApplicationController
   before_action :authenticate_user!
   layout "studio"
-
-  VIEWS = %w[a_confirmer confirmees].freeze
 
   def sessions
     authorize :admin, :session_confirmations?
@@ -14,16 +11,11 @@ class ConfirmationsController < ApplicationController
     @period = PayPeriod.from_param(params[:periode])
     @periods = PayPeriod.recent
     @periods << @period unless @periods.include?(@period)
-    @view = VIEWS.include?(params[:vue]) ? params[:vue] : VIEWS.first
     @filter_params = { employee_id: params[:employee_id].presence, q: params[:q].presence }
     # A deactivated trainer stays in the list while their filter is on.
     @staff = User.selectable.or(User.where(id: @filter_params[:employee_id])).order(:first_name, :last_name)
 
-    in_period = Session.in_period(@period).apply_filters(@filter_params)
-    @counts = { "a_confirmer" => in_period.unconfirmed.count, "confirmees" => in_period.confirmed.count }
-
-    sessions = in_period.public_send(@view == "confirmees" ? :confirmed : :unconfirmed).with_associations
-    sessions = sessions.includes(:confirmed_by) if @view == "confirmees"
+    sessions = Session.in_period(@period).unconfirmed.apply_filters(@filter_params).with_associations
     # Grouped by trainer (by name), oldest séance first in each group.
     @groups = sessions.to_a
                       .sort_by { |s| [ s.occurred_at || Time.zone.at(0), s.id ] }

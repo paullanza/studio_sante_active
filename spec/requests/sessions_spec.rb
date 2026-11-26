@@ -467,34 +467,4 @@ RSpec.describe "Sessions", type: :request do
       expect(flash[:alert]).to eq("Fliip ne répond pas, réessayez plus tard.")
     end
   end
-
-  describe "PATCH /sessions/:id/unconfirm" do
-    let!(:session_record) { create(:session, fliip_service: service) }
-
-    before { Session.confirm([session_record.id], by: create(:user, :admin)) }
-
-    it "lets an admin unconfirm a séance, answering with a stream" do
-      sign_in create(:user, :admin)
-      patch unconfirm_session_path(session_record), headers: { "Accept" => "text/vnd.turbo-stream.html, text/html" }
-
-      expect(response.media_type).to eq("text/vnd.turbo-stream.html")
-      expect(session_record.reload).to have_attributes(confirmed: false, confirmed_at: nil, confirmed_by_id: nil)
-    end
-
-    it "redirects back with a notice for HTML" do
-      sign_in create(:user, :super_admin)
-      patch unconfirm_session_path(session_record)
-
-      expect(response).to redirect_to(session_confirmations_path)
-      expect(flash[:notice]).to eq("Confirmation annulée.")
-    end
-
-    it "refuses a manager" do
-      sign_in create(:user, :manager)
-      patch unconfirm_session_path(session_record)
-
-      expect(session_record.reload).to be_confirmed
-      expect(flash[:alert]).to eq("Non autorisé·e.")
-    end
-  end
 end

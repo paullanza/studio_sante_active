@@ -2,7 +2,7 @@ class SessionsController < ApplicationController
   include BookingPage
 
   before_action :authenticate_user!
-  before_action :set_session, only: [:destroy, :edit, :update, :row, :unconfirm]
+  before_action :set_session, only: [:destroy, :edit, :update, :row]
   before_action :load_staff,  only: [:edit, :update]
 
   OWNER_REQUIRED_MESSAGE = "Veuillez choisir un·e employé·e.".freeze
@@ -87,20 +87,9 @@ class SessionsController < ApplicationController
 
     @session.destroy
     respond_to do |format|
-      format.turbo_stream { render turbo_stream: refreshed_lists }
+      format.turbo_stream { render turbo_stream: confirmations_context? ? removed_confirmation_row : refreshed_lists }
       format.json { head :no_content }
       format.html { redirect_back fallback_location: session_confirmations_path, notice: "Séance supprimée." }
-    end
-  end
-
-  # « Annuler la confirmation » on Confirmations: back to « Non confirmée ».
-  def unconfirm
-    authorize @session
-
-    @session.unconfirm!
-    respond_to do |format|
-      format.turbo_stream { render turbo_stream: turbo_stream.remove(helpers.dom_id(@session, :item)) }
-      format.html { redirect_back fallback_location: session_confirmations_path, notice: "Confirmation annulée." }
     end
   end
 
@@ -177,6 +166,18 @@ class SessionsController < ApplicationController
       turbo_stream.replace(helpers.dom_id(service, :summary), partial: "fliip_services/summary", locals: { service: service }),
       turbo_stream.replace(helpers.dom_id(service, :sessions), partial: "fliip_services/sessions", locals: { service: service, numbered_sessions: numbered }),
       turbo_stream.update(helpers.dom_id(service, :sessions_count), numbered.size.to_s)
+    ]
+  end
+
+  # A séance deleted from Confirmations: its row goes, and its trainer's
+  # count drops (the group goes with its last séance).
+  def removed_confirmation_row
+    left = Session.unconfirmed.in_period(PayPeriod.containing(@session.occurred_at.to_date)).where(user_id: @session.user_id).count
+    return turbo_stream.remove(helpers.dom_id(@session.user, :confirm_section)) if left.zero?
+
+    [
+      turbo_stream.remove(helpers.dom_id(@session, :item)),
+      turbo_stream.update(helpers.dom_id(@session.user, :confirm_count), "#{left} séance(s)")
     ]
   end
 

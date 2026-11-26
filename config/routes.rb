@@ -80,8 +80,7 @@ Rails.application.routes.draw do
   # =====================================================================
   # CONFIRMATIONS (admins, before payroll)
   # ---------------------------------------------------------------------
-  # Séances by pay period: confirm in bulk, or undo one at a time
-  # (sessions#unconfirm).
+  # A pay period's unconfirmed séances: confirm them in bulk.
   # =====================================================================
   get   "confirmations/seances", to: "confirmations#sessions",         as: :session_confirmations
   patch "confirmations/seances", to: "confirmations#confirm_sessions", as: :confirm_session_confirmations
@@ -148,7 +147,6 @@ Rails.application.routes.draw do
   resources :sessions, only: [:create, :destroy, :edit, :update] do
     member do
       get :row
-      patch :unconfirm
     end
   end
 

@@ -271,11 +271,6 @@ class Session < ApplicationRecord
     )
   end
 
-  # Back to « Non confirmée » (an admin, one séance at a time).
-  def unconfirm!
-    update_columns(confirmed: false, confirmed_at: nil, confirmed_by_id: nil)
-  end
-
   # Sequence number within this FliipService & session_type (paid/free)
   # Based on creation time ascending; ties broken by id.
   #

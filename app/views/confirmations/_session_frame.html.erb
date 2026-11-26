@@ -2,20 +2,17 @@
     sessions/_edit_card with context "confirmations"). Saisir's séance card
     in long form: the client and service, when and how long, the outcome, the
     service's Temps and Séances bars with its counts, the note. A card on a
-    phone, a row under .confirm-rows__head from 1100 px. Unconfirmed: a checkbox for
-    #confirm_sessions_form. Confirmed: « Confirmée le … par … » and « Annuler
-    la confirmation ». Locals: session. %>
+    phone, a row under .confirm-rows__head from 1100 px. A checkbox for
+    #confirm_sessions_form, « Modifier » and « Supprimer ». Locals: session. %>
 <% service = session.fliip_service %>
 <%= turbo_frame_tag dom_id(session), class: "seance-frame" do %>
   <article class="card confirm-row seance-card--<%= session.outcome %>">
     <div class="confirm-row__check">
-      <% unless session.confirmed? %>
-        <label class="checkbox">
-          <input type="checkbox" name="session_ids[]" value="<%= session.id %>" form="confirm_sessions_form"
-                 class="checkbox__input" data-confirm-selection-target="item" data-group="<%= session.user_id %>">
-          <span class="visually-hidden">Sélectionner la séance du <%= seance_datetime(session.occurred_at) %></span>
-        </label>
-      <% end %>
+      <label class="checkbox">
+        <input type="checkbox" name="session_ids[]" value="<%= session.id %>" form="confirm_sessions_form"
+               class="checkbox__input" data-confirm-selection-target="item" data-group="<%= session.user_id %>">
+        <span class="visually-hidden">Sélectionner la séance du <%= seance_datetime(session.occurred_at) %></span>
+      </label>
     </div>
     <div class="confirm-row__who">
       <%= link_to session.fliip_user&.full_name.presence || "—", fliip_service_path(session.fliip_service_id),
@@ -48,23 +45,6 @@
     <div class="confirm-row__note text-small">
       <% if session.note.present? %><span class="confirm-row__note-label">Note : </span><%= session.note %><% end %>
     </div>
-    <div class="confirm-row__actions">
-      <% if session.confirmed? %>
-        <span class="confirm-row__confirmed text-muted text-small">
-          <span>Confirmée<%= " le #{l(session.confirmed_at.to_date)}" if session.confirmed_at %></span>
-          <span>par <%= session.confirmed_by&.full_name.presence || "—" %></span>
-        </span>
-      <% end %>
-      <div class="confirm-row__buttons">
-        <% if policy(session).update? %>
-          <%= link_to "Modifier", edit_session_path(session, context: "confirmations"), class: "btn btn--secondary btn--small" %>
-        <% end %>
-        <% if session.confirmed? && policy(session).unconfirm? %>
-          <%= button_to "Annuler la confirmation", unconfirm_session_path(session), method: :patch,
-                class: "btn btn--danger btn--small",
-                form: { data: { turbo_confirm: "Annuler la confirmation de cette séance?" } } %>
-        <% end %>
-      </div>
-    </div>
+    <%= render "sessions/card_actions", session: session, context: "confirmations", stacked: true %>
   </article>
 <% end %>

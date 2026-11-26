@@ -19,8 +19,8 @@ RSpec.describe SessionPolicy, type: :policy do
   end
 
   %i[admin super_admin].each do |role|
-    it "lets #{role == :admin ? 'an admin' : 'the super admin'} edit any session, change its trainer and unconfirm it" do
-      everything = [*open_actions, :edit, :update, :destroy, :change_owner, :unconfirm]
+    it "lets #{role == :admin ? 'an admin' : 'the super admin'} edit any session and change its trainer" do
+      everything = [*open_actions, :edit, :update, :destroy, :change_owner]
 
       expect(described_class.new(user_for(role), confirmed)).to permit_only_actions(*everything)
     end
