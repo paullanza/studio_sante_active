@@ -297,6 +297,17 @@
   }
 }
 
+// A staff member's Activité tab: Confirmations' columns without the checkbox,
+// in the narrower column beside the top card.
+@container (min-width: 900px) {
+  .seance-row--personnel {
+    @include row;
+    display: grid;
+    grid-template-columns: 84px minmax(160px, 1fr) 68px 184px minmax(180px, 240px) minmax(0, 1fr) auto;
+    grid-template-areas: "tag who dur when usage note act";
+  }
+}
+
 // The column names keep their small type in a row (after the rows' rules).
 .seance-row--head > .seance-row__label {
   display: block;

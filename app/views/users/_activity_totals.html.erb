@@ -1,0 +1,13 @@
+<%# The Activité tab's totals, drawn again after an edit or a delete on the
+    tab (StaffActivityStreams). Local: activity (StaffActivity). %>
+<% totals = activity.totals %>
+<div id="<%= dom_id(activity.user, :activity_totals) %>" class="stats stats--activity">
+  <div class="stat"><span class="stat__value numeric"><%= totals.chargees %></span><span class="stat__label">Présent·e</span></div>
+  <div class="stat"><span class="stat__value numeric"><%= totals.absences %></span><span class="stat__label">Absence</span></div>
+  <div class="stat"><span class="stat__value numeric"><%= totals.moins24 %></span><span class="stat__label">-24h</span></div>
+  <div class="stat"><span class="stat__value numeric"><%= format_count(totals.hours) %> h</span><span class="stat__label">heures de séance</span></div>
+  <div class="stat"><span class="stat__value numeric"><%= totals.sessions_confirmed %> / <%= activity.sessions.size %></span><span class="stat__label">séances confirmées</span></div>
+  <div class="stat"><span class="stat__value numeric"><%= totals.consultations_present %></span><span class="stat__label">consultations, présent·e</span></div>
+  <div class="stat"><span class="stat__value numeric"><%= totals.consultations_absent %></span><span class="stat__label">consultations, absent·e</span></div>
+  <div class="stat"><span class="stat__value numeric"><%= totals.consultations_confirmed %> / <%= activity.consultations.size %></span><span class="stat__label">consultations confirmées</span></div>
+</div>

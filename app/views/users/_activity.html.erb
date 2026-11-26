@@ -1,0 +1,50 @@
+<%# The Activité tab: a pay period, its totals, then its séances and
+    consultations, oldest first, editable in place (context "personnel").
+    Locals: user, activity (StaffActivity). %>
+<div class="stack">
+  <%= form_with url: user_path(user), method: :get, class: "activity-period",
+        data: { controller: "autosubmit", action: "change->autosubmit#submit", turbo_action: "replace" } do %>
+    <%= hidden_field_tag :tab, "activite", id: nil %>
+    <div class="field field--compact">
+      <label class="field__box" for="periode">
+        <span class="field__label">Période</span>
+        <%= select_tag :periode, options_for_select(@periods.map { |p| [ p.label, p.to_param ] }, activity.period.to_param),
+              id: "periode", class: "field__input" %>
+      </label>
+    </div>
+    <noscript><button type="submit" class="btn btn--ghost">Afficher</button></noscript>
+  <% end %>
+
+  <%= render "users/follow_up", row: @follow_up, renewing: @renewing %>
+
+  <%= render "users/activity_totals", activity: activity %>
+
+  <section class="activity-section" aria-labelledby="activite-seances">
+    <h2 id="activite-seances">Séances (<%= activity.sessions.size %>)</h2>
+    <% if activity.sessions.any? %>
+      <div class="confirm-rows">
+        <%= render "sessions/seance_head", context: "personnel" %>
+        <ul class="list">
+          <% activity.sessions.each do |session| %>
+            <li id="<%= dom_id(session, :item) %>"><%= render "sessions/seance", session: session, context: "personnel", trainer_id: user.id %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% else %>
+      <p class="empty-state">Aucune séance pendant cette période.</p>
+    <% end %>
+  </section>
+
+  <section class="activity-section" aria-labelledby="activite-consultations">
+    <h2 id="activite-consultations">Consultations (<%= activity.consultations.size %>)</h2>
+    <% if activity.consultations.any? %>
+      <ul class="list card-grid">
+        <% activity.consultations.each do |consultation| %>
+          <li id="<%= dom_id(consultation, :item) %>"><%= render "consultations/card", consultation: consultation, context: "personnel" %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="empty-state">Aucune consultation pendant cette période.</p>
+    <% end %>
+  </section>
+</div>

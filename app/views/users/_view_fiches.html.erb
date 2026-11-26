@@ -1,0 +1,30 @@
+<%# « Fiches »: a card per staff member: the period's séances, consultations
+    and active clients, the outcome bar, and their flags as chips.
+    Local: overview (StaffOverview). %>
+<ul class="list staff-cards">
+  <% overview.rows.each do |row| %>
+    <li>
+      <%= link_to user_path(row.user), class: "card staff-card" do %>
+        <span class="staff-card__head">
+          <span class="staff-card__initials" aria-hidden="true"><%= [ row.user.first_name, row.user.last_name ].compact_blank.map { |n| n[0] }.join.upcase %></span>
+          <span class="staff-card__who">
+            <strong><%= row.user.full_name.presence || row.user.email %></strong>
+            <span class="text-muted text-small"><%= row.user.translated_role %> · dernière séance <%= last_session_label(row) %></span>
+          </span>
+        </span>
+        <span class="stats staff-card__stats">
+          <span class="stat"><span class="stat__value numeric"><%= row.sessions %></span><span class="stat__label">séances · <%= format_count(row.hours) %> h</span></span>
+          <span class="stat"><span class="stat__value numeric"><%= row.consultations %></span><span class="stat__label">consult. · <%= sales_label(row) %></span></span>
+          <span class="stat"><span class="stat__value numeric"><%= row.clients %></span><span class="stat__label">clients actifs</span></span>
+        </span>
+        <%= outcome_bar(row) %>
+        <span class="staff-card__flags">
+          <% if row.renewals.positive? %><span class="flag flag--warning"><%= row.renewals %> renouvellement(s)</span><% end %>
+          <% if row.inactive? %><span class="flag flag--danger">Dernière séance <%= last_session_label(row) %></span><% end %>
+          <% if row.falling? %><span class="flag flag--danger">Séances en baisse</span><% end %>
+          <% if row.unconfirmed.positive? %><span class="flag flag--unconfirmed"><%= row.unconfirmed %> non confirmée(s)</span><% end %>
+        </span>
+      <% end %>
+    </li>
+  <% end %>
+</ul>

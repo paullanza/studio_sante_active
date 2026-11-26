@@ -1,45 +1,58 @@
+# « Personnel » (managers and above): the staff list, and a page per staff
+# member with their details, their activity per pay period and the services
+# they work on. Every role reaches their own page. The member routes below
+# (role, active status, profile edit) keep their old pages until rebuilt.
 class UsersController < ApplicationController
   before_action :authenticate_user!
   before_action :set_user, only: [:show, :edit, :update, :make_employee, :make_manager, :make_admin, :activate, :deactivate]
+  layout "studio", only: [:index, :show]
 
-  # GET /users/:id
+  STATUSES = %w[actifs inactifs tous].freeze
+  TABS = %w[activite services].freeze
+  # Services tab: active, planned and suspended by default, as on Mes services.
+  DEFAULT_SERVICE_STATUSES = %w[A P S].freeze
+
+  # Two views of the same figures: « Tableau » (the renewals to follow up,
+  # then one row each, with the trend) and « Fiches » (a card each).
+  VIEWS = %w[tableau fiches].freeze
+
+  def index
+    authorize User
+
+    @view = VIEWS.include?(params[:vue]) ? params[:vue] : "tableau"
+    @status = STATUSES.include?(params[:statut]) ? params[:statut] : "actifs"
+    @role = User.roles.key?(params[:role]) ? params[:role] : nil
+    @period = PayPeriod.from_param(params[:periode])
+    @periods = PayPeriod.recent
+    @periods << @period unless @periods.include?(@period)
+
+    users = policy_scope(User)
+    users = users.where(active: @status == "actifs") unless @status == "tous"
+    users = users.where(role: @role) if @role
+    @overview = StaffOverview.new(users.order(role: :desc, last_name: :asc, first_name: :asc), @period)
+  end
+
   def show
     authorize @user
 
-    # Services this staff user has touched (sessions or adjustments)
-    svc_ids_from_sessions = Session.where(user_id: @user.id).distinct.pluck(:fliip_service_id)
-    svc_ids_from_adjusts  = ServiceUsageAdjustment.where(user_id: @user.id).distinct.pluck(:fliip_service_id)
-    svc_ids               = (svc_ids_from_sessions + svc_ids_from_adjusts).compact.uniq
-
-    # Build visible statuses from params (defaults: A, P, S)
-    statuses = %w[A P S]
-    statuses << "I" if params[:show_inactive]  == "1"
-    statuses << "C" if params[:show_cancelled] == "1"
-    statuses -= ["S"] if params[:hide_stopped] == "1"
-    statuses.uniq!
-
-    @services_for_user = FliipService
-      .where(id: svc_ids)
-      .by_statuses(statuses)
-      .includes(:fliip_user, :service_definition, :service_usage_adjustments)
-      .order(expire_date: :asc)
-
-    @unconfirmed_sessions = Session
-      .where(user_id: @user.id, confirmed: [false, nil])
-      .present_value(params[:present])
-      .of_type(params[:session_type])
-      .includes(:fliip_user, :fliip_service)
-      .order_by_occurred_at_desc
-
-    @consultations_for_user = Consultation
-      .where(user_id: @user.id)
-      .with_associations
-      .order_by_occurred_at_desc
-
-    if params[:show_confirmed] == "1"
-      @consultations_for_user = @consultations_for_user.confirmed
+    @tab = TABS.include?(params[:tab]) ? params[:tab] : "activite"
+    if @tab == "activite"
+      @period = PayPeriod.from_param(params[:periode])
+      @periods = PayPeriod.recent
+      @periods << @period unless @periods.include?(@period)
+      @activity = StaffActivity.new(@user, @period)
+      FliipService.preload_usage(@activity.sessions.map(&:fliip_service))
+      @follow_up = StaffOverview.new([ @user ], @period).rows.first
+      @renewing = StaffOverview.renewing_services(@user).to_a
     else
-      @consultations_for_user = @consultations_for_user.unconfirmed
+      @show_inactive  = params[:inactifs] == "1"
+      @show_cancelled = params[:annules] == "1"
+      statuses = DEFAULT_SERVICE_STATUSES.dup
+      statuses << "I" if @show_inactive
+      statuses << "C" if @show_cancelled
+      @services = FliipService.worked_on_by(@user).by_statuses(statuses)
+                              .includes(:fliip_user, :service_definition).ending_soonest_first.to_a
+      FliipService.preload_usage(@services)
     end
   end
 
@@ -54,10 +67,8 @@ class UsersController < ApplicationController
     if @user.update(permitted_attributes(@user))
       redirect_to user_path(@user), notice: "User updated."
     else
-      # Rebuild show data so the page re-renders fully with errors
-      show
       flash.now[:alert] = @user.errors.full_messages.to_sentence
-      render :show, status: :unprocessable_content
+      render :edit, status: :unprocessable_content
     end
   end
 

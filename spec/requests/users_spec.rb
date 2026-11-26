@@ -53,6 +53,141 @@ RSpec.describe "Users", type: :request do
     end
   end
 
+  describe "GET /personnel" do
+    def listed_ids(view = "tableau")
+      selector = view == "tableau" ? "table.personnel-table tbody tr td:first-child a" : "a.staff-card"
+      Nokogiri::HTML(response.body).css(selector).map { |a| a["href"] }
+    end
+
+    %i[manager admin super_admin].each do |viewer|
+      it "opens each view for #{viewer}" do
+        sign_in everyone[viewer]
+
+        %w[tableau fiches].each do |view|
+          get users_path(vue: view)
+          expect(response).to have_http_status(:ok), view
+        end
+      end
+    end
+
+    it "sends an employee back with the alert" do
+      sign_in employee
+      get users_path
+
+      expect(response).to redirect_to(authenticated_root_path)
+    end
+
+    it "lists everyone but the super admin to a manager, active by default" do
+      colleague.update!(active: false)
+      sign_in manager
+
+      get users_path(vue: "tableau")
+      # The list is only visible in the markup.
+      expect(listed_ids).to include(user_path(employee), user_path(other_manager), user_path(admin))
+      expect(listed_ids).not_to include(user_path(super_admin), user_path(colleague))
+
+      get users_path(vue: "fiches", statut: "inactifs")
+      expect(listed_ids("fiches")).to eq([ user_path(colleague) ])
+
+      get users_path(vue: "tableau", statut: "tous", role: "manager")
+      expect(listed_ids).to contain_exactly(user_path(manager), user_path(other_manager))
+    end
+
+    it "lists who has renewals coming up above « Tableau », its default view" do
+      service = create(:fliip_service, purchase_status: "A", expire_date: 10.days.from_now.to_date)
+      create(:service_usage_adjustment, fliip_service: service, user: employee)
+      sign_in admin
+
+      get users_path
+
+      card = Nokogiri::HTML(response.body).at_css("section[aria-labelledby=renouvellements]")
+      expect(card.css("a").map { |a| a["href"] }).to eq([ user_path(employee) ])
+    end
+  end
+
+  describe "a staff member's page" do
+    before { travel_to Time.zone.local(2026, 11, 26, 12, 0) }
+
+    let(:service) { create(:fliip_service, service_definition: create(:service_definition, paid_sessions: 20, free_sessions: 5)) }
+
+    def seance(time, **attrs)
+      create(:session, fliip_service: service, user: employee, **attrs).tap { |s| s.update_columns(occurred_at: time) }
+    end
+
+    def stats
+      Nokogiri::HTML(response.body).css("#activity_totals_user_#{employee.id} .stat").to_h do |stat|
+        [ stat.at_css(".stat__label").text.strip, stat.at_css(".stat__value").text.strip ]
+      end
+    end
+
+    it "totals the period's séances by outcome and in hours, and its consultations" do
+      seance(Time.zone.local(2026, 11, 23, 9, 0))
+      seance(Time.zone.local(2026, 11, 23, 10, 0), duration: 0.5)
+      seance(Time.zone.local(2026, 11, 24, 9, 0), present: false)
+      seance(Time.zone.local(2026, 11, 25, 9, 0)).update_columns(session_type: "paid", present: false, confirmed: true)
+      create(:consultation, user: employee, occurred_at: Time.zone.local(2026, 11, 24, 15, 0), present: false)
+      sign_in manager
+
+      get user_path(employee)
+
+      expect(stats).to include("Présent·e" => "2", "Absence" => "1", "-24h" => "1", "heures de séance" => "3,5 h",
+                               "séances confirmées" => "1 / 4", "consultations, absent·e" => "1")
+    end
+
+    it "keeps each period to Sunday through Saturday" do
+      seance(Time.zone.local(2026, 11, 21, 23, 0))
+      seance(Time.zone.local(2026, 11, 22, 0, 30))
+      sign_in admin
+
+      get user_path(employee)
+      expect(stats["Présent·e"]).to eq("1")
+
+      get user_path(employee, periode: "2026-11-08")
+      expect(stats["Présent·e"]).to eq("1")
+    end
+
+    it "lists the services they work on in the Services tab" do
+      seance(Time.zone.local(2026, 11, 23, 9, 0))
+      sign_in employee
+
+      get user_path(employee, tab: "services")
+
+      expect(response.body).to include(fliip_service_path(service))
+    end
+
+    it "redraws the totals after a séance is edited on the page" do
+      record = seance(Time.zone.local(2026, 11, 23, 9, 0))
+      sign_in admin
+
+      patch session_path(record), params: { context: "personnel", trainer_id: employee.id,
+                                            session: { note: "x", present: "0", duration: "1.0", date: "2026-11-23", time: "09:00" } },
+                                  headers: { "Accept" => "text/vnd.turbo-stream.html, text/html" }
+
+      expect(response.body).to include(%(target="activity_totals_user_#{employee.id}"))
+    end
+
+    it "never draws another staff member's totals for an employee" do
+      record = seance(Time.zone.local(2026, 11, 23, 9, 0))
+      sign_in employee
+
+      patch session_path(record), params: { context: "personnel", trainer_id: manager.id,
+                                            session: { note: "x", present: "1", duration: "1.0", date: "2026-11-23", time: "09:00" } },
+                                  headers: { "Accept" => "text/vnd.turbo-stream.html, text/html" }
+
+      expect(response.body).not_to include("activity_totals_user_#{manager.id}")
+      expect(response.body).to include("activity_totals_user_#{employee.id}")
+    end
+
+    it "redraws the totals after a consultation is deleted on the page" do
+      consultation = create(:consultation, user: employee, occurred_at: Time.zone.local(2026, 11, 24, 15, 0))
+      sign_in admin
+
+      delete consultation_path(consultation), params: { context: "personnel" }, headers: { "Accept" => "text/vnd.turbo-stream.html, text/html" }
+
+      expect(response.body).to include(%(target="activity_totals_user_#{employee.id}"))
+    end
+  end
+
   describe "editing profiles" do
     {
       employee: %i[employee],

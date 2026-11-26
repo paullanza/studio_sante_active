@@ -1,0 +1,269 @@
+// « Personnel »: the staff list in its three views (users/index, users/_view_*)
+// and a staff member's page (users/show).
+
+.personnel__bar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.personnel-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.personnel-filters > .field:first-of-type {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 1024px) {
+  .personnel__bar {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .personnel-filters {
+    grid-template-columns: 240px 160px 160px;
+  }
+
+  .personnel-filters > .field:first-of-type {
+    grid-column: auto;
+  }
+}
+
+.section-label {
+  margin: 0 0 8px;
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--brand-light);
+}
+
+// The period's séances by outcome, and the séances-per-week trend (UsersHelper).
+.outcome-bar {
+  display: block;
+  width: 100%;
+  max-width: 180px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-2);
+}
+
+.outcome-bar__chargee { fill: var(--badge-chargee-fg); }
+.outcome-bar__absence { fill: var(--badge-absence-fg); }
+.outcome-bar__moins24 { fill: var(--badge-moins24-fg); }
+
+.trend {
+  display: block;
+  width: 77px;
+  height: 24px;
+}
+
+.trend__bar { fill: var(--border-strong); }
+.trend__bar--empty { fill: var(--border); }
+.trend__bar--now { fill: var(--accent); }
+
+// A flag: something to follow up, as a pill.
+.flag {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.flag--warning { background: var(--badge-warning-bg); color: var(--badge-warning-fg); }
+.flag--danger { background: var(--badge-moins24-bg); color: var(--badge-moins24-fg); }
+.flag--unconfirmed { background: var(--badge-unconfirmed-bg); color: var(--badge-unconfirmed-fg); }
+
+// A follow-up card: renewals above « Tableau », and on a staff member's page.
+.follow-up__card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.follow-up__head {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.follow-up__count {
+  font-family: var(--font-heading);
+  font-size: 26px;
+}
+
+.follow-up__card--warning .follow-up__head { color: var(--badge-warning-fg); }
+.follow-up__card--danger .follow-up__head { color: var(--badge-moins24-fg); }
+.follow-up__card--unconfirmed .follow-up__head { color: var(--badge-unconfirmed-fg); }
+.follow-up__card.is-empty .follow-up__head { color: var(--text-muted); }
+
+.follow-up__people {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.follow-up__people li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+
+// The renewals card lists people in columns from tablet up.
+@media (min-width: 768px) {
+  .follow-up__people--columns {
+    columns: 2;
+    column-gap: 32px;
+  }
+
+  .follow-up__people--columns li {
+    break-inside: avoid;
+  }
+}
+
+@media (min-width: 1280px) {
+  .follow-up__people--columns {
+    columns: 3;
+  }
+}
+
+// « Tableau »: sideways scroll on a narrow screen.
+.table-scroll {
+  overflow-x: auto;
+}
+
+.personnel-table {
+  min-width: 1000px;
+}
+
+.personnel-table td {
+  vertical-align: middle;
+}
+
+.personnel-table__sub {
+  display: block;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.personnel-table .outcome-bar {
+  margin-top: 4px;
+}
+
+// « Fiches »: a card per staff member; the whole card links to their page.
+// One column on a phone, as many 340 px cards as fit from tablet up.
+.staff-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+@media (min-width: 768px) {
+  .staff-cards {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  }
+}
+
+.staff-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.staff-card__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.staff-card__initials {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: var(--on-brand);
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+.staff-card__who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.staff-card .outcome-bar {
+  max-width: none;
+}
+
+.staff-card__flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+// The Activité tab: the period picker, « À suivre » for this person, the totals.
+.activity-period {
+  max-width: 320px;
+}
+
+.stats--activity {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .stats--activity {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.activity-section + .activity-section {
+  margin-top: 8px;
+}
+
+.person-follow-up {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.person-follow-up__trend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.person-follow-up__trend .trend {
+  width: 154px;
+  height: 36px;
+}
+
+// The account actions under the top card's details.
+.staff-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.staff-actions form {
+  display: flex;
+}

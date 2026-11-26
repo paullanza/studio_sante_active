@@ -1,0 +1,53 @@
+<%# « Tableau »: the renewals to follow up, then one row per staff member with
+    the period's figures, the 8-week trend and their flags in place. Scrolls
+    sideways on a phone. Local: overview (StaffOverview). %>
+<% renewals = overview.renewals %>
+<section class="follow-up__card follow-up__card--warning<%= " is-empty" if renewals.empty? %>" aria-labelledby="renouvellements">
+  <h2 id="renouvellements" class="follow-up__head">
+    <span class="follow-up__count numeric"><%= renewals.sum(&:renewals) %></span> renouvellement(s) à suivre d'ici <%= StaffOverview::RENEWAL_WINDOW.in_days.to_i %> jours
+  </h2>
+  <% if renewals.any? %>
+    <ul class="follow-up__people follow-up__people--columns">
+      <% renewals.each do |row| %>
+        <li><%= link_to row.user.full_name, user_path(row.user) %><span class="text-muted numeric"><%= row.renewals %> service(s)</span></li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="text-muted text-small">Aucun service de leurs clients ne se termine bientôt.</p>
+  <% end %>
+</section>
+
+<div class="table-scroll">
+  <table class="table personnel-table">
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Séances (période)</th>
+        <th class="numeric">Heures</th>
+        <th><%= StaffOverview::TREND_WEEKS %> dernières semaines</th>
+        <th>Consultations</th>
+        <th class="numeric">Clients actifs</th>
+        <th class="numeric">Fin ≤ 30 j</th>
+        <th>Dernière séance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% overview.rows.each do |row| %>
+        <tr>
+          <td><%= link_to row.user.full_name.presence || row.user.email, user_path(row.user) %><span class="personnel-table__sub"><%= row.user.translated_role %><%= " · inactif·ve" unless row.user.active? %></span></td>
+          <td>
+            <span class="numeric"><strong><%= row.sessions %></strong> <span class="text-muted text-small"><%= row.chargees %> prés. · <%= row.absences %> abs. · <%= row.moins24 %> -24h</span></span>
+            <%= outcome_bar(row) %>
+          </td>
+          <td class="numeric"><%= format_count(row.hours) %> h</td>
+          <td><%= trend_sparkline(row.trend) %><% if row.falling? %><span class="flag flag--danger">En baisse</span><% end %></td>
+          <td class="numeric"><%= row.consultations %><span class="personnel-table__sub"><%= sales_label(row) %></span></td>
+          <td class="numeric"><%= row.clients %></td>
+          <td class="numeric"><span class="<%= "flag flag--warning" if row.renewals.positive? %>"><%= row.renewals %></span></td>
+          <td><span class="<%= "flag flag--danger" if row.inactive? %>"><%= last_session_label(row) %></span></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+<p class="text-muted text-small">Tendance : séances par semaine, la dernière en or. « Fin ≤ 30 j » : les services actifs de leurs clients qui se terminent bientôt.</p>
