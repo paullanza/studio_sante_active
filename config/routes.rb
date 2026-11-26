@@ -78,13 +78,12 @@ Rails.application.routes.draw do
   patch "admin/signup_codes/:id/deactivate",  to: "admin#deactivate_signup_code", as: :deactivate_admin_signup_code
 
   # =====================================================================
-  # ADMIN — SESSION CONFIRMATION WORKFLOW
+  # CONFIRMATIONS (admins, before payroll)
   # ---------------------------------------------------------------------
-  # Used during payroll cycles: list unconfirmed sessions and perform a
-  # bulk confirmation action across selected records.
+  # A pay period's unconfirmed séances: confirm them in bulk.
   # =====================================================================
-  get   "admin/unconfirmed_sessions", to: "admin#unconfirmed_sessions", as: :admin_unconfirmed_sessions
-  patch "admin/confirm_sessions",     to: "admin#confirm_sessions",     as: :admin_confirm_sessions
+  get   "confirmations/seances", to: "confirmations#sessions",         as: :session_confirmations
+  patch "confirmations/seances", to: "confirmations#confirm_sessions", as: :confirm_session_confirmations
 
   # =====================================================================
   # ADMIN — CONSULTATION CONFIRMATION WORKFLOW

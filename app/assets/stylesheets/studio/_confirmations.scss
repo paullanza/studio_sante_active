@@ -1,0 +1,233 @@
+// Confirmations (confirmations/sessions): filters, then séances grouped by
+// trainer. Each séance (confirmations/_session_frame) is a card on a phone
+// and a row under .confirm-rows__head from 1100 px (subgrid), so the columns
+// line up across groups. The gold « Confirmer (N) » sticks to the bottom.
+.confirmations__filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+
+.confirmations__earlier {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--badge-warning-fg);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.confirm-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.confirm-group__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  padding-top: 8px;
+}
+
+.confirm-group__title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 18px;
+}
+
+.confirm-group__check {
+  min-height: 0;
+}
+
+.confirm-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.confirm-rows__head {
+  display: none;
+}
+
+// On a phone, Saisir's séance card with a checkbox: the client and service
+// beside the box, when under both, on one line; the outcome over the bars on the right; the note and the
+// buttons underneath.
+.confirm-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 112px;
+  grid-template-areas:
+    "check who     outcome"
+    "when  when    usage"
+    "note  note    note"
+    "act   act     act";
+  align-items: start;
+  gap: 4px 12px;
+  padding: 10px 14px;
+}
+
+.confirm-row__check { grid-area: check; }
+.confirm-row__who { grid-area: who; display: flex; flex-direction: column; min-width: 0; }
+.confirm-row__when { grid-area: when; display: flex; flex-wrap: wrap; column-gap: 4px; font-size: 13px; }
+.confirm-row__by { flex-basis: 100%; }
+.confirm-row__when strong,
+.confirm-row__duration { white-space: nowrap; }
+.confirm-row__note { grid-area: note; color: var(--text-muted); overflow-wrap: anywhere; }
+.confirm-row__note:empty { display: none; }
+.confirm-row__note-label { color: var(--text); font-weight: 700; }
+
+.confirm-row__client {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.confirm-row__client:hover {
+  color: var(--brand-light);
+}
+
+.confirm-row__service {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.confirm-row__outcome {
+  grid-area: outcome;
+  justify-self: end;
+}
+
+// The service's Temps and Séances bars and its counts (fliip_services/_bars).
+.confirm-row__usage {
+  grid-area: usage;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.confirm-row__usage .service-bars { gap: 4px; }
+.confirm-row__usage .service-bar { gap: 2px; }
+.confirm-row__usage .service-bar__label { font-size: 11px; }
+.confirm-row__usage .service-bar .progress { height: 5px; }
+
+.confirm-row__counts {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.confirm-row .seance-card__actions {
+  grid-area: act;
+  justify-content: flex-end;
+}
+
+// The gold button stays in reach at the bottom of the screen.
+.confirmations__bar {
+  position: sticky;
+  bottom: calc(12px + var(--safe-bottom, 0px));
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (min-width: 768px) {
+  .confirmations__filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+// From 1100 px a row per séance under .confirm-rows__head, in subgrid so the
+// columns line up across trainer groups.
+@media (min-width: 1100px) {
+  .confirm-rows {
+    display: grid;
+    grid-template-columns: 32px minmax(180px, 280px) 190px 104px minmax(240px, 360px) minmax(0, 1fr) auto;
+    column-gap: 16px;
+    row-gap: 8px;
+  }
+
+  .confirm-rows__head,
+  .confirm-group,
+  .confirm-group__list,
+  .confirm-group__list > li,
+  .confirm-group__list .seance-frame,
+  .confirm-row {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+  }
+
+  .confirm-group {
+    row-gap: 8px;
+  }
+
+  .confirm-group__head {
+    grid-column: 1 / -1;
+    padding-left: 15px;
+  }
+
+  // A size container inside nested subgrids crashes Chromium's layout. The
+  // edit card is a container of its own, so its frame needn't be one.
+  .confirm-group__list .seance-frame {
+    container-type: normal;
+  }
+
+  // An edit card in a row's frame takes the row's whole width.
+  .confirm-group__list .seance-frame > .seance-edit {
+    grid-column: 1 / -1;
+  }
+
+  .confirm-rows__head {
+    padding: 0 15px;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .confirm-row {
+    grid-template-areas: none;
+    align-items: center;
+    min-height: 56px;
+    padding: 8px 14px;
+  }
+
+  .confirm-row > * {
+    grid-area: auto;
+  }
+
+  .confirm-row__when {
+    flex-direction: column;
+    font-size: 14px;
+  }
+
+  .confirm-row__sep { display: none; }
+  .confirm-row__duration { color: var(--text-muted); font-size: 13px; }
+  .confirm-row__by { font-size: 13px; }
+  .confirm-row__outcome { justify-self: start; }
+  .confirm-row__note:empty { display: block; }
+
+  // One line per bar: label, bar, percentage.
+  .confirm-row__usage .service-bar {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) 40px;
+    align-items: center;
+    column-gap: 8px;
+  }
+
+  .confirm-row__usage .service-bar__label { display: contents; }
+  .confirm-row__usage .service-bar__label > span:first-child { grid-column: 1; }
+  .confirm-row__usage .service-bar .progress { grid-column: 2; grid-row: 1; }
+  .confirm-row__usage .service-bar__pct { grid-column: 3; grid-row: 1; text-align: right; }
+
+  .confirm-row .seance-card__actions {
+    grid-area: auto;
+    align-items: flex-end;
+  }
+
+  .confirm-row.seance-card--absence,
+  .confirm-row.seance-card--moins24 {
+    padding-left: 11px;
+  }
+}

@@ -87,9 +87,9 @@ class SessionsController < ApplicationController
 
     @session.destroy
     respond_to do |format|
-      format.turbo_stream { render turbo_stream: refreshed_lists }
+      format.turbo_stream { render turbo_stream: confirmations_context? ? removed_confirmation_row : refreshed_lists }
       format.json { head :no_content }
-      format.html { redirect_back fallback_location: admin_unconfirmed_sessions_path, notice: "Séance supprimée." }
+      format.html { redirect_back fallback_location: session_confirmations_path, notice: "Séance supprimée." }
     end
   end
 
@@ -105,9 +105,14 @@ class SessionsController < ApplicationController
 
   private
 
-  # Where the séance is shown: Saisir's latest séances, or the Service page.
+  # Where the séance is shown: Saisir's latest séances, Confirmations, or the
+  # Service page.
   def saisir_context?
     params[:context] == "saisir"
+  end
+
+  def confirmations_context?
+    params[:context] == "confirmations"
   end
 
   # The new form sends session[duration]; the old table row sends half_hour.
@@ -127,9 +132,11 @@ class SessionsController < ApplicationController
     end
   end
 
-  # The séance's card in its frame: a latest-séance row on Saisir, else the
-  # Service page card with its number.
+  # The séance's card in its frame: its row on Confirmations, a latest-séance
+  # row on Saisir, else the Service page card with its number.
   def render_frame_card
+    return render partial: "confirmations/session_frame", locals: { session: @session } if confirmations_context?
+
     if saisir_context?
       render partial: "sessions/recent_frame", locals: { session: @session, trainer_id: params[:trainer_id] }
     else
@@ -142,6 +149,10 @@ class SessionsController < ApplicationController
   # A changed date can reorder the Service page's séances and their numbers, so
   # the whole list is drawn again.
   def refreshed_lists
+    if confirmations_context?
+      return turbo_stream.replace(helpers.dom_id(@session), partial: "confirmations/session_frame", locals: { session: @session })
+    end
+
     if saisir_context?
       trainer = recent_trainer
       return turbo_stream.replace("recent_sessions", partial: "bookings/recent_sessions",
@@ -155,6 +166,18 @@ class SessionsController < ApplicationController
       turbo_stream.replace(helpers.dom_id(service, :summary), partial: "fliip_services/summary", locals: { service: service }),
       turbo_stream.replace(helpers.dom_id(service, :sessions), partial: "fliip_services/sessions", locals: { service: service, numbered_sessions: numbered }),
       turbo_stream.update(helpers.dom_id(service, :sessions_count), numbered.size.to_s)
+    ]
+  end
+
+  # A séance deleted from Confirmations: its row goes, and its trainer's
+  # count drops (the group goes with its last séance).
+  def removed_confirmation_row
+    left = Session.unconfirmed.in_period(PayPeriod.containing(@session.occurred_at.to_date)).where(user_id: @session.user_id).count
+    return turbo_stream.remove(helpers.dom_id(@session.user, :confirm_section)) if left.zero?
+
+    [
+      turbo_stream.remove(helpers.dom_id(@session, :item)),
+      turbo_stream.update(helpers.dom_id(@session.user, :confirm_count), "#{left} séance(s)")
     ]
   end
 
@@ -180,7 +203,7 @@ class SessionsController < ApplicationController
     respond_to do |format|
       format.turbo_stream { head :forbidden }
       format.json { head :forbidden }
-      format.html { redirect_back fallback_location: admin_unconfirmed_sessions_path, alert: "Non autorisé·e." }
+      format.html { redirect_back fallback_location: session_confirmations_path, alert: "Non autorisé·e." }
     end
   end
 

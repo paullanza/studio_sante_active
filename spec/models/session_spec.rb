@@ -156,18 +156,35 @@ RSpec.describe Session, type: :model do
   end
 
   describe ".confirm" do
-    it "confirms only unconfirmed sessions and returns the count" do
+    let(:admin) { create(:user, :admin) }
+
+    it "confirms only unconfirmed sessions, records who did it, and returns the count" do
       first  = create(:session, fliip_service: service, occurred_at: 1.day.ago)
       second = create(:session, fliip_service: service, occurred_at: 2.days.ago)
       second.update_columns(confirmed: true)
 
-      expect(described_class.confirm([first.id, second.id])).to eq(1)
-      expect(first.reload).to be_confirmed
+      expect(described_class.confirm([first.id, second.id], by: admin)).to eq(1)
+      expect(first.reload).to have_attributes(confirmed: true, confirmed_by: admin)
       expect(first.confirmed_at).to be_present
+      expect(second.reload.confirmed_by).to be_nil
     end
 
     it "returns 0 for no ids" do
-      expect(described_class.confirm([])).to eq(0)
+      expect(described_class.confirm([], by: admin)).to eq(0)
+    end
+  end
+
+  describe ".in_period" do
+    it "keeps the séances from Sunday 00:00 to Saturday 23:59 of the period" do
+      period = PayPeriod.containing(Date.new(2026, 11, 8))
+      roomy = create(:fliip_service, service_definition: create(:service_definition, paid_sessions: 10, free_sessions: 0))
+      at = ->(time) { create(:session, fliip_service: roomy).tap { |s| s.update_columns(occurred_at: time) } }
+      inside_first = at.call(Time.zone.local(2026, 11, 8, 0, 0))
+      inside_last = at.call(Time.zone.local(2026, 11, 21, 23, 30))
+      at.call(Time.zone.local(2026, 11, 7, 23, 30))
+      at.call(Time.zone.local(2026, 11, 22, 0, 0))
+
+      expect(described_class.in_period(period)).to contain_exactly(inside_first, inside_last)
     end
   end
 

@@ -244,7 +244,7 @@ RSpec.describe "Sessions", type: :request do
       expect(response).to have_http_status(:ok)
 
       get edit_session_path(confirmed)
-      expect(response).to redirect_to(admin_unconfirmed_sessions_path)
+      expect(response).to redirect_to(session_confirmations_path)
       expect(flash[:alert]).to eq("Non autorisé·e.")
     end
 
@@ -465,26 +465,6 @@ RSpec.describe "Sessions", type: :request do
 
       expect(response).to redirect_to(new_seance_path)
       expect(flash[:alert]).to eq("Fliip ne répond pas, réessayez plus tard.")
-    end
-  end
-
-  describe "PATCH /admin/confirm_sessions" do
-    let!(:session_record) { create(:session, fliip_service: service) }
-
-    it "lets admins and the super admin confirm sessions" do
-      sign_in create(:user, :super_admin)
-      patch admin_confirm_sessions_path, params: { session_ids: [session_record.id] }
-
-      expect(session_record.reload).to be_confirmed
-      expect(flash[:notice]).to eq("1 session confirmed.")
-    end
-
-    it "refuses employees" do
-      sign_in employee
-      patch admin_confirm_sessions_path, params: { session_ids: [session_record.id] }
-
-      expect(session_record.reload).not_to be_confirmed
-      expect(response).to redirect_to(authenticated_root_path)
     end
   end
 end

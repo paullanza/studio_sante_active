@@ -5,7 +5,7 @@ RSpec.describe AdminPolicy, type: :policy do
     it "permits every admin action to #{role == :admin ? 'an admin' : 'the super admin'}" do
       expect(described_class.new(user_for(role), :admin)).to permit_actions(
         :dashboard, :import_clients,
-        :create_signup_code, :deactivate_signup_code, :unconfirmed_sessions, :confirm_sessions,
+        :create_signup_code, :deactivate_signup_code, :session_confirmations, :confirm_sessions,
         :unconfirmed_consultations, :confirm_consultations, :jobs
       )
     end

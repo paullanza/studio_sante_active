@@ -58,33 +58,6 @@ class AdminController < ApplicationController
     end
   end
 
-  # Unconfirmed Sessions
-  def unconfirmed_sessions
-    @filter_params = permitted_session_filters
-    @sessions = Session.unconfirmed
-                       .apply_filters(@filter_params)
-                       .with_associations
-                       .order_by_occurred_at_asc
-
-    @staff = User.selectable.order(:first_name, :last_name)
-  end
-
-  def confirm_sessions
-    ids = Array(params[:session_ids]).map(&:to_i).uniq
-    if ids.empty?
-      redirect_to admin_unconfirmed_sessions_path, alert: "No sessions selected." and return
-    end
-
-    updated = Session.confirm(ids)
-
-    if updated.zero?
-      redirect_to admin_unconfirmed_sessions_path, alert: "Nothing to confirm (already confirmed?)."
-    else
-      redirect_to admin_unconfirmed_sessions_path,
-                  notice: "#{updated} #{'session'.pluralize(updated)} confirmed."
-    end
-  end
-
   # Unconfirmed Consultations
   def unconfirmed_consultations
     @filter_params = permitted_consultation_filters
@@ -119,16 +92,6 @@ class AdminController < ApplicationController
   end
 
   private
-
-  def permitted_session_filters
-    params.permit(
-      :q,
-      :employee_id,
-      :session_date_from, :session_date_to,
-      :created_from, :created_to,
-      present: [], session_type: []
-    )
-  end
 
   def permitted_consultation_filters
     params.permit(
