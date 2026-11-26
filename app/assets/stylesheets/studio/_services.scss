@@ -292,10 +292,10 @@
   gap: 10px;
 }
 
-// The edit card's rows (Saisir's .form-rows, packed). Date, heure, présence
-// and durée: one per line in a narrow card, two from 420 px of card, one line
-// from 760 px. Trainer and note side by side from 560 px. Labels of the
-// short rows give way to their icons when space is tight.
+// The edit card's fields: tiles with a small gold label above a left-aligned
+// value, like the Confirmations filters. Date, heure, présence and durée: one
+// per line in a narrow card, two from 420 px of card, one line from 760 px.
+// Trainer and note side by side from 560 px, the note wider.
 .seance-edit__rows {
   display: flex;
   flex-direction: column;
@@ -304,13 +304,60 @@
 
 .seance-edit__rows .form-grid {
   grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
 }
 
-.seance-edit__rows .field__box,
+.seance-edit__rows .field__label {
+  color: var(--accent);
+}
+
+.seance-edit__rows .field__input {
+  color-scheme: dark; // native date and time icons for a dark page
+}
+
+// Présence and durée: the same tile, the pills under the label.
 .seance-edit__rows fieldset.field:has(> .segmented) {
-  min-height: 48px;
-  padding: 6px 12px;
-  column-gap: 10px;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-height: 50px;
+  padding: 6px 12px 8px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.seance-edit__rows fieldset.field:has(> .segmented) > .field__label {
+  float: left;
+  grid-row: 1;
+}
+
+.seance-edit__rows .segmented {
+  grid-row: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  overflow: visible;
+  border: 0;
+}
+
+.seance-edit__rows .segmented__text {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.seance-edit__rows .segmented__option + .segmented__option .segmented__text {
+  border-left: 1px solid var(--border-strong);
+}
+
+.seance-edit__rows .segmented__input:checked + .segmented__text {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 // « Absent·e » takes the Absence colours when chosen, as Saisir's switch does.
@@ -318,12 +365,6 @@
   border-color: var(--badge-absence-fg);
   background: var(--badge-absence-fg);
   color: var(--bg);
-}
-
-.seance-edit__rows .segmented__text {
-  min-height: 32px;
-  padding: 0 10px;
-  white-space: nowrap;
 }
 
 @container (min-width: 420px) {
@@ -334,7 +375,7 @@
 
 @container (min-width: 560px) {
   .seance-edit__rows .seance-edit__more {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   }
 
   .seance-edit__rows .seance-edit__more--single {
@@ -345,24 +386,6 @@
 @container (min-width: 760px) {
   .seance-edit__rows .seance-edit__when {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto auto;
-  }
-
-  // The pills speak for themselves on one line: no icon beside them.
-  .seance-edit__when fieldset.field > .field__icon {
-    display: none;
-  }
-
-  .seance-edit__when fieldset.field:has(> .field__icon) {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .seance-edit__when .field__label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
   }
 }
 
@@ -384,48 +407,71 @@
   flex-wrap: wrap;
 }
 
-// A consultation (consultations/_card): stacked in a narrow frame (Saisir's
-// side column), a row in a wide one (Client and Service pages), in the séance
-// row's order: name and presence, when, contact, people, buttons; the note
-// on a line underneath, or its own column after the people when the row is
-// wide enough. Its layout follows the frame's width, not the screen's.
-.consultation-card .seance-card__tag {
-  flex-direction: row;
-  align-items: center;
+// A consultation (consultations/_card). Stacked in a narrow frame (Saisir's
+// side column): the prospect and the presence on top, then when, people,
+// note and buttons. A row from 860 px of frame (Client and Service pages), in
+// the séance row's columns: « Consultation » over the presence, the prospect
+// and their contact, when, people, note, buttons stacked. Its layout follows
+// the frame's width, not the screen's.
+.consultation-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "who    tag"
+    "main   main"
+    "people people"
+    "note   note"
+    "act    act";
+  gap: 6px 12px;
 }
 
-.consultation-card .seance-card__actions {
-  justify-content: flex-start;
-  gap: 20px;
+.consultation-card > .seance-card__tag { grid-area: tag; align-self: start; }
+.consultation-card__who { grid-area: who; display: flex; flex-direction: column; min-width: 0; }
+.consultation-card > .seance-card__main { grid-area: main; }
+.consultation-card > .seance-card__people { grid-area: people; }
+.consultation-card > .seance-card__note { grid-area: note; }
+.consultation-card > .seance-card__actions { grid-area: act; justify-content: flex-start; gap: 20px; }
+
+.consultation-card .seance-card__note:empty {
+  display: none;
+}
+
+// The word goes with the row; on the card the prospect's name heads it.
+.consultation-card__kind {
+  display: none;
 }
 
 .consultation-card__email {
   overflow-wrap: anywhere;
 }
 
-@container (min-width: 720px) {
+@container (min-width: 860px) {
   .consultation-card {
-    display: grid;
-    grid-template-columns: minmax(140px, 200px) 184px minmax(140px, 220px) minmax(0, 1fr) auto;
+    grid-template-columns: 96px minmax(140px, 1fr) 184px minmax(150px, 1fr) minmax(160px, 1.2fr) auto;
+    grid-template-areas: "tag who main people note act";
     align-items: center;
     column-gap: 14px;
   }
 
-  .consultation-card .seance-card__tag {
+  .consultation-card > .seance-card__tag {
     flex-direction: column;
     align-items: flex-start;
+    align-self: center;
     gap: 4px;
   }
 
-  .consultation-card .seance-card__note {
-    grid-row: 2;
-    grid-column: 1 / -1;
-    margin-top: 10px;
+  .consultation-card__kind {
+    display: inline;
   }
 
-  .consultation-card .seance-card__actions {
-    grid-row: 1;
-    grid-column: 5;
+  .consultation-card .seance-card__note,
+  .consultation-card .seance-card__note:empty {
+    display: block;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .consultation-card > .seance-card__actions {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
@@ -437,24 +483,6 @@
 
   .consultation-card .seance-card__actions form {
     display: flex;
-  }
-}
-
-@container (min-width: 900px) {
-  .consultation-card--noted {
-    grid-template-columns: minmax(120px, 180px) 184px minmax(140px, 190px) minmax(140px, 200px) minmax(150px, 1fr) auto;
-  }
-
-  .consultation-card--noted .seance-card__note {
-    grid-row: 1;
-    grid-column: 5;
-    margin-top: 0;
-    padding-top: 0;
-    border-top: 0;
-  }
-
-  .consultation-card--noted .seance-card__actions {
-    grid-column: 6;
   }
 }
 
