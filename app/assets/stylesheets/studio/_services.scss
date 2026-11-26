@@ -425,6 +425,19 @@
   display: none;
 }
 
+// Confirmations: a checkbox before everything else.
+.consultation-card--check {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "check who    tag"
+    ".     main   main"
+    ".     people people"
+    ".     note   note"
+    ".     act    act";
+}
+
+.consultation-card__check { grid-area: check; align-self: start; }
+
 // The word goes with the row; on the card the prospect's name heads it.
 .consultation-card__kind {
   display: none;
@@ -441,6 +454,13 @@
     align-items: center;
     column-gap: 14px;
   }
+
+  .consultation-card--check {
+    grid-template-columns: 28px 96px minmax(140px, 1fr) 184px minmax(150px, 1fr) minmax(160px, 1.2fr) auto;
+    grid-template-areas: "check tag who main people note act";
+  }
+
+  .consultation-card__check { align-self: center; }
 
   .consultation-card > .seance-card__tag {
     flex-direction: column;

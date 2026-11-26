@@ -205,8 +205,11 @@ class ConsultationsController < ApplicationController
   end
 
   # After a delete: the card goes, and the Client or Service page's tab count
-  # follows.
+  # follows. On Confirmations the trainer's count drops, and the group goes
+  # with its last consultation.
   def removed_card_streams
+    return removed_confirmation_streams if params[:context] == "confirmations"
+
     streams = [ turbo_stream.remove(helpers.dom_id(@consultation, :item)) ]
     owner, column = case params[:context]
     when "client" then [ @consultation.fliip_user, :fliip_user_id ]
@@ -215,6 +218,17 @@ class ConsultationsController < ApplicationController
     return streams unless owner
 
     streams << turbo_stream.update(helpers.dom_id(owner, :consultations_count), Consultation.where(column => owner.id).count.to_s)
+  end
+
+  def removed_confirmation_streams
+    period = PayPeriod.containing(@consultation.occurred_at.to_date)
+    left = Consultation.unconfirmed.in_period(period).where(user_id: @consultation.user_id).count
+    return turbo_stream.remove(helpers.dom_id(@consultation.user, :confirm_section)) if left.zero?
+
+    [
+      turbo_stream.remove(helpers.dom_id(@consultation, :item)),
+      turbo_stream.update(helpers.dom_id(@consultation.user, :confirm_count), "#{left} consultation(s)")
+    ]
   end
 
   # The edit card, in the consultation's frame (or as a stream after a failed save).

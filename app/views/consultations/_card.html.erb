@@ -5,10 +5,11 @@
     and their contact, when, people, note, buttons (container queries in
     studio/_services.scss). An absent prospect gets the
     Absence stripe.
-    `context` ("saisir", "client", "service" or "lier") goes along with
-    « Modifier » so the card comes back the same; the Service page leaves out
-    « liée à ». « Lier les consultations » adds « Lier », which opens the link
-    form in this frame; a linked consultation offers « Délier » to admins.
+    `context` ("saisir", "client", "service", "lier" or "confirmations") goes
+    along with « Modifier » so the card comes back the same; the Service page
+    leaves out « liée à ». « Lier les consultations » adds « Lier », which opens
+    the link form in this frame; a linked consultation offers « Délier » to
+    admins. Confirmations adds a checkbox for #confirm_consultations_form.
     Locals: consultation, context. %>
 <% context = local_assigns[:context] %>
 <% service = consultation.fliip_service unless context == "service" %>
@@ -16,8 +17,18 @@
 <% can_delete = policy(consultation).destroy? %>
 <% can_link = context == "lier" && policy(consultation).associate? %>
 <% can_unlink = consultation.fliip_user_id && policy(consultation).disassociate? %>
+<% check = context == "confirmations" %>
 <%= turbo_frame_tag dom_id(consultation), class: "seance-frame" do %>
-  <article class="card seance-card consultation-card<%= " seance-card--absence" if consultation.present == false %>">
+  <article class="card seance-card consultation-card<%= " consultation-card--check" if check %><%= " seance-card--absence" if consultation.present == false %>">
+    <% if check %>
+      <div class="consultation-card__check">
+        <label class="checkbox">
+          <input type="checkbox" name="consultation_ids[]" value="<%= consultation.id %>" form="confirm_consultations_form"
+                 class="checkbox__input" data-confirm-selection-target="item" data-group="<%= consultation.user_id %>">
+          <span class="visually-hidden">Sélectionner la consultation du <%= consultation.occurred_at ? seance_datetime(consultation.occurred_at) : "—" %></span>
+        </label>
+      </div>
+    <% end %>
     <%# « Consultation » over the presence, as « Séance #N » on a séance row. %>
     <div class="seance-card__tag">
       <span class="seance-card__title consultation-card__kind">Consultation</span>

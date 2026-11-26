@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_26_152216) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_26_195816) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "unaccent"
@@ -31,6 +31,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_26_152216) do
     t.text "note"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "confirmed_by_id"
+    t.index ["confirmed_by_id"], name: "index_consultations_on_confirmed_by_id"
     t.index ["created_by_id"], name: "index_consultations_on_created_by_id"
     t.index ["fliip_service_id"], name: "index_consultations_on_fliip_service_id"
     t.index ["fliip_user_id"], name: "index_consultations_on_fliip_user_id"
@@ -322,6 +324,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_26_152216) do
   add_foreign_key "consultations", "fliip_services", on_delete: :nullify
   add_foreign_key "consultations", "fliip_users", on_delete: :nullify
   add_foreign_key "consultations", "users"
+  add_foreign_key "consultations", "users", column: "confirmed_by_id"
   add_foreign_key "consultations", "users", column: "created_by_id"
   add_foreign_key "fliip_contracts", "fliip_users"
   add_foreign_key "fliip_services", "fliip_users"

@@ -11,9 +11,7 @@ RSpec.describe "Admin", type: :request do
       "dashboard"                 => -> { get admin_dashboard_path },
       "import_clients"            => -> { post import_clients_path },
       "create_signup_code"        => -> { post admin_signup_codes_path },
-      "deactivate_signup_code"    => -> { patch deactivate_admin_signup_code_path(signup_code) },
-      "unconfirmed_consultations" => -> { get admin_unconfirmed_consultations_path },
-      "confirm_consultations"     => -> { patch admin_confirm_consultations_path, params: { consultation_ids: [consultation.id] } }
+      "deactivate_signup_code"    => -> { patch deactivate_admin_signup_code_path(signup_code) }
     }
   end
 
@@ -83,7 +81,7 @@ RSpec.describe "Admin", type: :request do
 
       get session_confirmations_path
       expect(response.body).not_to include(%(value="#{super_admin.id}"))
-      get admin_unconfirmed_consultations_path
+      get consultation_confirmations_path
       expect(response.body).not_to include(%(value="#{super_admin.id}"))
     end
 
