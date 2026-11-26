@@ -29,43 +29,51 @@ class ConsultationsController < ApplicationController
 
   def edit
     authorize @consultation
+    return render_edit_card if turbo_frame_request?
 
     render partial: "consultations/shared/consultation_edit_row",
            locals:  { consultation: @consultation, show_bulk_checkbox: params[:show_bulk].present? },
            layout:  false
   end
 
+  # The consultation's card (« Annuler » in the edit card), or the old table row.
   def row
     authorize @consultation
+    return render partial: "consultations/card", locals: { consultation: @consultation, context: params[:context] } if turbo_frame_request?
+
     render partial: "consultations/shared/consultation_row",
            locals:  { consultation: @consultation, show_bulk_checkbox: params[:show_bulk].present? },
            layout:  false
   end
 
+  # The new pages (Saisir, Client, Service) answer with Turbo Streams; the old
+  # admin tables still get their row partials.
   def update
     authorize @consultation
 
-    @consultation.first_name   = params.dig(:consultation, :first_name).to_s
-    @consultation.last_name    = params.dig(:consultation, :last_name).to_s
-    @consultation.email        = params.dig(:consultation, :email).to_s
-    @consultation.phone_number = params.dig(:consultation, :phone_number).to_s
-
-    @consultation.note         = params.dig(:consultation, :note).to_s
-    @consultation.present      = params.dig(:consultation, :present) == "1"
+    attributes = permitted_attributes(@consultation)
+    @consultation.assign_attributes(attributes.except(:user_id))
     assign_occurred_at(@consultation, params.dig(:consultation, :date), params.dig(:consultation, :time))
 
-    uid = permitted_attributes(@consultation)[:user_id]
+    uid = attributes[:user_id]
     if uid.present? && uid.to_i != @consultation.user_id
       @consultation.user       = User.selectable.find_by(id: uid)
       @consultation.created_by = current_user
     end
 
-    if @consultation.user.present? && @consultation.save
+    saved = @consultation.user.present? && @consultation.save
+    @consultation.errors.add(:base, OWNER_REQUIRED_MESSAGE) if @consultation.user.nil?
+
+    if request.format.turbo_stream?
+      return render_edit_card(status: :unprocessable_content) unless saved
+
+      render turbo_stream: turbo_stream.replace(helpers.dom_id(@consultation), partial: "consultations/card",
+                                                                               locals: { consultation: @consultation, context: params[:context] })
+    elsif saved
       render partial: "consultations/shared/consultation_row",
              locals:  { consultation: @consultation, show_bulk_checkbox: params[:show_bulk].present? },
              layout:  false
     else
-      @consultation.errors.add(:base, OWNER_REQUIRED_MESSAGE) if @consultation.user.nil?
       render partial: "consultations/shared/consultation_edit_row",
              locals:  { consultation: @consultation, show_bulk_checkbox: params[:show_bulk].present? },
              status:  :unprocessable_content,
@@ -159,6 +167,7 @@ class ConsultationsController < ApplicationController
 
     @consultation.destroy
     respond_to do |format|
+      format.turbo_stream { render turbo_stream: removed_card_streams }
       format.json { head :no_content }
       format.html { redirect_back fallback_location: new_seance_path(tab: "consultation"), notice: "Consultation supprimée." }
     end
@@ -190,6 +199,29 @@ class ConsultationsController < ApplicationController
     @consultation = Consultation.find(params[:id])
   end
 
+  # After a delete: the card goes, and the Client or Service page's tab count
+  # follows.
+  def removed_card_streams
+    streams = [ turbo_stream.remove(helpers.dom_id(@consultation, :item)) ]
+    owner, column = case params[:context]
+    when "client" then [ @consultation.fliip_user, :fliip_user_id ]
+    when "service" then [ @consultation.fliip_service, :fliip_service_id ]
+    end
+    return streams unless owner
+
+    streams << turbo_stream.update(helpers.dom_id(owner, :consultations_count), Consultation.where(column => owner.id).count.to_s)
+  end
+
+  # The edit card, in the consultation's frame (or as a stream after a failed save).
+  def render_edit_card(status: :ok)
+    locals = { consultation: @consultation, context: params[:context] }
+    if request.format.turbo_stream?
+      render turbo_stream: turbo_stream.replace(helpers.dom_id(@consultation), partial: "consultations/edit_card", locals: locals), status: status
+    else
+      render partial: "consultations/edit_card", locals: locals, status: status
+    end
+  end
+
   # Matches SessionsController#load_staff
   def load_staff
     @staff = policy(Consultation).change_owner? ? User.selectable.order(:first_name, :last_name) : []
@@ -203,6 +235,7 @@ class ConsultationsController < ApplicationController
     return head :forbidden if action_name == "service_select"
 
     respond_to do |format|
+      format.turbo_stream { head :forbidden }
       format.json { head :forbidden }
       format.html { redirect_back fallback_location: new_seance_path(tab: "consultation"), alert: "Non autorisé·e." }
     end

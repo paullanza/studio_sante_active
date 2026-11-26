@@ -38,7 +38,7 @@ class FliipUsersController < ApplicationController
     allocation_readers = @tab == "services" ? @services : @services.select { |s| s.purchase_status == "A" && !s.removed_from_fliip? }
     ActiveRecord::Associations::Preloader.new(records: allocation_readers, associations: :service_definition).call
     @contracts = @fliip_user.fliip_contracts.sort_by { |c| [ c.end_date ? 1 : 0, -(c.end_date&.jd || 0) ] }
-    @consultations = @fliip_user.consultations.with_associations.order_by_occurred_at_desc
+    @consultations = @fliip_user.consultations.includes(:user, :created_by, :fliip_service).order_by_occurred_at_desc
   end
 
   def refresh

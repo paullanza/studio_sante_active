@@ -53,14 +53,12 @@
   color: var(--text-muted);
 }
 
-.service-card__dates,
-.consultation-card__when {
+.service-card__dates {
   font-size: 14px;
   font-weight: 700;
 }
 
-.contract-card,
-.consultation-card {
+.contract-card {
   gap: 4px;
   padding: 12px 14px;
 }
@@ -377,6 +375,72 @@
   border-top: 0;
 }
 
+// A consultation (consultations/_card): stacked in a narrow frame (Saisir's
+// side column), a row in a wide one (Client and Service pages): name and
+// presence, when, contact and people, buttons stacked last. Its layout follows
+// the frame's width, not the screen's.
+.consultation-card .seance-card__tag {
+  flex-direction: row;
+  align-items: center;
+}
+
+.consultation-card .seance-card__actions {
+  justify-content: flex-start;
+  gap: 20px;
+}
+
+.consultation-card__email {
+  overflow-wrap: anywhere;
+}
+
+@container (min-width: 720px) {
+  .consultation-card {
+    display: grid;
+    grid-template-columns: minmax(160px, 240px) 184px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 14px;
+  }
+
+  .consultation-card .seance-card__tag {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .consultation-card .seance-card__note {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+  }
+
+  .consultation-card .seance-card__actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .consultation-card .seance-card__actions .btn {
+    min-height: 26px;
+  }
+
+  .consultation-card .seance-card__actions form {
+    display: flex;
+  }
+}
+
+// The consultation edit card's prospect row: two fields a line from 420 px of
+// card, all four from 760 px.
+@container (min-width: 420px) {
+  .seance-edit__rows .seance-edit__who {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (min-width: 760px) {
+  .seance-edit__rows .seance-edit__who {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 .adjustment-card__actions {
   display: flex;
   justify-content: flex-end;
@@ -457,7 +521,73 @@
     gap: 4px 24px;
   }
 
-  .adjustment-card .adjustment-card__actions {
+  .adjustment-card // A consultation (consultations/_card): stacked in a narrow frame (Saisir's
+// side column), a row in a wide one (Client and Service pages): name and
+// presence, when, contact and people, buttons stacked last. Its layout follows
+// the frame's width, not the screen's.
+.consultation-card .seance-card__tag {
+  flex-direction: row;
+  align-items: center;
+}
+
+.consultation-card .seance-card__actions {
+  justify-content: flex-start;
+  gap: 20px;
+}
+
+.consultation-card__email {
+  overflow-wrap: anywhere;
+}
+
+@container (min-width: 720px) {
+  .consultation-card {
+    display: grid;
+    grid-template-columns: minmax(160px, 240px) 184px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 14px;
+  }
+
+  .consultation-card .seance-card__tag {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .consultation-card .seance-card__note {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+  }
+
+  .consultation-card .seance-card__actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .consultation-card .seance-card__actions .btn {
+    min-height: 26px;
+  }
+
+  .consultation-card .seance-card__actions form {
+    display: flex;
+  }
+}
+
+// The consultation edit card's prospect row: two fields a line from 420 px of
+// card, all four from 760 px.
+@container (min-width: 420px) {
+  .seance-edit__rows .seance-edit__who {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (min-width: 760px) {
+  .seance-edit__rows .seance-edit__who {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.adjustment-card__actions {
     margin-left: auto;
   }
 }
@@ -545,9 +675,8 @@
     display: none;
   }
 
-  // Abonnement and consultation rows: the same columns on every row.
-  .contract-card,
-  .consultation-card {
+  // Abonnement rows: the same columns on every row.
+  .contract-card {
     display: grid;
     align-items: center;
     column-gap: 24px;
@@ -557,17 +686,11 @@
     grid-template-columns: minmax(0, 1.3fr) 130px minmax(0, 1fr) 160px;
   }
 
-  .consultation-card {
-    grid-template-columns: 240px 130px minmax(0, 1fr);
-  }
-
-  .contract-card .service-card__head,
-  .consultation-card .service-card__head {
+  .contract-card .service-card__head {
     display: contents;
   }
 
-  .contract-card .badge,
-  .consultation-card .badge {
+  .contract-card .badge {
     justify-self: start;
   }
 }

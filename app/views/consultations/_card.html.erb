@@ -1,0 +1,63 @@
+<%# A consultation as one card on every rebuilt page (Saisir, Client page, Service
+    page), in its Turbo frame, where « Modifier » swaps in consultations/_edit_card.
+    Stacked in a narrow frame (Saisir's side column); a row in a wide one
+    (container query in studio/_services.scss). An absent prospect gets the
+    Absence stripe.
+    `context` ("saisir", "client" or "service") goes along with « Modifier » so the
+    card comes back the same; the Service page leaves out « liée à ».
+    Locals: consultation, context. %>
+<% context = local_assigns[:context] %>
+<% service = consultation.fliip_service unless context == "service" %>
+<% can_edit = policy(consultation).update? %>
+<% can_delete = policy(consultation).destroy? %>
+<%= turbo_frame_tag dom_id(consultation), class: "seance-frame" do %>
+  <article class="card seance-card consultation-card<%= " seance-card--absence" if consultation.present == false %>">
+    <div class="seance-card__tag">
+      <span class="seance-card__title"><%= consultation.full_name.presence || "—" %></span>
+      <% if consultation.present %>
+        <span class="badge badge--chargee">Présent·e</span>
+      <% elsif consultation.present == false %>
+        <span class="badge badge--absence">Absent·e</span>
+      <% end %>
+    </div>
+    <div class="seance-card__main">
+      <div class="seance-card__when numeric">
+        <%= consultation.occurred_at ? consultation.occurred_at.strftime("%d/%m/%Y · %H h %M") : "—" %>
+      </div>
+      <div class="text-muted text-small numeric">créée : <%= consultation.created_at.strftime("%d/%m/%Y %H:%M") %></div>
+      <div class="seance-card__status text-small"><%= confirmation_status(consultation) %></div>
+    </div>
+    <div class="seance-card__people text-small">
+      <% if consultation.phone_number.present? %>
+        <span class="numeric"><%= format_phone(consultation.phone_number) %></span>
+      <% end %>
+      <% if consultation.email.present? %>
+        <span class="consultation-card__email"><%= consultation.email %></span>
+      <% end %>
+      <% trainer = consultation.user %>
+      <span>Entraîneur·e : <%= trainer ? link_to_if(policy(trainer).show?, trainer.full_name.presence || "—", user_path(trainer), data: { turbo_frame: "_top" }) : "—" %></span>
+      <% if consultation.created_by_id != consultation.user_id %>
+        <span class="text-muted">Saisie par <%= consultation.created_by&.full_name.presence || "—" %></span>
+      <% end %>
+      <% if service %>
+        <span>liée à <%= link_to service.service_name.presence || "Service", fliip_service_path(service), data: { turbo_frame: "_top" } %></span>
+      <% end %>
+    </div>
+    <% if can_edit || can_delete %>
+      <div class="seance-card__actions">
+        <% if can_edit %>
+          <%= link_to "Modifier", edit_consultation_path(consultation, context: context), class: "btn btn--secondary btn--small" %>
+        <% end %>
+        <% if can_delete %>
+          <%= button_to "Supprimer", consultation_path(consultation), method: :delete,
+                params: { context: context }.compact,
+                class: "btn btn--danger btn--small",
+                form: { data: { turbo_confirm: "Supprimer cette consultation? Cette action est irréversible." } } %>
+        <% end %>
+      </div>
+    <% end %>
+    <% if consultation.note.present? %>
+      <p class="seance-card__note"><span class="seance-card__note-label">Note :</span> <%= consultation.note %></p>
+    <% end %>
+  </article>
+<% end %>
