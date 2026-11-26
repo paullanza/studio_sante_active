@@ -28,17 +28,6 @@
               Utilisateur·trice·s
             </button>
 
-            <button
-              class="nav-link"
-              id="tab-admin-codes"
-              type="button"
-              role="tab"
-              aria-controls="pane-admin-codes"
-              aria-selected="false"
-              data-bs-target="#pane-admin-codes"
-              data-action="click->tabs#activate">
-              Codes d’accès
-            </button>
 
             <button
               class="nav-link"
@@ -93,12 +82,6 @@
                 </div>
               </section>
 
-              <!-- Signup Codes -->
-              <section class="d-none" id="pane-admin-codes" role="tabpanel" aria-labelledby="tab-admin-codes">
-                <div class="table-scroll">
-                  <%= render "shared/signup_codes_table", signup_codes: @signup_codes %>
-                </div>
-              </section>
 
               <!-- Services ending soon -->
               <section class="d-none" id="pane-admin-ending" role="tabpanel" aria-labelledby="tab-admin-ending">

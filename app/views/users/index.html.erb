@@ -16,6 +16,9 @@
     <p class="text-muted text-small numeric">
       <%= pluralize(@overview.rows.size, "membre") %> · cette période : <%= totals[:sessions] %> séance(s), <%= format_count(totals[:hours]) %> h, <%= totals[:consultations] %> consultation(s)
     </p>
+    <% if policy(SignupCode).index? %>
+      <p class="text-small"><%= link_to "Codes d'inscription", signup_codes_path %></p>
+    <% end %>
   </div>
 
   <div class="personnel__bar">

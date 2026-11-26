@@ -3,8 +3,7 @@ require "rails_helper"
 RSpec.describe "Manager", type: :request do
   def manager_requests
     {
-      "dashboard" => -> { get manager_dashboard_path },
-      "create_signup_code" => -> { post manager_signup_codes_path }
+      "dashboard" => -> { get manager_dashboard_path }
     }
   end
 
@@ -15,14 +14,11 @@ RSpec.describe "Manager", type: :request do
     end
   end
 
-  it "lets managers see the dashboard and create signup codes" do
+  it "lets managers see the dashboard" do
     sign_in create(:user, :manager)
 
     get manager_dashboard_path
     expect(response).to have_http_status(:ok)
-
-    expect { post manager_signup_codes_path }.to change(SignupCode, :count).by(1)
-    expect(response).to redirect_to(manager_dashboard_path)
   end
 
   %i[admin super_admin].each do |role|
@@ -41,7 +37,7 @@ RSpec.describe "Manager", type: :request do
     employee = create(:user)
     sign_in employee
 
-    expect { post manager_signup_codes_path }.not_to change(SignupCode, :count)
+    get manager_dashboard_path
     expect(response).to redirect_to(user_path(employee))
     expect(flash[:alert]).to eq("Not authorized")
   end

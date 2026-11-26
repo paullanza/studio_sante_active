@@ -1,7 +1,6 @@
 require "rails_helper"
 
 RSpec.describe "Admin", type: :request do
-  let(:signup_code)  { create(:signup_code) }
   let(:session_record) { create(:session) }
   let(:consultation) { create(:consultation) }
 
@@ -9,9 +8,7 @@ RSpec.describe "Admin", type: :request do
   def admin_requests
     {
       "dashboard"                 => -> { get admin_dashboard_path },
-      "import_clients"            => -> { post import_clients_path },
-      "create_signup_code"        => -> { post admin_signup_codes_path },
-      "deactivate_signup_code"    => -> { patch deactivate_admin_signup_code_path(signup_code) }
+      "import_clients"            => -> { post import_clients_path }
     }
   end
 
@@ -34,7 +31,6 @@ RSpec.describe "Admin", type: :request do
           expect(response).to redirect_to(authenticated_root_path), name
           expect(flash[:alert]).to eq("Not authorized"), name
         end
-        expect(signup_code.reload).to be_active
       end
     end
   end
@@ -49,13 +45,6 @@ RSpec.describe "Admin", type: :request do
           expect(response.status).to be < 400, name
           expect(flash[:alert]).not_to eq("Not authorized"), name
         end
-      end
-
-      it "manages signup codes" do
-        expect { post admin_signup_codes_path }.to change(SignupCode, :count).by(1)
-
-        patch deactivate_admin_signup_code_path(signup_code)
-        expect(signup_code.reload).to be_deactivated
       end
 
       it "enqueues the full Fliip sync instead of running it in the request" do

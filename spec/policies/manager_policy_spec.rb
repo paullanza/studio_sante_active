@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe ManagerPolicy, type: :policy do
   it "permits the manager pages to managers" do
-    expect(described_class.new(user_for(:manager), :manager)).to permit_only_actions(:dashboard, :create_signup_code)
+    expect(described_class.new(user_for(:manager), :manager)).to permit_only_actions(:dashboard)
   end
 
   %i[employee admin super_admin].each do |role|
