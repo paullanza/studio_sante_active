@@ -15,7 +15,8 @@ class FliipService < ApplicationRecord
   has_many   :service_usage_adjustments, dependent: :destroy, inverse_of: :fliip_service
 
   # A service can be linked to at most one consultation at a time.
-  has_one    :consultation, dependent: :restrict_with_error, inverse_of: :fliip_service
+  # Linked consultations: a service can have several, each links to one service.
+  has_many   :consultations, dependent: :restrict_with_error, inverse_of: :fliip_service
 
   # -----------------------------------------
   # Scopes: by purchase status
@@ -75,47 +76,26 @@ class FliipService < ApplicationRecord
     where(fliip_user_id: fliip_user_id)
   }
 
-  # Historical window used for *session* browsing on the booking page (+3 months).
-  scope :start_within_window, ->(base_date) {
-    base = (base_date.presence || Date.current).to_date
-    from = base - 14.days
-    to   = base + 3.months
-    where("COALESCE(start_date, purchase_date::date) BETWEEN ? AND ?", from, to)
-  }
-
-  scope :unassociated_with_consultation, -> {
-    where.not(id: Consultation.where.not(fliip_service_id: nil).select(:fliip_service_id))
-  }
-
-  # Association-specific window:
-  # Prefer purchase_date; fallback to start_date; allowed = [-14 days, +30 days]
+  # The link window (GLOSSARY.md): bought from 14 days before to 30 days after
+  # the consultation, by purchase date, else start date.
+  LINK_WINDOW_BEFORE = 14.days
+  LINK_WINDOW_AFTER = 30.days
   scope :purchase_within_association_window, ->(base_date) {
     base = (base_date.presence || Date.current).to_date
-    from = base - 14.days
-    to   = base + 30.days
-    where("COALESCE(purchase_date::date, start_date) BETWEEN ? AND ?", from, to)
+    where("COALESCE(purchase_date::date, start_date) BETWEEN ? AND ?", base - LINK_WINDOW_BEFORE, base + LINK_WINDOW_AFTER)
   }
 
-  # Backward compatible entrypoint for consultations:
-  scope :available_for_association, ->(fliip_user_id:, cutoff_date: nil, base_date: nil) {
-    base = (base_date.presence || cutoff_date.presence || Date.current).to_date
-
+  # The client's services a consultation can link to, newest end date first.
+  # A service already linked to another consultation stays available.
+  scope :available_for_association, ->(fliip_user_id:, base_date: nil) {
     for_fliip_user(fliip_user_id)
-      .purchase_within_association_window(base)
-      .unassociated_with_consultation
-      .includes(:fliip_user, :service_definition, :service_usage_adjustments)
+      .purchase_within_association_window(base_date)
       .order(expire_date: :desc, service_name: :asc)
   }
 
-  def self.find_available_for_association(service_id:, fliip_user_id:, cutoff_date:, base_date: nil)
-    return nil if service_id.blank? || fliip_user_id.blank?
-
-    base = (base_date.presence || cutoff_date.presence || Date.current).to_date
-
-    available_for_association(
-      fliip_user_id: fliip_user_id,
-      base_date:     base
-    ).find_by(id: service_id)
+  # The date the link window is measured from: purchase date, else start date.
+  def link_date
+    purchase_date&.to_date || start_date
   end
 
   def start_or_purchase_date

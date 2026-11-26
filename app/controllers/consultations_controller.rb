@@ -2,7 +2,8 @@ class ConsultationsController < ApplicationController
   include BookingPage
 
   before_action :authenticate_user!
-  before_action :set_consultation, only: [:edit, :update, :destroy, :row, :association, :associate, :service_select, :disassociate]
+  before_action :set_consultation, only: [:edit, :update, :destroy, :row, :association, :associate, :disassociate]
+  layout "studio", only: [:associations]
   before_action :load_staff,       only: [:create, :edit, :update]
 
   OWNER_REQUIRED_MESSAGE = "Veuillez choisir un·e employé·e.".freeze
@@ -81,57 +82,34 @@ class ConsultationsController < ApplicationController
     end
   end
 
+  # The link form, in the consultation card's frame: the chosen client (or the
+  # best name match), then their services in the link window.
   def association
     authorize @consultation
-
-    load_fliip_users_for_association(@consultation)
-    load_services_for(@selected_fliip_user_id, cutoff_date: consultation_cutoff_date(@consultation))
-    @prefill_name = prefill_name_for(@selected_fliip_user_id, @consultation)
-
-    render partial: "consultations/shared/consultation_associate_row",
-           locals:  { consultation: @consultation, show_bulk_checkbox: params[:show_bulk].present? },
-           layout:  false
+    render_link_form(client: chosen_client)
   end
 
+  # Links the consultation to a client and, optionally, one of their services.
+  # On « Lier les consultations » a card with a service leaves the list.
   def associate
     authorize @consultation
 
-    selected_user_id    = params[:fliip_user_id].presence
-    selected_service_id = params[:fliip_service_id].presence
+    client = FliipUser.find_by(id: params[:fliip_user_id])
+    @consultation.fliip_user = client
+    @consultation.fliip_service = FliipService.find_by(id: params[:fliip_service_id]) if client && params[:fliip_service_id].present?
+    @consultation.errors.add(:fliip_user_id, "doit être choisi") if client.nil?
 
-    @consultation.fliip_user_id = selected_user_id
-
-    service = nil
-    if selected_service_id.present?
-      service = find_available_service_for_association(
-        service_id:    selected_service_id,
-        fliip_user_id: selected_user_id,
-        cutoff_date:   consultation_cutoff_date(@consultation)
-      )
-      if service.nil?
-        @consultation.errors.add(:fliip_service_id, "n’est pas disponible pour association (client/date/association existante).")
+    if client && @consultation.save
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: linked_card_stream }
+        format.html { redirect_to associations_consultations_path, notice: "Consultation liée." }
       end
-    end
-
-    @consultation.fliip_service_id = service&.id if @consultation.errors.empty?
-
-    if @consultation.errors.empty? && @consultation.save
-      render partial: "consultations/shared/consultation_row",
-             locals:  { consultation: @consultation, show_bulk_checkbox: params[:show_bulk].present? },
-             layout:  false
     else
-      load_fliip_users_for_association(@consultation)
-      @selected_fliip_user_id = selected_user_id if selected_user_id.present?
-      load_services_for(@selected_fliip_user_id, cutoff_date: consultation_cutoff_date(@consultation))
-      @prefill_name = prefill_name_for(@selected_fliip_user_id, @consultation)
-
-      render partial: "consultations/shared/consultation_associate_row",
-             locals:  { consultation: @consultation, show_bulk_checkbox: params[:show_bulk].present? },
-             status:  :unprocessable_content,
-             layout:  false
+      render_link_form(client: client, status: :unprocessable_content)
     end
   end
 
+  # Clears the client and the service (admins).
   def disassociate
     authorize @consultation
 
@@ -143,23 +121,13 @@ class ConsultationsController < ApplicationController
              layout:  false
     else
       respond_to do |format|
-        format.html { redirect_to request.referer || new_seance_path(tab: "consultation"), notice: "Association retirée." }
-        format.turbo_stream if respond_to?(:turbo_stream)
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.replace(helpers.dom_id(@consultation), partial: "consultations/card",
+                                                                                   locals: { consultation: @consultation, context: params[:context] })
+        end
+        format.html { redirect_back fallback_location: associations_consultations_path, notice: "Liaison retirée." }
       end
     end
-  end
-
-  def service_select
-    authorize @consultation
-
-    fliip_user_id = params.require(:fliip_user_id)
-    @selected_id  = params[:selected_id]
-
-    load_services_for(fliip_user_id, cutoff_date: consultation_cutoff_date(@consultation))
-
-    render partial: "consultations/service_select",
-          locals:  { services: (@services || []), selected_id: @selected_id },
-          layout:  false
   end
 
   def destroy
@@ -173,6 +141,7 @@ class ConsultationsController < ApplicationController
     end
   end
 
+  # « Lier les consultations »: the consultations still without a service.
   def associations
     authorize Consultation
 
@@ -180,23 +149,59 @@ class ConsultationsController < ApplicationController
       q:                      params[:q].presence,
       employee_id:            params[:employee_id].presence,
       consultation_date_from: params[:consultation_date_from].presence,
-      consultation_date_to:   params[:consultation_date_to].presence,
-      created_from:           params[:created_from].presence,
-      created_to:             params[:created_to].presence,
-      present:                Array(params[:present]).presence
+      consultation_date_to:   params[:consultation_date_to].presence
     }
+    # A deactivated trainer stays in the list while their filter is on.
+    @staff = User.selectable.or(User.where(id: @filter_params[:employee_id])).order(:first_name, :last_name)
 
-    @staff = User.selectable.order(:first_name, :last_name)
-
-    base = Consultation.unassociated.with_associations
-    @consultations = base.apply_filters(@filter_params).order_by_occurred_at_desc
-    @consultations = @consultations.limit(100) unless @consultations.respond_to?(:page)
+    @pagy, @consultations = pagy(
+      Consultation.to_link.apply_filters(@filter_params).with_associations.order_by_occurred_at_desc,
+      limit: 25
+    )
+    @to_link_count = Consultation.to_link.count
   end
 
   private
 
   def set_consultation
     @consultation = Consultation.find(params[:id])
+  end
+
+  # The client the link form opens on: the one asked for, the one already
+  # linked, else the best match for the prospect's name. Nil when none matches.
+  def chosen_client
+    return if params[:change].present?
+    return FliipUser.find_by(id: params[:fliip_user_id]) if params[:fliip_user_id].present?
+    return @consultation.fliip_user if @consultation.fliip_user
+
+    FliipUser.search(@consultation.full_name).first
+  end
+
+  def render_link_form(client:, status: :ok)
+    services = client ? FliipService.available_for_association(fliip_user_id: client.id, base_date: @consultation.occurred_at).to_a : []
+    counts = Consultation.where(fliip_service_id: services.map(&:id)).where.not(id: @consultation.id)
+                         .group(:fliip_service_id).count
+    locals = { consultation: @consultation, client: client, services: services, counts: counts, context: params[:context] }
+
+    if request.format.turbo_stream?
+      render turbo_stream: turbo_stream.replace(helpers.dom_id(@consultation), partial: "consultations/link_form", locals: locals), status: status
+    else
+      render partial: "consultations/link_form", locals: locals, status: status
+    end
+  end
+
+  # After a link: on « Lier les consultations » the card leaves once it has a
+  # service; elsewhere it is drawn again.
+  def linked_card_stream
+    if params[:context] == "lier" && @consultation.fliip_service_id
+      return [
+        turbo_stream.remove(helpers.dom_id(@consultation, :item)),
+        turbo_stream.update("to_link_count", Consultation.to_link.count.to_s)
+      ]
+    end
+
+    turbo_stream.replace(helpers.dom_id(@consultation), partial: "consultations/card",
+                                                         locals: { consultation: @consultation, context: params[:context] })
   end
 
   # After a delete: the card goes, and the Client or Service page's tab count
@@ -229,11 +234,8 @@ class ConsultationsController < ApplicationController
     @owner_required = @staff.any? && @staff.none? { |u| u.id == current_user.id }
   end
 
-  # Keeps this controller's existing response formats. service_select
-  # always answered with a bare 403.
+  # Keeps this controller's existing response formats.
   def user_not_authorized
-    return head :forbidden if action_name == "service_select"
-
     respond_to do |format|
       format.turbo_stream { head :forbidden }
       format.json { head :forbidden }
@@ -260,52 +262,5 @@ class ConsultationsController < ApplicationController
     rescue ArgumentError
       record.occurred_at ||= Time.zone.now
     end
-  end
-
-  def consultation_cutoff_date(consultation)
-    (consultation.occurred_at&.to_date) || Date.current
-  end
-
-  def load_fliip_users_for_association(consultation)
-    service_user_ids = FliipService.distinct.pluck(:fliip_user_id)
-
-    @fliip_users = FliipUser.where(id: service_user_ids).sort_by do |u|
-      I18n.transliterate("#{u.user_lastname.to_s.strip} #{u.user_firstname.to_s.strip}").downcase
-    end
-
-    query = [consultation.first_name, consultation.last_name].compact_blank.join(" ")
-    @selected_fliip_user_id = nil
-
-    if query.present?
-      best = FliipUser.search_clients(query).limit(1).pluck(:id).first
-      @selected_fliip_user_id = best if best.present?
-    end
-  end
-
-  def load_services_for(fliip_user_id, cutoff_date:)
-    return @services = [] if fliip_user_id.blank?
-    cutoff = cutoff_date || Date.current
-
-    @services = FliipService.available_for_association(
-      fliip_user_id: fliip_user_id,
-      cutoff_date:   cutoff
-    )
-  end
-
-  def find_available_service_for_association(service_id:, fliip_user_id:, cutoff_date:)
-    FliipService.find_available_for_association(
-      service_id:    service_id,
-      fliip_user_id: fliip_user_id,
-      cutoff_date:   cutoff_date
-    )
-  end
-
-  def prefill_name_for(selected_fliip_user_id, consultation)
-    if selected_fliip_user_id.present?
-      if (u = FliipUser.select(:id, :user_firstname, :user_lastname).find_by(id: selected_fliip_user_id))
-        return u.full_name
-      end
-    end
-    "Aucun client ne correspond à cette consultation."
   end
 end

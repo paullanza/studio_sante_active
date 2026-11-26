@@ -632,3 +632,58 @@
   flex-wrap: wrap;
   gap: 0 20px;
 }
+
+// The link form (consultations/_link_form), in a consultation card's frame:
+// the client with « Changer » or a client search, then the services as
+// Saisir's service options.
+.link-form {
+  gap: 12px;
+}
+
+.link-form__client {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.link-form__client-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.link-form__services {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+// « Lier les consultations »: trainer, du, au and prospect filters.
+.link-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.link-filters > .field:first-child,
+.link-filters > .field:last-of-type {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 1024px) {
+  .link-filters {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr);
+  }
+
+  .link-filters > .field:first-child,
+  .link-filters > .field:last-of-type {
+    grid-column: auto;
+  }
+}

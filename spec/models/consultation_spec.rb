@@ -2,13 +2,32 @@ require "rails_helper"
 
 RSpec.describe Consultation, type: :model do
   describe "validations" do
-    it "allows a service to be linked to only one consultation" do
-      service = create(:fliip_service)
-      create(:consultation, fliip_service: service)
-      other = build(:consultation, fliip_service: service)
+    it "lets two consultations link to one service" do
+      service = create(:fliip_service, purchase_date: 1.day.ago)
+      create(:consultation, fliip_user: service.fliip_user, fliip_service: service)
 
-      expect(other).not_to be_valid
-      expect(other.errors[:fliip_service_id]).to be_present
+      expect(build(:consultation, user: create(:user), fliip_user: service.fliip_user, fliip_service: service)).to be_valid
+    end
+
+    it "refuses a service from another client" do
+      consultation = build(:consultation, fliip_user: create(:fliip_user), fliip_service: create(:fliip_service, purchase_date: 1.day.ago))
+
+      expect(consultation).not_to be_valid
+      expect(consultation.errors[:fliip_service_id]).to include("ne correspond pas au client choisi")
+    end
+
+    it "refuses a service bought outside the link window, but keeps an older link on other edits" do
+      travel_to Time.zone.local(2026, 5, 15, 10)
+      service = create(:fliip_service, purchase_date: Date.new(2026, 6, 15))
+      consultation = build(:consultation, user: create(:user), fliip_user: service.fliip_user, fliip_service: service, occurred_at: Time.zone.local(2026, 5, 15, 10))
+
+      expect(consultation).not_to be_valid
+      expect(consultation.errors[:fliip_service_id]).to include("doit avoir été acheté entre le 01/05/2026 et le 14/06/2026")
+
+      consultation.fliip_service = nil
+      consultation.save!
+      consultation.update_columns(fliip_service_id: service.id)
+      expect(consultation.reload.update(note: "suivi")).to be(true)
     end
 
     it "defaults created_by to the responsible user" do
@@ -99,15 +118,17 @@ RSpec.describe Consultation, type: :model do
   end
 
   describe "status scopes" do
-    it "splits confirmed from unconfirmed and finds unassociated ones" do
+    it "splits confirmed from unconfirmed and finds those still to link" do
       pending   = create(:consultation)
       done      = create(:consultation, confirmed: true)
-      linked    = create(:consultation, fliip_user: create(:fliip_user))
+      client_only = create(:consultation, fliip_user: create(:fliip_user))
+      service = create(:fliip_service, purchase_date: 1.day.ago)
+      linked = create(:consultation, fliip_user: service.fliip_user, fliip_service: service)
       pending.update_columns(confirmed: nil)
 
-      expect(described_class.unconfirmed).to contain_exactly(pending, linked)
+      expect(described_class.unconfirmed).to contain_exactly(pending, client_only, linked)
       expect(described_class.confirmed).to contain_exactly(done)
-      expect(described_class.unassociated).to contain_exactly(pending, done)
+      expect(described_class.to_link).to contain_exactly(pending, done, client_only)
     end
 
     it "orders by occurred_at, newest first" do
@@ -154,11 +175,11 @@ RSpec.describe Consultation, type: :model do
     end
   end
 
-  describe "#association_start_window" do
-    it "runs from 14 days before to 3 months after the consultation" do
+  describe "#link_window" do
+    it "runs from 14 days before to 30 days after the consultation" do
       consultation = build(:consultation, occurred_at: Time.zone.local(2026, 5, 15, 10))
 
-      expect(consultation.association_start_window).to eq(Date.new(2026, 5, 1)..Date.new(2026, 8, 15))
+      expect(consultation.link_window).to eq(Date.new(2026, 5, 1)..Date.new(2026, 6, 14))
     end
   end
 end
