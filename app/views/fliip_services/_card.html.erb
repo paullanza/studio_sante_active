@@ -29,12 +29,7 @@
       <div class="service-card__usage">
         <%= render "fliip_services/bars", service: service %>
         <div class="text-muted text-small numeric">
-          <% if service.allocation_to_define? %>
-            Allocation à définir
-          <% else %>
-            <%= format_count(service.paid_used_total) %> / <%= format_count(service.paid_allowed_total) %> séances ·
-            <%= format_count(service.free_used_total) %> / <%= format_count(service.free_allowed_total) %> absences
-          <% end %>
+          <%= render "fliip_services/usage_line", service: service %>
         </div>
       </div>
     <% end %>

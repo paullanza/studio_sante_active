@@ -14,8 +14,7 @@
             autocomplete: "email", autocapitalize: "none", spellcheck: false, required: true, autofocus: true %>
 
       <%= f.field :password, label: "Mot de passe", as: :password,
-            autocomplete: "current-password", required: true,
-            label_aside: link_to("Mot de passe oublié?", password_help_path) %>
+            autocomplete: "current-password", required: true %>
 
       <% if devise_mapping.rememberable? %>
         <%= f.check :remember_me, label: "Se souvenir de moi" %>
@@ -23,7 +22,11 @@
     </section>
 
     <div class="form-actions">
-      <%= f.submit "Se connecter" %>
+      <%# The link follows the button in the HTML, so Tab reaches it after « Se connecter ». %>
+      <div class="auth-submit">
+        <%= f.submit "Se connecter" %>
+        <%= link_to "Mot de passe oublié?", password_help_path, class: "auth-submit__link" %>
+      </div>
 
       <% if devise_mapping.registerable? %>
         <div class="auth-switch">

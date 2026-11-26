@@ -37,16 +37,39 @@ body:has(.top-nav) .brand-bar {
   border-bottom-color: transparent;
 }
 
+// The brand on the left, the signed-in staff member's name on the right.
+.brand-bar__inner {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+}
+
 .brand {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   column-gap: 8px;
-  max-width: var(--page-max-width);
-  margin: 0 auto;
+  min-width: 0;
   padding: 10px 0 8px;
   color: var(--text);
   text-decoration: none;
+}
+
+// Never pushes the brand: the name shrinks first and ends in « … ».
+.signed-in-as {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 45%;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .brand:hover {
@@ -131,6 +154,28 @@ body:has(.top-nav) .brand-bar {
 
 .auth-split__form {
   grid-area: form;
+}
+
+// The gold button with a quiet text link under it (« Mot de passe oublié? »).
+.auth-submit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.auth-submit .btn {
+  align-self: stretch;
+}
+
+// Beside the « Créer un compte » card, the button keeps its one-line width.
+.form-actions .auth-submit {
+  flex: none;
+}
+
+.auth-submit__link {
+  font-size: 13px;
+  font-weight: 700;
 }
 
 // The way to the other auth page, in the form's actions: a card with a line

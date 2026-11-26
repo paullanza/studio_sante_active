@@ -1,0 +1,9 @@
+<%# A service's usage on one line: « 3 / 10 séances · 1 / 2 absences », the same
+    counts as the Service page, or « Allocation à définir ». Lists of services
+    call FliipService.preload_usage first. Local: service. %>
+<% if service.allocation_to_define? %>
+  Allocation à définir
+<% else %>
+  <%= format_count(service.paid_used_total) %> / <%= format_count(service.paid_allowed_total) %> séances ·
+  <%= format_count(service.free_used_total) %> / <%= format_count(service.free_allowed_total) %> absences
+<% end %>
