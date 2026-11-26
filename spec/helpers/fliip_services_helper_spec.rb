@@ -42,7 +42,7 @@ RSpec.describe FliipServicesHelper, type: :helper do
     let(:svc)        { create(:fliip_service, service_definition: definition) }
 
     it "is complete once every paid session is used" do
-      create(:service_usage_adjustment, fliip_service: svc, paid_used_delta: 4)
+      create(:service_usage_adjustment, fliip_service: svc, kind: :paid_used, amount: 4)
 
       expect(helper.paid_progress_complete?(svc, 100)).to be true
       expect(helper.paid_progress_label(svc, 100)).to eq("Complet - 4.0/4.0 100%")
@@ -50,7 +50,7 @@ RSpec.describe FliipServicesHelper, type: :helper do
     end
 
     it "otherwise shows the compact usage and the discrepancy color" do
-      create(:service_usage_adjustment, fliip_service: svc, paid_used_delta: 1)
+      create(:service_usage_adjustment, fliip_service: svc, kind: :paid_used, amount: 1)
 
       expect(helper.paid_progress_complete?(svc, 25)).to be false
       expect(helper.paid_progress_label(svc, 25)).to eq("1.0/4.0 [0.0/2.0 absences] • 25%")

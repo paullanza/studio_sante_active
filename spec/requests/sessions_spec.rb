@@ -50,7 +50,7 @@ RSpec.describe "Sessions", type: :request do
     end
 
     it "records -24h (paid) when the client was absent with no absence left" do
-      create(:service_usage_adjustment, fliip_service: service, free_used_delta: 2)
+      create(:service_usage_adjustment, fliip_service: service, kind: :free_used, amount: 2)
       sign_in employee
       post sessions_path, params: session_params(present: "0")
 
@@ -58,7 +58,7 @@ RSpec.describe "Sessions", type: :request do
     end
 
     it "refuses a séance when the service has no séances left" do
-      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 10)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_used, amount: 10)
       sign_in employee
 
       expect { post sessions_path, params: session_params }.not_to change(Session, :count)
@@ -75,7 +75,7 @@ RSpec.describe "Sessions", type: :request do
     end
 
     it "shows the -24h warning when re-rendering an absent séance with no absence left" do
-      create(:service_usage_adjustment, fliip_service: service, free_used_delta: 2)
+      create(:service_usage_adjustment, fliip_service: service, kind: :free_used, amount: 2)
       sign_in employee
       post sessions_path, params: session_params(present: "0", date: "")
 
@@ -410,7 +410,7 @@ RSpec.describe "Sessions", type: :request do
     end
 
     it "refuses an edit that needs a séance the service doesn't have" do
-      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 1.5)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_used, amount: 1.5)
       own.update_columns(duration: 0.5)
       sign_in employee
       patch session_path(own), params: update_params(duration: "1.0"), headers: stream

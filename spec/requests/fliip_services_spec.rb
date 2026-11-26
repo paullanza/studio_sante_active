@@ -33,7 +33,7 @@ RSpec.describe "Fliip services", type: :request do
     let(:trainer)    { create(:user, first_name: "Thoren", last_name: "Lachance") }
     let!(:seance)    { create(:session, fliip_service: service, user: trainer, occurred_at: 2.days.ago.change(hour: 17, min: 0)) }
     let!(:consultation) { create(:consultation, fliip_service: service, fliip_user: service.fliip_user, user: trainer) }
-    let!(:adjustment)   { create(:service_usage_adjustment, fliip_service: service, user: trainer, bonus_sessions: 2) }
+    let!(:adjustment)   { create(:service_usage_adjustment, fliip_service: service, user: trainer, kind: :paid_bonus, amount: 2) }
 
     def page
       Nokogiri::HTML(response.body)
@@ -88,7 +88,7 @@ RSpec.describe "Fliip services", type: :request do
       get fliip_service_path(service, tab: "adjustments")
 
       expect(current_tab).to eq("Ajustements (1)")
-      expect(page.at_css(".seance-card dd").text).to eq("2")
+      expect(page.at_css(".adjustment-card__change").text.squish).to eq("Séances ajoutées +2")
       expect(page.at_css("form[action='#{fliip_service_service_usage_adjustments_path(service)}']")).to be_nil
       expect(page.at_css(".adjustment-card__actions")).to be_nil
     end
@@ -99,7 +99,7 @@ RSpec.describe "Fliip services", type: :request do
       get fliip_service_path(service, tab: "adjustments")
 
       expect(page.at_css(".adjustment-card__actions a").text).to eq("Modifier")
-      expect(page.at_css("form[action='#{fliip_service_service_usage_adjustments_path(service)}'] select#service_usage_adjustment_user_id")).to be_present
+      expect(page.at_css("form[action='#{fliip_service_service_usage_adjustments_path(service)}'] select#new_adjustment_service_usage_adjustment_user_id")).to be_present
     end
 
     it "gives an employee asking for the adjustments the séances tab" do
@@ -142,7 +142,7 @@ RSpec.describe "Fliip services", type: :request do
 
     it "gives the reason instead for a fully used service" do
       used_up = create(:fliip_service, service_definition: create(:service_definition, paid_sessions: 1, free_sessions: 0))
-      create(:service_usage_adjustment, fliip_service: used_up, paid_used_delta: 1)
+      create(:service_usage_adjustment, fliip_service: used_up, kind: :paid_used, amount: 1)
 
       get fliip_service_path(used_up)
 

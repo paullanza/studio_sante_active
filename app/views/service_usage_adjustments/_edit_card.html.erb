@@ -1,0 +1,17 @@
+<%# An adjustment being edited, in place of its card, in the same Turbo frame.
+    « Annuler » brings the card back. Locals: service, adjustment. %>
+<%= turbo_frame_tag dom_id(adjustment), class: "seance-frame" do %>
+  <article class="card seance-card seance-edit">
+    <div class="seance-card__tag">
+      <span class="seance-card__title">Modifier l'ajustement</span>
+    </div>
+    <%= form_with model: adjustment, url: fliip_service_service_usage_adjustment_path(service, adjustment), method: :patch,
+          builder: StudioFormBuilder, namespace: dom_id(adjustment), class: "form seance-edit__form adjustment-form-wrap" do |f| %>
+      <%= render "service_usage_adjustments/fields", f: f, adjustment: adjustment, staff: @staff %>
+      <div class="form-actions seance-edit__actions">
+        <%= link_to "Annuler", fliip_service_service_usage_adjustment_path(service, adjustment), class: "btn btn--ghost btn--small" %>
+        <button type="submit" class="btn btn--secondary btn--small">Enregistrer<%= button_arrow %></button>
+      </div>
+    <% end %>
+  </article>
+<% end %>

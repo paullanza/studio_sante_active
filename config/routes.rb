@@ -192,7 +192,7 @@ Rails.application.routes.draw do
   # tweak usage counts for that specific service.
   # =====================================================================
   resources :fliip_services, only: [:show] do
-    resources :service_usage_adjustments, only: [:create, :edit, :update, :destroy]
+    resources :service_usage_adjustments, only: [:show, :create, :edit, :update, :destroy]
   end
 
   # =====================================================================

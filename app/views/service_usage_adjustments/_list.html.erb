@@ -1,0 +1,13 @@
+<%# The Ajustements tab's list, newest first, drawn again after every change.
+    Locals: service, adjustments. %>
+<div id="<%= dom_id(service, :adjustment_list) %>">
+  <% if adjustments.any? %>
+    <ul class="list card-grid">
+      <% adjustments.each do |adjustment| %>
+        <li id="<%= dom_id(adjustment, :item) %>"><%= render "service_usage_adjustments/card", service: service, adjustment: adjustment %></li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="empty-state">Aucun ajustement sur ce service.</p>
+  <% end %>
+</div>

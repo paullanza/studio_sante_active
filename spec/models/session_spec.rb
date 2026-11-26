@@ -45,7 +45,7 @@ RSpec.describe Session, type: :model do
     end
 
     it "rejects a session longer than what remains" do
-      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 1.5)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_used, amount: 1.5)
       session = build_session(present: true, duration: 1.0)
 
       expect(session).not_to be_valid
@@ -53,7 +53,7 @@ RSpec.describe Session, type: :model do
     end
 
     it "allows a half-hour session when half an hour remains" do
-      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 1.5)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_used, amount: 1.5)
       session = build_session(present: true, duration: 0.5)
 
       expect(session).to be_valid
@@ -162,7 +162,7 @@ RSpec.describe Session, type: :model do
       first = at.call(service, 3.days.ago)
       second = at.call(service, 2.days.ago)
       elsewhere = at.call(other, 1.day.ago)
-      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 2).update_columns(created_at: 4.days.ago)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_used, amount: 2).update_columns(created_at: 4.days.ago)
 
       numbers = described_class.numbers_for([ second, elsewhere, first ])
 
@@ -347,9 +347,9 @@ RSpec.describe Session, type: :model do
     end
 
     it "adds used adjustments that existed before the session" do
-      adjustment = create(:service_usage_adjustment, fliip_service: roomy, paid_used_delta: 0.5)
+      adjustment = create(:service_usage_adjustment, fliip_service: roomy, kind: :paid_used, amount: 0.5)
       adjustment.update_columns(created_at: 4.days.ago)
-      create(:service_usage_adjustment, fliip_service: roomy, paid_used_delta: 3)
+      create(:service_usage_adjustment, fliip_service: roomy, kind: :paid_used, amount: 3)
 
       expect(second.adjustments_used_before_self).to eq(0.5)
       expect(second.sequence_label).to eq("Séance #2.5")
@@ -405,14 +405,14 @@ RSpec.describe Session, type: :model do
     end
 
     it "allows 30 min → 1 h when exactly 30 min is left" do
-      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 1.0)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_used, amount: 1.0)
       session = create(:session, fliip_service: service, duration: 0.5)
 
       expect(session.update(duration: 1.0)).to be(true)
     end
 
     it "refuses 30 min → 1 h when nothing is left" do
-      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 1.5)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_used, amount: 1.5)
       session = create(:session, fliip_service: service, duration: 0.5)
 
       expect(session.update(duration: 1.0)).to be(false)

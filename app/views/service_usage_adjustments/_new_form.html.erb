@@ -1,0 +1,10 @@
+<%# « Ajouter un ajustement » (admins), under the list. Comes back empty after a
+    save, or with its errors. Locals: service, adjustment, staff. %>
+<%= form_with model: adjustment, url: fliip_service_service_usage_adjustments_path(service), builder: StudioFormBuilder,
+      namespace: "new_adjustment", id: dom_id(service, :new_adjustment), class: "form adjustment-form-wrap" do |f| %>
+  <section class="form-section" aria-labelledby="ajout-ajustement">
+    <header class="form-section__head"><h2 id="ajout-ajustement">Ajouter un ajustement</h2></header>
+    <%= render "service_usage_adjustments/fields", f: f, adjustment: adjustment, staff: staff %>
+  </section>
+  <div class="form-actions"><%= f.submit "Ajouter", variant: :secondary %></div>
+<% end %>

@@ -509,6 +509,67 @@
   }
 }
 
+// An adjustment (service_usage_adjustments/_card): the change and its amount,
+// then the trainer and who entered it, the note, the buttons.
+.adjustment-card__change {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.adjustment-card__amount {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.adjustment-card__people {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+// The adjustment fields (service_usage_adjustments/_fields), in the add form
+// and the edit card. Stacked on a phone, the kinds two by two. From 640 px
+// of form the kinds take one row, then Nombre (narrow), the trainer and a
+// one-line note share the next. The form's width decides, not the screen's.
+.adjustment-form-wrap {
+  container-type: inline-size;
+}
+
+.adjustment-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.adjustment-form .segmented {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.adjustment-form .segmented__text {
+  flex: 1;
+  justify-content: center;
+  padding: 0 12px;
+}
+
+@container (min-width: 640px) {
+  .adjustment-form {
+    grid-template-columns: 130px minmax(180px, 240px) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .adjustment-form__kind {
+    grid-column: 1 / -1;
+  }
+
+  .adjustment-form .segmented {
+    display: inline-flex;
+  }
+}
+
 .adjustment-card__actions {
   display: flex;
   justify-content: flex-end;
@@ -518,20 +579,19 @@
 // From 1024 px adjustment cards on the Service page become rows.
 @media (min-width: 1024px) {
   .adjustment-card {
-    flex-direction: row;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(200px, 1fr) minmax(200px, 1fr) minmax(200px, 2fr) auto;
     align-items: center;
     column-gap: 24px;
   }
 
-  .adjustment-card .facts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 24px;
+  .adjustment-card__change {
+    justify-content: flex-start;
   }
 
-  .adjustment-card .adjustment-card__actions {
-    margin-left: auto;
+  .adjustment-card .adjustment-card__note {
+    padding-top: 0;
+    border-top: 0;
   }
 }
 

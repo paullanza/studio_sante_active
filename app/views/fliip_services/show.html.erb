@@ -13,8 +13,8 @@
     <% tabs << [ "adjustments", "Ajustements", @adjustments.size ] if policy(ServiceUsageAdjustment).index? %>
     <nav class="tabs" aria-label="Sections">
       <% tabs.each do |key, label, count| %>
-        <%# The séance and consultation counts are refreshed alone after an edit or a delete. %>
-        <% count_id = { "sessions" => dom_id(@service, :sessions_count), "consultations" => dom_id(@service, :consultations_count) }[key] %>
+        <%# The counts are refreshed alone after an edit or a delete. %>
+        <% count_id = dom_id(@service, :"#{key}_count") %>
         <%= link_to safe_join([ "#{label} (", tag.span(count, id: count_id), ")" ]),
               fliip_service_path(@service, tab: key), class: "tabs__tab", aria: { current: (@tab == key ? "page" : nil) } %>
       <% end %>

@@ -37,14 +37,32 @@ RSpec.describe FliipService, type: :model do
     end
 
     it "adds bonus sessions to the paid allowance" do
-      create(:service_usage_adjustment, fliip_service: service, bonus_sessions: 3)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_bonus, amount: 3)
 
       expect(service.paid_allowed_total).to eq(13.0)
       expect(service.remaining_paid_sessions).to eq(13.0)
     end
 
+    it "adds absences to the free allowance" do
+      create(:service_usage_adjustment, fliip_service: service, kind: :free_bonus, amount: 1.5)
+
+      expect(service.free_allowed_total).to eq(3.5)
+      expect(service.paid_allowed_total).to eq(10.0)
+    end
+
+    it "sums the adjustments already loaded the same way as in SQL, leaving out unsaved ones" do
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_bonus, amount: 2)
+      create(:service_usage_adjustment, fliip_service: service, kind: :free_used, amount: 0.5)
+      loaded = described_class.includes(:service_usage_adjustments).find(service.id)
+      loaded.service_usage_adjustments.build(kind: :paid_bonus, amount: 5)
+
+      expect([ loaded.paid_allowed_total, loaded.free_used_total ]).to eq([ service.paid_allowed_total, service.free_used_total ])
+      expect(loaded.paid_allowed_total).to eq(12.0)
+    end
+
     it "applies used deltas from adjustments" do
-      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 4, free_used_delta: 1)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_used, amount: 4)
+      create(:service_usage_adjustment, fliip_service: service, kind: :free_used, amount: 1)
 
       expect(service.paid_used_total).to eq(4.0)
       expect(service.remaining_paid_sessions).to eq(6.0)
@@ -52,7 +70,7 @@ RSpec.describe FliipService, type: :model do
     end
 
     it "never goes below zero remaining" do
-      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 15)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_used, amount: 15)
 
       expect(service.remaining_paid_sessions).to eq(0.0)
       expect(service).to be_fully_used
@@ -78,8 +96,11 @@ RSpec.describe FliipService, type: :model do
       create(:session, fliip_service: service, present: true, duration: 0.5)
       create(:session, fliip_service: service, present: false, duration: 1.0, occurred_at: 1.day.ago)
       create(:session, fliip_service: other, present: true, duration: 1.0)
-      create(:service_usage_adjustment, fliip_service: service, bonus_sessions: 3, paid_used_delta: 2, free_used_delta: 0.5)
-      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: -1)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_bonus, amount: 3)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_used, amount: 2)
+      create(:service_usage_adjustment, fliip_service: service, kind: :free_used, amount: 0.5)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_used, amount: -1)
+      create(:service_usage_adjustment, fliip_service: service, kind: :free_bonus, amount: 1)
     end
 
     it "gives the same totals as counting each service alone" do
@@ -87,7 +108,7 @@ RSpec.describe FliipService, type: :model do
       described_class.preload_usage(preloaded)
 
       preloaded.each { |record| expect(totals(record)).to eq(totals(described_class.find(record.id))) }
-      expect(totals(preloaded.find { |record| record.id == service.id })).to eq([ 1.5, 1.5, 13.0, 2.0, 11.5, 0.5 ])
+      expect(totals(preloaded.find { |record| record.id == service.id })).to eq([ 1.5, 1.5, 13.0, 3.0, 11.5, 1.5 ])
     end
 
     it "reads the preloaded sums without querying again" do
@@ -148,7 +169,7 @@ RSpec.describe FliipService, type: :model do
     end
 
     it "blocks fully used services" do
-      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 10)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_used, amount: 10)
       expect(service.booking_block_reason).to eq("Toutes les séances utilisées")
     end
   end
@@ -236,25 +257,17 @@ RSpec.describe FliipService, type: :model do
 
   describe "booking logic" do
     it "is blocked once its séances are used up, even with absences left" do
-      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 10)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_used, amount: 10)
 
       expect(service.remaining_free_sessions).to eq(2.0)
       expect(service).to be_booking_blocked
-    end
-
-    it "#usage_stats summarizes both allowances" do
-      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 3, bonus_sessions: 2)
-
-      expect(service.usage_stats).to eq(
-        paid: { used_sessions: 3.0, included: 10, bonus: 2.0, allowed_total: 12.0, remaining: 9.0 },
-        free: { used_sessions: 0.0, included: 2, allowed_total: 2.0, remaining: 2.0 }
-      )
     end
   end
 
   describe "progress and labels" do
     it "#paid_progress_percent and #free_progress_percent round the used share" do
-      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 2.5, free_used_delta: 1)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_used, amount: 2.5)
+      create(:service_usage_adjustment, fliip_service: service, kind: :free_used, amount: 1)
 
       expect(service.paid_progress_percent).to eq(25)
       expect(service.free_progress_percent).to eq(50)
@@ -284,13 +297,11 @@ RSpec.describe FliipService, type: :model do
       expect(build(:fliip_service, expire_date: nil).time_range_label).to eq("—")
     end
 
-    it "#paid_breakdown, #paid_usage_compact_str and #absences_compact_str format usage" do
-      create(:service_usage_adjustment, fliip_service: service, paid_used_delta: 1.5, bonus_sessions: 2, free_used_delta: 0.5)
+    it "#paid_usage_compact_str and #absences_compact_str format usage" do
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_used, amount: 1.5)
+      create(:service_usage_adjustment, fliip_service: service, kind: :paid_bonus, amount: 2)
+      create(:service_usage_adjustment, fliip_service: service, kind: :free_used, amount: 0.5)
 
-      expect(service.paid_breakdown).to include(
-        used: 1.5, included: 10, bonus: 2.0, allowed: 12.0, percent: 13,
-        used_str: "1.5", included_str: "10", allowed_str: "12.0", percent_str: "13"
-      )
       expect(service.paid_usage_compact_str).to eq("1.5/(10.0 + 2.0)")
       expect(service.absences_compact_str).to eq("[0.5/2.0 absences]")
     end
@@ -383,9 +394,11 @@ RSpec.describe FliipService, type: :model do
     end
 
     it "adds the séances and absences used by adjustments created at or before each séance" do
-      early = create(:service_usage_adjustment, fliip_service: roomy, paid_used_delta: 2, free_used_delta: 0.5)
-      early.update_columns(created_at: Time.zone.local(2026, 11, 1, 9, 0))
-      late = create(:service_usage_adjustment, fliip_service: roomy, paid_used_delta: 3)
+      [ [ :paid_used, 2 ], [ :free_used, 0.5 ] ].each do |kind, amount|
+        create(:service_usage_adjustment, fliip_service: roomy, kind: kind, amount: amount)
+          .update_columns(created_at: Time.zone.local(2026, 11, 1, 9, 0))
+      end
+      late = create(:service_usage_adjustment, fliip_service: roomy, kind: :paid_used, amount: 3)
       late.update_columns(created_at: Time.zone.local(2026, 11, 13, 9, 0))
       first  = create(:session, fliip_service: roomy, occurred_at: Time.zone.local(2026, 11, 10, 9, 0))
       second = create(:session, fliip_service: roomy, occurred_at: Time.zone.local(2026, 11, 13, 9, 0))
