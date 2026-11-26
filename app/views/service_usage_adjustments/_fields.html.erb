@@ -1,15 +1,18 @@
 <%# The fields of an adjustment, in the add form and the edit card: what
-    changes, how much (half séances, negative allowed), the trainer, a note.
+    changes, then how much (half séances, negative allowed), the trainer and a
+    one-line note. Compact: from 640 px of form, the last three share one row
+    (container query in studio/_services.scss).
     A deactivated trainer stays in the list on their own adjustment.
     Locals: f, adjustment, staff. %>
 <% staff = staff.to_a %>
 <% staff += [ adjustment.user ] if adjustment.user && staff.exclude?(adjustment.user) %>
 <%= f.base_errors(also: %i[fliip_service created_by]) %>
-<div class="form-grid adjustment-form">
-  <div class="form-grid__wide">
+<div class="adjustment-form">
+  <div class="adjustment-form__kind">
     <%= f.segmented :kind, ServiceUsageAdjustment::KIND_LABELS.map { |kind, label| [ label, kind ] }, label: "Changement" %>
   </div>
-  <%= f.field :amount, label: "Nombre", as: :number, step: 0.5, required: true, hint: "Négatif pour retirer, par demi-séance" %>
-  <%= f.select_field :user_id, staff.map { |u| [ u.full_name, u.id ] }, label: "Entraîneur·e" %>
-  <%= f.field :note, label: "Note", as: :textarea, required: true, maxlength: 1000, rows: 2, field_class: "form-grid__wide" %>
+  <%= f.field :amount, label: "Nombre", as: :number, step: 0.5, required: true, placeholder: "ex. 2 ou -0,5",
+        field_class: "adjustment-form__amount" %>
+  <%= f.select_field :user_id, staff.map { |u| [ u.full_name, u.id ] }, label: "Entraîneur·e", field_class: "adjustment-form__trainer" %>
+  <%= f.field :note, label: "Note", required: true, maxlength: 1000, autocomplete: "off", field_class: "adjustment-form__note" %>
 </div>

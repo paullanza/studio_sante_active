@@ -6,7 +6,7 @@
       <span class="seance-card__title">Modifier l'ajustement</span>
     </div>
     <%= form_with model: adjustment, url: fliip_service_service_usage_adjustment_path(service, adjustment), method: :patch,
-          builder: StudioFormBuilder, namespace: dom_id(adjustment), class: "form seance-edit__form" do |f| %>
+          builder: StudioFormBuilder, namespace: dom_id(adjustment), class: "form seance-edit__form adjustment-form-wrap" do |f| %>
       <%= render "service_usage_adjustments/fields", f: f, adjustment: adjustment, staff: @staff %>
       <div class="form-actions seance-edit__actions">
         <%= link_to "Annuler", fliip_service_service_usage_adjustment_path(service, adjustment), class: "btn btn--ghost btn--small" %>
