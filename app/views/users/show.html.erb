@@ -11,8 +11,11 @@
 <% end %>
 
 <div class="client-page">
-  <%= render "users/top", user: @user %>
-  <%= render "users/access", user: @user %>
+  <%# The top card and « Accès » share the left column on desktop. %>
+  <div class="staff-side">
+    <%= render "users/top", user: @user %>
+    <%= render "users/access", user: @user %>
+  </div>
 
   <div class="client-page__tabs">
     <nav class="tabs" aria-label="Sections">
