@@ -6,8 +6,4 @@ class ManagerPolicy < ApplicationPolicy
   def dashboard?
     manager?
   end
-
-  def create_signup_code?
-    manager?
-  end
 end

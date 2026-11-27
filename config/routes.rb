@@ -69,13 +69,13 @@ Rails.application.routes.draw do
   patch "allocations", to: "allocations#bulk_update", as: :bulk_update_allocations
 
   # =====================================================================
-  # ADMIN — SIGNUP CODES (ACCESS CONTROL FOR NEW EMPLOYEES)
+  # CODES D'INSCRIPTION (managers and above)
   # ---------------------------------------------------------------------
-  # Create new codes and deactivate existing ones. Codes gate employee
-  # self-sign-ups and typically expire after a set time.
+  # A code lets a new hire sign up: it lasts 14 days and works once.
   # =====================================================================
-  post  "admin/signup_codes",                 to: "admin#create_signup_code",     as: :admin_signup_codes
-  patch "admin/signup_codes/:id/deactivate",  to: "admin#deactivate_signup_code", as: :deactivate_admin_signup_code
+  resources :signup_codes, only: [:index, :create], path: "codes-inscription" do
+    patch :deactivate, on: :member
+  end
 
   # =====================================================================
   # CONFIRMATIONS (admins, before payroll)
@@ -91,10 +91,9 @@ Rails.application.routes.draw do
   # MANAGER VIEWS (READ-ONLY/REDUCED POWERS VS. ADMIN)
   # ---------------------------------------------------------------------
   # Manager dashboard for day-to-day oversight without admin-level
-  # mutation rights. Managers can also create signup codes.
+  # mutation rights.
   # =====================================================================
-  get  "manager/dashboard",     to: "manager#dashboard",    as: :manager_dashboard
-  post "manager/signup_codes",  to: "manager#create_signup_code", as: :manager_signup_codes
+  get "manager/dashboard", to: "manager#dashboard", as: :manager_dashboard
 
   # =====================================================================
   # OVERSIGHT — FOLLOW-UP PAGES FOR MANAGERS AND ABOVE (« Plus » menu)

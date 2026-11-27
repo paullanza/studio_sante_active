@@ -16,14 +16,6 @@ class AdminPolicy < ApplicationPolicy
     admin_or_above?
   end
 
-  def create_signup_code?
-    admin_or_above?
-  end
-
-  def deactivate_signup_code?
-    admin_or_above?
-  end
-
   # Confirmations, séances tab (ConfirmationsController).
   def session_confirmations?
     admin_or_above?

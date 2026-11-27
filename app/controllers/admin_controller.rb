@@ -24,8 +24,6 @@ class AdminController < ApplicationController
 
     @services_touched_counts = tmp.transform_values { |arr| arr.uniq.size }
 
-    @signup_codes = SignupCode.order(created_at: :desc).limit(20)
-
     today = Date.current
     @services_ending_soon = FliipService
       .active
@@ -41,21 +39,6 @@ class AdminController < ApplicationController
     @consultations_last_30 = Consultation
       .where(occurred_at: (today - 30.days)..today)
       .order(occurred_at: :desc)
-  end
-
-  def create_signup_code
-    SignupCode.create!
-    redirect_to admin_dashboard_path, notice: "Signup code generated."
-  end
-
-  def deactivate_signup_code
-    code = SignupCode.find(params[:id])
-
-    if code.safely_deactivate!
-      redirect_to admin_dashboard_path, notice: "Signup code deactivated."
-    else
-      redirect_to admin_dashboard_path, alert: "Cannot deactivate an expired or used code."
-    end
   end
 
   # Runs in the background; a sync already running makes it wait its turn.

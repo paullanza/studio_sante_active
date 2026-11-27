@@ -170,6 +170,17 @@ A native `<dialog class="dialog">` (`.dialog__title`, `.dialog__body`, `.dialog_
 
 `.card--top` is the one key-information card at the top of Service and Client pages.
 
+### Copy to clipboard
+
+```erb
+<section class="card card--top" data-controller="clipboard">
+  <span class="signup-code signup-code--large" data-clipboard-target="source">K7M3QPZX</span>
+  <button type="button" class="btn btn--secondary" data-clipboard-target="button" data-action="clipboard#copy">Copier</button>
+</section>
+```
+
+`clipboard_controller.js` copies the source's text; the button reads « Copié » for two seconds. `.signup-code` sets a code in `--font-mono` (Codes d'inscription).
+
 ### Tabs
 
 Server-rendered links with a `?tab=` param:
