@@ -21,6 +21,7 @@ class OversightController < ApplicationController
     @services = (@tab == "recents" ? ended_recently : ending_soon)
       .includes(:fliip_user, :service_definition, :service_usage_adjustments)
       .to_a
+    FliipService.preload_usage(@services)
     @trainers_by_service_id = trainer_names_by_service_id(@services)
   end
 
