@@ -429,4 +429,64 @@ RSpec.describe "Consultations", type: :request do
       expect(response.body).not_to include(%(value="#{super_admin.id}"))
     end
   end
+  describe "GET /consultations" do
+    let(:client)  { create(:fliip_user) }
+    let(:service) { create(:fliip_service, fliip_user: client, purchase_date: 1.day.ago) }
+    let!(:to_link) { create(:consultation, user: employee, occurred_at: 2.days.ago) }
+    let!(:linked)  { create(:consultation, fliip_user: client, fliip_service: service, occurred_at: 1.day.ago) }
+    let!(:old)     { create(:consultation, user: employee, occurred_at: 40.days.ago) }
+
+    def listed_ids
+      Nokogiri::HTML(response.body).css(".consultation-card").map { |card| card.ancestors("turbo-frame").first["id"] }
+    end
+
+    it "is closed to employees" do
+      sign_in employee
+      get consultations_path
+
+      expect(response).to redirect_to(new_seance_path(tab: "consultation"))
+    end
+
+    %i[manager admin super_admin].each do |role|
+      it "lists the last 30 days, newest first, for #{role}" do
+        sign_in create(:user, role)
+        get consultations_path
+
+        expect(response).to have_http_status(:ok)
+        # The list is only visible in the markup.
+        expect(listed_ids).to eq([ "consultation_#{linked.id}", "consultation_#{to_link.id}" ])
+      end
+    end
+
+    it "shows every date once « Du » is emptied" do
+      sign_in create(:user, :manager)
+      get consultations_path(consultation_date_from: "")
+
+      expect(listed_ids).to include("consultation_#{old.id}")
+    end
+
+    it "filters by status and by trainer" do
+      sign_in create(:user, :manager)
+
+      get consultations_path(status: "to_link")
+      expect(listed_ids).to eq([ "consultation_#{to_link.id}" ])
+
+      get consultations_path(status: "linked")
+      expect(listed_ids).to eq([ "consultation_#{linked.id}" ])
+
+      get consultations_path(employee_id: linked.user_id)
+      expect(listed_ids).to eq([ "consultation_#{linked.id}" ])
+    end
+
+    it "keeps a linked card on the list" do
+      other = create(:fliip_service, fliip_user: client, purchase_date: 1.day.ago)
+      sign_in create(:user, :manager)
+
+      patch associate_consultation_path(to_link), params: { fliip_user_id: client.id, fliip_service_id: other.id, context: "consultations" },
+                                                  headers: { "Accept" => "text/vnd.turbo-stream.html, text/html" }
+
+      expect(to_link.reload.fliip_service).to eq(other)
+      expect(response.body).to include(%(action="replace" target="consultation_#{to_link.id}"))
+    end
+  end
 end

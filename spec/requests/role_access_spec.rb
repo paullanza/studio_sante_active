@@ -122,6 +122,7 @@ RSpec.describe "Role-based access", type: :request do
         "C4 GET /consultations/:id/row"          => [ALL, -> { get row_consultation_path(consultation) }],
         "C5 PATCH /consultations/:id/disassociate" => [ADMINS, -> { patch disassociate_consultation_path(associated) }],
         "C6 GET /consultations/associations"     => [MANAGEMENT, -> { get associations_consultations_path }],
+        "C7 GET /consultations"                  => [MANAGEMENT, -> { get consultations_path }],
         "U0 GET /personnel"                  => [MANAGEMENT, -> { get users_path }],
         "U1 GET /personnel/:id (employee)"   => [MANAGEMENT, -> { get user_path(other_employee) }],
         "U2 GET /users/:id/edit (employee)"  => [ADMINS, -> { get edit_user_path(other_employee) }],

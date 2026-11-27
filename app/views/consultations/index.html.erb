@@ -1,0 +1,70 @@
+<%# « Consultations » (managers and above): the recent consultations, newest
+    first, the last 30 days by default. The status tabs carry the totals for
+    the other filters (how many are still « à lier », how many bought), and
+    keep them. A card without a service has « Lier », as on « Lier les
+    consultations », but stays on the list once linked. %>
+<% content_for :nav_section, "plus" %>
+<% content_for :title, "Consultations" %>
+<% content_for :page_wide, true %>
+<% filters = @filter_params.compact %>
+<% filters[:consultation_date_from] ||= "" %>
+
+<div class="stack">
+  <div class="page-header">
+    <h1>Consultations</h1>
+    <p class="text-muted text-small numeric">
+      <%= pluralize(@totals[:all], "consultation") %> · <%= @totals[:to_link] %> à lier · <%= @totals[:linked] %> liée(s)<% if @totals[:all].positive? %> (<%= (100.0 * @totals[:linked] / @totals[:all]).round %> %)<% end %>
+    </p>
+  </div>
+
+  <nav class="tabs" aria-label="Statut">
+    <% [ [ nil, "Toutes", :all ], [ "to_link", "À lier", :to_link ], [ "linked", "Liées", :linked ] ].each do |status, label, total| %>
+      <%= link_to "#{label} (#{@totals[total]})", consultations_path(filters.merge(status: status).compact), class: "tabs__tab",
+            aria: { current: (@status == status ? "page" : nil) } %>
+    <% end %>
+  </nav>
+
+  <%= form_with url: consultations_path, method: :get, class: "link-filters",
+        data: { controller: "autosubmit", action: "change->autosubmit#submit", turbo_action: "replace" } do %>
+    <div class="field field--compact">
+      <label class="field__box" for="employee_id">
+        <span class="field__label">Entraîneur·e</span>
+        <%= select_tag :employee_id, options_for_select(@staff.map { |u| [ u.full_name, u.id ] }, @filter_params[:employee_id]),
+              include_blank: "Tous", id: "employee_id", class: "field__input" %>
+      </label>
+    </div>
+    <div class="field field--compact">
+      <label class="field__box" for="consultation_date_from">
+        <span class="field__label">Du</span>
+        <%= date_field_tag :consultation_date_from, @filter_params[:consultation_date_from], id: "consultation_date_from", class: "field__input" %>
+      </label>
+    </div>
+    <div class="field field--compact">
+      <label class="field__box" for="consultation_date_to">
+        <span class="field__label">Au</span>
+        <%= date_field_tag :consultation_date_to, @filter_params[:consultation_date_to], id: "consultation_date_to", class: "field__input" %>
+      </label>
+    </div>
+    <div class="field field--compact">
+      <label class="field__box" for="q">
+        <span class="field__label">Prospect</span>
+        <%= search_field_tag :q, @filter_params[:q], id: "q", class: "field__input", placeholder: "Nom, courriel ou téléphone", autocomplete: "off" %>
+      </label>
+    </div>
+    <noscript><button type="submit" class="btn btn--ghost">Filtrer</button></noscript>
+    <%# Last, so the grid's first field still spans the row on a phone. %>
+    <%= hidden_field_tag :status, @status, id: nil if @status %>
+  <% end %>
+
+  <% if @consultations.empty? %>
+    <p class="empty-state">Aucune consultation pour ces filtres.</p>
+  <% else %>
+    <%= render "shared/pager", pagy: @pagy %>
+    <ul class="list card-grid">
+      <% @consultations.each do |consultation| %>
+        <li id="<%= dom_id(consultation, :item) %>"><%= render "consultations/card", consultation: consultation, context: "consultations" %></li>
+      <% end %>
+    </ul>
+    <%= render "shared/pager", pagy: @pagy %>
+  <% end %>
+</div>

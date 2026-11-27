@@ -6,7 +6,8 @@ RSpec.describe ConsultationPolicy, type: :policy do
   let(:confirmed)    { create(:consultation, user: owner, confirmed: true) }
 
   let(:open_actions)        { %i[create new row] }
-  let(:association_actions) { %i[association associate associations] }
+  # The Consultations list goes with « Lier les consultations ».
+  let(:association_actions) { %i[index association associate associations] }
 
   it "lets an owner edit until confirmed, but never associate" do
     expect(described_class.new(owner, consultation)).to permit_only_actions(*open_actions, :edit, :update, :destroy)
