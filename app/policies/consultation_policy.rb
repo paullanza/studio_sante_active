@@ -5,6 +5,11 @@
 class ConsultationPolicy < ApplicationPolicy
   BASE_ATTRIBUTES = [:first_name, :last_name, :email, :phone_number, :note, :present].freeze
 
+  # The Consultations list.
+  def index?
+    manager_or_above?
+  end
+
   def create?
     user.present?
   end

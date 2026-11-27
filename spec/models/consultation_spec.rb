@@ -150,6 +150,10 @@ RSpec.describe Consultation, type: :model do
       expect(described_class.unconfirmed).to contain_exactly(pending, client_only, linked)
       expect(described_class.confirmed).to contain_exactly(done)
       expect(described_class.to_link).to contain_exactly(pending, done, client_only)
+      expect(described_class.linked).to contain_exactly(linked)
+      expect(described_class.apply_filters(status: "to_link")).to contain_exactly(pending, done, client_only)
+      expect(described_class.apply_filters(status: "linked")).to contain_exactly(linked)
+      expect(described_class.apply_filters(status: "other")).to contain_exactly(pending, done, client_only, linked)
     end
 
     it "orders by occurred_at, newest first" do

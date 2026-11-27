@@ -1,0 +1,47 @@
+<%# « Codes d'inscription » (managers and above): one gold « Créer un code »,
+    a new code on top with « Copier », then the latest codes, newest first,
+    with their status and expiry date. A code lasts 14 days and works once. %>
+<% content_for :nav_section, "plus" %>
+<% content_for :title, "Codes d'inscription" %>
+
+<%= back_link_to "Personnel", users_path %>
+
+<div class="stack signup-codes">
+  <div class="page-header">
+    <h1>Codes d'inscription</h1>
+    <p class="text-muted text-small">Un code permet à une nouvelle personne de créer son compte. Il dure 14 jours et ne sert qu'une fois.</p>
+  </div>
+
+  <%= button_to signup_codes_path, method: :post, class: "btn btn--primary" do %>
+    <%= safe_join([ "Créer un code", button_arrow ]) %>
+  <% end %>
+
+  <% if @highlight %>
+    <section class="card card--top signup-code-new" data-controller="clipboard" aria-label="Nouveau code">
+      <span class="text-muted text-small">Nouveau code, valide jusqu'au <span class="numeric"><%= l(@highlight.expiry_date.to_date) %></span></span>
+      <span class="signup-code signup-code--large" data-clipboard-target="source"><%= @highlight.code %></span>
+      <button type="button" class="btn btn--secondary" data-clipboard-target="button" data-action="clipboard#copy">Copier</button>
+    </section>
+  <% end %>
+
+  <% if @signup_codes.empty? %>
+    <p class="empty-state">Aucun code pour l'instant.</p>
+  <% else %>
+    <ul class="list signup-code-list">
+      <% @signup_codes.each do |code| %>
+        <li id="<%= dom_id(code) %>" class="card signup-code-row">
+          <span class="signup-code"><%= code.code %></span>
+          <span class="signup-code-row__status"><%= signup_code_status(code) %></span>
+          <span class="signup-code-row__dates text-muted text-small numeric">
+            créé le <%= l(code.created_at.to_date) %> · expire le <%= l(code.expiry_date.to_date) %>
+          </span>
+          <% if policy(code).deactivate? %>
+            <%= button_to "Désactiver", deactivate_signup_code_path(code), method: :patch,
+                  class: "btn btn--danger btn--small", form_class: "signup-code-row__action",
+                  form: { data: { turbo_confirm: "Désactiver le code #{code.code}?" } } %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>

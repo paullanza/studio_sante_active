@@ -29,9 +29,6 @@ class ManagerController < ApplicationController
 
     @services_touched_counts = tmp.transform_values { |arr| arr.uniq.size }
 
-    # Signup codes (small slice to keep dashboard light)
-    @signup_codes = SignupCode.order(created_at: :desc).limit(20)
-
     # Services ending soon (next 30 days) and ended recently (last 30 days)
     today = Date.current
     @services_ending_soon = FliipService
@@ -48,11 +45,6 @@ class ManagerController < ApplicationController
     @consultations_last_30 = Consultation
       .where(occurred_at: (today - 30.days)..today)
       .order(occurred_at: :desc)
-  end
-
-  def create_signup_code
-    SignupCode.create!
-    redirect_to manager_dashboard_path, notice: "Signup code generated."
   end
 
   private

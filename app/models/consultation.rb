@@ -59,6 +59,8 @@ class Consultation < ApplicationRecord
   scope :confirmed,    -> { where(confirmed: true) }
   # « Lier les consultations »: still without a service.
   scope :to_link, -> { where(fliip_service_id: nil) }
+  # Linked to a service: the prospect bought.
+  scope :linked, -> { where.not(fliip_service_id: nil) }
   # Consultations that took place in a pay period (PayPeriod), Sunday to Saturday.
   scope :in_period, ->(period) {
     where(occurred_at: period.starts_on.beginning_of_day..period.ends_on.end_of_day)
@@ -116,7 +118,17 @@ class Consultation < ApplicationRecord
     rel = rel.date_between(params[:consultation_date_from], params[:consultation_date_to])
     rel = rel.created_between(params[:created_from], params[:created_to])
     rel = rel.present_value(params[:present])
+    rel = rel.by_status(params[:status])
     rel
+  end
+
+  # « À lier » or « Liées »; anything else keeps them all.
+  def self.by_status(status)
+    case status.to_s
+    when "to_link" then to_link
+    when "linked"  then linked
+    else all
+    end
   end
 
   # -----------------------------------------
