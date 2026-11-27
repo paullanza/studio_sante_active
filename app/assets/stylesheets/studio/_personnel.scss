@@ -267,3 +267,62 @@
 .staff-actions form {
   display: flex;
 }
+
+// « Accès » on a staff member's page (users/_access): status, role, activation.
+.staff-access {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.staff-access .section-label {
+  margin: 0;
+}
+
+.staff-access__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.staff-access__role {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+@media (min-width: 768px) {
+  .staff-access__role {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 16px;
+  }
+}
+
+// A staff member's page: the top card and « Accès » in one column, which
+// sticks on desktop as the top card does on the Client page.
+.staff-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .staff-side {
+    position: sticky;
+    top: calc(var(--safe-top) + 88px);
+  }
+
+  .staff-side .client-page__top {
+    position: static;
+  }
+
+  .staff-access__role {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

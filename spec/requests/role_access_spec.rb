@@ -87,7 +87,8 @@ RSpec.describe "Role-based access", type: :request do
     # Alerts the app uses when it refuses a request.
     REFUSALS = [
       "Non autorisé·e.", "Not authorized", "Not authorized.", "Admins must use the Admin dashboard",
-      "Not authorized to activate this user.", "Not authorized to deactivate this user."
+      "Vous ne pouvez pas changer le rôle de ce compte.", "Ce changement de rôle n'est pas permis.",
+      "Vous ne pouvez pas réactiver ce compte.", "Vous ne pouvez pas désactiver ce compte."
     ].freeze
 
     let(:actors) { ROLES.index_with { |role| role == :employee ? employee : create(:user, role) } }
@@ -126,9 +127,9 @@ RSpec.describe "Role-based access", type: :request do
         "U0 GET /personnel"                  => [MANAGEMENT, -> { get users_path }],
         "U1 GET /personnel/:id (employee)"   => [MANAGEMENT, -> { get user_path(other_employee) }],
         "U2 GET /users/:id/edit (employee)"  => [ADMINS, -> { get edit_user_path(other_employee) }],
-        "U3 PATCH make_employee (manager)"   => [ADMINS, -> { patch make_employee_user_path(manager_target) }],
-        "U4 PATCH make_manager (employee)"   => [ADMINS, -> { patch make_manager_user_path(create(:user)) }],
-        "U5 PATCH make_admin (manager)"      => [%i[super_admin], -> { patch make_admin_user_path(create(:user, :manager)) }],
+        "U3 PATCH role → employee (manager)" => [ADMINS, -> { patch role_user_path(manager_target), params: { user: { role: "employee" } } }],
+        "U4 PATCH role → manager (employee)" => [ADMINS, -> { patch role_user_path(create(:user)), params: { user: { role: "manager" } } }],
+        "U5 PATCH role → admin (manager)"    => [%i[super_admin], -> { patch role_user_path(create(:user, :manager)), params: { user: { role: "admin" } } }],
         "U6 PATCH deactivate (employee)"     => [MANAGEMENT, -> { patch deactivate_user_path(create(:user)) }],
         "U6 PATCH deactivate (manager)"      => [ADMINS, -> { patch deactivate_user_path(create(:user, :manager)) }],
         "U6 PATCH deactivate (admin)"        => [%i[super_admin], -> { patch deactivate_user_path(create(:user, :admin)) }],

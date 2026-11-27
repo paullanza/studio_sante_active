@@ -86,7 +86,7 @@ RSpec.describe User, type: :model do
       expect(build(:user).translated_role).to eq("Employé·e")
       expect(build(:user, :manager).translated_role).to eq("Gestionnaire")
       expect(build(:user, :admin).translated_role).to eq("Admin")
-      expect(build(:user, :super_admin).translated_role).to eq("Admin")
+      expect(build(:user, :super_admin).translated_role).to eq("Super admin")
     end
   end
 

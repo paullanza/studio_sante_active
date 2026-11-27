@@ -230,12 +230,12 @@ RSpec.describe "Users", type: :request do
       expect(employee).to be_active
     end
 
-    it "keeps the old alert when a visible profile cannot be edited" do
+    it "sends a visible profile that can't be edited back with an alert" do
       sign_in manager
       get edit_user_path(employee)
 
       expect(response).to redirect_to(user_path(employee))
-      expect(flash[:alert]).to eq("Not authorized.")
+      expect(flash[:alert]).to eq("Non autorisé·e.")
     end
 
     it "re-renders the profile with errors when a field is invalid" do
@@ -247,67 +247,80 @@ RSpec.describe "Users", type: :request do
   end
 
   describe "role changes" do
-    it "lets admins demote a manager and promote an employee" do
+    def change_role(user, role)
+      patch role_user_path(user), params: { user: { role: role } }
+    end
+
+    it "lets admins switch employees and managers, with a French notice" do
       sign_in admin
 
-      patch make_employee_user_path(manager)
+      change_role(manager, "employee")
       expect(manager.reload).to be_employee
-      patch make_manager_user_path(employee)
+      expect(response).to redirect_to(user_path(manager))
+      expect(flash[:notice]).to eq("#{manager.first_name} est maintenant employé·e.")
+
+      change_role(employee, "manager")
       expect(employee.reload).to be_manager
+      expect(flash[:notice]).to eq("#{employee.first_name} est maintenant gestionnaire.")
     end
 
-    it "stops admins from changing any admin, themself included, or making admins" do
+    it "stops admins from making admins or changing an admin, themself included" do
       sign_in admin
 
-      patch make_manager_user_path(other_admin)
-      patch make_manager_user_path(admin)
-      patch make_admin_user_path(manager)
-
-      expect(other_admin.reload).to be_admin
-      expect(admin.reload).to be_admin
+      change_role(manager, "admin")
       expect(manager.reload).to be_manager
-    end
+      expect(flash[:alert]).to eq("Ce changement de rôle n'est pas permis.")
 
-    it "lets the super admin demote an admin and promote a manager to admin" do
-      sign_in super_admin
-
-      patch make_manager_user_path(admin)
-      expect(admin.reload).to be_manager
-      patch make_admin_user_path(other_manager)
+      change_role(other_admin, "manager")
       expect(other_admin.reload).to be_admin
-      expect(other_manager.reload).to be_admin
+      expect(flash[:alert]).to eq("Vous ne pouvez pas changer le rôle de ce compte.")
+
+      change_role(admin, "manager")
+      expect(admin.reload).to be_admin
     end
 
-    it "keeps each target rule and its message" do
+    it "lets the super admin make and unmake admins" do
       sign_in super_admin
 
-      patch make_admin_user_path(employee)
-      expect(flash[:alert]).to eq("Only managers can be promoted to admin.")
-      patch make_employee_user_path(employee)
-      expect(flash[:alert]).to eq("Only managers can be demoted to employee.")
-      patch make_manager_user_path(manager)
-      expect(flash[:alert]).to eq("This change isn’t allowed.")
+      change_role(other_manager, "admin")
+      expect(other_manager.reload).to be_admin
+      change_role(admin, "manager")
+      expect(admin.reload).to be_manager
+      change_role(employee, "admin")
+      expect(employee.reload).to be_admin
+    end
+
+    it "refuses the current role, an unknown role and super admin" do
+      sign_in super_admin
+
+      [ "manager", "boss", "super_admin" ].each do |role|
+        change_role(manager, role)
+        expect(manager.reload).to be_manager, role
+        expect(flash[:alert]).to eq("Ce changement de rôle n'est pas permis."), role
+      end
     end
 
     it "never changes the super admin" do
       sign_in super_admin
 
-      patch make_manager_user_path(super_admin)
+      change_role(super_admin, "manager")
 
       expect(super_admin.reload).to be_super_admin
-      expect(flash[:alert]).to eq("You can't change a Super Admin.")
+      expect(flash[:alert]).to eq("Vous ne pouvez pas changer le rôle de ce compte.")
     end
 
     it "is refused to managers and employees" do
-      [manager, employee].each do |user|
+      [ manager, employee ].each do |user|
         sign_in user
-        patch make_manager_user_path(colleague)
+        change_role(colleague, "manager")
         expect(colleague.reload).to be_employee
       end
     end
   end
 
   describe "activation" do
+    # The deactivated user is signed out on their next request: specced in
+    # spec/requests/role_access_spec.rb (« a user deactivated mid-session »).
     {
       employee: [],
       manager: %i[employee colleague],
@@ -329,13 +342,28 @@ RSpec.describe "Users", type: :request do
       end
     end
 
-    it "keeps the old alerts" do
+    it "says what happened in French" do
       sign_in manager
 
+      patch deactivate_user_path(employee)
+      expect(flash[:notice]).to eq("Compte désactivé.")
+      patch activate_user_path(employee)
+      expect(flash[:notice]).to eq("Compte réactivé.")
+
       patch deactivate_user_path(other_manager)
-      expect(flash[:alert]).to eq("Not authorized to deactivate this user.")
+      expect(flash[:alert]).to eq("Vous ne pouvez pas désactiver ce compte.")
       patch activate_user_path(other_manager)
-      expect(flash[:alert]).to eq("Not authorized to activate this user.")
+      expect(flash[:alert]).to eq("Vous ne pouvez pas réactiver ce compte.")
+    end
+
+    it "shows « Accès » only to those who may change something" do
+      sign_in manager
+      get user_path(employee)
+      # The section is only visible in the markup.
+      expect(Nokogiri::HTML(response.body).at_css(".staff-access")).to be_present
+
+      get user_path(other_manager)
+      expect(Nokogiri::HTML(response.body).at_css(".staff-access")).to be_nil
     end
   end
 end

@@ -35,11 +35,9 @@ RSpec.describe UserPolicy, type: :policy do
   end
 
   context "for an admin" do
-    # Role changes are allowed by actor here; each action then checks the
-    # target's current role (e.g. only a manager can be made an employee).
     it "edits and manages employees and managers, but never makes admins" do
-      expect(policy(admin, employee)).to permit_only_actions(:index, :show, :edit, :update, :make_employee, :make_manager, :activate, :deactivate)
-      expect(policy(admin, manager)).to permit_only_actions(:index, :show, :edit, :update, :make_employee, :make_manager, :activate, :deactivate)
+      expect(policy(admin, employee)).to permit_only_actions(:index, :show, :edit, :update, :update_role, :activate, :deactivate)
+      expect(policy(admin, manager)).to permit_only_actions(:index, :show, :edit, :update, :update_role, :activate, :deactivate)
     end
 
     it "edits admins, themself included, without changing their role or status" do
@@ -54,7 +52,7 @@ RSpec.describe UserPolicy, type: :policy do
 
   context "for the super admin" do
     it "does everything to admins and managers, including role changes" do
-      every_user_action = %i[show edit update make_employee make_manager make_admin activate deactivate]
+      every_user_action = %i[show edit update update_role activate deactivate]
 
       expect(policy(super_admin, admin)).to permit_only_actions(:index, *every_user_action)
       expect(policy(super_admin, manager)).to permit_only_actions(:index, *every_user_action)
@@ -62,6 +60,34 @@ RSpec.describe UserPolicy, type: :policy do
 
     it "edits themself but never changes their own role or status" do
       expect(policy(super_admin, super_admin)).to permit_only_actions(:index, :show, :edit, :update)
+    end
+  end
+
+  describe "#assignable_roles" do
+    # Viewer × target → the roles the viewer may give, the current one left out.
+    {
+      %i[employee colleague]       => [],
+      %i[manager employee]         => [],
+      %i[manager other_manager]    => [],
+      %i[admin employee]           => %w[manager],
+      %i[admin manager]            => %w[employee],
+      %i[admin other_admin]        => [],
+      %i[admin admin]              => [],
+      %i[admin super_admin]        => [],
+      %i[super_admin employee]     => %w[manager admin],
+      %i[super_admin manager]      => %w[employee admin],
+      %i[super_admin admin]        => %w[employee manager],
+      %i[super_admin super_admin]  => []
+    }.each do |(viewer, target), roles|
+      it "gives #{roles.inspect} to a #{viewer} looking at #{target}" do
+        actors = { employee:, colleague:, manager:, other_manager:, admin:, other_admin:, super_admin: }
+
+        expect(policy(actors[viewer], actors[target]).assignable_roles).to eq(roles)
+      end
+    end
+
+    it "gives a guest nothing" do
+      expect(policy(nil, employee).assignable_roles).to eq([])
     end
   end
 
